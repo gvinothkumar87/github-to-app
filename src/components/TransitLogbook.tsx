@@ -26,6 +26,9 @@ export const TransitLogbook = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
+  
+  // Load weight input tracking
+  const [loadWeights, setLoadWeights] = useState<{[key: string]: string}>({});
 
   useEffect(() => {
     if (activeTab === 'entries') {
@@ -160,6 +163,12 @@ export const TransitLogbook = () => {
       } else {
         fetchEntries();
       }
+      
+      // Clear the input value after successful update
+      setLoadWeights(prev => ({
+        ...prev,
+        [entryId]: ''
+      }));
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -365,7 +374,96 @@ export const TransitLogbook = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
+                {/* Mobile optimized layout */}
+                <div className="block md:hidden space-y-4">
+                  {entries.map((entry) => (
+                    <Card key={entry.id} className="p-4 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-medium text-sm">#{entry.serial_no}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {new Date(entry.entry_date).toLocaleDateString()}
+                          </div>
+                        </div>
+                        <Badge variant="secondary" className="text-xs">
+                          {language === 'english' ? 'Pending' : 'நிலுவையில்'}
+                        </Badge>
+                      </div>
+                      
+                      <div className="space-y-2 text-sm">
+                        <div>
+                          <span className="font-medium">
+                            {language === 'english' ? 'Customer: ' : 'வாடிக்கையாளர்: '}
+                          </span>
+                          {entry.customers ? getDisplayName(entry.customers) : '-'}
+                        </div>
+                        <div>
+                          <span className="font-medium">
+                            {language === 'english' ? 'Item: ' : 'பொருள்: '}
+                          </span>
+                          {entry.items ? getDisplayName(entry.items) : '-'}
+                        </div>
+                        <div>
+                          <span className="font-medium">
+                            {language === 'english' ? 'Lorry: ' : 'லாரி: '}
+                          </span>
+                          {entry.lorry_no}
+                        </div>
+                        <div>
+                          <span className="font-medium">
+                            {language === 'english' ? 'Empty Weight: ' : 'காலி எடை: '}
+                          </span>
+                          {entry.empty_weight} {entry.items?.unit}
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2 items-center">
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder={language === 'english' ? 'Load weight' : 'மொத்த எடை'}
+                          value={loadWeights[entry.id] || ''}
+                          onChange={(e) => setLoadWeights(prev => ({
+                            ...prev,
+                            [entry.id]: e.target.value
+                          }))}
+                          className="flex-1"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              const value = parseFloat(loadWeights[entry.id] || '0');
+                              if (value > 0) {
+                                updateLoadWeight(entry.id, value);
+                              }
+                            }
+                          }}
+                        />
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            const value = parseFloat(loadWeights[entry.id] || '0');
+                            if (value > 0) {
+                              updateLoadWeight(entry.id, value);
+                            }
+                          }}
+                          className="shrink-0"
+                        >
+                          {language === 'english' ? 'Update' : 'புதுப்பி'}
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+                  
+                  {entries.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      {language === 'english' 
+                        ? 'No pending load weight entries' 
+                        : 'நிலுவையில் உள்ள மொத்த எடை பதிவுகள் இல்லை'}
+                    </div>
+                  )}
+                </div>
+
+                {/* Desktop table view */}
+                <div className="hidden md:block overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -393,10 +491,15 @@ export const TransitLogbook = () => {
                               type="number"
                               step="0.01"
                               placeholder={language === 'english' ? 'Enter load weight' : 'மொத்த எடையை உள்ளிடவும்'}
+                              value={loadWeights[entry.id] || ''}
+                              onChange={(e) => setLoadWeights(prev => ({
+                                ...prev,
+                                [entry.id]: e.target.value
+                              }))}
                               className="w-32"
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
-                                  const value = parseFloat((e.target as HTMLInputElement).value);
+                                  const value = parseFloat(loadWeights[entry.id] || '0');
                                   if (value > 0) {
                                     updateLoadWeight(entry.id, value);
                                   }
@@ -408,8 +511,7 @@ export const TransitLogbook = () => {
                             <Button
                               size="sm"
                               onClick={() => {
-                                const input = document.querySelector(`input[placeholder*="${entry.id}"]`) as HTMLInputElement;
-                                const value = parseFloat(input?.value || '0');
+                                const value = parseFloat(loadWeights[entry.id] || '0');
                                 if (value > 0) {
                                   updateLoadWeight(entry.id, value);
                                 }
@@ -420,6 +522,16 @@ export const TransitLogbook = () => {
                           </TableCell>
                         </TableRow>
                       ))}
+                      
+                      {entries.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                            {language === 'english' 
+                              ? 'No pending load weight entries' 
+                              : 'நிலுவையில் உள்ள மொத்த எடை பதிவுகள் இல்லை'}
+                          </TableCell>
+                        </TableRow>
+                      )}
                     </TableBody>
                   </Table>
                 </div>

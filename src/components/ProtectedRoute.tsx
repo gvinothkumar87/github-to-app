@@ -22,7 +22,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">Loading application...</p>
         </div>
       </div>
     );

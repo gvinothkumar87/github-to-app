@@ -19,8 +19,8 @@ import { Input } from './ui/input';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export const TransitLogbook = () => {
   const { language, getDisplayName } = useLanguage();
@@ -278,48 +278,59 @@ export const TransitLogbook = () => {
   };
 
   const downloadPDF = () => {
-    const doc = new jsPDF();
-    
-    // Title
-    doc.setFontSize(16);
-    doc.text('Transit Logbook Report', 14, 20);
-    
-    // Date range
-    if (startDate || endDate) {
-      doc.setFontSize(10);
-      const dateRange = `Date Range: ${startDate ? format(startDate, 'dd/MM/yyyy') : 'All'} - ${endDate ? format(endDate, 'dd/MM/yyyy') : 'All'}`;
-      doc.text(dateRange, 14, 30);
+    try {
+      const doc = new jsPDF();
+      
+      // Title
+      doc.setFontSize(16);
+      doc.text('Transit Logbook Report', 14, 20);
+      
+      // Date range
+      if (startDate || endDate) {
+        doc.setFontSize(10);
+        const dateRange = `Date Range: ${startDate ? format(startDate, 'dd/MM/yyyy') : 'All'} - ${endDate ? format(endDate, 'dd/MM/yyyy') : 'All'}`;
+        doc.text(dateRange, 14, 30);
+      }
+
+      // Prepare table data
+      const tableData = reportEntries.map(entry => [
+        entry.serial_no.toString(),
+        format(new Date(entry.entry_date), 'dd/MM/yyyy'),
+        entry.customers ? getDisplayName(entry.customers) : '-',
+        entry.items ? getDisplayName(entry.items) : '-',
+        entry.lorry_no,
+        entry.empty_weight.toString(),
+        (entry.load_weight || 0).toString(),
+        entry.load_weight ? (entry.load_weight - entry.empty_weight).toString() : '0',
+        entry.items?.unit || ''
+      ]);
+
+      // Add table using autoTable
+      autoTable(doc, {
+        head: [['S.No', 'Date', 'Customer', 'Item', 'Lorry', 'Empty Wt', 'Load Wt', 'Net Wt', 'Unit']],
+        body: tableData,
+        startY: startDate || endDate ? 40 : 30,
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [66, 139, 202] },
+        margin: { top: 40 },
+        theme: 'grid'
+      });
+
+      const filename = `transit-report-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      doc.save(filename);
+
+      toast({
+        title: language === 'english' ? 'Success' : 'வெற்றி',
+        description: language === 'english' ? 'PDF file downloaded successfully' : 'PDF கோப்பு வெற்றிகரமாக பதிவிறக்கப்பட்டது',
+      });
+    } catch (error) {
+      console.error('PDF Download Error:', error);
+      toast({
+        variant: 'destructive',
+        title: language === 'english' ? 'Error' : 'பிழை',
+        description: language === 'english' ? 'Failed to download PDF file' : 'PDF கோப்பு பதிவிறக்கம் தோல்வியுற்றது',
+      });
     }
-
-    // Prepare table data
-    const tableData = reportEntries.map(entry => [
-      entry.serial_no,
-      format(new Date(entry.entry_date), 'dd/MM/yyyy'),
-      entry.customers ? getDisplayName(entry.customers) : '-',
-      entry.items ? getDisplayName(entry.items) : '-',
-      entry.lorry_no,
-      entry.empty_weight,
-      entry.load_weight || 0,
-      entry.load_weight ? (entry.load_weight - entry.empty_weight) : 0,
-      entry.items?.unit || ''
-    ]);
-
-    // Add table
-    (doc as any).autoTable({
-      head: [['S.No', 'Date', 'Customer', 'Item', 'Lorry', 'Empty Wt', 'Load Wt', 'Net Wt', 'Unit']],
-      body: tableData,
-      startY: startDate || endDate ? 40 : 30,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [66, 139, 202] },
-    });
-
-    const filename = `transit-report-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-    doc.save(filename);
-
-    toast({
-      title: language === 'english' ? 'Success' : 'வெற்றி',
-      description: language === 'english' ? 'PDF file downloaded successfully' : 'PDF கோப்பு வெற்றிகரமாக பதிவிறக்கப்பட்டது',
-    });
   };
 
   const renderContent = () => {

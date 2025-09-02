@@ -41,8 +41,8 @@ export const TransitLogbook = () => {
   // Reports filters
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
-  const [selectedCustomer, setSelectedCustomer] = useState<string>('');
-  const [selectedItem, setSelectedItem] = useState<string>('');
+  const [selectedCustomer, setSelectedCustomer] = useState<string>('all');
+  const [selectedItem, setSelectedItem] = useState<string>('all');
   const [reportEntries, setReportEntries] = useState<OutwardEntry[]>([]);
 
   useEffect(() => {
@@ -153,12 +153,12 @@ export const TransitLogbook = () => {
     }
 
     // Apply customer filter
-    if (selectedCustomer) {
+    if (selectedCustomer && selectedCustomer !== 'all') {
       query = query.eq('customer_id', selectedCustomer);
     }
 
     // Apply item filter
-    if (selectedItem) {
+    if (selectedItem && selectedItem !== 'all') {
       query = query.eq('item_id', selectedItem);
     }
 
@@ -770,7 +770,7 @@ export const TransitLogbook = () => {
                         } />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">
+                        <SelectItem value="all">
                           {language === 'english' ? 'All Customers' : 'அனைத்து வாடிக்கையாளர்கள்'}
                         </SelectItem>
                         {customers.map((customer) => (
@@ -794,7 +794,7 @@ export const TransitLogbook = () => {
                         } />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">
+                        <SelectItem value="all">
                           {language === 'english' ? 'All Items' : 'அனைத்து பொருட்கள்'}
                         </SelectItem>
                         {items.map((item) => (
@@ -816,8 +816,8 @@ export const TransitLogbook = () => {
                     onClick={() => {
                       setStartDate(undefined);
                       setEndDate(undefined);
-                      setSelectedCustomer('');
-                      setSelectedItem('');
+                      setSelectedCustomer('all');
+                      setSelectedItem('all');
                       setReportEntries([]);
                     }}
                     variant="outline"

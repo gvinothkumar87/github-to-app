@@ -390,7 +390,77 @@ export const TransitLogbook = () => {
         {activeTab === 'entries' && (
           <Card className="shadow-card bg-gradient-card">
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
+              {/* Mobile optimized view */}
+              <div className="block md:hidden space-y-4 p-4">
+                {entries.map((entry) => (
+                  <Card key={entry.id} className="p-4 space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-medium text-sm">#{entry.serial_no}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {new Date(entry.entry_date).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <Badge variant={entry.is_completed ? 'default' : 'secondary'} className="text-xs">
+                        {entry.is_completed 
+                          ? (language === 'english' ? 'Completed' : 'முடிந்தது')
+                          : (language === 'english' ? 'Pending' : 'நிலுவையில்')}
+                      </Badge>
+                    </div>
+                    
+                    <div className="space-y-2 text-sm">
+                      <div>
+                        <span className="font-medium">
+                          {language === 'english' ? 'Customer: ' : 'வாடிக்கையாளர்: '}
+                        </span>
+                        {entry.customers ? getDisplayName(entry.customers) : '-'}
+                      </div>
+                      <div>
+                        <span className="font-medium">
+                          {language === 'english' ? 'Item: ' : 'பொருள்: '}
+                        </span>
+                        {entry.items ? getDisplayName(entry.items) : '-'}
+                      </div>
+                      <div>
+                        <span className="font-medium">
+                          {language === 'english' ? 'Lorry: ' : 'லாரி: '}
+                        </span>
+                        {entry.lorry_no}
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2 pt-2 border-t">
+                        <div className="text-center">
+                          <div className="text-xs text-muted-foreground">
+                            {language === 'english' ? 'Empty Weight' : 'காலி எடை'}
+                          </div>
+                          <div className="font-medium">
+                            {entry.empty_weight} {entry.items?.unit}
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xs text-muted-foreground">
+                            {language === 'english' ? 'Load Weight' : 'மொத்த எடை'}
+                          </div>
+                          <div className="font-medium">
+                            {entry.load_weight ? `${entry.load_weight} ${entry.items?.unit}` : '-'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+                
+                {entries.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    {language === 'english' 
+                      ? 'No entries found' 
+                      : 'பதிவுகள் எதுவும் கிடைக்கவில்லை'}
+                  </div>
+                )}
+              </div>
+
+              {/* Desktop table view */}
+              <div className="hidden md:block overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>

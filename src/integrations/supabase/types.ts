@@ -44,6 +44,10 @@ export type Database = {
       customers: {
         Row: {
           address: string | null
+          address_english: string | null
+          address_tamil: string | null
+          code: string | null
+          contact_person: string | null
           created_at: string
           credit_limit: number | null
           email: string | null
@@ -51,12 +55,18 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          name_english: string | null
+          name_tamil: string | null
           outstanding_balance: number | null
           phone: string | null
           updated_at: string
         }
         Insert: {
           address?: string | null
+          address_english?: string | null
+          address_tamil?: string | null
+          code?: string | null
+          contact_person?: string | null
           created_at?: string
           credit_limit?: number | null
           email?: string | null
@@ -64,12 +74,18 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          name_english?: string | null
+          name_tamil?: string | null
           outstanding_balance?: number | null
           phone?: string | null
           updated_at?: string
         }
         Update: {
           address?: string | null
+          address_english?: string | null
+          address_tamil?: string | null
+          code?: string | null
+          contact_person?: string | null
           created_at?: string
           credit_limit?: number | null
           email?: string | null
@@ -77,8 +93,49 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          name_english?: string | null
+          name_tamil?: string | null
           outstanding_balance?: number | null
           phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      items: {
+        Row: {
+          code: string
+          created_at: string
+          description_english: string | null
+          description_tamil: string | null
+          id: string
+          is_active: boolean
+          name_english: string
+          name_tamil: string | null
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description_english?: string | null
+          description_tamil?: string | null
+          id?: string
+          is_active?: boolean
+          name_english: string
+          name_tamil?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description_english?: string | null
+          description_tamil?: string | null
+          id?: string
+          is_active?: boolean
+          name_english?: string
+          name_tamil?: string | null
+          unit?: string
           updated_at?: string
         }
         Relationships: []
@@ -121,6 +178,78 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      outward_entries: {
+        Row: {
+          created_at: string
+          customer_id: string
+          driver_mobile: string
+          empty_weight: number
+          entry_date: string
+          id: string
+          is_completed: boolean
+          item_id: string
+          load_weight: number | null
+          load_weight_updated_at: string | null
+          load_weight_updated_by: string | null
+          lorry_no: string
+          net_weight: number | null
+          remarks: string | null
+          serial_no: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          driver_mobile: string
+          empty_weight?: number
+          entry_date?: string
+          id?: string
+          is_completed?: boolean
+          item_id: string
+          load_weight?: number | null
+          load_weight_updated_at?: string | null
+          load_weight_updated_by?: string | null
+          lorry_no: string
+          net_weight?: number | null
+          remarks?: string | null
+          serial_no?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          driver_mobile?: string
+          empty_weight?: number
+          entry_date?: string
+          id?: string
+          is_completed?: boolean
+          item_id?: string
+          load_weight?: number | null
+          load_weight_updated_at?: string | null
+          load_weight_updated_by?: string | null
+          lorry_no?: string
+          net_weight?: number | null
+          remarks?: string | null
+          serial_no?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outward_entries_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outward_entries_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       product_categories: {
         Row: {

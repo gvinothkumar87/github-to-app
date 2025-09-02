@@ -30,6 +30,8 @@ export const TransitLogbook = () => {
   useEffect(() => {
     if (activeTab === 'entries') {
       fetchEntries();
+    } else if (activeTab === 'load-weight') {
+      fetchPendingEntries();
     } else if (activeTab === 'customers') {
       fetchCustomers();
     } else if (activeTab === 'items') {
@@ -53,6 +55,32 @@ export const TransitLogbook = () => {
       toast({
         variant: 'destructive',
         title: language === 'english' ? 'Error' : 'பிழை',
+        description: error.message,
+      });
+    } else {
+      setEntries(data as any || []);
+    }
+    setLoading(false);
+  };
+
+  // Separate function to fetch only pending load weight entries
+  const fetchPendingEntries = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('outward_entries')
+      .select(`
+        *,
+        customers!inner(name_english, name_tamil, code),
+        items!inner(name_english, name_tamil, code, unit)
+      `)
+      .eq('is_completed', false)
+      .order('serial_no', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching pending entries:', error);
+      toast({
+        variant: 'destructive',
+        title: language === 'english' ? 'Error' : 'பيะই',
         description: error.message,
       });
     } else {
@@ -126,7 +154,12 @@ export const TransitLogbook = () => {
         description: language === 'english' ? 'Load weight updated successfully' : 'மொத்த எடை வெற்றிகரமாக புதுப்பிக்கப்பட்டது',
       });
 
-      fetchEntries();
+      // Refresh the appropriate list based on current tab
+      if (activeTab === 'load-weight') {
+        fetchPendingEntries();
+      } else {
+        fetchEntries();
+      }
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -347,7 +380,7 @@ export const TransitLogbook = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {entries.filter(entry => !entry.is_completed).map((entry) => (
+                      {entries.map((entry) => (
                         <TableRow key={entry.id}>
                           <TableCell className="font-medium">{entry.serial_no}</TableCell>
                           <TableCell>{new Date(entry.entry_date).toLocaleDateString()}</TableCell>

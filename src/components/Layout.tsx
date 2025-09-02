@@ -1,6 +1,7 @@
 import React from 'react';
-import { Truck, Package, Users, ClipboardList, BarChart3, Menu, Scale } from 'lucide-react';
+import { Truck, Package, Users, ClipboardList, BarChart3, Menu, Scale, LogOut } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { LanguageToggle } from './LanguageToggle';
 import { 
   Sidebar, 
@@ -21,6 +22,7 @@ interface LayoutProps {
 
 const AppSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabChange: (tab: string) => void }) => {
   const { language } = useLanguage();
+  const { signOut } = useAuth();
   const { setOpenMobile } = useSidebar();
 
   const tabs = [
@@ -55,6 +57,17 @@ const AppSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabChange
               </SidebarMenuItem>
             );
           })}
+          
+          {/* Logout button */}
+          <SidebarMenuItem className="mt-auto">
+            <SidebarMenuButton 
+              onClick={signOut}
+              className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+            >
+              <LogOut className="h-4 w-4" />
+              <span>{language === 'english' ? 'Logout' : 'வெளியேறு'}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
     </Sidebar>

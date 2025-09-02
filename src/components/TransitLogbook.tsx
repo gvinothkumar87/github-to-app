@@ -301,7 +301,7 @@ export const TransitLogbook = () => {
         entry.lorry_no,
         entry.empty_weight.toString(),
         (entry.load_weight || 0).toString(),
-        entry.load_weight ? (entry.load_weight - entry.empty_weight).toString() : '0',
+        entry.load_weight ? Math.abs(entry.load_weight - entry.empty_weight).toString() : '0',
         entry.items?.unit || ''
       ]);
 

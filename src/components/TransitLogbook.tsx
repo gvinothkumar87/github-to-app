@@ -70,6 +70,12 @@ export const TransitLogbook = () => {
 
   const fetchEntries = async () => {
     setLoading(true);
+    
+    // Calculate date 10 days ago
+    const tenDaysAgo = new Date();
+    tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+    const tenDaysAgoFormatted = tenDaysAgo.toISOString().split('T')[0];
+    
     const { data, error } = await supabase
       .from('outward_entries')
       .select(`
@@ -77,6 +83,7 @@ export const TransitLogbook = () => {
         customers!inner(name_english, name_tamil, code),
         items!inner(name_english, name_tamil, code, unit)
       `)
+      .gte('entry_date', tenDaysAgoFormatted)
       .order('serial_no', { ascending: false });
     
     if (error) {

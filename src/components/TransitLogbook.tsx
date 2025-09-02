@@ -7,12 +7,20 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Badge } from './ui/badge';
+import { Calendar } from './ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Customer, Item, OutwardEntry } from '@/types';
-import { Plus, Edit, Truck, Scale } from 'lucide-react';
+import { Plus, Edit, Truck, Scale, CalendarIcon, Download, FileText, FileSpreadsheet } from 'lucide-react';
 import { Input } from './ui/input';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 export const TransitLogbook = () => {
   const { language, getDisplayName } = useLanguage();
@@ -29,6 +37,13 @@ export const TransitLogbook = () => {
   
   // Load weight input tracking
   const [loadWeights, setLoadWeights] = useState<{[key: string]: string}>({});
+  
+  // Reports filters
+  const [startDate, setStartDate] = useState<Date>();
+  const [endDate, setEndDate] = useState<Date>();
+  const [selectedCustomer, setSelectedCustomer] = useState<string>('');
+  const [selectedItem, setSelectedItem] = useState<string>('');
+  const [reportEntries, setReportEntries] = useState<OutwardEntry[]>([]);
 
   useEffect(() => {
     if (activeTab === 'entries') {
@@ -39,8 +54,19 @@ export const TransitLogbook = () => {
       fetchCustomers();
     } else if (activeTab === 'items') {
       fetchItems();
+    } else if (activeTab === 'reports') {
+      fetchCustomers();
+      fetchItems();
+      fetchReportData();
     }
   }, [activeTab]);
+
+  // Trigger report data refresh when filters change
+  useEffect(() => {
+    if (activeTab === 'reports') {
+      fetchReportData();
+    }
+  }, [startDate, endDate, selectedCustomer, selectedItem, activeTab]);
 
   const fetchEntries = async () => {
     setLoading(true);
@@ -103,6 +129,50 @@ export const TransitLogbook = () => {
       console.error('Error fetching customers:', error);
     } else {
       setCustomers(data || []);
+    }
+    setLoading(false);
+  };
+
+  const fetchReportData = async () => {
+    setLoading(true);
+    let query = supabase
+      .from('outward_entries')
+      .select(`
+        *,
+        customers!inner(name_english, name_tamil, code),
+        items!inner(name_english, name_tamil, code, unit)
+      `)
+      .eq('is_completed', true);
+
+    // Apply date filters
+    if (startDate) {
+      query = query.gte('entry_date', format(startDate, 'yyyy-MM-dd'));
+    }
+    if (endDate) {
+      query = query.lte('entry_date', format(endDate, 'yyyy-MM-dd'));
+    }
+
+    // Apply customer filter
+    if (selectedCustomer) {
+      query = query.eq('customer_id', selectedCustomer);
+    }
+
+    // Apply item filter
+    if (selectedItem) {
+      query = query.eq('item_id', selectedItem);
+    }
+
+    const { data, error } = await query.order('entry_date', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching report data:', error);
+      toast({
+        variant: 'destructive',
+        title: language === 'english' ? 'Error' : 'பிழை',
+        description: error.message,
+      });
+    } else {
+      setReportEntries(data as any || []);
     }
     setLoading(false);
   };
@@ -176,6 +246,80 @@ export const TransitLogbook = () => {
         description: error.message,
       });
     }
+  };
+
+  const downloadExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(
+      reportEntries.map(entry => ({
+        'Serial No': entry.serial_no,
+        'Date': format(new Date(entry.entry_date), 'dd/MM/yyyy'),
+        'Customer': entry.customers ? getDisplayName(entry.customers) : '-',
+        'Item': entry.items ? getDisplayName(entry.items) : '-',
+        'Lorry No': entry.lorry_no,
+        'Driver Mobile': entry.driver_mobile,
+        'Empty Weight': entry.empty_weight,
+        'Load Weight': entry.load_weight || 0,
+        'Net Weight': entry.load_weight ? (entry.load_weight - entry.empty_weight) : 0,
+        'Unit': entry.items?.unit || '',
+        'Remarks': entry.remarks || ''
+      }))
+    );
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Transit Report');
+    
+    const filename = `transit-report-${format(new Date(), 'yyyy-MM-dd')}.xlsx`;
+    XLSX.writeFile(workbook, filename);
+
+    toast({
+      title: language === 'english' ? 'Success' : 'வெற்றி',
+      description: language === 'english' ? 'Excel file downloaded successfully' : 'Excel கோப்பு வெற்றிகரமாக பதிவிறக்கப்பட்டது',
+    });
+  };
+
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    
+    // Title
+    doc.setFontSize(16);
+    doc.text('Transit Logbook Report', 14, 20);
+    
+    // Date range
+    if (startDate || endDate) {
+      doc.setFontSize(10);
+      const dateRange = `Date Range: ${startDate ? format(startDate, 'dd/MM/yyyy') : 'All'} - ${endDate ? format(endDate, 'dd/MM/yyyy') : 'All'}`;
+      doc.text(dateRange, 14, 30);
+    }
+
+    // Prepare table data
+    const tableData = reportEntries.map(entry => [
+      entry.serial_no,
+      format(new Date(entry.entry_date), 'dd/MM/yyyy'),
+      entry.customers ? getDisplayName(entry.customers) : '-',
+      entry.items ? getDisplayName(entry.items) : '-',
+      entry.lorry_no,
+      entry.empty_weight,
+      entry.load_weight || 0,
+      entry.load_weight ? (entry.load_weight - entry.empty_weight) : 0,
+      entry.items?.unit || ''
+    ]);
+
+    // Add table
+    (doc as any).autoTable({
+      head: [['S.No', 'Date', 'Customer', 'Item', 'Lorry', 'Empty Wt', 'Load Wt', 'Net Wt', 'Unit']],
+      body: tableData,
+      startY: startDate || endDate ? 40 : 30,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [66, 139, 202] },
+    });
+
+    const filename = `transit-report-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+    doc.save(filename);
+
+    toast({
+      title: language === 'english' ? 'Success' : 'வெற்றி',
+      description: language === 'english' ? 'PDF file downloaded successfully' : 'PDF கோப்பு வெற்றிகரமாக பதிவிறக்கப்பட்டது',
+    });
   };
 
   const renderContent = () => {
@@ -542,20 +686,328 @@ export const TransitLogbook = () => {
 
         {activeTab === 'reports' && (
           <div className="grid gap-6">
+            {/* Filters Section */}
             <Card className="shadow-card bg-gradient-card">
               <CardHeader>
-                <CardTitle>
-                  {language === 'english' ? 'Reports & Analytics' : 'அறிக்கைகள் மற்றும் பகுப்பாய்வு'}
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  {language === 'english' ? 'Report Filters' : 'அறிக்கை வடிகட்டிகள்'}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  {language === 'english' 
-                    ? 'Reporting features will be implemented in the next version.' 
-                    : 'அறிக்கை அம்சங்கள் அடுத்த பதிப்பில் செயல்படுத்தப்படும்.'}
-                </p>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Start Date */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      {language === 'english' ? 'Start Date' : 'தொடக்க தேதி'}
+                    </label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !startDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {startDate ? format(startDate, "dd/MM/yyyy") : 
+                            (language === 'english' ? 'Pick start date' : 'தொடக்க தேதி தேர்ந்தெடுக்கவும்')}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={startDate}
+                          onSelect={setStartDate}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  {/* End Date */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      {language === 'english' ? 'End Date' : 'முடிவு தேதி'}
+                    </label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !endDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {endDate ? format(endDate, "dd/MM/yyyy") : 
+                            (language === 'english' ? 'Pick end date' : 'முடிவு தேதி தேர்ந்தெடுக்கவும்')}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={endDate}
+                          onSelect={setEndDate}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  {/* Customer Filter */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      {language === 'english' ? 'Customer' : 'வாடிக்கையாளர்'}
+                    </label>
+                    <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={
+                          language === 'english' ? 'Select customer' : 'வாடிக்கையாளரைத் தேர்ந்தெடுக்கவும்'
+                        } />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">
+                          {language === 'english' ? 'All Customers' : 'அனைத்து வாடிக்கையாளர்கள்'}
+                        </SelectItem>
+                        {customers.map((customer) => (
+                          <SelectItem key={customer.id} value={customer.id}>
+                            {getDisplayName(customer)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Item Filter */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      {language === 'english' ? 'Item' : 'பொருள்'}
+                    </label>
+                    <Select value={selectedItem} onValueChange={setSelectedItem}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={
+                          language === 'english' ? 'Select item' : 'பொருளைத் தேர்ந்தெடுக்கவும்'
+                        } />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">
+                          {language === 'english' ? 'All Items' : 'அனைத்து பொருட்கள்'}
+                        </SelectItem>
+                        {items.map((item) => (
+                          <SelectItem key={item.id} value={item.id}>
+                            {getDisplayName(item)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <Button onClick={fetchReportData} className="bg-gradient-primary">
+                    <FileText className="h-4 w-4 mr-2" />
+                    {language === 'english' ? 'Generate Report' : 'அறிக்கை உருவாக்கவும்'}
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      setStartDate(undefined);
+                      setEndDate(undefined);
+                      setSelectedCustomer('');
+                      setSelectedItem('');
+                      setReportEntries([]);
+                    }}
+                    variant="outline"
+                  >
+                    {language === 'english' ? 'Clear Filters' : 'வடிகட்டிகளை அழிக்கவும்'}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
+
+            {/* Results and Download Section */}
+            {reportEntries.length > 0 && (
+              <Card className="shadow-card bg-gradient-card">
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <CardTitle>
+                      {language === 'english' ? 'Transit Ledger Report' : 'போக்குவரத்து லெட்ஜர் அறிக்கை'}
+                    </CardTitle>
+                    <div className="flex gap-2">
+                      <Button onClick={downloadExcel} variant="outline" size="sm">
+                        <FileSpreadsheet className="h-4 w-4 mr-2" />
+                        {language === 'english' ? 'Excel' : 'Excel'}
+                      </Button>
+                      <Button onClick={downloadPDF} variant="outline" size="sm">
+                        <Download className="h-4 w-4 mr-2" />
+                        {language === 'english' ? 'PDF' : 'PDF'}
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {/* Mobile optimized view */}
+                  <div className="block md:hidden space-y-4">
+                    {reportEntries.map((entry) => (
+                      <Card key={entry.id} className="p-4 space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <div className="font-medium text-sm">#{entry.serial_no}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {format(new Date(entry.entry_date), 'dd/MM/yyyy')}
+                            </div>
+                          </div>
+                          <Badge variant="default" className="text-xs">
+                            {language === 'english' ? 'Completed' : 'முடிந்தது'}
+                          </Badge>
+                        </div>
+                        
+                        <div className="space-y-2 text-sm">
+                          <div>
+                            <span className="font-medium">
+                              {language === 'english' ? 'Customer: ' : 'வாடிக்கையாளர்: '}
+                            </span>
+                            {entry.customers ? getDisplayName(entry.customers) : '-'}
+                          </div>
+                          <div>
+                            <span className="font-medium">
+                              {language === 'english' ? 'Item: ' : 'பொருள்: '}
+                            </span>
+                            {entry.items ? getDisplayName(entry.items) : '-'}
+                          </div>
+                          <div>
+                            <span className="font-medium">
+                              {language === 'english' ? 'Lorry: ' : 'லாரி: '}
+                            </span>
+                            {entry.lorry_no}
+                          </div>
+                          
+                          <div className="grid grid-cols-3 gap-2 pt-2 border-t">
+                            <div className="text-center">
+                              <div className="text-xs text-muted-foreground">
+                                {language === 'english' ? 'Empty' : 'காலி'}
+                              </div>
+                              <div className="font-medium">
+                                {entry.empty_weight} {entry.items?.unit}
+                              </div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-xs text-muted-foreground">
+                                {language === 'english' ? 'Load' : 'மொத்த'}
+                              </div>
+                              <div className="font-medium">
+                                {entry.load_weight || 0} {entry.items?.unit}
+                              </div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-xs text-muted-foreground">
+                                {language === 'english' ? 'Net' : 'நிகர'}
+                              </div>
+                              <div className="font-medium text-primary">
+                                {entry.load_weight ? (entry.load_weight - entry.empty_weight) : 0} {entry.items?.unit}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+
+                  {/* Desktop table view */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>{language === 'english' ? 'Serial No' : 'வரிசை எண்'}</TableHead>
+                          <TableHead>{language === 'english' ? 'Date' : 'தேதி'}</TableHead>
+                          <TableHead>{language === 'english' ? 'Customer' : 'வாடிக்கையாளர்'}</TableHead>
+                          <TableHead>{language === 'english' ? 'Item' : 'பொருள்'}</TableHead>
+                          <TableHead>{language === 'english' ? 'Lorry No' : 'லாரி எண்'}</TableHead>
+                          <TableHead>{language === 'english' ? 'Driver Mobile' : 'ஓட்டுனர் மொபைல்'}</TableHead>
+                          <TableHead>{language === 'english' ? 'Empty Weight' : 'காலி எடை'}</TableHead>
+                          <TableHead>{language === 'english' ? 'Load Weight' : 'மொத்த எடை'}</TableHead>
+                          <TableHead>{language === 'english' ? 'Net Weight' : 'நிகர எடை'}</TableHead>
+                          <TableHead>{language === 'english' ? 'Unit' : 'அலகு'}</TableHead>
+                          <TableHead>{language === 'english' ? 'Remarks' : 'குறிப்புகள்'}</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {reportEntries.map((entry) => (
+                          <TableRow key={entry.id}>
+                            <TableCell className="font-medium">{entry.serial_no}</TableCell>
+                            <TableCell>{format(new Date(entry.entry_date), 'dd/MM/yyyy')}</TableCell>
+                            <TableCell>{entry.customers ? getDisplayName(entry.customers) : '-'}</TableCell>
+                            <TableCell>{entry.items ? getDisplayName(entry.items) : '-'}</TableCell>
+                            <TableCell className="font-mono">{entry.lorry_no}</TableCell>
+                            <TableCell className="font-mono">{entry.driver_mobile}</TableCell>
+                            <TableCell>{entry.empty_weight} {entry.items?.unit}</TableCell>
+                            <TableCell>{entry.load_weight || 0} {entry.items?.unit}</TableCell>
+                            <TableCell className="font-medium text-primary">
+                              {entry.load_weight ? (entry.load_weight - entry.empty_weight) : 0} {entry.items?.unit}
+                            </TableCell>
+                            <TableCell>{entry.items?.unit}</TableCell>
+                            <TableCell>{entry.remarks || '-'}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Summary */}
+                  <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                      <div>
+                        <div className="text-sm text-muted-foreground">
+                          {language === 'english' ? 'Total Entries' : 'மொத்த பதிவுகள்'}
+                        </div>
+                        <div className="text-2xl font-bold">{reportEntries.length}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-muted-foreground">
+                          {language === 'english' ? 'Total Empty Weight' : 'மொத்த காலி எடை'}
+                        </div>
+                        <div className="text-2xl font-bold">
+                          {reportEntries.reduce((sum, entry) => sum + entry.empty_weight, 0).toFixed(2)}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-muted-foreground">
+                          {language === 'english' ? 'Total Load Weight' : 'மொத்த சுமை எடை'}
+                        </div>
+                        <div className="text-2xl font-bold">
+                          {reportEntries.reduce((sum, entry) => sum + (entry.load_weight || 0), 0).toFixed(2)}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-muted-foreground">
+                          {language === 'english' ? 'Total Net Weight' : 'மொத்த நிகர எடை'}
+                        </div>
+                        <div className="text-2xl font-bold text-primary">
+                          {reportEntries.reduce((sum, entry) => 
+                            sum + (entry.load_weight ? (entry.load_weight - entry.empty_weight) : 0), 0
+                          ).toFixed(2)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {reportEntries.length === 0 && startDate && (
+              <Card className="shadow-card bg-gradient-card">
+                <CardContent className="text-center py-8">
+                  <div className="text-muted-foreground">
+                    {language === 'english' 
+                      ? 'No completed entries found for the selected filters.' 
+                      : 'தேர்ந்தெடுக்கப்பட்ட வடிகட்டிகளுக்கு முடிக்கப்பட்ட பதிவுகள் எதுவும் கிடைக்கவில்லை.'}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
       </div>

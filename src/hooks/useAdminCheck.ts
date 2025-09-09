@@ -6,13 +6,20 @@ export const useAdminCheck = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   
   useEffect(() => {
+    console.log('useAdminCheck: Current user:', user);
+    console.log('useAdminCheck: User ID:', user?.id);
+    console.log('useAdminCheck: Admin UUID:', '6fad72cb-61e3-4507-9ade-11d1c3a6ffa4');
+    
     if (user) {
-      // Check if the current user is the admin user (gvinothkumar87)
-      setIsAdmin(user.id === '6fad72cb-61e3-4507-9ade-11d1c3a6ffa4');
+      const isAdminUser = user.id === '6fad72cb-61e3-4507-9ade-11d1c3a6ffa4';
+      console.log('useAdminCheck: Is admin?', isAdminUser);
+      setIsAdmin(isAdminUser);
     } else {
+      console.log('useAdminCheck: No user, setting isAdmin to false');
       setIsAdmin(false);
     }
   }, [user]);
   
+  console.log('useAdminCheck: Returning isAdmin:', isAdmin);
   return isAdmin;
 };

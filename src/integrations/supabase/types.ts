@@ -133,6 +133,185 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_ledger: {
+        Row: {
+          balance: number
+          created_at: string
+          credit_amount: number
+          customer_id: string
+          debit_amount: number
+          description: string | null
+          id: string
+          reference_id: string
+          transaction_date: string
+          transaction_type: string
+          updated_at: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          credit_amount?: number
+          customer_id: string
+          debit_amount?: number
+          description?: string | null
+          id?: string
+          reference_id: string
+          transaction_date?: string
+          transaction_type: string
+          updated_at?: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          credit_amount?: number
+          customer_id?: string
+          debit_amount?: number
+          description?: string | null
+          id?: string
+          reference_id?: string
+          transaction_date?: string
+          transaction_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_ledger_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_ledger_mapping: {
+        Row: {
+          created_at: string
+          created_by: string
+          customer_id: string
+          id: string
+          ledger_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          customer_id: string
+          id?: string
+          ledger_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          customer_id?: string
+          id?: string
+          ledger_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_ledger_mapping_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_ledger_mapping_ledger_id_fkey"
+            columns: ["ledger_id"]
+            isOneToOne: false
+            referencedRelation: "ledgers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customers: {
+        Row: {
+          address_english: string | null
+          address_tamil: string | null
+          code: string
+          contact_person: string | null
+          created_at: string
+          email: string | null
+          gstin: string | null
+          id: string
+          is_active: boolean
+          name_english: string
+          name_tamil: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address_english?: string | null
+          address_tamil?: string | null
+          code: string
+          contact_person?: string | null
+          created_at?: string
+          email?: string | null
+          gstin?: string | null
+          id?: string
+          is_active?: boolean
+          name_english: string
+          name_tamil?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address_english?: string | null
+          address_tamil?: string | null
+          code?: string
+          contact_person?: string | null
+          created_at?: string
+          email?: string | null
+          gstin?: string | null
+          id?: string
+          is_active?: boolean
+          name_english?: string
+          name_tamil?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      items: {
+        Row: {
+          code: string
+          created_at: string
+          description_english: string | null
+          description_tamil: string | null
+          id: string
+          is_active: boolean
+          name_english: string
+          name_tamil: string | null
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description_english?: string | null
+          description_tamil?: string | null
+          id?: string
+          is_active?: boolean
+          name_english: string
+          name_tamil?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description_english?: string | null
+          description_tamil?: string | null
+          id?: string
+          is_active?: boolean
+          name_english?: string
+          name_tamil?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ledger_groups: {
         Row: {
           created_at: string
@@ -207,6 +386,78 @@ export type Database = {
           },
         ]
       }
+      outward_entries: {
+        Row: {
+          created_at: string
+          customer_id: string
+          driver_mobile: string
+          empty_weight: number
+          entry_date: string
+          id: string
+          is_completed: boolean
+          item_id: string
+          load_weight: number | null
+          load_weight_updated_at: string | null
+          load_weight_updated_by: string | null
+          lorry_no: string
+          net_weight: number | null
+          remarks: string | null
+          serial_no: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          driver_mobile: string
+          empty_weight: number
+          entry_date?: string
+          id?: string
+          is_completed?: boolean
+          item_id: string
+          load_weight?: number | null
+          load_weight_updated_at?: string | null
+          load_weight_updated_by?: string | null
+          lorry_no: string
+          net_weight?: number | null
+          remarks?: string | null
+          serial_no?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          driver_mobile?: string
+          empty_weight?: number
+          entry_date?: string
+          id?: string
+          is_completed?: boolean
+          item_id?: string
+          load_weight?: number | null
+          load_weight_updated_at?: string | null
+          load_weight_updated_by?: string | null
+          lorry_no?: string
+          net_weight?: number | null
+          remarks?: string | null
+          serial_no?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outward_entries_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outward_entries_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       performance_metrics: {
         Row: {
           id: string
@@ -272,6 +523,117 @@ export type Database = {
           username_tamil?: string | null
         }
         Relationships: []
+      }
+      receipts: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          id: string
+          payment_method: string
+          receipt_date: string
+          receipt_no: string
+          remarks: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          id?: string
+          payment_method?: string
+          receipt_date?: string
+          receipt_no: string
+          remarks?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          id?: string
+          payment_method?: string
+          receipt_date?: string
+          receipt_no?: string
+          remarks?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receipts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          id: string
+          item_id: string
+          outward_entry_id: string
+          quantity: number
+          rate: number
+          sale_date: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          id?: string
+          item_id: string
+          outward_entry_id: string
+          quantity: number
+          rate: number
+          sale_date?: string
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          id?: string
+          item_id?: string
+          outward_entry_id?: string
+          quantity?: number
+          rate?: number
+          sale_date?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_outward_entry_id_fkey"
+            columns: ["outward_entry_id"]
+            isOneToOne: false
+            referencedRelation: "outward_entries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       transaction_cache: {
         Row: {
@@ -552,6 +914,10 @@ export type Database = {
       fix_running_balances: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      generate_receipt_no: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       get_cached_balance: {
         Args: { p_balance_type: string; p_date?: string; p_user_id: string }

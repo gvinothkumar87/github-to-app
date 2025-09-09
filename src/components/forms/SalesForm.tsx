@@ -27,27 +27,40 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
   }, []);
 
   const fetchCompletedEntries = async () => {
-    const { data, error } = await supabase
-      .from('outward_entries')
-      .select(`
-        *,
-        customers (id, name_english, name_tamil, code, is_active, created_at, updated_at),
-        items (id, name_english, name_tamil, code, unit, is_active, created_at, updated_at)
-      `)
-      .eq('is_completed', true)
-      .not('id', 'in', `(SELECT outward_entry_id FROM sales)`)
-      .order('created_at', { ascending: false });
+    try {
+      // First get all completed outward entries
+      const { data: entries, error: entriesError } = await supabase
+        .from('outward_entries')
+        .select(`
+          *,
+          customers (id, name_english, name_tamil, code, is_active, created_at, updated_at),
+          items (id, name_english, name_tamil, code, unit, is_active, created_at, updated_at)
+        `)
+        .eq('is_completed', true)
+        .order('created_at', { ascending: false });
 
-    if (error) {
+      if (entriesError) throw entriesError;
+
+      // Get all sales to filter out entries that have already been converted to sales
+      const { data: sales, error: salesError } = await supabase
+        .from('sales')
+        .select('outward_entry_id');
+
+      if (salesError) throw salesError;
+
+      // Filter out entries that have already been converted to sales
+      const soldEntryIds = new Set(sales?.map(s => s.outward_entry_id) || []);
+      const availableEntries = (entries || []).filter(entry => !soldEntryIds.has(entry.id));
+
+      setOutwardEntries(availableEntries as OutwardEntry[]);
+    } catch (error: any) {
       toast({
         title: language === 'english' ? 'Error' : 'பிழை',
         description: language === 'english' ? 'Failed to fetch entries' : 'என்ட்ரிகளை பெறுவதில் தோல்வி',
         variant: 'destructive',
       });
-      return;
+      console.error('Error fetching completed entries:', error);
     }
-
-    setOutwardEntries((data || []) as OutwardEntry[]);
   };
 
   const calculateTotalAmount = () => {

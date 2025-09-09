@@ -344,7 +344,7 @@ export const AmountReceivedForm = ({ onSuccess, onCancel }: AmountReceivedFormPr
               <SelectContent>
                 {ledgers.map((ledger) => (
                   <SelectItem key={ledger.id} value={ledger.id}>
-                    {getDisplayName(ledger)}
+                    {language === 'english' ? ledger.name : (ledger.name_tamil || ledger.name)}
                   </SelectItem>
                 ))}
               </SelectContent>

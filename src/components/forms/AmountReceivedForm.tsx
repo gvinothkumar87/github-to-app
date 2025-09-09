@@ -25,6 +25,8 @@ export const AmountReceivedForm = ({ onSuccess, onCancel }: AmountReceivedFormPr
   const [loading, setLoading] = useState(false);
   const [ledgers, setLedgers] = useState<any[]>([]);
   const [selectedLedger, setSelectedLedger] = useState('');
+  const [customerBalance, setCustomerBalance] = useState<number>(0);
+  const [balanceLoading, setBalanceLoading] = useState(false);
   const { toast } = useToast();
   const { language, getDisplayName } = useLanguage();
 
@@ -68,6 +70,46 @@ export const AmountReceivedForm = ({ onSuccess, onCancel }: AmountReceivedFormPr
     }
 
     setLedgers(data || []);
+  };
+
+  const fetchCustomerBalance = async (customerId: string) => {
+    if (!customerId) {
+      setCustomerBalance(0);
+      return;
+    }
+
+    setBalanceLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('customer_ledger')
+        .select('debit_amount, credit_amount')
+        .eq('customer_id', customerId)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching customer balance:', error);
+        setCustomerBalance(0);
+        return;
+      }
+
+      // Calculate running balance
+      let balance = 0;
+      data?.forEach(entry => {
+        balance += entry.debit_amount - entry.credit_amount;
+      });
+
+      setCustomerBalance(balance);
+    } catch (error) {
+      console.error('Error calculating customer balance:', error);
+      setCustomerBalance(0);
+    } finally {
+      setBalanceLoading(false);
+    }
+  };
+
+  const handleCustomerChange = (customerId: string) => {
+    setSelectedCustomerId(customerId);
+    fetchCustomerBalance(customerId);
   };
 
   const generateReceiptNo = async () => {
@@ -172,6 +214,7 @@ export const AmountReceivedForm = ({ onSuccess, onCancel }: AmountReceivedFormPr
       setReceiptDate(new Date().toISOString().split('T')[0]);
       setRemarks('');
       setSelectedLedger('');
+      setCustomerBalance(0);
       
       onSuccess();
       
@@ -203,7 +246,7 @@ export const AmountReceivedForm = ({ onSuccess, onCancel }: AmountReceivedFormPr
             <Label htmlFor="customer">
               {language === 'english' ? 'Customer' : 'வாடிக்கையாளர்'}
             </Label>
-            <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
+            <Select value={selectedCustomerId} onValueChange={handleCustomerChange}>
               <SelectTrigger>
                 <SelectValue placeholder={language === 'english' ? 'Choose customer...' : 'வாடிக்கையாளரை தேர்ந்தெடுக்கவும்...'} />
               </SelectTrigger>
@@ -215,6 +258,25 @@ export const AmountReceivedForm = ({ onSuccess, onCancel }: AmountReceivedFormPr
                 ))}
               </SelectContent>
             </Select>
+            
+            {selectedCustomerId && (
+              <div className="mt-2 p-3 bg-muted rounded-lg">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">
+                    {language === 'english' ? 'Current Balance:' : 'தற்போதைய இருப்பு:'}
+                  </span>
+                  {balanceLoading ? (
+                    <span className="text-sm">
+                      {language === 'english' ? 'Loading...' : 'ஏற்றுகிறது...'}
+                    </span>
+                  ) : (
+                    <span className={`text-sm font-bold ${customerBalance > 0 ? 'text-red-600' : customerBalance < 0 ? 'text-green-600' : 'text-gray-600'}`}>
+                      ₹{Math.abs(customerBalance).toFixed(2)} {customerBalance > 0 ? (language === 'english' ? '(Outstanding)' : '(நிலுவை)') : customerBalance < 0 ? (language === 'english' ? '(Advance)' : '(முன்பணம்)') : ''}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           <div>

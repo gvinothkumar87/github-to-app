@@ -2,6 +2,7 @@ import React from 'react';
 import { Truck, Package, Users, ClipboardList, BarChart3, Menu, Scale, LogOut, ShoppingCart, Receipt, Book } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { LanguageToggle } from './LanguageToggle';
 import { 
   Sidebar, 
@@ -24,17 +25,21 @@ const AppSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabChange
   const { language } = useLanguage();
   const { signOut } = useAuth();
   const { setOpenMobile } = useSidebar();
+  const isAdmin = useAdminCheck();
 
-  const tabs = [
+  const allTabs = [
     { id: 'entries', label: language === 'english' ? 'Outward Entries' : 'வெளியீட்டு பதிவுகள்', icon: Truck },
     { id: 'load-weight', label: language === 'english' ? 'Load Weight' : 'மொத்த எடை', icon: Scale },
-    { id: 'sales', label: language === 'english' ? 'Sales' : 'விற்பனை', icon: ShoppingCart },
-    { id: 'amount-received', label: language === 'english' ? 'Amount Received' : 'பெற்ற தொகை', icon: Receipt },
-    { id: 'customer-ledger', label: language === 'english' ? 'Customer Ledger' : 'வாடிக்கையாளர் லெட்ஜர்', icon: Book },
+    { id: 'sales', label: language === 'english' ? 'Sales' : 'விற்பனை', icon: ShoppingCart, adminOnly: true },
+    { id: 'amount-received', label: language === 'english' ? 'Amount Received' : 'பெற்ற தொகை', icon: Receipt, adminOnly: true },
+    { id: 'customer-ledger', label: language === 'english' ? 'Customer Ledger' : 'வாடிக்கையாளர் லெட்ஜர்', icon: Book, adminOnly: true },
     { id: 'customers', label: language === 'english' ? 'Customers' : 'வாடிக்கையாளர்கள்', icon: Users },
     { id: 'items', label: language === 'english' ? 'Items' : 'பொருட்கள்', icon: Package },
     { id: 'reports', label: language === 'english' ? 'Reports' : 'அறிக்கைகள்', icon: BarChart3 },
   ];
+
+  // Filter tabs based on admin status
+  const tabs = allTabs.filter(tab => !tab.adminOnly || isAdmin);
 
   const handleTabClick = (tabId: string) => {
     onTabChange(tabId);
@@ -79,6 +84,7 @@ const AppSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabChange
 
 export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange }) => {
   const { language } = useLanguage();
+  const isAdmin = useAdminCheck();
 
   return (
     <SidebarProvider>
@@ -111,13 +117,13 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
                 {[
                   { id: 'entries', label: language === 'english' ? 'Outward Entries' : 'வெளியீட்டு பதிவுகள்', icon: Truck },
                   { id: 'load-weight', label: language === 'english' ? 'Load Weight' : 'மொத்த எடை', icon: Scale },
-                  { id: 'sales', label: language === 'english' ? 'Sales' : 'விற்பனை', icon: ShoppingCart },
-                  { id: 'amount-received', label: language === 'english' ? 'Amount Received' : 'பெற்ற தொகை', icon: Receipt },
-                  { id: 'customer-ledger', label: language === 'english' ? 'Customer Ledger' : 'வாடிக்கையாளர் லெட்ஜர்', icon: Book },
+                  { id: 'sales', label: language === 'english' ? 'Sales' : 'விற்பனை', icon: ShoppingCart, adminOnly: true },
+                  { id: 'amount-received', label: language === 'english' ? 'Amount Received' : 'பெற்ற தொகை', icon: Receipt, adminOnly: true },
+                  { id: 'customer-ledger', label: language === 'english' ? 'Customer Ledger' : 'வாடிக்கையாளர் லெட்ஜர்', icon: Book, adminOnly: true },
                   { id: 'customers', label: language === 'english' ? 'Customers' : 'வாடிக்கையாளர்கள்', icon: Users },
                   { id: 'items', label: language === 'english' ? 'Items' : 'பொருட்கள்', icon: Package },
                   { id: 'reports', label: language === 'english' ? 'Reports' : 'அறிக்கைகள்', icon: BarChart3 },
-                ].map((tab) => {
+                ].filter(tab => !tab.adminOnly || isAdmin).map((tab) => {
                   const Icon = tab.icon;
                   return (
                     <button

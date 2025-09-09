@@ -3,6 +3,9 @@ import { Layout } from './Layout';
 import { CustomerForm } from './forms/CustomerForm';
 import { ItemForm } from './forms/ItemForm';
 import { OutwardEntryForm } from './forms/OutwardEntryForm';
+import { SalesForm } from './forms/SalesForm';
+import { AmountReceivedForm } from './forms/AmountReceivedForm';
+import { CustomerLedgerView } from './CustomerLedgerView';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
@@ -58,6 +61,8 @@ export const TransitLogbook = () => {
       fetchCustomers();
       fetchItems();
       fetchReportData();
+    } else if (activeTab === 'sales' || activeTab === 'amount-received') {
+      // These tabs handle their own data fetching
     }
   }, [activeTab]);
 
@@ -365,6 +370,20 @@ export const TransitLogbook = () => {
             onCancel={() => setShowForm(false)}
           />
         );
+      } else if (activeTab === 'sales') {
+        return (
+          <SalesForm
+            onSuccess={handleFormSuccess}
+            onCancel={() => setShowForm(false)}
+          />
+        );
+      } else if (activeTab === 'amount-received') {
+        return (
+          <AmountReceivedForm
+            onSuccess={handleFormSuccess}
+            onCancel={() => setShowForm(false)}
+          />
+        );
       }
     }
 
@@ -377,9 +396,12 @@ export const TransitLogbook = () => {
             {activeTab === 'items' && (language === 'english' ? 'Items' : 'பொருட்கள்')}
             {activeTab === 'load-weight' && (language === 'english' ? 'Load Weight Update' : 'மொத்த எடை புதுப்பிப்பு')}
             {activeTab === 'reports' && (language === 'english' ? 'Reports' : 'அறிக்கைகள்')}
+            {activeTab === 'sales' && (language === 'english' ? 'Sales' : 'விற்பனை')}
+            {activeTab === 'amount-received' && (language === 'english' ? 'Amount Received' : 'பெற்ற தொகை')}
+            {activeTab === 'customer-ledger' && (language === 'english' ? 'Customer Ledger' : 'வாடிக்கையாளர் லெட்ஜர்')}
           </h2>
           
-          {(activeTab === 'entries' || activeTab === 'customers' || activeTab === 'items') && (
+          {(activeTab === 'entries' || activeTab === 'customers' || activeTab === 'items' || activeTab === 'sales' || activeTab === 'amount-received') && (
             <Button onClick={() => setShowForm(true)} className="bg-gradient-primary text-primary-foreground shadow-card">
               <Plus className="h-4 w-4 mr-2" />
               {language === 'english' ? 'Add New' : 'புதியது சேர்க்கவும்'}
@@ -1097,6 +1119,35 @@ export const TransitLogbook = () => {
               </Card>
             )}
           </div>
+        )}
+
+        {/* Sales tab content */}
+        {activeTab === 'sales' && !showForm && (
+          <div className="text-center py-12">
+            <div className="text-muted-foreground mb-4">
+              {language === 'english' 
+                ? 'Click "Add New" to create a sale from completed outward entries'
+                : 'முடிக்கப்பட்ட வெளிச்செல்லும் என்ட்ரிகளிலிருந்து விற்பனை உருவாக்க "புதியது சேர்க்கவும்" என்பதை கிளிக் செய்யவும்'
+              }
+            </div>
+          </div>
+        )}
+
+        {/* Amount Received tab content */}
+        {activeTab === 'amount-received' && !showForm && (
+          <div className="text-center py-12">
+            <div className="text-muted-foreground mb-4">
+              {language === 'english' 
+                ? 'Click "Add New" to record payment received from customers'
+                : 'வாடிக்கையாளர்களிடமிருந்து பெறப்பட்ட பணத்தை பதிவு செய்ய "புதியது சேர்க்கவும்" என்பதை கிளிக் செய்யவும்'
+              }
+            </div>
+          </div>
+        )}
+
+        {/* Customer Ledger tab content */}
+        {activeTab === 'customer-ledger' && (
+          <CustomerLedgerView />
         )}
       </div>
     );

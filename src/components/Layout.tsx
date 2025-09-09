@@ -1,5 +1,5 @@
 import React from 'react';
-import { Truck, Package, Users, ClipboardList, BarChart3, Menu, Scale, LogOut } from 'lucide-react';
+import { Truck, Package, Users, ClipboardList, BarChart3, Menu, Scale, LogOut, ShoppingCart, Receipt, Book } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { LanguageToggle } from './LanguageToggle';
@@ -28,6 +28,9 @@ const AppSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabChange
   const tabs = [
     { id: 'entries', label: language === 'english' ? 'Outward Entries' : 'வெளியீட்டு பதிவுகள்', icon: Truck },
     { id: 'load-weight', label: language === 'english' ? 'Load Weight' : 'மொத்த எடை', icon: Scale },
+    { id: 'sales', label: language === 'english' ? 'Sales' : 'விற்பனை', icon: ShoppingCart },
+    { id: 'amount-received', label: language === 'english' ? 'Amount Received' : 'பெற்ற தொகை', icon: Receipt },
+    { id: 'customer-ledger', label: language === 'english' ? 'Customer Ledger' : 'வாடிக்கையாளர் லெட்ஜர்', icon: Book },
     { id: 'customers', label: language === 'english' ? 'Customers' : 'வாடிக்கையாளர்கள்', icon: Users },
     { id: 'items', label: language === 'english' ? 'Items' : 'பொருட்கள்', icon: Package },
     { id: 'reports', label: language === 'english' ? 'Reports' : 'அறிக்கைகள்', icon: BarChart3 },
@@ -108,6 +111,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
                 {[
                   { id: 'entries', label: language === 'english' ? 'Outward Entries' : 'வெளியீட்டு பதிவுகள்', icon: Truck },
                   { id: 'load-weight', label: language === 'english' ? 'Load Weight' : 'மொத்த எடை', icon: Scale },
+                  { id: 'sales', label: language === 'english' ? 'Sales' : 'விற்பனை', icon: ShoppingCart },
+                  { id: 'amount-received', label: language === 'english' ? 'Amount Received' : 'பெற்ற தொகை', icon: Receipt },
+                  { id: 'customer-ledger', label: language === 'english' ? 'Customer Ledger' : 'வாடிக்கையாளர் லெட்ஜர்', icon: Book },
                   { id: 'customers', label: language === 'english' ? 'Customers' : 'வாடிக்கையாளர்கள்', icon: Users },
                   { id: 'items', label: language === 'english' ? 'Items' : 'பொருட்கள்', icon: Package },
                   { id: 'reports', label: language === 'english' ? 'Reports' : 'அறிக்கைகள்', icon: BarChart3 },

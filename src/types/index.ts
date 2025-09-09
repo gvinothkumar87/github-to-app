@@ -48,6 +48,52 @@ export interface OutwardEntry {
   items?: Item;
 }
 
+export interface Sale {
+  id: string;
+  outward_entry_id: string;
+  customer_id: string;
+  item_id: string;
+  quantity: number;
+  rate: number;
+  total_amount: number;
+  sale_date: string;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+  customers?: Customer;
+  items?: Item;
+  outward_entries?: OutwardEntry;
+}
+
+export interface Receipt {
+  id: string;
+  receipt_no: string;
+  customer_id: string;
+  amount: number;
+  receipt_date: string;
+  payment_method: string;
+  remarks?: string;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+  customers?: Customer;
+}
+
+export interface CustomerLedger {
+  id: string;
+  customer_id: string;
+  transaction_type: 'sale' | 'receipt';
+  reference_id: string;
+  debit_amount: number;
+  credit_amount: number;
+  balance: number;
+  transaction_date: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+  customers?: Customer;
+}
+
 export type Language = 'english' | 'tamil';
 
 export interface LanguageContextType {

@@ -184,9 +184,9 @@ export const AmountReceivedForm = ({ onSuccess, onCancel }: AmountReceivedFormPr
         p_amount: parseFloat(amount),
         p_description: `Receipt from ${selectedCustomerData?.name_english || 'Customer'} - ${receiptNo}`,
         p_date: receiptDate,
-        p_user_id: 'current_user', // Replace with actual user ID when auth is implemented
+        p_user_id: '6fad72cb-61e3-4507-9ade-11d1c3a6ffa4', // gvinothkumar87 admin user
         p_type: 'income',
-        p_created_by: 'current_user', // Replace with actual user ID when auth is implemented
+        p_created_by: '6fad72cb-61e3-4507-9ade-11d1c3a6ffa4', // gvinothkumar87 admin user
         p_ledger_id: selectedLedger,
         p_attached_bill: receiptNo
       });

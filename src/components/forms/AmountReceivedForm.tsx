@@ -23,11 +23,14 @@ export const AmountReceivedForm = ({ onSuccess, onCancel }: AmountReceivedFormPr
   const [receiptDate, setReceiptDate] = useState(new Date().toISOString().split('T')[0]);
   const [remarks, setRemarks] = useState('');
   const [loading, setLoading] = useState(false);
+  const [ledgers, setLedgers] = useState<any[]>([]);
+  const [selectedLedger, setSelectedLedger] = useState('');
   const { toast } = useToast();
   const { language, getDisplayName } = useLanguage();
 
   useEffect(() => {
     fetchCustomers();
+    fetchLedgers();
   }, []);
 
   const fetchCustomers = async () => {
@@ -49,6 +52,24 @@ export const AmountReceivedForm = ({ onSuccess, onCancel }: AmountReceivedFormPr
     setCustomers(data || []);
   };
 
+  const fetchLedgers = async () => {
+    const { data, error } = await supabase
+      .from('ledgers')
+      .select('*')
+      .order('name', { ascending: true });
+
+    if (error) {
+      toast({
+        title: language === 'english' ? 'Error' : 'பிழை',
+        description: language === 'english' ? 'Failed to fetch ledgers' : 'லெட்ஜர்களை பெறுவதில் தோல்வி',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setLedgers(data || []);
+  };
+
   const generateReceiptNo = async () => {
     const { data, error } = await supabase.rpc('generate_receipt_no');
     
@@ -62,10 +83,10 @@ export const AmountReceivedForm = ({ onSuccess, onCancel }: AmountReceivedFormPr
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedCustomerId || !amount) {
+    if (!selectedCustomerId || !amount || !selectedLedger) {
       toast({
         title: language === 'english' ? 'Error' : 'பிழை',
-        description: language === 'english' ? 'Please select customer and enter amount' : 'வாடிக்கையாளர் மற்றும் தொகையை தேர்ந்தெடுக்கவும்',
+        description: language === 'english' ? 'Please select customer, enter amount and select ledger' : 'வாடிக்கையாளர், தொகை மற்றும் லெட்ஜர் தேர்ந்தெடுக்கவும்',
         variant: 'destructive',
       });
       return;
@@ -113,11 +134,35 @@ export const AmountReceivedForm = ({ onSuccess, onCancel }: AmountReceivedFormPr
 
       if (ledgerError) throw ledgerError;
 
+      // Create transaction in main ledger system using process_transaction function
+      const selectedCustomerData = customers.find(c => c.id === selectedCustomerId);
+      const selectedLedgerData = ledgers.find(l => l.id === selectedLedger);
+      
+      const { error: transactionError } = await supabase.rpc('process_transaction', {
+        p_amount: parseFloat(amount),
+        p_description: `Receipt from ${selectedCustomerData?.name_english || 'Customer'} - ${receiptNo}`,
+        p_date: receiptDate,
+        p_user_id: 'current_user', // Replace with actual user ID when auth is implemented
+        p_type: 'income',
+        p_created_by: 'current_user', // Replace with actual user ID when auth is implemented
+        p_ledger_id: selectedLedger,
+        p_attached_bill: receiptNo
+      });
+
+      if (transactionError) {
+        console.error('Error creating main ledger transaction:', transactionError);
+        toast({
+          title: language === 'english' ? 'Warning' : 'எச்சரிக்கை',
+          description: language === 'english' ? 'Receipt created but failed to update main ledger' : 'ரசீது உருவாக்கப்பட்டது ஆனால் முக்கிய லெட்ஜர் புதுப்பிக்கத் தவறியது',
+          variant: 'destructive',
+        });
+      }
+
       toast({
         title: language === 'english' ? 'Success' : 'வெற்றி',
         description: language === 'english' 
-          ? `Receipt ${receiptNo} created successfully` 
-          : `ரசீது ${receiptNo} வெற்றிகரமாக உருவாக்கப்பட்டது`,
+          ? `Receipt ${receiptNo} created and recorded in ${selectedLedgerData?.name || 'selected ledger'}` 
+          : `ரசீது ${receiptNo} உருவாக்கப்பட்டு ${selectedLedgerData?.name || 'தேர்ந்தெடுக்கப்பட்ட லெட்ஜர்'} இல் பதிவு செய்யப்பட்டது`,
       });
 
       // Reset form
@@ -126,6 +171,7 @@ export const AmountReceivedForm = ({ onSuccess, onCancel }: AmountReceivedFormPr
       setPaymentMethod('cash');
       setReceiptDate(new Date().toISOString().split('T')[0]);
       setRemarks('');
+      setSelectedLedger('');
       
       onSuccess();
       
@@ -226,6 +272,24 @@ export const AmountReceivedForm = ({ onSuccess, onCancel }: AmountReceivedFormPr
           </div>
 
           <div>
+            <Label htmlFor="ledger">
+              {language === 'english' ? 'Select Ledger' : 'லெட்ஜர் தேர்ந்தெடுக்கவும்'} *
+            </Label>
+            <Select value={selectedLedger} onValueChange={setSelectedLedger}>
+              <SelectTrigger>
+                <SelectValue placeholder={language === 'english' ? 'Choose ledger to record payment...' : 'பணம் பதிவு செய்ய லெட்ஜர் தேர்ந்தெடுக்கவும்...'} />
+              </SelectTrigger>
+              <SelectContent>
+                {ledgers.map((ledger) => (
+                  <SelectItem key={ledger.id} value={ledger.id}>
+                    {getDisplayName(ledger)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
             <Label htmlFor="remarks">
               {language === 'english' ? 'Remarks (Optional)' : 'குறிப்புகள் (விருப்பமான)'}
             </Label>
@@ -239,7 +303,7 @@ export const AmountReceivedForm = ({ onSuccess, onCancel }: AmountReceivedFormPr
           </div>
 
           <div className="flex gap-2">
-            <Button type="submit" disabled={loading || !selectedCustomerId || !amount}>
+            <Button type="submit" disabled={loading || !selectedCustomerId || !amount || !selectedLedger}>
               {loading 
                 ? (language === 'english' ? 'Creating...' : 'உருவாக்குகிறது...') 
                 : (language === 'english' ? 'Create Receipt' : 'ரசீது உருவாக்கு')

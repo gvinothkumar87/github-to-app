@@ -21,7 +21,6 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ customer, onSuccess,
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
-    name: customer?.name_english || '', // Keep for backward compatibility
     name_english: customer?.name_english || '',
     name_tamil: customer?.name_tamil || '',
     code: customer?.code || '',
@@ -95,7 +94,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ customer, onSuccess,
               <Input
                 id="name_english"
                 value={formData.name_english}
-                onChange={(e) => setFormData({ ...formData, name_english: e.target.value, name: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, name_english: e.target.value })}
                 required
                 placeholder={language === 'english' ? 'Enter customer name' : 'வாடிக்கையாளர் பெயரை உள்ளிடவும்'}
               />

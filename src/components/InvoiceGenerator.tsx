@@ -173,7 +173,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
             
             .header { display: flex; border-bottom: 1px solid #000; }
             .logo-section { width: 80px; padding: 10px; border-right: 1px solid #000; display: flex; align-items: center; justify-content: center; }
-            .logo { width: 60px; height: 60px; }
+            .logo { width: 75px; height: 75px; object-fit: contain; }
             .company-section { flex: 1; padding: 10px; text-align: center; }
             .company-name { font-size: 16px; font-weight: bold; margin-bottom: 3px; }
             .company-address { font-size: 8px; margin-bottom: 2px; line-height: 1.2; }

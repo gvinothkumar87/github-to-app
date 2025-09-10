@@ -592,28 +592,32 @@ export const TransitLogbook = () => {
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{language === 'english' ? 'Code' : 'குறியீடு'}</TableHead>
-                      <TableHead>{language === 'english' ? 'Name' : 'பெயர்'}</TableHead>
-                      <TableHead>{language === 'english' ? 'Unit' : 'அலகு'}</TableHead>
-                      <TableHead>{language === 'english' ? 'Status' : 'நிலை'}</TableHead>
-                      <TableHead>{language === 'english' ? 'Actions' : 'செயல்கள்'}</TableHead>
-                    </TableRow>
-                  </TableHeader>
+                   <TableHeader>
+                     <TableRow>
+                       <TableHead>{language === 'english' ? 'Code' : 'குறியீடு'}</TableHead>
+                       <TableHead>{language === 'english' ? 'Name' : 'பெயர்'}</TableHead>
+                       <TableHead>{language === 'english' ? 'Unit' : 'அலகு'}</TableHead>
+                       <TableHead>{language === 'english' ? 'HSN No' : 'எச்எஸ்என் எண்'}</TableHead>
+                       <TableHead>{language === 'english' ? 'GST %' : 'ஜிஎஸ்டி %'}</TableHead>
+                       <TableHead>{language === 'english' ? 'Status' : 'நிலை'}</TableHead>
+                       <TableHead>{language === 'english' ? 'Actions' : 'செயல்கள்'}</TableHead>
+                     </TableRow>
+                   </TableHeader>
                   <TableBody>
-                    {items.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell className="font-mono">{item.code}</TableCell>
-                        <TableCell className="font-medium">{getDisplayName(item)}</TableCell>
-                        <TableCell>{item.unit}</TableCell>
-                        <TableCell>
-                          <Badge variant={item.is_active ? 'default' : 'secondary'}>
-                            {item.is_active 
-                              ? (language === 'english' ? 'Active' : 'செயல்பாட்டில்')
-                              : (language === 'english' ? 'Inactive' : 'செயல்படாது')}
-                          </Badge>
-                        </TableCell>
+                     {items.map((item) => (
+                       <TableRow key={item.id}>
+                         <TableCell className="font-mono">{item.code}</TableCell>
+                         <TableCell className="font-medium">{getDisplayName(item)}</TableCell>
+                         <TableCell>{item.unit}</TableCell>
+                         <TableCell className="font-mono">{item.hsn_no || '-'}</TableCell>
+                         <TableCell>{item.gst_percentage}%</TableCell>
+                         <TableCell>
+                           <Badge variant={item.is_active ? 'default' : 'secondary'}>
+                             {item.is_active 
+                               ? (language === 'english' ? 'Active' : 'செயல்பாட்டில்')
+                               : (language === 'english' ? 'Inactive' : 'செயல்படாது')}
+                           </Badge>
+                         </TableCell>
                         <TableCell>
                           <Button
                             variant="outline"

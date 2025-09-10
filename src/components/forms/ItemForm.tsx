@@ -28,6 +28,8 @@ export const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel })
     name_tamil: item?.name_tamil || '',
     code: item?.code || '',
     unit: item?.unit || 'KG',
+    hsn_no: item?.hsn_no || '',
+    gst_percentage: item?.gst_percentage || 0,
     description_english: item?.description_english || '',
     description_tamil: item?.description_tamil || '',
   });
@@ -170,8 +172,38 @@ export const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel })
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-          </div>
+             </div>
+           </div>
+           
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <div>
+               <Label htmlFor="hsn_no">
+                 {language === 'english' ? 'HSN No' : 'எச்எஸ்என் எண்'}
+               </Label>
+               <Input
+                 id="hsn_no"
+                 value={formData.hsn_no}
+                 onChange={(e) => setFormData({ ...formData, hsn_no: e.target.value })}
+                 placeholder={language === 'english' ? 'e.g., 1234567890' : 'உதா: 1234567890'}
+               />
+             </div>
+             
+             <div>
+               <Label htmlFor="gst_percentage">
+                 {language === 'english' ? 'GST %' : 'ஜிஎஸ்டி %'}
+               </Label>
+               <Input
+                 id="gst_percentage"
+                 type="number"
+                 step="0.01"
+                 min="0"
+                 max="100"
+                 value={formData.gst_percentage}
+                 onChange={(e) => setFormData({ ...formData, gst_percentage: parseFloat(e.target.value) || 0 })}
+                 placeholder={language === 'english' ? 'e.g., 18.00' : 'உதா: 18.00'}
+               />
+             </div>
+           </div>
           
           <div>
             <Label htmlFor="description_english">

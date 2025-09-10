@@ -20,6 +20,8 @@ export interface Item {
   name_tamil?: string;
   code: string;
   unit: string;
+  hsn_no?: string;
+  gst_percentage: number;
   description_english?: string;
   description_tamil?: string;
   is_active: boolean;

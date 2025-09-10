@@ -279,6 +279,8 @@ export type Database = {
           created_at: string
           description_english: string | null
           description_tamil: string | null
+          gst_percentage: number | null
+          hsn_no: string | null
           id: string
           is_active: boolean
           name_english: string
@@ -291,6 +293,8 @@ export type Database = {
           created_at?: string
           description_english?: string | null
           description_tamil?: string | null
+          gst_percentage?: number | null
+          hsn_no?: string | null
           id?: string
           is_active?: boolean
           name_english: string
@@ -303,6 +307,8 @@ export type Database = {
           created_at?: string
           description_english?: string | null
           description_tamil?: string | null
+          gst_percentage?: number | null
+          hsn_no?: string | null
           id?: string
           is_active?: boolean
           name_english?: string

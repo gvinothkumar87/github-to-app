@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
+import Bills from "./pages/Bills";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -22,6 +23,11 @@ const App = () => (
           <LanguageProvider>
             <Routes>
               <Route path="/auth" element={<Auth />} />
+              <Route path="/bills" element={
+                <ProtectedRoute>
+                  <Bills />
+                </ProtectedRoute>
+              } />
               <Route path="/" element={
                 <ProtectedRoute>
                   <Index />

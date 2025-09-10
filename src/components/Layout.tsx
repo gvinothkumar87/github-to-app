@@ -1,5 +1,6 @@
 import React from 'react';
-import { Truck, Package, Users, ClipboardList, BarChart3, Menu, Scale, LogOut, ShoppingCart, Receipt, Book } from 'lucide-react';
+import { Truck, Package, Users, ClipboardList, BarChart3, Menu, Scale, LogOut, ShoppingCart, Receipt, Book, FileText } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
@@ -25,6 +26,7 @@ const AppSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabChange
   const { language } = useLanguage();
   const { signOut } = useAuth();
   const { setOpenMobile } = useSidebar();
+  const navigate = useNavigate();
   const isAdmin = useAdminCheck();
 
   const allTabs = [
@@ -36,6 +38,17 @@ const AppSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabChange
     { id: 'customers', label: language === 'english' ? 'Customers' : 'வாடிக்கையாளர்கள்', icon: Users },
     { id: 'items', label: language === 'english' ? 'Items' : 'பொருட்கள்', icon: Package },
     { id: 'reports', label: language === 'english' ? 'Reports' : 'அறிக்கைகள்', icon: BarChart3 },
+  ];
+
+  const navigationItems = [
+    { 
+      id: 'bills', 
+      label: language === 'english' ? 'Bills Management' : 'பில் மேலாண்மை', 
+      icon: FileText, 
+      adminOnly: true,
+      isNavigation: true,
+      onClick: () => navigate('/bills')
+    },
   ];
 
   // Filter tabs based on admin status
@@ -66,6 +79,25 @@ const AppSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabChange
             );
           })}
           
+          {/* Navigation items */}
+          {navigationItems.filter(item => !item.adminOnly || isAdmin).map((item) => {
+            const Icon = item.icon;
+            return (
+              <SidebarMenuItem key={item.id}>
+                <SidebarMenuButton 
+                  onClick={() => {
+                    item.onClick();
+                    setOpenMobile(false);
+                  }}
+                  className="w-full justify-start"
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{item.label}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
+          
           {/* Logout button */}
           <SidebarMenuItem className="mt-auto">
             <SidebarMenuButton 
@@ -84,6 +116,7 @@ const AppSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabChange
 
 export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange }) => {
   const { language } = useLanguage();
+  const navigate = useNavigate();
   const isAdmin = useAdminCheck();
 
   return (
@@ -140,6 +173,17 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
                     </button>
                   );
                 })}
+                
+                {/* Navigation buttons */}
+                {isAdmin && (
+                  <button
+                    onClick={() => navigate('/bills')}
+                    className="flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-all whitespace-nowrap border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground"
+                  >
+                    <FileText className="h-4 w-4" />
+                    {language === 'english' ? 'Bills Management' : 'பில் மேலாண்மை'}
+                  </button>
+                )}
               </div>
             </div>
           </nav>

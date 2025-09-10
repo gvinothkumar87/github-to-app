@@ -197,7 +197,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
             .items-table .amount-col { text-align: right; }
             
             .footer-section { border-top: 1px solid #000; }
-            .amount-words { padding: 8px; border-bottom: 1px solid #000; font-size: 8px; }
+            .amount-words { padding: 8px; border-top: 1px solid #000; border-bottom: 1px solid #000; font-size: 8px; }
             .amount-words-bold { font-weight: bold; }
             
             .tax-details { display: flex; }

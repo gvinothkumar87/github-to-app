@@ -168,89 +168,126 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
         <head>
           <title>Tax Invoice - ${sale.bill_serial_no}</title>
           <style>
-            body { font-family: Arial, sans-serif; margin: 20px; font-size: 11px; }
-            .invoice-container { max-width: 800px; margin: 0 auto; }
-            .header { display: flex; align-items: center; border: 2px solid #000; padding: 15px; margin-bottom: 0; }
-            .logo { width: 80px; height: 80px; margin-right: 15px; }
-            .company-info { flex: 1; }
-            .company-name { font-size: 20px; font-weight: bold; color: #d4a574; margin-bottom: 5px; }
-            .company-details { font-size: 10px; line-height: 1.2; }
-            .invoice-details { display: flex; justify-content: space-between; border-left: 2px solid #000; border-right: 2px solid #000; padding: 10px; margin-bottom: 0; }
-            .invoice-info, .transport-info { font-size: 10px; }
-            .customer-section { border: 2px solid #000; border-top: none; padding: 15px; margin-bottom: 0; }
-            .customer-row { display: flex; margin-bottom: 8px; }
-            .customer-label { width: 100px; font-weight: bold; font-size: 10px; }
-            .customer-value { flex: 1; font-size: 11px; }
-            .table { width: 100%; border-collapse: collapse; border: 2px solid #000; border-top: none; }
-            .table th, .table td { border: 1px solid #000; padding: 6px; text-align: center; font-size: 10px; }
-            .table th { background-color: #f0f0f0; font-weight: bold; }
-            .table .desc-col { text-align: left; }
-            .amount-section { border: 2px solid #000; border-top: none; padding: 10px; }
-            .amount-row { display: flex; justify-content: space-between; margin: 3px 0; font-size: 10px; }
-            .amount-words { margin: 15px 0; font-size: 10px; }
-            .bank-details { margin-top: 20px; border: 1px solid #000; padding: 10px; font-size: 10px; }
-            .signature-section { margin-top: 30px; text-align: right; font-size: 10px; }
-            .total-row { border-top: 1px solid #000; margin-top: 5px; padding-top: 5px; font-weight: bold; }
+            body { font-family: Arial, sans-serif; margin: 0; padding: 10px; font-size: 9px; }
+            .invoice-container { max-width: 210mm; margin: 0 auto; border: 2px solid #000; }
+            
+            .header { display: flex; border-bottom: 1px solid #000; }
+            .logo-section { width: 80px; padding: 10px; border-right: 1px solid #000; display: flex; align-items: center; justify-content: center; }
+            .logo { width: 60px; height: 60px; }
+            .company-section { flex: 1; padding: 10px; text-align: center; }
+            .company-name { font-size: 16px; font-weight: bold; margin-bottom: 3px; }
+            .company-address { font-size: 8px; margin-bottom: 2px; line-height: 1.2; }
+            .invoice-info-section { width: 200px; border-left: 1px solid #000; }
+            
+            .invoice-details { display: flex; }
+            .invoice-left { flex: 1; padding: 8px; font-size: 8px; }
+            .invoice-right { width: 120px; padding: 8px; border-left: 1px solid #000; font-size: 8px; }
+            
+            .consignee-section { display: flex; border-top: 1px solid #000; }
+            .consignee-left { flex: 1; padding: 10px; border-right: 1px solid #000; }
+            .consignee-right { flex: 1; padding: 10px; }
+            .section-title { font-weight: bold; font-size: 8px; margin-bottom: 8px; }
+            .customer-name { font-weight: bold; font-size: 10px; margin-bottom: 5px; }
+            .customer-details { font-size: 8px; line-height: 1.3; }
+            
+            .items-table { width: 100%; border-collapse: collapse; border-top: 1px solid #000; }
+            .items-table th { background-color: #f5f5f5; font-weight: bold; font-size: 7px; padding: 5px; border: 1px solid #000; text-align: center; }
+            .items-table td { font-size: 8px; padding: 4px; border: 1px solid #000; text-align: center; }
+            .items-table .desc-col { text-align: left; }
+            .items-table .amount-col { text-align: right; }
+            
+            .footer-section { border-top: 1px solid #000; }
+            .amount-words { padding: 8px; border-bottom: 1px solid #000; font-size: 8px; }
+            .amount-words-bold { font-weight: bold; }
+            
+            .tax-details { display: flex; }
+            .hsn-table-section { flex: 1; padding: 8px; border-right: 1px solid #000; }
+            .hsn-table { width: 100%; border-collapse: collapse; font-size: 7px; }
+            .hsn-table th, .hsn-table td { border: 1px solid #000; padding: 3px; text-align: center; }
+            .hsn-table th { background-color: #f5f5f5; font-weight: bold; }
+            
+            .total-section { flex: 1; padding: 8px; }
+            .total-row { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 8px; }
+            .total-final { border-top: 1px solid #000; margin-top: 5px; padding-top: 3px; font-weight: bold; }
+            
+            .bank-signature { display: flex; border-top: 1px solid #000; }
+            .bank-details { flex: 1; padding: 10px; border-right: 1px solid #000; font-size: 8px; }
+            .signature-area { width: 150px; padding: 10px; text-align: center; font-size: 8px; }
+            
+            @media print {
+              body { margin: 0; }
+              .invoice-container { max-width: none; }
+            }
           </style>
         </head>
         <body>
           <div class="invoice-container">
+            <!-- Header Section -->
             <div class="header">
-              <img src="/lovable-uploads/8ef45f84-cd7a-4909-9f31-86a578d28f2f.png" alt="GRM Logo" class="logo" />
-              <div class="company-info">
+              <div class="logo-section">
+                <img src="/lovable-uploads/8ef45f84-cd7a-4909-9f31-86a578d28f2f.png" alt="GRM Logo" class="logo" />
+              </div>
+              <div class="company-section">
                 <div class="company-name">${companyDetails.name}</div>
-                <div class="company-details">
-                  ${companyDetails.address}<br>
+                <div class="company-address">
+                  ${companyDetails.address.split(',').slice(0, 2).join(',')}<br>
+                  ${companyDetails.address.split(',').slice(2).join(',')}<br>
                   Phone: 9790404001, 9444066558<br>
-                  GSTIN/UIN: ${companyDetails.gstin}<br>
+                  GSTIN/UIN: ${companyDetails.gstin} &nbsp;&nbsp;&nbsp; State Name: Tamil Nadu, Code: 33
+                </div>
+              </div>
+              <div class="invoice-info-section">
+                <div style="padding: 8px; border-bottom: 1px solid #000;">
+                  <div style="font-weight: bold; font-size: 8px;">Invoice No.</div>
+                  <div style="font-size: 9px; margin-top: 2px;">${sale.bill_serial_no}</div>
+                </div>
+                <div style="padding: 8px; border-bottom: 1px solid #000;">
+                  <div style="font-weight: bold; font-size: 8px;">Dated</div>
+                  <div style="font-size: 9px; margin-top: 2px;">${new Date().toLocaleDateString('en-IN')}</div>
+                </div>
+                <div style="padding: 8px;">
+                  <div style="font-weight: bold; font-size: 8px;">Motor Vehicle No.</div>
+                  <div style="font-size: 9px; margin-top: 2px;">${outwardEntry.lorry_no}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Consignee Section -->
+            <div class="consignee-section">
+              <div class="consignee-left">
+                <div class="section-title">Consignee (Ship to)</div>
+                <div class="customer-name">${getDisplayName(customer)}</div>
+                <div class="customer-details">
+                  ${customer.address_english || customer.address_tamil || ''}<br>
+                  ${customer.phone ? `Phone: ${customer.phone}<br>` : ''}
+                  ${customer.gstin ? `GSTIN/UIN: ${customer.gstin}<br>` : ''}
+                  State Name: Tamil Nadu, Code: 33
+                </div>
+              </div>
+              <div class="consignee-right">
+                <div class="section-title">Buyer (Bill to)</div>
+                <div class="customer-name">${getDisplayName(customer)}</div>
+                <div class="customer-details">
+                  ${customer.address_english || customer.address_tamil || ''}<br>
+                  ${customer.phone ? `Phone: ${customer.phone}<br>` : ''}
+                  ${customer.gstin ? `GSTIN/UIN: ${customer.gstin}<br>` : ''}
                   State Name: Tamil Nadu, Code: 33
                 </div>
               </div>
             </div>
 
-            <div class="invoice-details">
-              <div class="invoice-info">
-                <div><strong>Invoice No.</strong></div>
-                <div>${sale.bill_serial_no}</div>
-                <div style="margin-top: 10px;"><strong>Dated</strong></div>
-                <div>${new Date().toLocaleDateString('en-IN')}</div>
-              </div>
-              <div class="transport-info">
-                <div><strong>Motor Vehicle No.</strong></div>
-                <div>${outwardEntry.lorry_no}</div>
-              </div>
-            </div>
-
-            <div class="customer-section">
-              <div style="display: flex;">
-                <div style="flex: 1; margin-right: 20px;">
-                  <div style="font-weight: bold; margin-bottom: 10px;">Consignee (Ship to)</div>
-                  <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px;">${getDisplayName(customer)}</div>
-                  ${customer.address_english || customer.address_tamil ? `<div style="margin-bottom: 5px;">${customer.address_english || customer.address_tamil}</div>` : ''}
-                  ${customer.phone ? `<div style="margin-bottom: 5px;">Phone: ${customer.phone}</div>` : ''}
-                  ${customer.gstin ? `<div>GSTIN/UIN: ${customer.gstin}</div>` : ''}
-                </div>
-                <div style="flex: 1;">
-                  <div style="font-weight: bold; margin-bottom: 10px;">Buyer (Bill to)</div>
-                  <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px;">${getDisplayName(customer)}</div>
-                  ${customer.address_english || customer.address_tamil ? `<div style="margin-bottom: 5px;">${customer.address_english || customer.address_tamil}</div>` : ''}
-                  ${customer.phone ? `<div style="margin-bottom: 5px;">Phone: ${customer.phone}</div>` : ''}
-                  ${customer.gstin ? `<div>GSTIN/UIN: ${customer.gstin}</div>` : ''}
-                </div>
-              </div>
-            </div>
-
-            <table class="table">
+            <!-- Items Table -->
+            <table class="items-table">
               <thead>
                 <tr>
-                  <th style="width: 5%;">Sl<br>No.</th>
+                  <th style="width: 4%;">Sl<br>No.</th>
                   <th style="width: 25%;">Description of Goods</th>
-                  <th style="width: 10%;">HSN/SAC</th>
-                  <th style="width: 8%;">GST<br>Rate</th>
-                  <th style="width: 12%;">Quantity</th>
-                  <th style="width: 10%;">Rate</th>
-                  <th style="width: 8%;">per</th>
-                  <th style="width: 12%;">Amount</th>
+                  <th style="width: 8%;">HSN/SAC</th>
+                  <th style="width: 6%;">GST<br>Rate</th>
+                  <th style="width: 10%;">Quantity</th>
+                  <th style="width: 8%;">Rate</th>
+                  <th style="width: 6%;">per</th>
+                  <th style="width: 10%;">Amount</th>
                 </tr>
               </thead>
               <tbody>
@@ -260,77 +297,85 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
                   <td>${item.hsn_no}</td>
                   <td>${item.gst_percentage}%</td>
                   <td>${sale.quantity} ${item.unit}</td>
-                  <td>₹${sale.rate.toFixed(2)}</td>
+                  <td class="amount-col">₹${sale.rate.toFixed(2)}</td>
                   <td>${item.unit}</td>
-                  <td>₹${baseAmount.toFixed(2)}</td>
+                  <td class="amount-col">₹${baseAmount.toFixed(2)}</td>
                 </tr>
-                <tr>
-                  <td colspan="4" style="text-align: right; font-weight: bold;">Total</td>
+                <tr style="background-color: #f9f9f9;">
+                  <td colspan="4" style="text-align: right; font-weight: bold; padding-right: 10px;">Total</td>
                   <td style="font-weight: bold;">${sale.quantity} ${item.unit}</td>
                   <td></td>
                   <td></td>
-                  <td style="font-weight: bold;">₹ ${baseAmount.toFixed(2)}</td>
+                  <td class="amount-col" style="font-weight: bold;">₹ ${baseAmount.toFixed(2)}</td>
                 </tr>
               </tbody>
             </table>
 
-            <div class="amount-section">
+            <!-- Footer Section -->
+            <div class="footer-section">
               <div class="amount-words">
-                <strong>Amount Chargeable (in words):</strong><br>
-                <strong>${convertNumberToWords(totalAmount)} Only</strong>
+                <strong>Amount Chargeable (in words)</strong><br>
+                <span class="amount-words-bold">${convertNumberToWords(totalAmount)} Only</span>
               </div>
               
-              <div style="display: flex;">
-                <div style="flex: 1;">
-                  <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
-                    <tr>
-                      <td style="border: 1px solid #000; padding: 5px; text-align: center; font-weight: bold;">HSN/SAC</td>
-                      <td style="border: 1px solid #000; padding: 5px; text-align: center; font-weight: bold;">Taxable<br>Value</td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #000; padding: 5px; text-align: center;">${item.hsn_no}</td>
-                      <td style="border: 1px solid #000; padding: 5px; text-align: center;">₹${baseAmount.toFixed(2)}</td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #000; padding: 5px; text-align: center; font-weight: bold;">Total</td>
-                      <td style="border: 1px solid #000; padding: 5px; text-align: center; font-weight: bold;">₹${baseAmount.toFixed(2)}</td>
-                    </tr>
+              <div class="tax-details">
+                <div class="hsn-table-section">
+                  <table class="hsn-table">
+                    <thead>
+                      <tr>
+                        <th>HSN/SAC</th>
+                        <th>Taxable Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>${item.hsn_no}</td>
+                        <td>₹${baseAmount.toFixed(2)}</td>
+                      </tr>
+                      <tr style="font-weight: bold;">
+                        <td>Total</td>
+                        <td>₹${baseAmount.toFixed(2)}</td>
+                      </tr>
+                    </tbody>
                   </table>
                 </div>
-                <div style="flex: 1; margin-left: 20px;">
-                  <div class="amount-row">
-                    <span>Taxable Amount:</span>
-                    <span>₹${baseAmount.toFixed(2)}</span>
-                  </div>
+                
+                <div class="total-section">
                   ${item.gst_percentage > 0 ? `
-                  <div class="amount-row">
+                  <div class="total-row">
                     <span>CGST ${(item.gst_percentage / 2)}%:</span>
                     <span>₹${(gstAmount / 2).toFixed(2)}</span>
                   </div>
-                  <div class="amount-row">
+                  <div class="total-row">
                     <span>SGST ${(item.gst_percentage / 2)}%:</span>
                     <span>₹${(gstAmount / 2).toFixed(2)}</span>
                   </div>
-                  ` : '<div class="amount-row"><span>Tax Amount:</span><span>NIL</span></div>'}
-                  <div class="amount-row total-row">
-                    <span><strong>Total:</strong></span>
-                    <span><strong>₹${totalAmount.toFixed(2)}</strong></span>
+                  ` : `
+                  <div class="total-row">
+                    <span>Tax Amount:</span>
+                    <span>NIL</span>
+                  </div>
+                  `}
+                  <div class="total-row total-final">
+                    <span>Total:</span>
+                    <span>₹${totalAmount.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
-
-              <div class="bank-details">
-                <strong>Company's Bank Details</strong><br>
-                Bank Name: ICICI BANK<br>
-                A/c No.: 305105000641<br>
-                Branch: ANANTHAPURAM<br>
-                IFSC Code: ICIC0003051
+              
+              <div class="bank-signature">
+                <div class="bank-details">
+                  <strong>Company's Bank Details</strong><br>
+                  Bank Name: ICICI BANK<br>
+                  A/c No.: 305105000641<br>
+                  Branch IFS Code: ICIC0003051<br>
+                  Branch: ANANTHAPURAM
+                </div>
+                <div class="signature-area">
+                  <div style="margin-bottom: 40px;">for ${companyDetails.name}</div>
+                  <div style="border-top: 1px solid #000; padding-top: 5px;">Authorised Signatory</div>
+                </div>
               </div>
-            </div>
-
-            <div class="signature-section">
-              <div>for ${companyDetails.name}</div>
-              <div style="margin-top: 50px;">Authorised Signatory</div>
             </div>
           </div>
         </body>

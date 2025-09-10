@@ -196,10 +196,10 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
               <div><strong>Date:</strong> ${new Date().toLocaleDateString('en-IN')}</div>
             </div>
             <div class="row">
-              <div><strong>Customer:</strong> ${getDisplayName(customer)}</div>
+              <div><strong style="font-size: 16px;">${getDisplayName(customer)}</strong></div>
               <div><strong>Lorry No:</strong> ${outwardEntry.lorry_no}</div>
             </div>
-            ${customer.address_english || customer.address_tamil ? `<div class="row"><div><strong>Address:</strong> ${customer.address_english || customer.address_tamil}</div></div>` : ''}
+            ${customer.address_english || customer.address_tamil ? `<div class="row"><div>${customer.address_english || customer.address_tamil}</div></div>` : ''}
             ${customer.phone ? `<div class="row"><div><strong>Phone:</strong> ${customer.phone}</div></div>` : ''}
             ${customer.gstin ? `<div class="row"><div><strong>Customer GSTIN:</strong> ${customer.gstin}</div></div>` : ''}
           </div>
@@ -357,9 +357,9 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
                 {language === 'english' ? 'Customer Details' : 'வாடிக்கையாளர் விவரங்கள்'}
               </h4>
               <div className="space-y-1 text-sm">
-                <p><strong>{language === 'english' ? 'Name:' : 'பெயர்:'}</strong> {getDisplayName(customer)}</p>
+                <p className="text-lg font-semibold">{getDisplayName(customer)}</p>
                 {(customer.address_english || customer.address_tamil) && (
-                  <p><strong>{language === 'english' ? 'Address:' : 'முகவரி:'}</strong> {customer.address_english || customer.address_tamil}</p>
+                  <p>{customer.address_english || customer.address_tamil}</p>
                 )}
                 {customer.phone && <p><strong>{language === 'english' ? 'Phone:' : 'தொலைபேசி:'}</strong> {customer.phone}</p>}
                 {customer.gstin && <p><strong>GSTIN:</strong> {customer.gstin}</p>}

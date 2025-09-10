@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,6 +31,37 @@ export const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel })
     description_english: item?.description_english || '',
     description_tamil: item?.description_tamil || '',
   });
+
+  useEffect(() => {
+    if (!item) {
+      generateItemCode();
+    }
+  }, [item]);
+
+  const generateItemCode = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('items')
+        .select('code')
+        .like('code', 'ITEM%')
+        .order('code', { ascending: false })
+        .limit(1);
+      
+      if (error) throw error;
+      
+      let nextNumber = 1;
+      if (data && data.length > 0) {
+        const lastCode = data[0].code;
+        const numberPart = lastCode.replace('ITEM', '');
+        nextNumber = parseInt(numberPart) + 1;
+      }
+      
+      const newCode = `ITEM${nextNumber.toString().padStart(3, '0')}`;
+      setFormData(prev => ({ ...prev, code: newCode }));
+    } catch (error) {
+      console.error('Error generating item code:', error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,13 +147,13 @@ export const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel })
               <Label htmlFor="code">
                 {language === 'english' ? 'Item Code' : 'பொருள் குறியீடு'} *
               </Label>
-              <Input
-                id="code"
-                value={formData.code}
-                onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                required
-                placeholder={language === 'english' ? 'e.g., ITEM001' : 'உதா: ITEM001'}
-              />
+               <Input
+                 id="code"
+                 value={formData.code}
+                 readOnly
+                 className="bg-muted"
+                 placeholder={language === 'english' ? 'Auto-generated' : 'தானாக உருவாக்கப்பட்டது'}
+               />
             </div>
             
             <div>

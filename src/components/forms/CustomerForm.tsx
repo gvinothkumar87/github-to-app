@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,6 +31,37 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ customer, onSuccess,
     address_tamil: customer?.address_tamil || '',
     gstin: customer?.gstin || '',
   });
+
+  useEffect(() => {
+    if (!customer) {
+      generateCustomerCode();
+    }
+  }, [customer]);
+
+  const generateCustomerCode = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('customers')
+        .select('code')
+        .like('code', 'CUST%')
+        .order('code', { ascending: false })
+        .limit(1);
+      
+      if (error) throw error;
+      
+      let nextNumber = 1;
+      if (data && data.length > 0) {
+        const lastCode = data[0].code;
+        const numberPart = lastCode.replace('CUST', '');
+        nextNumber = parseInt(numberPart) + 1;
+      }
+      
+      const newCode = `CUST${nextNumber.toString().padStart(3, '0')}`;
+      setFormData(prev => ({ ...prev, code: newCode }));
+    } catch (error) {
+      console.error('Error generating customer code:', error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,13 +147,13 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ customer, onSuccess,
               <Label htmlFor="code">
                 {language === 'english' ? 'Customer Code' : 'வாடிக்கையாளர் குறியீடு'} *
               </Label>
-              <Input
-                id="code"
-                value={formData.code}
-                onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                required
-                placeholder={language === 'english' ? 'e.g., CUST001' : 'உதா: CUST001'}
-              />
+               <Input
+                 id="code"
+                 value={formData.code}
+                 readOnly
+                 className="bg-muted"
+                 placeholder={language === 'english' ? 'Auto-generated' : 'தானாக உருவாக்கப்பட்டது'}
+               />
             </div>
             
             <div>

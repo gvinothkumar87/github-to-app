@@ -225,7 +225,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
             <!-- Header Section -->
             <div class="header">
               <div class="logo-section">
-                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1+/AAAABx0RVh0U29mdHdhcmUAQWRvYmUgRmlyZXdvcmtzIENTNnui8sowAAABjGlDQ1BJQ0MgUHJvZmlsZQAAKM+VkT1Iw0AcxV9TpSIVBzuIOGSoThZERRy1CkWoEGqFVh1MLv2CJg1Jiouj4Fpw8GOx6uDirKuDqyAIfoA4OjkpukiJ/0sKLWI8OO7Hu3uPu3eAUC8zzeoYBzTdNlOJuJjJroqhVwQQRgiDGJWZZcxJUhK+4+seAb7exXiW/7k/R6+as2JAQCQ+YcY0m3iDeHrTNjjvE4dZUVaJz4nHTLog8SPXFY/fOBdcFnhm2Eyn5onDxGKhg5UOZkVTI54ijqqaTvlCxmOV8xZnrVxlzXvyFwZz+soy12kOI4FFLEGCCAVVlFCGjRitOikWUrQf9/APOf4kuWRylcDIsYAKNEiOH/wPfndrFiYnvKRQHOh8cZyPESC0CzRqjvN97DiNE8D/DFzpLX+lDsx8kl5radEjYGAbOL9uafIecLkDDD3pkiE5kp+mkM8D72f0TVlg4BboXfN6a+3j9AFIU1fJG+DgEBgtUPa6x7u72737t6c5vx8lJXKwRg+l7QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAAuIwAALiMBeKU/dgAAAAd0SU1FB+gKCwohMa8sKRYAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAAAtklEQVR42u3BMQ0AAAwCoPdPbQ8HFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8DCAaQABGgGpf0QAAAAASUVORK5CYII=" alt="GRM Logo" class="logo" />
+                <img src="${window.location.origin}/lovable-uploads/8ef45f84-cd7a-4909-9f31-86a578d28f2f.png" alt="GRM Logo" class="logo" onerror="this.style.display='none'" />
               </div>
               <div class="company-section">
                 <div class="company-name">${companyDetails.name}</div>

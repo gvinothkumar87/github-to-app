@@ -211,7 +211,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
             .total-final { border-top: 1px solid #000; margin-top: 5px; padding-top: 3px; font-weight: bold; }
             
             .bank-signature { display: flex; border-top: 1px solid #000; }
-            .bank-details { flex: 1; padding: 10px; border-right: 1px solid #000; font-size: 8px; }
+            .bank-details { flex: 1; padding: 10px; border-right: 1px solid #000; font-size: 9px; }
             .signature-area { width: 150px; padding: 10px; text-align: center; font-size: 8px; }
             
             @media print {
@@ -225,7 +225,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
             <!-- Header Section -->
             <div class="header">
               <div class="logo-section">
-                <img src="/lovable-uploads/8ef45f84-cd7a-4909-9f31-86a578d28f2f.png" alt="GRM Logo" class="logo" />
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1+/AAAABx0RVh0U29mdHdhcmUAQWRvYmUgRmlyZXdvcmtzIENTNnui8sowAAABjGlDQ1BJQ0MgUHJvZmlsZQAAKM+VkT1Iw0AcxV9TpSIVBzuIOGSoThZERRy1CkWoEGqFVh1MLv2CJg1Jiouj4Fpw8GOx6uDirKuDqyAIfoA4OjkpukiJ/0sKLWI8OO7Hu3uPu3eAUC8zzeoYBzTdNlOJuJjJroqhVwQQRgiDGJWZZcxJUhK+4+seAb7exXiW/7k/R6+as2JAQCQ+YcY0m3iDeHrTNjjvE4dZUVaJz4nHTLog8SPXFY/fOBdcFnhm2Eyn5onDxGKhg5UOZkVTI54ijqqaTvlCxmOV8xZnrVxlzXvyFwZz+soy12kOI4FFLEGCCAVVlFCGjRitOikWUrQf9/APOf4kuWRylcDIsYAKNEiOH/wPfndrFiYnvKRQHOh8cZyPESC0CzRqjvN97DiNE8D/DFzpLX+lDsx8kl5radEjYGAbOL9uafIecLkDDD3pkiE5kp+mkM8D72f0TVlg4BboXfN6a+3j9AFIU1fJG+DgEBgtUPa6x7u72737t6c5vx8lJXKwRg+l7QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAAuIwAALiMBeKU/dgAAAAd0SU1FB+gKCwohMa8sKRYAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAAAtklEQVR42u3BMQ0AAAwCoPdPbQ8HFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8DCAaQABGgGpf0QAAAAASUVORK5CYII=" alt="GRM Logo" class="logo" />
               </div>
               <div class="company-section">
                 <div class="company-name">${companyDetails.name}</div>
@@ -365,11 +365,11 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
               
               <div class="bank-signature">
                 <div class="bank-details">
-                  <strong>Company's Bank Details</strong><br>
-                  Bank Name: ICICI BANK<br>
-                  A/c No.: 305105000641<br>
-                  Branch IFS Code: ICIC0003051<br>
-                  Branch: ANANTHAPURAM
+                  <strong style="font-size: 9px;">Bank Details</strong><br>
+                  <span style="font-size: 9px;">Bank Name: ICICI</span><br>
+                  <span style="font-size: 9px;">A/c No.: 305105000641</span><br>
+                  <span style="font-size: 9px;">Branch: ANANTHAPURAM</span><br>
+                  <span style="font-size: 9px;">IFSC: ICIC0003051</span>
                 </div>
                 <div class="signature-area">
                   <div style="margin-bottom: 40px;">for ${companyDetails.name}</div>

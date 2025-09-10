@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Bills from "./pages/Bills";
+import DebitNote from "./pages/DebitNote";
+import CreditNote from "./pages/CreditNote";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -26,6 +28,16 @@ const App = () => (
               <Route path="/bills" element={
                 <ProtectedRoute>
                   <Bills />
+                </ProtectedRoute>
+              } />
+              <Route path="/debit-note" element={
+                <ProtectedRoute>
+                  <DebitNote />
+                </ProtectedRoute>
+              } />
+              <Route path="/credit-note" element={
+                <ProtectedRoute>
+                  <CreditNote />
                 </ProtectedRoute>
               } />
               <Route path="/" element={

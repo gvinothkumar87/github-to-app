@@ -133,6 +133,45 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_notes: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          id: string
+          note_date: string
+          note_no: string
+          reason: string
+          reference_bill_no: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          id?: string
+          note_date?: string
+          note_no: string
+          reason: string
+          reference_bill_no?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          id?: string
+          note_date?: string
+          note_no?: string
+          reason?: string
+          reference_bill_no?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customer_ledger: {
         Row: {
           balance: number
@@ -269,6 +308,45 @@ export type Database = {
           name_english?: string
           name_tamil?: string | null
           phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      debit_notes: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          id: string
+          note_date: string
+          note_no: string
+          reason: string
+          reference_bill_no: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          id?: string
+          note_date?: string
+          note_no: string
+          reason: string
+          reference_bill_no?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          id?: string
+          note_date?: string
+          note_no?: string
+          reason?: string
+          reference_bill_no?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -926,6 +1004,14 @@ export type Database = {
       fix_running_balances: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      generate_credit_note_no: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_debit_note_no: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       generate_receipt_no: {
         Args: Record<PropertyKey, never>

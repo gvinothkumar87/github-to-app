@@ -86,13 +86,41 @@ export interface Receipt {
 export interface CustomerLedger {
   id: string;
   customer_id: string;
-  transaction_type: 'sale' | 'receipt';
+  transaction_type: 'sale' | 'receipt' | 'debit_note' | 'credit_note';
   reference_id: string;
   debit_amount: number;
   credit_amount: number;
   balance: number;
   transaction_date: string;
   description?: string;
+  created_at: string;
+  updated_at: string;
+  customers?: Customer;
+}
+
+export interface DebitNote {
+  id: string;
+  note_no: string;
+  customer_id: string;
+  reference_bill_no?: string;
+  amount: number;
+  reason: string;
+  note_date: string;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+  customers?: Customer;
+}
+
+export interface CreditNote {
+  id: string;
+  note_no: string;
+  customer_id: string;
+  reference_bill_no?: string;
+  amount: number;
+  reason: string;
+  note_date: string;
+  created_by?: string;
   created_at: string;
   updated_at: string;
   customers?: Customer;

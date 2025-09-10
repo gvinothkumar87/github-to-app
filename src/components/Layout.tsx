@@ -1,5 +1,5 @@
 import React from 'react';
-import { Truck, Package, Users, ClipboardList, BarChart3, Menu, Scale, LogOut, ShoppingCart, Receipt, Book, FileText } from 'lucide-react';
+import { Truck, Package, Users, ClipboardList, BarChart3, Menu, Scale, LogOut, ShoppingCart, Receipt, Book, FileText, Plus, Minus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -48,6 +48,22 @@ const AppSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabChange
       adminOnly: true,
       isNavigation: true,
       onClick: () => navigate('/bills')
+    },
+    { 
+      id: 'debit-note', 
+      label: language === 'english' ? 'Debit Note' : 'டெபிட் குறிப்பு', 
+      icon: Plus, 
+      adminOnly: true,
+      isNavigation: true,
+      onClick: () => navigate('/debit-note')
+    },
+    { 
+      id: 'credit-note', 
+      label: language === 'english' ? 'Credit Note' : 'கிரெடிட் குறிப்பு', 
+      icon: Minus, 
+      adminOnly: true,
+      isNavigation: true,
+      onClick: () => navigate('/credit-note')
     },
   ];
 
@@ -176,13 +192,29 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
                 
                 {/* Navigation buttons */}
                 {isAdmin && (
-                  <button
-                    onClick={() => navigate('/bills')}
-                    className="flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-all whitespace-nowrap border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground"
-                  >
-                    <FileText className="h-4 w-4" />
-                    {language === 'english' ? 'Bills Management' : 'பில் மேலாண்மை'}
-                  </button>
+                  <>
+                    <button
+                      onClick={() => navigate('/bills')}
+                      className="flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-all whitespace-nowrap border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground"
+                    >
+                      <FileText className="h-4 w-4" />
+                      {language === 'english' ? 'Bills Management' : 'பில் மேலாண்மை'}
+                    </button>
+                    <button
+                      onClick={() => navigate('/debit-note')}
+                      className="flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-all whitespace-nowrap border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground"
+                    >
+                      <Plus className="h-4 w-4" />
+                      {language === 'english' ? 'Debit Note' : 'டெபிட் குறிப்பு'}
+                    </button>
+                    <button
+                      onClick={() => navigate('/credit-note')}
+                      className="flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-all whitespace-nowrap border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground"
+                    >
+                      <Minus className="h-4 w-4" />
+                      {language === 'english' ? 'Credit Note' : 'கிரெடிட் குறிப்பு'}
+                    </button>
+                  </>
                 )}
               </div>
             </div>

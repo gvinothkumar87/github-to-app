@@ -313,11 +313,6 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
 
             <!-- Footer Section -->
             <div class="footer-section">
-              <div class="amount-words">
-                <strong>Amount Chargeable (in words)</strong><br>
-                <span class="amount-words-bold">${convertNumberToWords(totalAmount)} Only</span>
-              </div>
-              
               <div class="tax-details">
                 <div class="hsn-table-section">
                   <table class="hsn-table">
@@ -363,13 +358,18 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
                 </div>
               </div>
               
+              <div class="amount-words">
+                <strong>Amount Chargeable (in words)</strong><br>
+                <span class="amount-words-bold">${convertNumberToWords(totalAmount)} Only</span>
+              </div>
+              
               <div class="bank-signature">
                 <div class="bank-details">
-                  <strong style="font-size: 9px;">Bank Details</strong><br>
-                  <span style="font-size: 9px;">Bank Name: ICICI</span><br>
-                  <span style="font-size: 9px;">A/c No.: 305105000641</span><br>
-                  <span style="font-size: 9px;">Branch: ANANTHAPURAM</span><br>
-                  <span style="font-size: 9px;">IFSC: ICIC0003051</span>
+                  <strong style="font-size: 10px;">Bank Details</strong><br>
+                  <span style="font-size: 10px;">Bank Name: ICICI</span><br>
+                  <span style="font-size: 10px;">A/c No.: 305105000641</span><br>
+                  <span style="font-size: 10px;">Branch: ANANTHAPURAM</span><br>
+                  <span style="font-size: 10px;">IFSC: ICIC0003051</span>
                 </div>
                 <div class="signature-area">
                   <div style="margin-bottom: 40px;">for ${companyDetails.name}</div>

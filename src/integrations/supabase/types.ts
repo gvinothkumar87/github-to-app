@@ -399,6 +399,7 @@ export type Database = {
           load_weight: number | null
           load_weight_updated_at: string | null
           load_weight_updated_by: string | null
+          loading_place: string
           lorry_no: string
           net_weight: number | null
           remarks: string | null
@@ -417,6 +418,7 @@ export type Database = {
           load_weight?: number | null
           load_weight_updated_at?: string | null
           load_weight_updated_by?: string | null
+          loading_place?: string
           lorry_no: string
           net_weight?: number | null
           remarks?: string | null
@@ -435,6 +437,7 @@ export type Database = {
           load_weight?: number | null
           load_weight_updated_at?: string | null
           load_weight_updated_by?: string | null
+          loading_place?: string
           lorry_no?: string
           net_weight?: number | null
           remarks?: string | null

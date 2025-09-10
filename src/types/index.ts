@@ -41,6 +41,7 @@ export interface OutwardEntry {
   load_weight_updated_at?: string;
   load_weight_updated_by?: string;
   remarks?: string;
+  loading_place: string;
   is_completed: boolean;
   created_at: string;
   updated_at: string;

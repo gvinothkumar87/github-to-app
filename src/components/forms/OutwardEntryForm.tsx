@@ -23,6 +23,7 @@ export const OutwardEntryForm: React.FC<OutwardEntryFormProps> = ({ onSuccess, o
 
   const [formData, setFormData] = useState({
     entry_date: new Date().toISOString().split('T')[0],
+    loading_place: 'PULIVANTHI',
     customer_id: '',
     item_id: '',
     lorry_no: '',
@@ -118,6 +119,25 @@ export const OutwardEntryForm: React.FC<OutwardEntryFormProps> = ({ onSuccess, o
                 onChange={(e) => setFormData({ ...formData, entry_date: e.target.value })}
                 required
               />
+            </div>
+            
+            <div>
+              <Label htmlFor="loading_place">
+                {language === 'english' ? 'Loading Place' : 'ஏற்றும் இடம்'} *
+              </Label>
+              <Select value={formData.loading_place} onValueChange={(value) => setFormData({ ...formData, loading_place: value })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PULIVANTHI">
+                    {language === 'english' ? 'PULIVANTHI' : 'புலியந்தி'}
+                  </SelectItem>
+                  <SelectItem value="MATTAPARAI">
+                    {language === 'english' ? 'MATTAPARAI' : 'மட்டப்பாறை'}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             <div>

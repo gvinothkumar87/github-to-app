@@ -267,6 +267,7 @@ export const TransitLogbook = () => {
         'Date': format(new Date(entry.entry_date), 'dd/MM/yyyy'),
         'Customer': entry.customers ? getDisplayName(entry.customers) : '-',
         'Item': entry.items ? getDisplayName(entry.items) : '-',
+        'Loading Place': entry.loading_place === 'PULIVANTHI' ? 'PULIVANTHI' : 'MATTAPARAI',
         'Lorry No': entry.lorry_no,
         'Driver Mobile': entry.driver_mobile,
         'Empty Weight': entry.empty_weight,
@@ -430,25 +431,33 @@ export const TransitLogbook = () => {
                       </Badge>
                     </div>
                     
-                    <div className="space-y-2 text-sm">
-                      <div>
-                        <span className="font-medium">
-                          {language === 'english' ? 'Customer: ' : 'வாடிக்கையாளர்: '}
-                        </span>
-                        {entry.customers ? getDisplayName(entry.customers) : '-'}
-                      </div>
-                      <div>
-                        <span className="font-medium">
-                          {language === 'english' ? 'Item: ' : 'பொருள்: '}
-                        </span>
-                        {entry.items ? getDisplayName(entry.items) : '-'}
-                      </div>
-                      <div>
-                        <span className="font-medium">
-                          {language === 'english' ? 'Lorry: ' : 'லாரி: '}
-                        </span>
-                        {entry.lorry_no}
-                      </div>
+                     <div className="space-y-2 text-sm">
+                       <div>
+                         <span className="font-medium">
+                           {language === 'english' ? 'Customer: ' : 'வாடிக்கையாளர்: '}
+                         </span>
+                         {entry.customers ? getDisplayName(entry.customers) : '-'}
+                       </div>
+                       <div>
+                         <span className="font-medium">
+                           {language === 'english' ? 'Item: ' : 'பொருள்: '}
+                         </span>
+                         {entry.items ? getDisplayName(entry.items) : '-'}
+                       </div>
+                       <div>
+                         <span className="font-medium">
+                           {language === 'english' ? 'Loading Place: ' : 'ஏற்றும் இடம்: '}
+                         </span>
+                         {entry.loading_place === 'PULIVANTHI' 
+                           ? (language === 'english' ? 'PULIVANTHI' : 'புலியந்தி')
+                           : (language === 'english' ? 'MATTAPARAI' : 'மட்டப்பாறை')}
+                       </div>
+                       <div>
+                         <span className="font-medium">
+                           {language === 'english' ? 'Lorry: ' : 'லாரி: '}
+                         </span>
+                         {entry.lorry_no}
+                       </div>
                       
                       <div className="grid grid-cols-2 gap-2 pt-2 border-t">
                         <div className="text-center">
@@ -484,39 +493,45 @@ export const TransitLogbook = () => {
               {/* Desktop table view */}
               <div className="hidden md:block overflow-x-auto">
                 <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{language === 'english' ? 'Serial No' : 'வரிசை எண்'}</TableHead>
-                      <TableHead>{language === 'english' ? 'Date' : 'தேதி'}</TableHead>
-                      <TableHead>{language === 'english' ? 'Customer' : 'வாடிக்கையாளர்'}</TableHead>
-                      <TableHead>{language === 'english' ? 'Item' : 'பொருள்'}</TableHead>
-                      <TableHead>{language === 'english' ? 'Lorry No' : 'லாரி எண்'}</TableHead>
-                      <TableHead>{language === 'english' ? 'Empty Weight' : 'காலி எடை'}</TableHead>
-                      <TableHead>{language === 'english' ? 'Load Weight' : 'மொத்த எடை'}</TableHead>
-                      <TableHead>{language === 'english' ? 'Status' : 'நிலை'}</TableHead>
-                    </TableRow>
-                  </TableHeader>
+                   <TableHeader>
+                     <TableRow>
+                       <TableHead>{language === 'english' ? 'Serial No' : 'வரிசை எண்'}</TableHead>
+                       <TableHead>{language === 'english' ? 'Date' : 'தேதி'}</TableHead>
+                       <TableHead>{language === 'english' ? 'Customer' : 'வாடிக்கையாளர்'}</TableHead>
+                       <TableHead>{language === 'english' ? 'Item' : 'பொருள்'}</TableHead>
+                       <TableHead>{language === 'english' ? 'Loading Place' : 'ஏற்றும் இடம்'}</TableHead>
+                       <TableHead>{language === 'english' ? 'Lorry No' : 'லாரி எண்'}</TableHead>
+                       <TableHead>{language === 'english' ? 'Empty Weight' : 'காலி எடை'}</TableHead>
+                       <TableHead>{language === 'english' ? 'Load Weight' : 'மொத்த எடை'}</TableHead>
+                       <TableHead>{language === 'english' ? 'Status' : 'நிலை'}</TableHead>
+                     </TableRow>
+                   </TableHeader>
                   <TableBody>
-                    {entries.map((entry) => (
-                      <TableRow key={entry.id}>
-                        <TableCell className="font-medium">{entry.serial_no}</TableCell>
-                        <TableCell>{new Date(entry.entry_date).toLocaleDateString()}</TableCell>
-                        <TableCell>{entry.customers ? getDisplayName(entry.customers) : '-'}</TableCell>
-                        <TableCell>{entry.items ? getDisplayName(entry.items) : '-'}</TableCell>
-                        <TableCell className="font-mono">{entry.lorry_no}</TableCell>
-                        <TableCell>{entry.empty_weight} {entry.items?.unit}</TableCell>
-                        <TableCell>
-                          {entry.load_weight ? `${entry.load_weight} ${entry.items?.unit}` : '-'}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={entry.is_completed ? 'default' : 'secondary'}>
-                            {entry.is_completed 
-                              ? (language === 'english' ? 'Completed' : 'முடிந்தது')
-                              : (language === 'english' ? 'Pending' : 'நிலுவையில்')}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                     {entries.map((entry) => (
+                       <TableRow key={entry.id}>
+                         <TableCell className="font-medium">{entry.serial_no}</TableCell>
+                         <TableCell>{new Date(entry.entry_date).toLocaleDateString()}</TableCell>
+                         <TableCell>{entry.customers ? getDisplayName(entry.customers) : '-'}</TableCell>
+                         <TableCell>{entry.items ? getDisplayName(entry.items) : '-'}</TableCell>
+                         <TableCell>
+                           {entry.loading_place === 'PULIVANTHI' 
+                             ? (language === 'english' ? 'PULIVANTHI' : 'புலியந்தி')
+                             : (language === 'english' ? 'MATTAPARAI' : 'மட்டப்பாறை')}
+                         </TableCell>
+                         <TableCell className="font-mono">{entry.lorry_no}</TableCell>
+                         <TableCell>{entry.empty_weight} {entry.items?.unit}</TableCell>
+                         <TableCell>
+                           {entry.load_weight ? `${entry.load_weight} ${entry.items?.unit}` : '-'}
+                         </TableCell>
+                         <TableCell>
+                           <Badge variant={entry.is_completed ? 'default' : 'secondary'}>
+                             {entry.is_completed 
+                               ? (language === 'english' ? 'Completed' : 'முடிந்தது')
+                               : (language === 'english' ? 'Pending' : 'நிலுவையில்')}
+                           </Badge>
+                         </TableCell>
+                       </TableRow>
+                     ))}
                   </TableBody>
                 </Table>
               </div>
@@ -644,32 +659,40 @@ export const TransitLogbook = () => {
                         </Badge>
                       </div>
                       
-                      <div className="space-y-2 text-sm">
-                        <div>
-                          <span className="font-medium">
-                            {language === 'english' ? 'Customer: ' : 'வாடிக்கையாளர்: '}
-                          </span>
-                          {entry.customers ? getDisplayName(entry.customers) : '-'}
-                        </div>
-                        <div>
-                          <span className="font-medium">
-                            {language === 'english' ? 'Item: ' : 'பொருள்: '}
-                          </span>
-                          {entry.items ? getDisplayName(entry.items) : '-'}
-                        </div>
-                        <div>
-                          <span className="font-medium">
-                            {language === 'english' ? 'Lorry: ' : 'லாரி: '}
-                          </span>
-                          {entry.lorry_no}
-                        </div>
-                        <div>
-                          <span className="font-medium">
-                            {language === 'english' ? 'Empty Weight: ' : 'காலி எடை: '}
-                          </span>
-                          {entry.empty_weight} {entry.items?.unit}
-                        </div>
-                      </div>
+                       <div className="space-y-2 text-sm">
+                         <div>
+                           <span className="font-medium">
+                             {language === 'english' ? 'Customer: ' : 'வாடிக்கையாளர்: '}
+                           </span>
+                           {entry.customers ? getDisplayName(entry.customers) : '-'}
+                         </div>
+                         <div>
+                           <span className="font-medium">
+                             {language === 'english' ? 'Item: ' : 'பொருள்: '}
+                           </span>
+                           {entry.items ? getDisplayName(entry.items) : '-'}
+                         </div>
+                         <div>
+                           <span className="font-medium">
+                             {language === 'english' ? 'Loading Place: ' : 'ஏற்றும் இடம்: '}
+                           </span>
+                           {entry.loading_place === 'PULIVANTHI' 
+                             ? (language === 'english' ? 'PULIVANTHI' : 'புலியந்தி')
+                             : (language === 'english' ? 'MATTAPARAI' : 'மட்டப்பாறை')}
+                         </div>
+                         <div>
+                           <span className="font-medium">
+                             {language === 'english' ? 'Lorry: ' : 'லாரி: '}
+                           </span>
+                           {entry.lorry_no}
+                         </div>
+                         <div>
+                           <span className="font-medium">
+                             {language === 'english' ? 'Empty Weight: ' : 'காலி எடை: '}
+                           </span>
+                           {entry.empty_weight} {entry.items?.unit}
+                         </div>
+                       </div>
                       
                       <div className="flex gap-2 items-center">
                         <Input
@@ -719,27 +742,33 @@ export const TransitLogbook = () => {
                 {/* Desktop table view */}
                 <div className="hidden md:block overflow-x-auto">
                   <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{language === 'english' ? 'Serial No' : 'வரிசை எண்'}</TableHead>
-                        <TableHead>{language === 'english' ? 'Date' : 'தேதி'}</TableHead>
-                        <TableHead>{language === 'english' ? 'Customer' : 'வாடிக்கையாளர்'}</TableHead>
-                        <TableHead>{language === 'english' ? 'Item' : 'பொருள்'}</TableHead>
-                        <TableHead>{language === 'english' ? 'Lorry No' : 'லாரி எண்'}</TableHead>
-                        <TableHead>{language === 'english' ? 'Empty Weight' : 'காலி எடை'}</TableHead>
-                        <TableHead>{language === 'english' ? 'Load Weight' : 'மொத்த எடை'}</TableHead>
-                        <TableHead>{language === 'english' ? 'Action' : 'செயல்'}</TableHead>
-                      </TableRow>
-                    </TableHeader>
+                     <TableHeader>
+                       <TableRow>
+                         <TableHead>{language === 'english' ? 'Serial No' : 'வரிசை எண்'}</TableHead>
+                         <TableHead>{language === 'english' ? 'Date' : 'தேதி'}</TableHead>
+                         <TableHead>{language === 'english' ? 'Customer' : 'வாடிக்கையாளர்'}</TableHead>
+                         <TableHead>{language === 'english' ? 'Item' : 'பொருள்'}</TableHead>
+                         <TableHead>{language === 'english' ? 'Loading Place' : 'ஏற்றும் இடம்'}</TableHead>
+                         <TableHead>{language === 'english' ? 'Lorry No' : 'லாரி எண்'}</TableHead>
+                         <TableHead>{language === 'english' ? 'Empty Weight' : 'காலி எடை'}</TableHead>
+                         <TableHead>{language === 'english' ? 'Load Weight' : 'மொத்த எடை'}</TableHead>
+                         <TableHead>{language === 'english' ? 'Action' : 'செயல்'}</TableHead>
+                       </TableRow>
+                     </TableHeader>
                     <TableBody>
-                      {entries.map((entry) => (
-                        <TableRow key={entry.id}>
-                          <TableCell className="font-medium">{entry.serial_no}</TableCell>
-                          <TableCell>{new Date(entry.entry_date).toLocaleDateString()}</TableCell>
-                          <TableCell>{entry.customers ? getDisplayName(entry.customers) : '-'}</TableCell>
-                          <TableCell>{entry.items ? getDisplayName(entry.items) : '-'}</TableCell>
-                          <TableCell className="font-mono">{entry.lorry_no}</TableCell>
-                          <TableCell>{entry.empty_weight} {entry.items?.unit}</TableCell>
+                       {entries.map((entry) => (
+                         <TableRow key={entry.id}>
+                           <TableCell className="font-medium">{entry.serial_no}</TableCell>
+                           <TableCell>{new Date(entry.entry_date).toLocaleDateString()}</TableCell>
+                           <TableCell>{entry.customers ? getDisplayName(entry.customers) : '-'}</TableCell>
+                           <TableCell>{entry.items ? getDisplayName(entry.items) : '-'}</TableCell>
+                           <TableCell>
+                             {entry.loading_place === 'PULIVANTHI' 
+                               ? (language === 'english' ? 'PULIVANTHI' : 'புலியந்தி')
+                               : (language === 'english' ? 'MATTAPARAI' : 'மட்டப்பாறை')}
+                           </TableCell>
+                           <TableCell className="font-mono">{entry.lorry_no}</TableCell>
+                           <TableCell>{entry.empty_weight} {entry.items?.unit}</TableCell>
                           <TableCell>
                             <Input
                               type="number"
@@ -975,25 +1004,33 @@ export const TransitLogbook = () => {
                           </Badge>
                         </div>
                         
-                        <div className="space-y-2 text-sm">
-                          <div>
-                            <span className="font-medium">
-                              {language === 'english' ? 'Customer: ' : 'வாடிக்கையாளர்: '}
-                            </span>
-                            {entry.customers ? getDisplayName(entry.customers) : '-'}
-                          </div>
-                          <div>
-                            <span className="font-medium">
-                              {language === 'english' ? 'Item: ' : 'பொருள்: '}
-                            </span>
-                            {entry.items ? getDisplayName(entry.items) : '-'}
-                          </div>
-                          <div>
-                            <span className="font-medium">
-                              {language === 'english' ? 'Lorry: ' : 'லாரி: '}
-                            </span>
-                            {entry.lorry_no}
-                          </div>
+                         <div className="space-y-2 text-sm">
+                           <div>
+                             <span className="font-medium">
+                               {language === 'english' ? 'Customer: ' : 'வாடிக்கையாளர்: '}
+                             </span>
+                             {entry.customers ? getDisplayName(entry.customers) : '-'}
+                           </div>
+                           <div>
+                             <span className="font-medium">
+                               {language === 'english' ? 'Item: ' : 'பொருள்: '}
+                             </span>
+                             {entry.items ? getDisplayName(entry.items) : '-'}
+                           </div>
+                           <div>
+                             <span className="font-medium">
+                               {language === 'english' ? 'Loading Place: ' : 'ஏற்றும் இடம்: '}
+                             </span>
+                             {entry.loading_place === 'PULIVANTHI' 
+                               ? (language === 'english' ? 'PULIVANTHI' : 'புலியந்தி')
+                               : (language === 'english' ? 'MATTAPARAI' : 'மட்டப்பாறை')}
+                           </div>
+                           <div>
+                             <span className="font-medium">
+                               {language === 'english' ? 'Lorry: ' : 'லாரி: '}
+                             </span>
+                             {entry.lorry_no}
+                           </div>
                           
                           <div className="grid grid-cols-3 gap-2 pt-2 border-t">
                             <div className="text-center">
@@ -1029,30 +1066,36 @@ export const TransitLogbook = () => {
                   {/* Desktop table view */}
                   <div className="hidden md:block overflow-x-auto">
                     <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>{language === 'english' ? 'Serial No' : 'வரிசை எண்'}</TableHead>
-                          <TableHead>{language === 'english' ? 'Date' : 'தேதி'}</TableHead>
-                          <TableHead>{language === 'english' ? 'Customer' : 'வாடிக்கையாளர்'}</TableHead>
-                          <TableHead>{language === 'english' ? 'Item' : 'பொருள்'}</TableHead>
-                          <TableHead>{language === 'english' ? 'Lorry No' : 'லாரி எண்'}</TableHead>
-                          <TableHead>{language === 'english' ? 'Driver Mobile' : 'ஓட்டுனர் மொபைல்'}</TableHead>
-                          <TableHead>{language === 'english' ? 'Empty Weight' : 'காலி எடை'}</TableHead>
-                          <TableHead>{language === 'english' ? 'Load Weight' : 'மொத்த எடை'}</TableHead>
-                          <TableHead>{language === 'english' ? 'Net Weight' : 'நிகர எடை'}</TableHead>
-                          <TableHead>{language === 'english' ? 'Unit' : 'அலகு'}</TableHead>
-                          <TableHead>{language === 'english' ? 'Remarks' : 'குறிப்புகள்'}</TableHead>
-                        </TableRow>
-                      </TableHeader>
+                       <TableHeader>
+                         <TableRow>
+                           <TableHead>{language === 'english' ? 'Serial No' : 'வரிசை எண்'}</TableHead>
+                           <TableHead>{language === 'english' ? 'Date' : 'தேதி'}</TableHead>
+                           <TableHead>{language === 'english' ? 'Customer' : 'வாடிக்கையாளர்'}</TableHead>
+                           <TableHead>{language === 'english' ? 'Item' : 'பொருள்'}</TableHead>
+                           <TableHead>{language === 'english' ? 'Loading Place' : 'ஏற்றும் இடம்'}</TableHead>
+                           <TableHead>{language === 'english' ? 'Lorry No' : 'லாரி எண்'}</TableHead>
+                           <TableHead>{language === 'english' ? 'Driver Mobile' : 'ஓட்டுனர் மொபைல்'}</TableHead>
+                           <TableHead>{language === 'english' ? 'Empty Weight' : 'காலி எடை'}</TableHead>
+                           <TableHead>{language === 'english' ? 'Load Weight' : 'மொத்த எடை'}</TableHead>
+                           <TableHead>{language === 'english' ? 'Net Weight' : 'நிகர எடை'}</TableHead>
+                           <TableHead>{language === 'english' ? 'Unit' : 'அலகு'}</TableHead>
+                           <TableHead>{language === 'english' ? 'Remarks' : 'குறிப்புகள்'}</TableHead>
+                         </TableRow>
+                       </TableHeader>
                       <TableBody>
-                        {reportEntries.map((entry) => (
-                          <TableRow key={entry.id}>
-                            <TableCell className="font-medium">{entry.serial_no}</TableCell>
-                            <TableCell>{format(new Date(entry.entry_date), 'dd/MM/yyyy')}</TableCell>
-                            <TableCell>{entry.customers ? getDisplayName(entry.customers) : '-'}</TableCell>
-                            <TableCell>{entry.items ? getDisplayName(entry.items) : '-'}</TableCell>
-                            <TableCell className="font-mono">{entry.lorry_no}</TableCell>
-                            <TableCell className="font-mono">{entry.driver_mobile}</TableCell>
+                         {reportEntries.map((entry) => (
+                           <TableRow key={entry.id}>
+                             <TableCell className="font-medium">{entry.serial_no}</TableCell>
+                             <TableCell>{format(new Date(entry.entry_date), 'dd/MM/yyyy')}</TableCell>
+                             <TableCell>{entry.customers ? getDisplayName(entry.customers) : '-'}</TableCell>
+                             <TableCell>{entry.items ? getDisplayName(entry.items) : '-'}</TableCell>
+                             <TableCell>
+                               {entry.loading_place === 'PULIVANTHI' 
+                                 ? (language === 'english' ? 'PULIVANTHI' : 'புலியந்தி')
+                                 : (language === 'english' ? 'MATTAPARAI' : 'மட்டப்பாறை')}
+                             </TableCell>
+                             <TableCell className="font-mono">{entry.lorry_no}</TableCell>
+                             <TableCell className="font-mono">{entry.driver_mobile}</TableCell>
                             <TableCell>{entry.empty_weight} {entry.items?.unit}</TableCell>
                             <TableCell>{entry.load_weight || 0} {entry.items?.unit}</TableCell>
                             <TableCell className="font-medium text-primary">

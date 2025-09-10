@@ -74,13 +74,13 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
         LglNm: getDisplayName(customer),
         TrdNm: getDisplayName(customer),
         Pos: "33",
-        Addr1: "Customer Address",
+        Addr1: customer.address_english || customer.address_tamil || "Customer Address",
         Addr2: null,
         Loc: "VILLUPURAM",
         Pin: 605201,
         Stcd: "33",
-        Ph: null,
-        Em: null
+        Ph: customer.phone || null,
+        Em: customer.email || null
       },
       ItemList: [
         {
@@ -199,7 +199,10 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
               <div><strong>Customer:</strong> ${getDisplayName(customer)}</div>
               <div><strong>Lorry No:</strong> ${outwardEntry.lorry_no}</div>
             </div>
+            ${customer.phone ? `<div class="row"><div><strong>Phone:</strong> ${customer.phone}</div></div>` : ''}
+            ${customer.address_english || customer.address_tamil ? `<div class="row"><div><strong>Address:</strong> ${customer.address_english || customer.address_tamil}</div></div>` : ''}
             ${customer.gstin ? `<div class="row"><div><strong>Customer GSTIN:</strong> ${customer.gstin}</div></div>` : ''}
+            ${customer.contact_person ? `<div class="row"><div><strong>Contact Person:</strong> ${customer.contact_person}</div></div>` : ''}
           </div>
 
           <table class="table">
@@ -354,9 +357,16 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
               <h4 className="font-semibold mb-2">
                 {language === 'english' ? 'Customer Details' : 'வாடிக்கையாளர் விவரங்கள்'}
               </h4>
-              <p><strong>{language === 'english' ? 'Name:' : 'பெயர்:'}</strong> {getDisplayName(customer)}</p>
-              <p><strong>{language === 'english' ? 'Code:' : 'குறியீடு:'}</strong> {customer.code}</p>
-              {customer.gstin && <p><strong>GSTIN:</strong> {customer.gstin}</p>}
+              <div className="space-y-1 text-sm">
+                <p><strong>{language === 'english' ? 'Name:' : 'பெயர்:'}</strong> {getDisplayName(customer)}</p>
+                <p><strong>{language === 'english' ? 'Code:' : 'குறியீடு:'}</strong> {customer.code}</p>
+                {customer.phone && <p><strong>{language === 'english' ? 'Phone:' : 'தொலைபேசி:'}</strong> {customer.phone}</p>}
+                {(customer.address_english || customer.address_tamil) && (
+                  <p><strong>{language === 'english' ? 'Address:' : 'முகவரி:'}</strong> {customer.address_english || customer.address_tamil}</p>
+                )}
+                {customer.contact_person && <p><strong>{language === 'english' ? 'Contact Person:' : 'தொடர்பு நபர்:'}</strong> {customer.contact_person}</p>}
+                {customer.gstin && <p><strong>GSTIN:</strong> {customer.gstin}</p>}
+              </div>
             </div>
           </div>
 

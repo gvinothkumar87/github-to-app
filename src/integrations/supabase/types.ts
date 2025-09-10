@@ -582,6 +582,7 @@ export type Database = {
       }
       sales: {
         Row: {
+          bill_serial_no: string | null
           created_at: string
           created_by: string | null
           customer_id: string
@@ -595,6 +596,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          bill_serial_no?: string | null
           created_at?: string
           created_by?: string | null
           customer_id: string
@@ -608,6 +610,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          bill_serial_no?: string | null
           created_at?: string
           created_by?: string | null
           customer_id?: string

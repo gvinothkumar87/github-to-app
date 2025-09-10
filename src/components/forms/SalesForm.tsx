@@ -34,7 +34,7 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
         .select(`
           *,
           customers (id, name_english, name_tamil, code, is_active, created_at, updated_at),
-          items (id, name_english, name_tamil, code, unit, is_active, created_at, updated_at)
+          items (id, name_english, name_tamil, code, unit, gst_percentage, hsn_no, is_active, created_at, updated_at)
         `)
         .eq('is_completed', true)
         .order('created_at', { ascending: false });
@@ -66,7 +66,58 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
   const calculateTotalAmount = () => {
     if (!selectedEntry || !rate) return 0;
     const quantity = selectedEntry.net_weight || 0;
+    const baseAmount = quantity * parseFloat(rate);
+    const gstPercent = selectedEntry.items?.gst_percentage || 0;
+    const gstAmount = baseAmount * (gstPercent / 100);
+    return baseAmount + gstAmount;
+  };
+
+  const getBaseAmount = () => {
+    if (!selectedEntry || !rate) return 0;
+    const quantity = selectedEntry.net_weight || 0;
     return quantity * parseFloat(rate);
+  };
+
+  const getGstAmount = () => {
+    const baseAmount = getBaseAmount();
+    const gstPercent = selectedEntry?.items?.gst_percentage || 0;
+    return baseAmount * (gstPercent / 100);
+  };
+
+  const generateBillSerial = async (loadingPlace: string) => {
+    try {
+      let prefix = '';
+      let query = supabase.from('sales').select('bill_serial_no');
+      
+      if (loadingPlace === 'PULIVANTHI') {
+        // For PULIVANTHI, get numeric serials like 001, 002, 003
+        query = query.like('bill_serial_no', '[0-9][0-9][0-9]');
+      } else if (loadingPlace === 'MATTAPARAI') {
+        // For MATTAPARAI, get GRM prefixed serials like GRM001, GRM002, GRM003
+        prefix = 'GRM';
+        query = query.like('bill_serial_no', 'GRM%');
+      }
+      
+      const { data: existingBills } = await query.order('bill_serial_no', { ascending: false }).limit(1);
+      
+      let nextNumber = 1;
+      if (existingBills && existingBills.length > 0) {
+        const lastSerial = existingBills[0].bill_serial_no;
+        if (loadingPlace === 'PULIVANTHI') {
+          const lastNumber = parseInt(lastSerial || '000');
+          nextNumber = lastNumber + 1;
+        } else if (loadingPlace === 'MATTAPARAI') {
+          const lastNumber = parseInt((lastSerial || 'GRM000').replace('GRM', ''));
+          nextNumber = lastNumber + 1;
+        }
+      }
+      
+      const serialNumber = nextNumber.toString().padStart(3, '0');
+      return loadingPlace === 'PULIVANTHI' ? serialNumber : `${prefix}${serialNumber}`;
+    } catch (error) {
+      console.error('Error generating bill serial:', error);
+      return loadingPlace === 'PULIVANTHI' ? '001' : 'GRM001';
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,6 +135,9 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
     setLoading(true);
 
     try {
+      // Generate bill serial number based on loading place
+      const billSerial = await generateBillSerial(selectedEntry.loading_place);
+      
       // Create sale record
       const saleData = {
         outward_entry_id: selectedEntry.id,
@@ -92,6 +146,7 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
         quantity: selectedEntry.net_weight || 0,
         rate: parseFloat(rate),
         total_amount: calculateTotalAmount(),
+        bill_serial_no: billSerial,
       };
 
       const { data: sale, error: saleError } = await supabase
@@ -190,6 +245,14 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
                   <Label className="text-xs font-medium">{language === 'english' ? 'Lorry No' : 'லாரி எண்'}:</Label>
                   <p>{selectedEntry.lorry_no}</p>
                 </div>
+                <div>
+                  <Label className="text-xs font-medium">{language === 'english' ? 'GST %' : 'ஜிஎஸ்டி %'}:</Label>
+                  <p>{selectedEntry.items?.gst_percentage || 0}%</p>
+                </div>
+                <div>
+                  <Label className="text-xs font-medium">{language === 'english' ? 'Loading Place' : 'ஏற்றும் இடம்'}:</Label>
+                  <p>{selectedEntry.loading_place}</p>
+                </div>
               </div>
             </div>
           )}
@@ -210,8 +273,16 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
           </div>
 
           {selectedEntry && rate && (
-            <div className="bg-primary/10 p-4 rounded-lg">
-              <div className="flex justify-between items-center">
+            <div className="bg-primary/10 p-4 rounded-lg space-y-2">
+              <div className="flex justify-between items-center text-sm">
+                <span>{language === 'english' ? 'Base Amount:' : 'அடிப்படை தொகை:'}</span>
+                <span>₹{getBaseAmount().toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span>{language === 'english' ? 'GST Amount:' : 'ஜிஎஸ்டி தொகை:'}</span>
+                <span>₹{getGstAmount().toFixed(2)}</span>
+              </div>
+              <div className="border-t pt-2 flex justify-between items-center">
                 <span className="font-medium">
                   {language === 'english' ? 'Total Amount:' : 'மொத்த தொகை:'}
                 </span>

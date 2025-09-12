@@ -1228,6 +1228,11 @@ export const TransitLogbook = () => {
           </div>
         )}
 
+        {/* Sales Ledger tab content */}
+        {activeTab === 'sales-ledger' && (
+          <SalesLedgerView />
+        )}
+
         {/* Customer Ledger tab content */}
         {activeTab === 'customer-ledger' && (
           <CustomerLedgerView />

@@ -8,12 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Customer, CustomerLedger } from '@/types';
+import { Customer, CustomerLedger, Item } from '@/types';
 import { format } from 'date-fns';
 
 export const CustomerLedgerView = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [selectedCustomerId, setSelectedCustomerId] = useState('');
+  const [items, setItems] = useState<Item[]>([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState('all');
+  const [selectedItemId, setSelectedItemId] = useState('all');
   const [ledgerEntries, setLedgerEntries] = useState<CustomerLedger[]>([]);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -24,19 +26,17 @@ export const CustomerLedgerView = () => {
 
   useEffect(() => {
     fetchCustomers();
+    fetchItems();
   }, []);
 
   useEffect(() => {
-    if (selectedCustomerId) {
-      fetchLedgerEntries();
-    }
-  }, [selectedCustomerId, dateFrom, dateTo]);
+    fetchLedgerEntries();
+  }, [selectedCustomerId, selectedItemId, dateFrom, dateTo]);
 
   const fetchCustomers = async () => {
     const { data, error } = await supabase
       .from('customers')
       .select('*')
-      .eq('is_active', true)
       .order('name_english', { ascending: true });
 
     if (error) {
@@ -51,27 +51,107 @@ export const CustomerLedgerView = () => {
     setCustomers(data || []);
   };
 
-  const fetchLedgerEntries = async () => {
-    if (!selectedCustomerId) return;
+  const fetchItems = async () => {
+    const { data, error } = await supabase
+      .from('items')
+      .select('*')
+      .order('name_english', { ascending: true });
 
+    if (error) {
+      toast({
+        title: language === 'english' ? 'Error' : 'பிழை',
+        description: language === 'english' ? 'Failed to fetch items' : 'பொருட்களை பெறுவதில் தோல்வி',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setItems(data || []);
+  };
+
+  const fetchLedgerEntries = async () => {
     setLoading(true);
-    let query = supabase
+    
+    // First, get sales data with item information if item filter is applied
+    let salesQuery = supabase
+      .from('sales')
+      .select(`
+        id,
+        customer_id,
+        item_id,
+        sale_date,
+        total_amount,
+        customers (id, name_english, name_tamil, code),
+        items (id, name_english, name_tamil, code)
+      `);
+
+    // Apply customer filter
+    if (selectedCustomerId !== 'all') {
+      salesQuery = salesQuery.eq('customer_id', selectedCustomerId);
+    }
+
+    // Apply item filter
+    if (selectedItemId !== 'all') {
+      salesQuery = salesQuery.eq('item_id', selectedItemId);
+    }
+
+    // Apply date filters
+    if (dateFrom) {
+      salesQuery = salesQuery.gte('sale_date', dateFrom);
+    }
+    if (dateTo) {
+      salesQuery = salesQuery.lte('sale_date', dateTo);
+    }
+
+    const { data: salesData, error: salesError } = await salesQuery;
+
+    if (salesError) {
+      toast({
+        title: language === 'english' ? 'Error' : 'பிழை',
+        description: language === 'english' ? 'Failed to fetch sales data' : 'விற்பனை தரவுகளை பெறுவதில் தோல்வி',
+        variant: 'destructive',
+      });
+      setLoading(false);
+      return;
+    }
+
+    // Get ledger entries based on sales
+    let ledgerQuery = supabase
       .from('customer_ledger')
       .select(`
         *,
         customers (id, name_english, name_tamil, code)
       `)
-      .eq('customer_id', selectedCustomerId)
       .order('transaction_date', { ascending: true });
 
-    if (dateFrom) {
-      query = query.gte('transaction_date', dateFrom);
-    }
-    if (dateTo) {
-      query = query.lte('transaction_date', dateTo);
+    // Apply customer filter to ledger
+    if (selectedCustomerId !== 'all') {
+      ledgerQuery = ledgerQuery.eq('customer_id', selectedCustomerId);
     }
 
-    const { data, error } = await query;
+    // Apply date filters to ledger
+    if (dateFrom) {
+      ledgerQuery = ledgerQuery.gte('transaction_date', dateFrom);
+    }
+    if (dateTo) {
+      ledgerQuery = ledgerQuery.lte('transaction_date', dateTo);
+    }
+
+    // If item filter is applied, filter by sales reference_ids
+    if (selectedItemId !== 'all' && salesData) {
+      const saleIds = salesData.map(sale => sale.id);
+      if (saleIds.length > 0) {
+        ledgerQuery = ledgerQuery.in('reference_id', saleIds);
+      } else {
+        // No sales found for the item filter, so no ledger entries
+        setLedgerEntries([]);
+        setCustomerBalance(0);
+        setLoading(false);
+        return;
+      }
+    }
+
+    const { data, error } = await ledgerQuery;
 
     if (error) {
       toast({
@@ -109,7 +189,7 @@ export const CustomerLedgerView = () => {
           <CardTitle>{language === 'english' ? 'Customer Ledger' : 'வாடிக்கையாளர் லெட்ஜர்'}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
             <div>
               <Label htmlFor="customer">
                 {language === 'english' ? 'Customer' : 'வாடிக்கையாளர்'}
@@ -119,9 +199,33 @@ export const CustomerLedgerView = () => {
                   <SelectValue placeholder={language === 'english' ? 'Choose customer...' : 'வாடிக்கையாளரை தேர்ந்தெடுக்கவும்...'} />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="all">
+                    {language === 'english' ? 'All Customers' : 'அனைத்து வாடிக்கையாளர்கள்'}
+                  </SelectItem>
                   {customers.map((customer) => (
                     <SelectItem key={customer.id} value={customer.id}>
                       {getDisplayName(customer)} {customer.code && `(${customer.code})`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="item">
+                {language === 'english' ? 'Product' : 'பொருள்'}
+              </Label>
+              <Select value={selectedItemId} onValueChange={setSelectedItemId}>
+                <SelectTrigger>
+                  <SelectValue placeholder={language === 'english' ? 'Choose product...' : 'பொருளை தேர்ந்தெடுக்கவும்...'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    {language === 'english' ? 'All Products' : 'அனைத்து பொருட்கள்'}
+                  </SelectItem>
+                  {items.map((item) => (
+                    <SelectItem key={item.id} value={item.id}>
+                      {getDisplayName(item)} {item.code && `(${item.code})`}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -153,13 +257,13 @@ export const CustomerLedgerView = () => {
             </div>
 
             <div className="flex items-end">
-              <Button onClick={fetchLedgerEntries} disabled={!selectedCustomerId}>
+              <Button onClick={fetchLedgerEntries}>
                 {language === 'english' ? 'View Ledger' : 'லெட்ஜரைப் பார்க்கவும்'}
               </Button>
             </div>
           </div>
 
-          {selectedCustomerId && (
+          {(selectedCustomerId || selectedItemId !== 'all') && (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-muted rounded-lg">
               <div className="text-center">
                 <div className="text-2xl font-bold text-red-600">₹{getTotalDebit().toFixed(2)}</div>
@@ -255,7 +359,7 @@ export const CustomerLedgerView = () => {
             </div>
           </CardContent>
         </Card>
-      ) : selectedCustomerId ? (
+      ) : (selectedCustomerId !== 'all' || selectedItemId !== 'all') ? (
         <Card>
           <CardContent className="p-6">
             <div className="text-center text-muted-foreground">

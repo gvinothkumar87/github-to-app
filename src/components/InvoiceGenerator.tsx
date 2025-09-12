@@ -43,14 +43,32 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
   const totalAmount = baseAmount + gstAmount;
 
   const generateEInvoiceJSON = () => {
+    const addressParts = companyDetails.address.split(',').map(part => part.trim());
+    const sellerAddr1 = outwardEntry.loading_place === 'PULIVANTHI' 
+      ? "6/175 GINGEE MAIN ROAD" 
+      : "S.No.58, SE KUNNATHURE ROAD,MATTAPARAI";
+    const sellerAddr2 = outwardEntry.loading_place === 'PULIVANTHI'
+      ? "GINGEE TALUK, VILLUPURAM DISTRICT"
+      : "GINGEE TK., VILLUPURAM DIST.";
+    const sellerLoc = outwardEntry.loading_place === 'PULIVANTHI'
+      ? "GINGEE"
+      : "MATTAPARAI VILLAGE";
+
+    // Parse customer address
+    const customerAddr = customer.address_english || customer.address_tamil || "";
+    const customerAddrParts = customerAddr.split(',').map(part => part.trim());
+    const buyerAddr1 = customerAddrParts[0] || "";
+    const buyerAddr2 = customerAddrParts.slice(1).join(',') || "";
+    const buyerLoc = customerAddrParts[customerAddrParts.length - 1] || "VILLUPURAM";
+
     const eInvoiceData = {
       Version: "1.1",
       TranDtls: {
         TaxSch: "GST",
         SupTyp: "B2B",
+        IgstOnIntra: "N",
         RegRev: "N",
-        EcmGstin: null,
-        IgstOnIntra: "N"
+        EcmGstin: null
       },
       DocDtls: {
         Typ: "INV",
@@ -60,27 +78,40 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
       SellerDtls: {
         Gstin: companyDetails.gstin,
         LglNm: companyDetails.name,
-        TrdNm: companyDetails.name,
-        Addr1: companyDetails.address.split(',')[0],
-        Addr2: companyDetails.address.split(',').slice(1, -2).join(','),
-        Loc: "VILLUPURAM",
+        Addr1: sellerAddr1,
+        Addr2: sellerAddr2,
+        Loc: sellerLoc,
         Pin: 605201,
         Stcd: "33",
-        Ph: null,
-        Em: null
+        Ph: "9790404001",
+        Em: "ER.CGVIGNESH@GMAIL.COM"
       },
       BuyerDtls: {
         Gstin: customer.gstin || null,
         LglNm: getDisplayName(customer),
-        TrdNm: getDisplayName(customer),
-        Pos: "33",
-        Addr1: customer.address_english || customer.address_tamil || "Customer Address",
-        Addr2: null,
-        Loc: "VILLUPURAM",
+        Addr1: buyerAddr1,
+        Addr2: buyerAddr2,
+        Loc: buyerLoc,
         Pin: 605201,
+        Pos: "33",
         Stcd: "33",
         Ph: customer.phone || null,
         Em: customer.email || null
+      },
+      ValDtls: {
+        AssVal: baseAmount,
+        IgstVal: 0,
+        CgstVal: gstAmount / 2,
+        SgstVal: gstAmount / 2,
+        CesVal: 0,
+        StCesVal: 0,
+        Discount: 0,
+        OthChrg: 0,
+        RndOffAmt: 0,
+        TotInvVal: totalAmount
+      },
+      RefDtls: {
+        InvRm: "NICGEPP2.0"
       },
       ItemList: [
         {
@@ -88,14 +119,13 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
           PrdDesc: getDisplayName(item),
           IsServc: "N",
           HsnCd: item.hsn_no,
-          Barcde: null,
           Qty: sale.quantity,
           FreeQty: 0,
           Unit: item.unit,
           UnitPrice: sale.rate,
           TotAmt: baseAmount,
           Discount: 0,
-          PreTaxVal: baseAmount,
+          PreTaxVal: 0,
           AssAmt: baseAmount,
           GstRt: item.gst_percentage,
           IgstAmt: 0,
@@ -110,42 +140,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
           OthChrg: 0,
           TotItemVal: totalAmount
         }
-      ],
-      ValDtls: {
-        AssVal: baseAmount,
-        CgstVal: gstAmount / 2,
-        SgstVal: gstAmount / 2,
-        IgstVal: 0,
-        CesVal: 0,
-        StCesVal: 0,
-        Discount: 0,
-        OthChrg: 0,
-        RndOffAmt: 0,
-        TotInvVal: totalAmount,
-        TotInvValFc: totalAmount
-      },
-      PayDtls: {
-        Nm: null,
-        Accdet: null,
-        Mode: null,
-        Fininsbr: null,
-        Payterm: null,
-        Payinstr: null,
-        Crtrn: null,
-        Dirdr: null,
-        Crday: null,
-        Paidamt: 0,
-        Paymtdue: totalAmount
-      },
-      RefDtls: {
-        InvRm: `Sale of ${getDisplayName(item)} - Lorry No: ${outwardEntry.lorry_no}`,
-        DocPerdDtls: {
-          InvStDt: new Date().toISOString().split('T')[0].split('-').reverse().join('/'),
-          InvEndDt: new Date().toISOString().split('T')[0].split('-').reverse().join('/')
-        },
-        PrecDocDtls: [],
-        ContrDtls: []
-      }
+      ]
     };
 
     const blob = new Blob([JSON.stringify(eInvoiceData, null, 2)], { type: 'application/json' });

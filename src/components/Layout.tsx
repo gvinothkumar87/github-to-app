@@ -1,5 +1,5 @@
 import React from 'react';
-import { Truck, Package, Users, ClipboardList, BarChart3, Menu, Scale, LogOut, ShoppingCart, Receipt, Book, FileText, Plus, Minus, Trash2 } from 'lucide-react';
+import { Truck, Package, Users, ClipboardList, BarChart3, Menu, Scale, LogOut, ShoppingCart, Receipt, Book, FileText, Plus, Minus, Trash2, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,7 +25,7 @@ interface LayoutProps {
 const AppSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabChange: (tab: string) => void }) => {
   const { language } = useLanguage();
   const { signOut } = useAuth();
-  const { setOpenMobile } = useSidebar();
+  const { setOpenMobile, setOpen } = useSidebar();
   const navigate = useNavigate();
   const isAdmin = useAdminCheck();
 
@@ -75,6 +75,7 @@ const AppSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabChange
   const handleTabClick = (tabId: string) => {
     onTabChange(tabId);
     setOpenMobile(false); // Close mobile sidebar after selection
+    setOpen(false); // Close desktop sidebar after selection
   };
 
   return (
@@ -106,6 +107,7 @@ const AppSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabChange
                   onClick={() => {
                     item.onClick();
                     setOpenMobile(false);
+                    setOpen(false);
                   }}
                   className="w-full justify-start"
                 >
@@ -144,17 +146,31 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
   const navigate = useNavigate();
   const isAdmin = useAdminCheck();
 
+  const HomeButton = () => {
+    const { toggleSidebar } = useSidebar();
+    
+    return (
+      <button
+        onClick={toggleSidebar}
+        className="p-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+        title={language === 'english' ? 'Toggle Menu' : 'மெனுவை மாற்று'}
+      >
+        <Home className="h-5 w-5" />
+      </button>
+    );
+  };
+
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full bg-background">
-        {/* Mobile sidebar */}
+        {/* Sidebar */}
         <AppSidebar activeTab={activeTab} onTabChange={onTabChange} />
         
         {/* Main content area */}
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Mobile sidebar trigger */}
-          <div className="md:hidden p-2 border-b">
-            <SidebarTrigger className="bg-primary/10 hover:bg-primary/20 text-primary border-primary/20" />
+          {/* Home button - always visible */}
+          <div className="p-4 border-b">
+            <HomeButton />
           </div>
 
           {/* Main Content */}

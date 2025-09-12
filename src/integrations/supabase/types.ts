@@ -133,6 +133,72 @@ export type Database = {
         }
         Relationships: []
       }
+      company_settings: {
+        Row: {
+          address_line1: string
+          address_line2: string | null
+          bank_account_no: string | null
+          bank_branch: string | null
+          bank_ifsc: string | null
+          bank_name: string | null
+          company_name: string
+          created_at: string
+          email: string | null
+          gstin: string
+          id: string
+          is_active: boolean
+          locality: string
+          location_code: string
+          location_name: string
+          phone: string | null
+          pin_code: number
+          state_code: string
+          updated_at: string
+        }
+        Insert: {
+          address_line1: string
+          address_line2?: string | null
+          bank_account_no?: string | null
+          bank_branch?: string | null
+          bank_ifsc?: string | null
+          bank_name?: string | null
+          company_name: string
+          created_at?: string
+          email?: string | null
+          gstin: string
+          id?: string
+          is_active?: boolean
+          locality: string
+          location_code: string
+          location_name: string
+          phone?: string | null
+          pin_code: number
+          state_code?: string
+          updated_at?: string
+        }
+        Update: {
+          address_line1?: string
+          address_line2?: string | null
+          bank_account_no?: string | null
+          bank_branch?: string | null
+          bank_ifsc?: string | null
+          bank_name?: string | null
+          company_name?: string
+          created_at?: string
+          email?: string | null
+          gstin?: string
+          id?: string
+          is_active?: boolean
+          locality?: string
+          location_code?: string
+          location_name?: string
+          phone?: string | null
+          pin_code?: number
+          state_code?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       credit_notes: {
         Row: {
           amount: number
@@ -278,6 +344,9 @@ export type Database = {
           name_english: string
           name_tamil: string | null
           phone: string | null
+          pin_code: string | null
+          place_of_supply: string | null
+          state_code: string | null
           updated_at: string
         }
         Insert: {
@@ -293,6 +362,9 @@ export type Database = {
           name_english: string
           name_tamil?: string | null
           phone?: string | null
+          pin_code?: string | null
+          place_of_supply?: string | null
+          state_code?: string | null
           updated_at?: string
         }
         Update: {
@@ -308,6 +380,9 @@ export type Database = {
           name_english?: string
           name_tamil?: string | null
           phone?: string | null
+          pin_code?: string | null
+          place_of_supply?: string | null
+          state_code?: string | null
           updated_at?: string
         }
         Relationships: []

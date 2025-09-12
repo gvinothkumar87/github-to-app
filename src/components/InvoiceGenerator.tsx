@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Download, FileText } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect } from 'react';
 
 interface InvoiceGeneratorProps {
   sale: Sale;
@@ -20,46 +22,81 @@ interface CompanyDetails {
 
 export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }: InvoiceGeneratorProps) => {
   const { language, getDisplayName } = useLanguage();
+  const [companySettings, setCompanySettings] = useState<any>(null);
 
-  const getCompanyDetails = (loadingPlace: string): CompanyDetails => {
+  useEffect(() => {
+    const fetchCompanySettings = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('company_settings')
+          .select('*')
+          .eq('location_code', outwardEntry.loading_place)
+          .eq('is_active', true)
+          .single();
+
+        if (error) {
+          console.error('Error fetching company settings:', error);
+          // Fallback to hardcoded values
+          setCompanySettings(getDefaultCompanyDetails(outwardEntry.loading_place));
+        } else {
+          setCompanySettings(data);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        setCompanySettings(getDefaultCompanyDetails(outwardEntry.loading_place));
+      }
+    };
+
+    fetchCompanySettings();
+  }, [outwardEntry.loading_place]);
+
+  const getDefaultCompanyDetails = (loadingPlace: string) => {
     if (loadingPlace === 'PULIVANTHI') {
       return {
-        name: 'GOVINDAN RICE MILL',
-        address: '6/175 GINGEE MAIN ROAD, GINGEE TALUK, VILLUPURAM DISTRICT, PIN CODE: 605201',
-        gstin: '33AALFG0221E1Z3'
+        company_name: "GOVINDAN RICE MILL",
+        address_line1: "6/175 GINGEE MAIN ROAD",
+        address_line2: "GINGEE TALUK, VILLUPURAM DISTRICT",
+        locality: "GINGEE",
+        pin_code: 605601,
+        state_code: "33",
+        gstin: "33AALFG0221E1Z3",
+        phone: "9790404001",
+        email: "ER.CGVIGNESH@GMAIL.COM"
       };
     } else {
       return {
-        name: 'GOVINDAN RICE MILL',
-        address: 'S.NO 58, SE. KUNNATHUR ROAD, MATTAPARAI VILLAGE, GINGEE TALUK, VILLUPURAM DISTRICT, PIN CODE: 605201',
-        gstin: '33AALFG0221E1Z3'
+        company_name: "GOVINDAN RICE MILL",
+        address_line1: "S.No.58, SE KUNNATHURE ROAD,MATTAPARAI",
+        address_line2: "GINGEE TK., VILLUPURAM DIST.",
+        locality: "MATTAPARAI VILLAGE",
+        pin_code: 605201,
+        state_code: "33",
+        gstin: "33AALFG0221E1Z3",
+        phone: "9790404001",
+        email: "ER.CGVIGNESH@GMAIL.COM"
       };
     }
   };
-
-  const companyDetails = getCompanyDetails(outwardEntry.loading_place);
   const baseAmount = sale.quantity * sale.rate;
   const gstAmount = baseAmount * (item.gst_percentage / 100);
   const totalAmount = baseAmount + gstAmount;
 
   const generateEInvoiceJSON = () => {
-    const addressParts = companyDetails.address.split(',').map(part => part.trim());
-    const sellerAddr1 = outwardEntry.loading_place === 'PULIVANTHI' 
-      ? "6/175 GINGEE MAIN ROAD" 
-      : "S.No.58, SE KUNNATHURE ROAD,MATTAPARAI";
-    const sellerAddr2 = outwardEntry.loading_place === 'PULIVANTHI'
-      ? "GINGEE TALUK, VILLUPURAM DISTRICT"
-      : "GINGEE TK., VILLUPURAM DIST.";
-    const sellerLoc = outwardEntry.loading_place === 'PULIVANTHI'
-      ? "GINGEE"
-      : "MATTAPARAI VILLAGE";
+    if (!companySettings) {
+      console.error('Company settings not loaded');
+      return;
+    }
 
     // Parse customer address
     const customerAddr = customer.address_english || customer.address_tamil || "";
     const customerAddrParts = customerAddr.split(',').map(part => part.trim());
     const buyerAddr1 = customerAddrParts[0] || "";
-    const buyerAddr2 = customerAddrParts.slice(1).join(',') || "";
-    const buyerLoc = customerAddrParts[customerAddrParts.length - 1] || "VILLUPURAM";
+    const buyerAddr2 = customerAddrParts.slice(1, -1).join(',').trim() || "";
+    const buyerLoc = customerAddrParts[customerAddrParts.length - 1]?.trim() || "VILLUPURAM";
+    
+    // Extract PIN code from customer address or use default
+    const pinCodeMatch = customerAddr.match(/\b\d{6}\b/);
+    const buyerPinCode = customer.pin_code || pinCodeMatch?.[0] || "605201";
 
     const eInvoiceData = {
       Version: "1.1",
@@ -76,15 +113,15 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
         Dt: new Date().toISOString().split('T')[0].split('-').reverse().join('/')
       },
       SellerDtls: {
-        Gstin: companyDetails.gstin,
-        LglNm: companyDetails.name,
-        Addr1: sellerAddr1,
-        Addr2: sellerAddr2,
-        Loc: sellerLoc,
-        Pin: 605201,
-        Stcd: "33",
-        Ph: "9790404001",
-        Em: "ER.CGVIGNESH@GMAIL.COM"
+        Gstin: companySettings.gstin,
+        LglNm: companySettings.company_name,
+        Addr1: companySettings.address_line1,
+        Addr2: companySettings.address_line2 || "",
+        Loc: companySettings.locality,
+        Pin: companySettings.pin_code,
+        Stcd: companySettings.state_code,
+        Ph: companySettings.phone || null,
+        Em: companySettings.email || null
       },
       BuyerDtls: {
         Gstin: customer.gstin || null,
@@ -92,9 +129,9 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
         Addr1: buyerAddr1,
         Addr2: buyerAddr2,
         Loc: buyerLoc,
-        Pin: 605201,
-        Pos: "33",
-        Stcd: "33",
+        Pin: parseInt(buyerPinCode),
+        Pos: customer.place_of_supply || customer.state_code || "33",
+        Stcd: customer.state_code || "33",
         Ph: customer.phone || null,
         Em: customer.email || null
       },
@@ -223,12 +260,12 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
                 <img src="${window.location.origin}/lovable-uploads/8ef45f84-cd7a-4909-9f31-86a578d28f2f.png" alt="GRM Logo" class="logo" onerror="this.style.display='none'" />
               </div>
               <div class="company-section">
-                <div class="company-name">${companyDetails.name}</div>
+                <div class="company-name">${companySettings?.company_name || "GOVINDAN RICE MILL"}</div>
                 <div class="company-address">
-                  ${companyDetails.address.split(',').slice(0, 2).join(',')}<br>
-                  ${companyDetails.address.split(',').slice(2).join(',')}<br>
-                  Phone: 9790404001, 9444066558<br>
-                  GSTIN/UIN: ${companyDetails.gstin} &nbsp;&nbsp;&nbsp; State Name: Tamil Nadu, Code: 33
+                  ${companySettings?.address_line1}<br>
+                  ${companySettings?.address_line2}, ${companySettings?.locality} - ${companySettings?.pin_code}<br>
+                  Phone: ${companySettings?.phone || "9790404001"}<br>
+                  GSTIN/UIN: ${companySettings?.gstin} &nbsp;&nbsp;&nbsp; State Name: Tamil Nadu, Code: ${companySettings?.state_code}
                 </div>
               </div>
               <div class="invoice-info-section">
@@ -367,7 +404,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
                   <span style="font-size: 10px;">IFSC: ICIC0003051</span>
                 </div>
                 <div class="signature-area">
-                  <div style="margin-bottom: 40px;">for ${companyDetails.name}</div>
+                  <div style="margin-bottom: 40px;">for ${companySettings?.company_name || "GOVINDAN RICE MILL"}</div>
                   <div style="border-top: 1px solid #000; padding-top: 5px;">Authorised Signatory</div>
                 </div>
               </div>
@@ -449,9 +486,12 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
         <div className="space-y-6">
           {/* Company Details */}
           <div className="bg-muted p-4 rounded-lg">
-            <h3 className="font-semibold text-lg mb-2">{companyDetails.name}</h3>
-            <p className="text-sm">{companyDetails.address}</p>
-            <p className="text-sm font-medium">GSTIN: {companyDetails.gstin}</p>
+            <h3 className="font-semibold text-lg mb-2">{companySettings?.company_name || "GOVINDAN RICE MILL"}</h3>
+            <p className="text-sm">
+              {companySettings?.address_line1}, {companySettings?.address_line2}
+            </p>
+            <p className="text-sm">{companySettings?.locality} - {companySettings?.pin_code}</p>
+            <p className="text-sm font-medium">GSTIN: {companySettings?.gstin}</p>
           </div>
 
           {/* Invoice Details */}

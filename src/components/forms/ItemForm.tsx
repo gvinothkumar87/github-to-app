@@ -16,7 +16,7 @@ interface ItemFormProps {
   onCancel: () => void;
 }
 
-const units = ['KG', 'TON', 'PCS', 'LTR', 'MT'];
+const units = ['KG', 'TON', 'PCS', 'LTR', 'MT', 'BAG'];
 
 export const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
   const { language } = useLanguage();

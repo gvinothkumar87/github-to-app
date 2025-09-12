@@ -9,6 +9,9 @@ export interface Customer {
   address_english?: string;
   address_tamil?: string;
   gstin?: string;
+  pin_code?: string;
+  state_code?: string;
+  place_of_supply?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;

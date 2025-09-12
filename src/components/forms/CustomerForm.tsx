@@ -30,6 +30,9 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ customer, onSuccess,
     address_english: customer?.address_english || '',
     address_tamil: customer?.address_tamil || '',
     gstin: customer?.gstin || '',
+    pin_code: customer?.pin_code || '',
+    state_code: customer?.state_code || '33',
+    place_of_supply: customer?.place_of_supply || '33',
   });
 
   useEffect(() => {
@@ -203,6 +206,48 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ customer, onSuccess,
                 value={formData.gstin}
                 onChange={(e) => setFormData({ ...formData, gstin: e.target.value.toUpperCase() })}
                 placeholder={language === 'english' ? 'GST Number' : 'ஜிஎஸ்டி எண்'}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="pin_code">
+                {language === 'english' ? 'Pin Code' : 'அஞ்சல் குறியீடு'}
+              </Label>
+              <Input
+                id="pin_code"
+                value={formData.pin_code}
+                onChange={(e) => setFormData({...formData, pin_code: e.target.value})}
+                placeholder={language === 'english' ? 'Enter 6-digit PIN code' : '6 இலக்க PIN குறியீட்டை உள்ளிடுக'}
+                maxLength={6}
+                pattern="[0-9]{6}"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="state_code">
+                {language === 'english' ? 'State Code' : 'மாநில குறியீடு'}
+              </Label>
+              <Input
+                id="state_code"
+                value={formData.state_code}
+                onChange={(e) => setFormData({...formData, state_code: e.target.value})}
+                placeholder={language === 'english' ? 'State code (e.g., 33)' : 'மாநில குறியீடு (எ.கா., 33)'}
+                maxLength={2}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="place_of_supply">
+                {language === 'english' ? 'Place of Supply' : 'விநியோக இடம்'}
+              </Label>
+              <Input
+                id="place_of_supply"
+                value={formData.place_of_supply}
+                onChange={(e) => setFormData({...formData, place_of_supply: e.target.value})}
+                placeholder={language === 'english' ? 'Place of supply code' : 'விநியோக இட குறியீடு'}
+                maxLength={2}
               />
             </div>
           </div>

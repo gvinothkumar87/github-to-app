@@ -4,6 +4,7 @@ import { CustomerForm } from './forms/CustomerForm';
 import { ItemForm } from './forms/ItemForm';
 import { OutwardEntryForm } from './forms/OutwardEntryForm';
 import { SalesForm } from './forms/SalesForm';
+import { SalesLedgerView } from './SalesLedgerView';
 import { AmountReceivedForm } from './forms/AmountReceivedForm';
 import { CustomerLedgerView } from './CustomerLedgerView';
 import { AdminDeleteForm } from './forms/AdminDeleteForm';
@@ -62,7 +63,7 @@ export const TransitLogbook = () => {
       fetchCustomers();
       fetchItems();
       fetchReportData();
-    } else if (activeTab === 'sales' || activeTab === 'amount-received') {
+    } else if (activeTab === 'sales' || activeTab === 'sales-ledger' || activeTab === 'amount-received') {
       // These tabs handle their own data fetching
     }
   }, [activeTab]);
@@ -406,6 +407,7 @@ export const TransitLogbook = () => {
             {activeTab === 'load-weight' && (language === 'english' ? 'Load Weight Update' : 'மொத்த எடை புதுப்பிப்பு')}
             {activeTab === 'reports' && (language === 'english' ? 'Reports' : 'அறிக்கைகள்')}
             {activeTab === 'sales' && (language === 'english' ? 'Sales' : 'விற்பனை')}
+            {activeTab === 'sales-ledger' && (language === 'english' ? 'Sales Ledger' : 'விற்பனை லெட்ஜர்')}
             {activeTab === 'amount-received' && (language === 'english' ? 'Amount Received' : 'பெற்ற தொகை')}
             {activeTab === 'admin-delete' && (language === 'english' ? 'Delete Entry' : 'என்ட்ரி நீக்கு')}
             {activeTab === 'customer-ledger' && (language === 'english' ? 'Customer Ledger' : 'வாடிக்கையாளர் லெட்ஜர்')}

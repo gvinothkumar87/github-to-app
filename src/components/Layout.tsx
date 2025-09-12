@@ -82,7 +82,7 @@ const AppSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabChange
     <Sidebar className="border-r">
       <SidebarContent>
         <SidebarMenu className="pt-4">
-          {tabs.map((tab) => {
+        {activeTab && tabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <SidebarMenuItem key={tab.id}>
@@ -132,7 +132,7 @@ const AppSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabChange
               className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
             >
               <LogOut className="h-4 w-4" />
-              <span>{language === 'english' ? 'Logout' : 'வெளியேறু'}</span>
+              <span>{language === 'english' ? 'Logout' : 'வெளியேறு'}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

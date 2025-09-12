@@ -1,5 +1,5 @@
 import React from 'react';
-import { Truck, Package, Users, ClipboardList, BarChart3, Menu, Scale, LogOut, ShoppingCart, Receipt, Book, FileText, Plus, Minus } from 'lucide-react';
+import { Truck, Package, Users, ClipboardList, BarChart3, Menu, Scale, LogOut, ShoppingCart, Receipt, Book, FileText, Plus, Minus, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -35,6 +35,7 @@ const AppSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabChange
     { id: 'sales', label: language === 'english' ? 'Sales' : 'விற்பனை', icon: ShoppingCart, adminOnly: true },
     { id: 'amount-received', label: language === 'english' ? 'Amount Received' : 'பெற்ற தொகை', icon: Receipt, adminOnly: true },
     { id: 'customer-ledger', label: language === 'english' ? 'Customer Ledger' : 'வாடிக்கையாளர் லெட்ஜர்', icon: Book, adminOnly: true },
+    { id: 'admin-delete', label: language === 'english' ? 'Delete Entry' : 'என்ட்ரி நீக்கு', icon: Trash2, adminOnly: true },
     { id: 'customers', label: language === 'english' ? 'Customers' : 'வாடிக்கையாளர்கள்', icon: Users },
     { id: 'items', label: language === 'english' ? 'Items' : 'பொருட்கள்', icon: Package },
     { id: 'reports', label: language === 'english' ? 'Reports' : 'அறிக்கைகள்', icon: BarChart3 },

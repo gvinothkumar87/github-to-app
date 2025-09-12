@@ -6,6 +6,7 @@ import { OutwardEntryForm } from './forms/OutwardEntryForm';
 import { SalesForm } from './forms/SalesForm';
 import { AmountReceivedForm } from './forms/AmountReceivedForm';
 import { CustomerLedgerView } from './CustomerLedgerView';
+import { AdminDeleteForm } from './forms/AdminDeleteForm';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
@@ -17,7 +18,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Customer, Item, OutwardEntry } from '@/types';
-import { Plus, Edit, Truck, Scale, CalendarIcon, Download, FileText, FileSpreadsheet } from 'lucide-react';
+import { Plus, Edit, Truck, Scale, CalendarIcon, Download, FileText, FileSpreadsheet, Trash2 } from 'lucide-react';
 import { Input } from './ui/input';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -385,6 +386,13 @@ export const TransitLogbook = () => {
             onCancel={() => setShowForm(false)}
           />
         );
+      } else if (activeTab === 'admin-delete') {
+        return (
+          <AdminDeleteForm
+            onSuccess={handleFormSuccess}
+            onCancel={() => setShowForm(false)}
+          />
+        );
       }
     }
 
@@ -399,6 +407,7 @@ export const TransitLogbook = () => {
             {activeTab === 'reports' && (language === 'english' ? 'Reports' : 'அறிக்கைகள்')}
             {activeTab === 'sales' && (language === 'english' ? 'Sales' : 'விற்பனை')}
             {activeTab === 'amount-received' && (language === 'english' ? 'Amount Received' : 'பெற்ற தொகை')}
+            {activeTab === 'admin-delete' && (language === 'english' ? 'Delete Entry' : 'என்ட்ரி நீக்கு')}
             {activeTab === 'customer-ledger' && (language === 'english' ? 'Customer Ledger' : 'வாடிக்கையாளர் லெட்ஜர்')}
           </h2>
           
@@ -406,6 +415,13 @@ export const TransitLogbook = () => {
             <Button onClick={() => setShowForm(true)} className="bg-gradient-primary text-primary-foreground shadow-card">
               <Plus className="h-4 w-4 mr-2" />
               {language === 'english' ? 'Add New' : 'புதியது சேர்க்கவும்'}
+            </Button>
+          )}
+          
+          {activeTab === 'admin-delete' && (
+            <Button onClick={() => setShowForm(true)} variant="destructive" className="shadow-card">
+              <Trash2 className="h-4 w-4 mr-2" />
+              {language === 'english' ? 'Delete Entry' : 'என்ட்ரி நீக்கு'}
             </Button>
           )}
         </div>
@@ -1187,6 +1203,24 @@ export const TransitLogbook = () => {
               {language === 'english' 
                 ? 'Click "Add New" to record payment received from customers'
                 : 'வாடிக்கையாளர்களிடமிருந்து பெறப்பட்ட பணத்தை பதிவு செய்ய "புதியது சேர்க்கவும்" என்பதை கிளிக் செய்யவும்'
+              }
+            </div>
+          </div>
+        )}
+
+        {/* Admin Delete tab content */}
+        {activeTab === 'admin-delete' && !showForm && (
+          <div className="text-center py-12">
+            <div className="text-muted-foreground mb-4">
+              {language === 'english' 
+                ? 'Click "Delete Entry" to remove outward entries in any status with all related data'
+                : 'அனைத்து தொடர்புடைய தரவுகளுடன் எந்த நிலையிலுள்ள வெளிச்செல்லும் என்ட்ரிகளையும் அகற்ற "என்ட்ரி நீக்கு" என்பதை கிளிக் செய்யவும்'
+              }
+            </div>
+            <div className="text-sm text-destructive">
+              {language === 'english' 
+                ? '⚠️ Admin access only - This will permanently delete entries and cannot be undone'
+                : '⚠️ நிர்வாக அணுகல் மட்டும் - இது என்ட்ரிகளை நிரந்தரமாக நீக்கும் மற்றும் மாற்ற முடியாது'
               }
             </div>
           </div>

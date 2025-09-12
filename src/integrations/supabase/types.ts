@@ -1056,6 +1056,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_and_fix_receipt_ledger_integrity: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       create_business_contact_auth_user: {
         Args: {
           contact_email: string

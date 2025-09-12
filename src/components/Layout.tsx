@@ -116,6 +116,13 @@ const AppSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabChange
             );
           })}
           
+          {/* Language Toggle */}
+          <SidebarMenuItem>
+            <div className="px-2 py-1">
+              <LanguageToggle />
+            </div>
+          </SidebarMenuItem>
+          
           {/* Logout button */}
           <SidebarMenuItem className="mt-auto">
             <SidebarMenuButton 
@@ -123,7 +130,7 @@ const AppSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabChange
               className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
             >
               <LogOut className="h-4 w-4" />
-              <span>{language === 'english' ? 'Logout' : 'வெளியேறு'}</span>
+              <span>{language === 'english' ? 'Logout' : 'வெளியேறু'}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -145,83 +152,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
         
         {/* Main content area */}
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Header */}
-          <header className="bg-gradient-primary text-primary-foreground shadow-elevated">
-            <div className="px-4 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <SidebarTrigger className="md:hidden bg-white/10 hover:bg-white/20 text-white border-white/20" />
-                  <Truck className="h-8 w-8" />
-                  <h1 className="text-xl md:text-2xl font-bold">
-                    {language === 'english' ? 'Transit Logbook' : 'போக்குவரத்து பதிவேடு'}
-                  </h1>
-                </div>
-                <LanguageToggle />
-              </div>
-            </div>
-          </header>
-
-          {/* Desktop navigation tabs - hidden on mobile */}
-          <nav className="hidden md:block bg-card border-b shadow-card">
-            <div className="px-4">
-              <div className="flex space-x-1 overflow-x-auto">
-                {[
-                  { id: 'entries', label: language === 'english' ? 'Outward Entries' : 'வெளியீட்டு பதிவுகள்', icon: Truck },
-                  { id: 'load-weight', label: language === 'english' ? 'Load Weight' : 'மொத்த எடை', icon: Scale },
-                  { id: 'sales', label: language === 'english' ? 'Sales' : 'விற்பனை', icon: ShoppingCart, adminOnly: true },
-                  { id: 'sales-ledger', label: language === 'english' ? 'Sales Ledger' : 'விற்பனை லெட்ஜர்', icon: ClipboardList, adminOnly: true },
-                  { id: 'amount-received', label: language === 'english' ? 'Amount Received' : 'பெற்ற தொகை', icon: Receipt, adminOnly: true },
-                  { id: 'customer-ledger', label: language === 'english' ? 'Customer Ledger' : 'வாடிக்கையாளர் லெட்ஜர்', icon: Book, adminOnly: true },
-                  { id: 'customers', label: language === 'english' ? 'Customers' : 'வாடிக்கையாளர்கள்', icon: Users },
-                  { id: 'items', label: language === 'english' ? 'Items' : 'பொருட்கள்', icon: Package },
-                  { id: 'reports', label: language === 'english' ? 'Reports' : 'அறிக்கைகள்', icon: BarChart3 },
-                ].filter(tab => !tab.adminOnly || isAdmin).map((tab) => {
-                  const Icon = tab.icon;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => onTabChange(tab.id)}
-                      className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${
-                        activeTab === tab.id
-                          ? 'border-primary text-primary bg-primary/5'
-                          : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground'
-                      }`}
-                    >
-                      <Icon className="h-4 w-4" />
-                      {tab.label}
-                    </button>
-                  );
-                })}
-                
-                {/* Navigation buttons */}
-                {isAdmin && (
-                  <>
-                    <button
-                      onClick={() => navigate('/bills')}
-                      className="flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-all whitespace-nowrap border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground"
-                    >
-                      <FileText className="h-4 w-4" />
-                      {language === 'english' ? 'Bills Management' : 'பில் மேலாண்மை'}
-                    </button>
-                    <button
-                      onClick={() => navigate('/debit-note')}
-                      className="flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-all whitespace-nowrap border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground"
-                    >
-                      <Plus className="h-4 w-4" />
-                      {language === 'english' ? 'Debit Note' : 'டெபிட் குறிப்பு'}
-                    </button>
-                    <button
-                      onClick={() => navigate('/credit-note')}
-                      className="flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-all whitespace-nowrap border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground"
-                    >
-                      <Minus className="h-4 w-4" />
-                      {language === 'english' ? 'Credit Note' : 'கிரெடிட் குறிப்பு'}
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          </nav>
+          {/* Mobile sidebar trigger */}
+          <div className="md:hidden p-2 border-b">
+            <SidebarTrigger className="bg-primary/10 hover:bg-primary/20 text-primary border-primary/20" />
+          </div>
 
           {/* Main Content */}
           <main className="flex-1 px-4 py-6 overflow-auto">

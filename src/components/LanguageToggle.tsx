@@ -7,10 +7,10 @@ export const LanguageToggle = () => {
 
   return (
     <Button
-      variant="outline"
+      variant="secondary"
       size="sm"
       onClick={() => setLanguage(language === 'english' ? 'tamil' : 'english')}
-      className="flex items-center gap-2"
+      className="flex items-center gap-2 w-full justify-start"
     >
       <Languages className="h-4 w-4" />
       {language === 'english' ? 'தமிழ்' : 'English'}

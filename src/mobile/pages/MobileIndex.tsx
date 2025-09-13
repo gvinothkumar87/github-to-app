@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MobileLayout } from '../components/MobileLayout';
+import { ServiceStatusIndicator } from '../components/ServiceStatusIndicator';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -14,41 +15,22 @@ import {
   Wifi,
   WifiOff 
 } from 'lucide-react';
-import { databaseService } from '../services/database.service';
 import { networkService } from '../services/network.service';
 import { syncService } from '../services/sync.service';
-import { useToast } from '@/hooks/use-toast';
+import { useMobileServices } from '../providers/MobileServiceProvider';
 
 const MobileIndex: React.FC = () => {
-  const { toast } = useToast();
+  const { isReady } = useMobileServices();
   const navigate = useNavigate();
+  const [isOnline, setIsOnline] = useState(networkService.isOnline());
 
   useEffect(() => {
-    const initializeServices = async () => {
-      try {
-        // Initialize all services
-        await databaseService.initialize();
-        await networkService.initialize();
-        await syncService.initialize();
-        
-        console.log('Mobile app services initialized successfully');
-        
-        toast({
-          title: "App Ready",
-          description: "Mobile app initialized successfully",
-        });
-      } catch (error) {
-        console.error('Failed to initialize mobile services:', error);
-        toast({
-          title: "Initialization Error",
-          description: "Failed to initialize mobile app services",
-          variant: "destructive",
-        });
-      }
-    };
+    const unsubscribe = networkService.onStatusChange((status) => {
+      setIsOnline(status.connected);
+    });
 
-    initializeServices();
-  }, [toast]);
+    return unsubscribe;
+  }, []);
 
   const menuItems = [
     {
@@ -124,6 +106,9 @@ const MobileIndex: React.FC = () => {
   return (
     <MobileLayout title="GRM Sales Mobile">
       <div className="space-y-6">
+        {/* Service Status Indicator */}
+        <ServiceStatusIndicator />
+
         {/* Welcome Card */}
         <Card>
           <CardHeader>
@@ -138,14 +123,17 @@ const MobileIndex: React.FC = () => {
           <CardContent>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
-                {networkService.isOnline() ? (
+                {isOnline ? (
                   <Wifi className="h-4 w-4 text-green-600" />
                 ) : (
                   <WifiOff className="h-4 w-4 text-red-600" />
                 )}
                 <span>
-                  {networkService.isOnline() ? 'Online' : 'Offline Mode'}
+                  {isOnline ? 'Online' : 'Offline Mode'}
                 </span>
+              </div>
+              <div className="text-xs">
+                Services: {isReady ? 'Ready' : 'Loading...'}
               </div>
             </div>
           </CardContent>

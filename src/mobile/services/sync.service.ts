@@ -338,21 +338,72 @@ export class SyncService {
 
     console.log('Downloading latest data from server...');
 
-    // Download customers
-    const { data: customers } = await supabase
-      .from('customers')
-      .select('*')
-      .eq('is_active', true);
+    try {
+      // Download customers
+      const { data: customers, error: customersError } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('is_active', true);
 
-    // Download items
-    const { data: items } = await supabase
-      .from('items')
-      .select('*')
-      .eq('is_active', true);
+      if (customersError) throw customersError;
 
-    // Store in local database (implementation depends on your needs)
-    // For now, we'll just log
-    console.log(`Downloaded ${customers?.length || 0} customers and ${items?.length || 0} items`);
+      // Download items
+      const { data: items, error: itemsError } = await supabase
+        .from('items')
+        .select('*')
+        .eq('is_active', true);
+
+      if (itemsError) throw itemsError;
+
+      // Store customers in local database
+      if (customers && customers.length > 0) {
+        await this.storeDownloadedData('customers', customers);
+      }
+
+      // Store items in local database
+      if (items && items.length > 0) {
+        await this.storeDownloadedData('items', items);
+      }
+
+      console.log(`Downloaded and stored ${customers?.length || 0} customers and ${items?.length || 0} items`);
+    } catch (error) {
+      console.error('Failed to download latest data:', error);
+      throw error;
+    }
+  }
+
+  private async storeDownloadedData(table: string, data: any[]): Promise<void> {
+    try {
+      // Clear existing downloaded data (not user-created data)
+      const tableName = `offline_${table}`;
+      
+      for (const item of data) {
+        const existing = await databaseService.findById(table, item.id);
+        
+        if (existing) {
+          // Update existing record but preserve sync_status for user-modified items
+          const updateData = { ...item };
+          if (existing.sync_status === 'pending') {
+            // Don't overwrite user changes
+            continue;
+          }
+          updateData.sync_status = 'synced';
+          
+          await databaseService.update(table, item.id, updateData);
+        } else {
+          // Insert new record
+          await databaseService.insert(table, {
+            ...item,
+            sync_status: 'synced'
+          });
+        }
+      }
+      
+      console.log(`Stored ${data.length} ${table} records in local database`);
+    } catch (error) {
+      console.error(`Failed to store ${table} data:`, error);
+      throw error;
+    }
   }
 
   onSyncProgress(callback: (progress: SyncProgress) => void): () => void {

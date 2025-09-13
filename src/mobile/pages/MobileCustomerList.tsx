@@ -5,13 +5,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { MobileLayout } from '../components/MobileLayout';
-import { useOfflineData } from '../hooks/useOfflineData';
+import { OfflineStatusBanner } from '../components/OfflineStatusBanner';
+import { useEnhancedOfflineData } from '../hooks/useEnhancedOfflineData';
 import { ArrowLeft, Plus, User, Phone, MapPin, Wifi, WifiOff } from 'lucide-react';
 
 const MobileCustomerList: React.FC = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
-  const { data: customers, loading, isOnline, refresh } = useOfflineData('offline_customers');
+  const { data: customers, loading, isOnline, refresh, isServicesReady } = useEnhancedOfflineData('customers');
 
   const handleRefresh = async () => {
     await refresh();
@@ -20,6 +21,10 @@ const MobileCustomerList: React.FC = () => {
   return (
     <MobileLayout title="Customers">
       <div className="space-y-4">
+        <OfflineStatusBanner 
+          isOnline={isOnline} 
+          isServicesReady={isServicesReady} 
+        />
         <div className="flex items-center justify-between">
           <Button
             variant="outline"

@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { MobileServiceProvider } from './providers/MobileServiceProvider';
 import MobileProtectedRoute from './components/MobileProtectedRoute';
 import MobileAuth from './pages/MobileAuth';
 import MobileIndex from './pages/MobileIndex';
@@ -35,7 +36,8 @@ const MobileApp: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <LanguageProvider>
-          <Router>
+          <MobileServiceProvider>
+            <Router>
             <Routes>
               <Route path="/auth" element={<MobileAuth />} />
               <Route path="/" element={
@@ -121,6 +123,7 @@ const MobileApp: React.FC = () => {
             </Routes>
             <Toaster />
           </Router>
+          </MobileServiceProvider>
         </LanguageProvider>
       </AuthProvider>
     </QueryClientProvider>

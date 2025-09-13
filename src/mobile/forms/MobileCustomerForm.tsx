@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { MobileLayout } from '../components/MobileLayout';
-import { useOfflineData } from '../hooks/useOfflineData';
+import { useEnhancedOfflineData } from '../hooks/useEnhancedOfflineData';
 import { ArrowLeft } from 'lucide-react';
 
 interface MobileCustomerFormProps {
@@ -20,7 +20,7 @@ const MobileCustomerForm: React.FC<MobileCustomerFormProps> = ({ customerId }) =
   const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const { create, update, findById } = useOfflineData('offline_customers');
+  const { create, update, findById, isServicesReady } = useEnhancedOfflineData('customers', [], { autoSync: true });
 
   const [formData, setFormData] = useState({
     name_english: '',

@@ -148,12 +148,44 @@ export class DatabaseService {
         sync_status TEXT DEFAULT 'pending',
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+      )`,
+
+      // Offline customer ledger table
+      `CREATE TABLE IF NOT EXISTS offline_customer_ledger (
+        id TEXT PRIMARY KEY,
+        customer_id TEXT NOT NULL,
+        transaction_type TEXT NOT NULL,
+        reference_id TEXT NOT NULL,
+        debit_amount REAL DEFAULT 0,
+        credit_amount REAL DEFAULT 0,
+        balance REAL DEFAULT 0,
+        transaction_date TEXT NOT NULL,
+        description TEXT,
+        sync_status TEXT DEFAULT 'pending',
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
       )`
     ];
 
     for (const tableSQL of tables) {
       await this.db.execute(tableSQL);
     }
+
+    // Create indexes for better query performance
+    const indexes = [
+      'CREATE INDEX IF NOT EXISTS idx_customers_active ON offline_customers(is_active)',
+      'CREATE INDEX IF NOT EXISTS idx_items_active ON offline_items(is_active)',
+      'CREATE INDEX IF NOT EXISTS idx_outward_entries_date ON offline_outward_entries(entry_date)',
+      'CREATE INDEX IF NOT EXISTS idx_sales_date ON offline_sales(sale_date)',
+      'CREATE INDEX IF NOT EXISTS idx_receipts_date ON offline_receipts(receipt_date)',
+      'CREATE INDEX IF NOT EXISTS idx_customer_ledger_customer ON offline_customer_ledger(customer_id)',
+      'CREATE INDEX IF NOT EXISTS idx_sync_queue_status ON sync_queue(sync_status)'
+    ];
+
+    for (const indexSQL of indexes) {
+      await this.db.execute(indexSQL);
+    }
+
   }
 
   // Generic CRUD operations

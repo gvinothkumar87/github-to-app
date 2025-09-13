@@ -5,9 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
+import { useEnhancedOfflineData } from '../hooks/useEnhancedOfflineData';
 
 interface LoadWeightModalProps {
   isOpen: boolean;
@@ -35,6 +35,7 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { update: updateOutwardEntry } = useEnhancedOfflineData('outward_entries', [], { autoSync: true });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,22 +61,18 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
     try {
       const netWeight = parseFloat(loadWeight) - outwardEntry.empty_weight;
       
-      const { error } = await supabase
-        .from('outward_entries')
-        .update({
-          load_weight: parseFloat(loadWeight),
-          net_weight: netWeight,
-          load_weight_updated_at: new Date().toISOString(),
-          load_weight_updated_by: user?.id,
-          remarks: remarks || null
-        })
-        .eq('id', outwardEntry.id);
-
-      if (error) throw error;
+      await updateOutwardEntry(outwardEntry.id, {
+        load_weight: parseFloat(loadWeight),
+        net_weight: netWeight,
+        load_weight_updated_at: new Date().toISOString(),
+        load_weight_updated_by: user?.id,
+        remarks: remarks || null,
+        is_completed: true
+      });
 
       toast({
-        title: "Success",
-        description: "Load weight updated successfully",
+        title: "Success", 
+        description: "Load weight updated successfully (will sync when online)",
       });
       
       onSuccess();

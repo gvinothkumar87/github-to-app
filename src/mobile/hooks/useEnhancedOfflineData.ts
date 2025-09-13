@@ -20,6 +20,11 @@ export function useEnhancedOfflineData<T>(
   const [error, setError] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(networkService.isOnline());
 
+  const normalizeTableName = (tableName: string) => {
+    // Remove 'offline_' prefix if it exists to avoid double-prefixing
+    return tableName.startsWith('offline_') ? tableName.substring(8) : tableName;
+  };
+
   const loadData = async () => {
     // Don't load if services aren't ready
     if (!isReady) {
@@ -31,9 +36,10 @@ export function useEnhancedOfflineData<T>(
       setLoading(true);
       setError(null);
       
-      const results = await databaseService.findAll(table);
+      const normalizedTable = normalizeTableName(table);
+      const results = await databaseService.findAll(normalizedTable);
       setData(results);
-      console.log(`Loaded ${results.length} records from ${table}`);
+      console.log(`Loaded ${results.length} records from ${normalizedTable}`);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       setError(errorMessage);
@@ -55,7 +61,8 @@ export function useEnhancedOfflineData<T>(
     }
 
     try {
-      const id = await databaseService.insert(table, {
+      const normalizedTable = normalizeTableName(table);
+      const id = await databaseService.insert(normalizedTable, {
         ...item,
         sync_status: 'pending'
       });
@@ -83,7 +90,8 @@ export function useEnhancedOfflineData<T>(
     }
 
     try {
-      await databaseService.update(table, id, {
+      const normalizedTable = normalizeTableName(table);
+      await databaseService.update(normalizedTable, id, {
         ...item,
         sync_status: 'pending'
       });
@@ -109,7 +117,8 @@ export function useEnhancedOfflineData<T>(
     }
 
     try {
-      await databaseService.delete(table, id);
+      const normalizedTable = normalizeTableName(table);
+      await databaseService.delete(normalizedTable, id);
       await loadData(); // Refresh data
       
       // Auto-sync if online and enabled
@@ -132,7 +141,8 @@ export function useEnhancedOfflineData<T>(
     }
 
     try {
-      return await databaseService.findById(table, id);
+      const normalizedTable = normalizeTableName(table);
+      return await databaseService.findById(normalizedTable, id);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Find failed';
       setError(errorMessage);

@@ -18,8 +18,8 @@ import MobileTransitList from './pages/MobileTransitList';
 import MobileItemList from './pages/MobileItemList';
 import MobileSalesList from './pages/MobileSalesList';
 import MobileSettings from './pages/MobileSettings';
-import MobileSalesLedger from './pages/MobileSalesLedger';
-import MobileCustomerLedger from './pages/MobileCustomerLedger';
+import MobileSalesLedgerOffline from './pages/MobileSalesLedgerOffline';
+import MobileCustomerLedgerOffline from './pages/MobileCustomerLedgerOffline';
 
 // Create a query client for React Query
 const queryClient = new QueryClient({
@@ -105,16 +105,16 @@ const MobileApp: React.FC = () => {
                   <MobileSalesForm />
                 </MobileProtectedRoute>
               } />
-              <Route path="/sales-ledger" element={
-                <MobileProtectedRoute>
-                  <MobileSalesLedger />
-                </MobileProtectedRoute>
-              } />
-              <Route path="/customer-ledger" element={
-                <MobileProtectedRoute>
-                  <MobileCustomerLedger />
-                </MobileProtectedRoute>
-              } />
+            <Route path="/sales-ledger" element={
+              <MobileProtectedRoute>
+                <MobileSalesLedgerOffline />
+              </MobileProtectedRoute>
+            } />
+            <Route path="/customer-ledger" element={
+              <MobileProtectedRoute>
+                <MobileCustomerLedgerOffline />
+              </MobileProtectedRoute>
+            } />
               <Route path="/settings" element={
                 <MobileProtectedRoute>
                   <MobileSettings />

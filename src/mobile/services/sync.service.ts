@@ -102,6 +102,9 @@ export class SyncService {
       case 'sales':
         await this.syncSale(operation, data);
         break;
+      case 'customer_ledger':
+        await this.syncCustomerLedger(operation, data);
+        break;
       default:
         throw new Error(`Unknown table: ${table_name}`);
     }
@@ -330,6 +333,48 @@ export class SyncService {
     }
   }
 
+  private async syncCustomerLedger(operation: string, data: any): Promise<void> {
+    const table = supabase.from('customer_ledger');
+
+    switch (operation) {
+      case 'CREATE':
+        const { error: insertError } = await table.insert({
+          id: data.id,
+          customer_id: data.customer_id,
+          transaction_type: data.transaction_type,
+          reference_id: data.reference_id,
+          debit_amount: data.debit_amount,
+          credit_amount: data.credit_amount,
+          balance: data.balance,
+          transaction_date: data.transaction_date,
+          description: data.description
+        });
+        if (insertError) throw insertError;
+        break;
+
+      case 'UPDATE':
+        const { error: updateError } = await table
+          .update({
+            customer_id: data.customer_id,
+            transaction_type: data.transaction_type,
+            reference_id: data.reference_id,
+            debit_amount: data.debit_amount,
+            credit_amount: data.credit_amount,
+            balance: data.balance,
+            transaction_date: data.transaction_date,
+            description: data.description
+          })
+          .eq('id', data.id);
+        if (updateError) throw updateError;
+        break;
+
+      case 'DELETE':
+        const { error: deleteError } = await table.delete().eq('id', data.id);
+        if (deleteError) throw deleteError;
+        break;
+    }
+  }
+
   // Download latest data from server when online
   async downloadLatestData(): Promise<void> {
     if (!networkService.isOnline()) {
@@ -355,17 +400,66 @@ export class SyncService {
 
       if (itemsError) throw itemsError;
 
-      // Store customers in local database
-      if (customers && customers.length > 0) {
-        await this.storeDownloadedData('customers', customers);
+      // Download outward entries (last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const { data: outwardEntries, error: outwardError } = await supabase
+        .from('outward_entries')
+        .select('*')
+        .gte('entry_date', thirtyDaysAgo.toISOString().split('T')[0])
+        .order('entry_date', { ascending: false });
+
+      if (outwardError) throw outwardError;
+
+      // Download sales (last 30 days)
+      const { data: sales, error: salesError } = await supabase
+        .from('sales')
+        .select('*')
+        .gte('sale_date', thirtyDaysAgo.toISOString().split('T')[0])
+        .order('sale_date', { ascending: false });
+
+      if (salesError) throw salesError;
+
+      // Download receipts (last 30 days)
+      const { data: receipts, error: receiptsError } = await supabase
+        .from('receipts')
+        .select('*')
+        .gte('receipt_date', thirtyDaysAgo.toISOString().split('T')[0])
+        .order('receipt_date', { ascending: false });
+
+      if (receiptsError) throw receiptsError;
+
+      // Download customer ledger (last 90 days)
+      const ninetyDaysAgo = new Date();
+      ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+      
+      const { data: customerLedger, error: ledgerError } = await supabase
+        .from('customer_ledger')
+        .select('*')
+        .gte('transaction_date', ninetyDaysAgo.toISOString().split('T')[0])
+        .order('transaction_date', { ascending: false });
+
+      if (ledgerError) throw ledgerError;
+
+      // Store all data in local database
+      const dataToStore = [
+        { table: 'customers', data: customers },
+        { table: 'items', data: items },
+        { table: 'outward_entries', data: outwardEntries },
+        { table: 'sales', data: sales },
+        { table: 'receipts', data: receipts },
+        { table: 'customer_ledger', data: customerLedger }
+      ];
+
+      for (const { table, data } of dataToStore) {
+        if (data && data.length > 0) {
+          await this.storeDownloadedData(table, data);
+          console.log(`Stored ${data.length} ${table} records`);
+        }
       }
 
-      // Store items in local database
-      if (items && items.length > 0) {
-        await this.storeDownloadedData('items', items);
-      }
-
-      console.log(`Downloaded and stored ${customers?.length || 0} customers and ${items?.length || 0} items`);
+      console.log('Complete data download and storage completed successfully');
     } catch (error) {
       console.error('Failed to download latest data:', error);
       throw error;
@@ -374,9 +468,6 @@ export class SyncService {
 
   private async storeDownloadedData(table: string, data: any[]): Promise<void> {
     try {
-      // Clear existing downloaded data (not user-created data)
-      const tableName = `offline_${table}`;
-      
       for (const item of data) {
         const existing = await databaseService.findById(table, item.id);
         
@@ -391,7 +482,7 @@ export class SyncService {
           
           await databaseService.update(table, item.id, updateData);
         } else {
-          // Insert new record
+          // Insert new record  
           await databaseService.insert(table, {
             ...item,
             sync_status: 'synced'

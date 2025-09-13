@@ -10,11 +10,17 @@ export function useOfflineData<T>(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const normalizeTableName = (tableName: string) => {
+    // Remove 'offline_' prefix if it exists to avoid double-prefixing
+    return tableName.startsWith('offline_') ? tableName.substring(8) : tableName;
+  };
+
   const loadData = async () => {
     try {
       setLoading(true);
       setError(null);
-      const results = await databaseService.findAll(table);
+      const normalizedTable = normalizeTableName(table);
+      const results = await databaseService.findAll(normalizedTable);
       setData(results);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -30,7 +36,8 @@ export function useOfflineData<T>(
 
   const create = async (item: Omit<T, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      const id = await databaseService.insert(table, {
+      const normalizedTable = normalizeTableName(table);
+      const id = await databaseService.insert(normalizedTable, {
         ...item,
         sync_status: 'pending'
       });
@@ -44,7 +51,8 @@ export function useOfflineData<T>(
 
   const update = async (id: string, item: Partial<T>) => {
     try {
-      await databaseService.update(table, id, {
+      const normalizedTable = normalizeTableName(table);
+      await databaseService.update(normalizedTable, id, {
         ...item,
         sync_status: 'pending'
       });
@@ -57,7 +65,8 @@ export function useOfflineData<T>(
 
   const remove = async (id: string) => {
     try {
-      await databaseService.delete(table, id);
+      const normalizedTable = normalizeTableName(table);
+      await databaseService.delete(normalizedTable, id);
       await loadData(); // Refresh data
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Delete failed');
@@ -67,7 +76,8 @@ export function useOfflineData<T>(
 
   const findById = async (id: string): Promise<T | null> => {
     try {
-      return await databaseService.findById(table, id);
+      const normalizedTable = normalizeTableName(table);
+      return await databaseService.findById(normalizedTable, id);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Find failed');
       return null;

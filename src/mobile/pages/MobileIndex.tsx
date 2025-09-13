@@ -13,17 +13,20 @@ import {
   Settings,
   Database,
   Wifi,
-  WifiOff 
+  WifiOff,
+  RefreshCw 
 } from 'lucide-react';
 import { networkService } from '../services/network.service';
 import { syncService } from '../services/sync.service';
 import { SyncStatusDisplay } from '../components/SyncStatusDisplay';
 import { useMobileServices } from '../providers/MobileServiceProvider';
+import { toast } from 'sonner';
 
 const MobileIndex: React.FC = () => {
   const { isReady } = useMobileServices();
   const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState(networkService.isOnline());
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     const unsubscribe = networkService.onStatusChange((status) => {
@@ -32,6 +35,24 @@ const MobileIndex: React.FC = () => {
 
     return unsubscribe;
   }, []);
+
+  const handleManualSync = async () => {
+    if (!networkService.isOnline()) {
+      toast.error('Cannot sync while offline');
+      return;
+    }
+    
+    setIsSyncing(true);
+    try {
+      await syncService.startSync();
+      toast.success('Sync completed successfully');
+    } catch (error) {
+      console.error('Sync failed:', error);
+      toast.error('Sync failed. Please try again.');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const menuItems = [
     {
@@ -141,8 +162,20 @@ const MobileIndex: React.FC = () => {
         </Card>
 
         {/* Sync Status Display - Always visible */}
-        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm p-2 rounded-lg border">
-          <SyncStatusDisplay showProgress={true} compact={false} />
+        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm p-3 rounded-lg border">
+          <div className="flex items-center justify-between">
+            <SyncStatusDisplay showProgress={true} compact={false} />
+            <Button 
+              onClick={handleManualSync}
+              disabled={isSyncing || !isOnline}
+              size="sm"
+              variant="outline"
+              className="ml-2"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+              {isSyncing ? 'Syncing...' : 'Sync Now'}
+            </Button>
+          </div>
         </div>
 
         {/* Menu Grid */}

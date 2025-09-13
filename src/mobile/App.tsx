@@ -22,8 +22,8 @@ const MobileApp: React.FC = () => {
       <LanguageProvider>
         <Router>
           <Routes>
-            <Route path="/mobile" element={<MobileIndex />} />
-            <Route path="/mobile/receipts/new" element={<MobileReceiptForm />} />
+            <Route path="/" element={<MobileIndex />} />
+            <Route path="/receipts/new" element={<MobileReceiptForm />} />
             {/* Add more mobile routes as needed */}
           </Routes>
           <Toaster />

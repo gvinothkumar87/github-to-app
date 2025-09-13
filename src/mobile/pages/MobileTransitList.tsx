@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -6,12 +6,15 @@ import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { MobileLayout } from '../components/MobileLayout';
 import { useOfflineData } from '../hooks/useOfflineData';
-import { ArrowLeft, Plus, Truck, User, Package, Weight, Wifi, WifiOff } from 'lucide-react';
+import LoadWeightModal from '../components/LoadWeightModal';
+import { ArrowLeft, Plus, Truck, User, Package, Weight, Wifi, WifiOff, Edit } from 'lucide-react';
 
 const MobileTransitList: React.FC = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
-  const { data: outwardEntries, loading, isOnline } = useOfflineData('offline_outward_entries');
+  const [selectedEntry, setSelectedEntry] = useState<any>(null);
+  const [showLoadWeightModal, setShowLoadWeightModal] = useState(false);
+  const { data: outwardEntries, loading, isOnline, refresh } = useOfflineData('offline_outward_entries');
   const { data: customers } = useOfflineData('offline_customers');
   const { data: items } = useOfflineData('offline_items');
 
@@ -23,6 +26,42 @@ const MobileTransitList: React.FC = () => {
   const getItemName = (itemId: string) => {
     const item = items.find((i: any) => i.id === itemId) as any;
     return item?.name_english || 'Unknown Item';
+  };
+
+  const getStatus = (entry: any) => {
+    if (entry.is_completed) {
+      return 'Completed';
+    } else if (entry.load_weight) {
+      return 'Loaded';
+    } else {
+      return 'Entry Only';
+    }
+  };
+
+  const getStatusColor = (entry: any) => {
+    if (entry.is_completed) {
+      return 'bg-green-100 text-green-800';
+    } else if (entry.load_weight) {
+      return 'bg-yellow-100 text-yellow-800';
+    } else {
+      return 'bg-blue-100 text-blue-800';
+    }
+  };
+
+  const handleLoadWeight = (entry: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedEntry({
+      ...entry,
+      customer_name: getCustomerName(entry.customer_id),
+      item_name: getItemName(entry.item_id)
+    });
+    setShowLoadWeightModal(true);
+  };
+
+  const handleLoadWeightSuccess = () => {
+    refresh();
+    setShowLoadWeightModal(false);
+    setSelectedEntry(null);
   };
 
   return (
@@ -90,13 +129,26 @@ const MobileTransitList: React.FC = () => {
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-2">
                         <h3 className="font-medium text-sm">#{entry.serial_no}</h3>
-                        <Badge variant={entry.is_completed ? 'default' : 'secondary'}>
-                          {entry.is_completed ? 'Completed' : 'Pending'}
-                        </Badge>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(entry)}`}>
+                          {getStatus(entry)}
+                        </span>
                       </div>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(entry.entry_date).toLocaleDateString()}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(entry.entry_date).toLocaleDateString()}
+                        </span>
+                        {!entry.is_completed && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => handleLoadWeight(entry, e)}
+                            className="h-6 px-2 text-xs"
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            {entry.load_weight ? 'Edit' : 'Add'} Weight
+                          </Button>
+                        )}
+                      </div>
                     </div>
 
                     <div className="space-y-2">
@@ -162,6 +214,16 @@ const MobileTransitList: React.FC = () => {
               </p>
             </CardContent>
           </Card>
+        )}
+
+        {/* Load Weight Modal */}
+        {selectedEntry && (
+          <LoadWeightModal
+            isOpen={showLoadWeightModal}
+            onClose={() => setShowLoadWeightModal(false)}
+            outwardEntry={selectedEntry}
+            onSuccess={handleLoadWeightSuccess}
+          />
         )}
       </div>
     </MobileLayout>

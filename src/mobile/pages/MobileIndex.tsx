@@ -92,6 +92,22 @@ const MobileIndex: React.FC = () => {
       href: '/sales'
     },
     {
+      title: 'Sales Ledger',
+      description: 'View sales reports',
+      icon: FileText,
+      color: 'text-indigo-600',
+      bgColor: 'bg-indigo-50',
+      href: '/sales-ledger'
+    },
+    {
+      title: 'Customer Ledger',
+      description: 'Customer account details',
+      icon: FileText,
+      color: 'text-teal-600',
+      bgColor: 'bg-teal-50',
+      href: '/customer-ledger'
+    },
+    {
       title: 'Settings',
       description: 'App configuration and sync',
       icon: Settings,

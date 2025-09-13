@@ -3,6 +3,9 @@ import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { LanguageProvider } from '@/contexts/LanguageContext';
+import { AuthProvider } from '@/contexts/AuthContext';
+import MobileProtectedRoute from './components/MobileProtectedRoute';
+import MobileAuth from './pages/MobileAuth';
 import MobileIndex from './pages/MobileIndex';
 import MobileReceiptForm from './forms/MobileReceiptForm';
 import MobileCustomerForm from './forms/MobileCustomerForm';
@@ -14,6 +17,8 @@ import MobileTransitList from './pages/MobileTransitList';
 import MobileItemList from './pages/MobileItemList';
 import MobileSalesList from './pages/MobileSalesList';
 import MobileSettings from './pages/MobileSettings';
+import MobileSalesLedger from './pages/MobileSalesLedger';
+import MobileCustomerLedger from './pages/MobileCustomerLedger';
 
 // Create a query client for React Query
 const queryClient = new QueryClient({
@@ -28,27 +33,96 @@ const queryClient = new QueryClient({
 const MobileApp: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <Router>
-          <Routes>
-            <Route path="/" element={<MobileIndex />} />
-            <Route path="/receipts/new" element={<MobileReceiptForm />} />
-            <Route path="/customers" element={<MobileCustomerList />} />
-            <Route path="/customers/new" element={<MobileCustomerForm />} />
-            <Route path="/customers/:id/edit" element={<MobileCustomerForm />} />
-            <Route path="/transit" element={<MobileTransitList />} />
-            <Route path="/transit/new" element={<MobileOutwardEntryForm />} />
-            <Route path="/items" element={<MobileItemList />} />
-            <Route path="/items/new" element={<MobileItemForm />} />
-            <Route path="/items/:id/edit" element={<MobileItemForm />} />
-            <Route path="/sales" element={<MobileSalesList />} />
-            <Route path="/sales/new" element={<MobileSalesForm />} />
-            <Route path="/sales/new/:outwardEntryId" element={<MobileSalesForm />} />
-            <Route path="/settings" element={<MobileSettings />} />
-          </Routes>
-          <Toaster />
-        </Router>
-      </LanguageProvider>
+      <AuthProvider>
+        <LanguageProvider>
+          <Router>
+            <Routes>
+              <Route path="/auth" element={<MobileAuth />} />
+              <Route path="/" element={
+                <MobileProtectedRoute>
+                  <MobileIndex />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/receipts/new" element={
+                <MobileProtectedRoute>
+                  <MobileReceiptForm />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/customers" element={
+                <MobileProtectedRoute>
+                  <MobileCustomerList />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/customers/new" element={
+                <MobileProtectedRoute>
+                  <MobileCustomerForm />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/customers/:id/edit" element={
+                <MobileProtectedRoute>
+                  <MobileCustomerForm />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/transit" element={
+                <MobileProtectedRoute>
+                  <MobileTransitList />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/transit/new" element={
+                <MobileProtectedRoute>
+                  <MobileOutwardEntryForm />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/items" element={
+                <MobileProtectedRoute>
+                  <MobileItemList />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/items/new" element={
+                <MobileProtectedRoute>
+                  <MobileItemForm />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/items/:id/edit" element={
+                <MobileProtectedRoute>
+                  <MobileItemForm />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/sales" element={
+                <MobileProtectedRoute>
+                  <MobileSalesList />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/sales/new" element={
+                <MobileProtectedRoute>
+                  <MobileSalesForm />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/sales/new/:outwardEntryId" element={
+                <MobileProtectedRoute>
+                  <MobileSalesForm />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/sales-ledger" element={
+                <MobileProtectedRoute>
+                  <MobileSalesLedger />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/customer-ledger" element={
+                <MobileProtectedRoute>
+                  <MobileCustomerLedger />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/settings" element={
+                <MobileProtectedRoute>
+                  <MobileSettings />
+                </MobileProtectedRoute>
+              } />
+            </Routes>
+            <Toaster />
+          </Router>
+        </LanguageProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 };

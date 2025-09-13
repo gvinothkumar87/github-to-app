@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { MobileLayout } from '../components/MobileLayout';
-import { useOfflineData } from '../hooks/useOfflineData';
+import { useEnhancedOfflineData } from '../hooks/useEnhancedOfflineData';
 import { ArrowLeft } from 'lucide-react';
 
 interface MobileItemFormProps {
@@ -21,7 +21,7 @@ const MobileItemForm: React.FC<MobileItemFormProps> = ({ itemId }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const { create, update, findById } = useOfflineData('offline_items');
+  const { create, update, findById, isServicesReady } = useEnhancedOfflineData('items', [], { autoSync: true });
 
   const [formData, setFormData] = useState({
     name_english: '',

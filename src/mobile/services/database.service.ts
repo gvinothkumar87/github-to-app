@@ -206,6 +206,21 @@ export class DatabaseService {
     return id;
   }
 
+  // Local insert without sync queue (for downloaded data)
+  async insertLocal(table: string, data: any): Promise<string> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    const id = data.id || this.generateUUID();
+    const columns = Object.keys(data).join(', ');
+    const placeholders = Object.keys(data).map(() => '?').join(', ');
+    const values = Object.values(data);
+
+    const sql = `INSERT OR REPLACE INTO offline_${table} (id, ${columns}) VALUES (?, ${placeholders})`;
+    await this.db.run(sql, [id, ...values]);
+
+    return id;
+  }
+
   async update(table: string, id: string, data: any): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
 
@@ -217,6 +232,17 @@ export class DatabaseService {
 
     // Add to sync queue
     await this.addToSyncQueue(table, 'UPDATE', { id, ...data });
+  }
+
+  // Local update without sync queue (for downloaded data)
+  async updateLocal(table: string, id: string, data: any): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    const updates = Object.keys(data).map(key => `${key} = ?`).join(', ');
+    const values = Object.values(data);
+
+    const sql = `UPDATE offline_${table} SET ${updates}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`;
+    await this.db.run(sql, [...values, id]);
   }
 
   async delete(table: string, id: string): Promise<void> {

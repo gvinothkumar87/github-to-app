@@ -76,7 +76,7 @@ const MobileIndex: React.FC = () => {
     },
     {
       title: 'Sales Ledger',
-      description: 'View sales reports',
+      description: 'View sales reports (Offline)',
       icon: FileText,
       color: 'text-indigo-600',
       bgColor: 'bg-indigo-50',
@@ -84,7 +84,7 @@ const MobileIndex: React.FC = () => {
     },
     {
       title: 'Customer Ledger',
-      description: 'Customer account details',
+      description: 'Customer account details (Offline)',
       icon: FileText,
       color: 'text-teal-600',
       bgColor: 'bg-teal-50',
@@ -140,8 +140,10 @@ const MobileIndex: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Sync Status Display */}
-        <SyncStatusDisplay showProgress={true} compact={false} />
+        {/* Sync Status Display - Always visible */}
+        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm p-2 rounded-lg border">
+          <SyncStatusDisplay showProgress={true} compact={false} />
+        </div>
 
         {/* Menu Grid */}
         <div className="grid grid-cols-2 gap-4">

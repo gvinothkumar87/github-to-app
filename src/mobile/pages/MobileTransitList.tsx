@@ -5,7 +5,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { MobileLayout } from '../components/MobileLayout';
-import { useOfflineData } from '../hooks/useOfflineData';
+import { useEnhancedOfflineData } from '../hooks/useEnhancedOfflineData';
+import { OfflineStatusBanner } from '../components/OfflineStatusBanner';
 import LoadWeightModal from '../components/LoadWeightModal';
 import { ArrowLeft, Plus, Truck, User, Package, Weight, Wifi, WifiOff, Edit } from 'lucide-react';
 
@@ -14,9 +15,9 @@ const MobileTransitList: React.FC = () => {
   const navigate = useNavigate();
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
   const [showLoadWeightModal, setShowLoadWeightModal] = useState(false);
-  const { data: outwardEntries, loading, isOnline, refresh } = useOfflineData('offline_outward_entries');
-  const { data: customers } = useOfflineData('offline_customers');
-  const { data: items } = useOfflineData('offline_items');
+  const { data: outwardEntries, loading, isOnline, refresh, isServicesReady, error } = useEnhancedOfflineData('outward_entries');
+  const { data: customers } = useEnhancedOfflineData('customers');
+  const { data: items } = useEnhancedOfflineData('items');
 
   const getCustomerName = (customerId: string) => {
     const customer = customers.find((c: any) => c.id === customerId) as any;
@@ -67,6 +68,11 @@ const MobileTransitList: React.FC = () => {
   return (
     <MobileLayout title="Transit Logbook">
       <div className="space-y-4">
+        <OfflineStatusBanner 
+          isOnline={isOnline} 
+          isServicesReady={isServicesReady}
+          error={error}
+        />
         <div className="flex items-center justify-between">
           <Button
             variant="outline"

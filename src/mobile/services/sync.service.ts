@@ -505,10 +505,11 @@ export class SyncService {
           }
           updateData.sync_status = 'synced';
           
-          await databaseService.update(table, item.id, updateData);
+          // Use local update to avoid adding to sync queue
+          await databaseService.updateLocal(table, item.id, updateData);
         } else {
-          // Insert new record  
-          await databaseService.insert(table, {
+          // Insert new record using local method (no sync queue)
+          await databaseService.insertLocal(table, {
             ...item,
             sync_status: 'synced'
           });

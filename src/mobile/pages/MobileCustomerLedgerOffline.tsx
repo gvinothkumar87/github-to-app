@@ -8,19 +8,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Filter, Receipt, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
 import { format } from 'date-fns';
 import { useEnhancedOfflineData } from '../hooks/useEnhancedOfflineData';
+import { OfflineStatusBanner } from '../components/OfflineStatusBanner';
 import { databaseService } from '../services/database.service';
-import type { Customer } from '@/types';
 
-interface CustomerLedger {
+interface CustomerLedgerEntry {
   id: string;
   customer_id: string;
   transaction_type: string;
-  reference_id: string;
+  transaction_date: string;
+  description: string;
   debit_amount: number;
   credit_amount: number;
   balance: number;
-  transaction_date: string;
-  description?: string;
+  reference_id: string;
   created_at: string;
   updated_at: string;
 }
@@ -28,14 +28,14 @@ interface CustomerLedger {
 const MobileCustomerLedgerOffline: React.FC = () => {
   const navigate = useNavigate();
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
-  const [ledgerEntries, setLedgerEntries] = useState<CustomerLedger[]>([]);
+  const [ledgerEntries, setLedgerEntries] = useState<CustomerLedgerEntry[]>([]);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [loading, setLoading] = useState(false);
   const [customerBalance, setCustomerBalance] = useState<number>(0);
   const [showFilters, setShowFilters] = useState(false);
 
-  const { data: customers, isServicesReady } = useEnhancedOfflineData<Customer>('customers');
+  const { data: customers, isOnline, isServicesReady, error } = useEnhancedOfflineData('customers');
 
   useEffect(() => {
     if (selectedCustomerId && isServicesReady) {
@@ -44,41 +44,34 @@ const MobileCustomerLedgerOffline: React.FC = () => {
   }, [selectedCustomerId, dateFrom, dateTo, isServicesReady]);
 
   const fetchLedgerEntries = async () => {
-    if (!selectedCustomerId || !isServicesReady) return;
+    if (!selectedCustomerId) return;
 
     setLoading(true);
     try {
-      // Get all customer ledger entries from offline database
       const allEntries = await databaseService.findAll('customer_ledger');
       
-      // Filter by customer
-      let filteredEntries = allEntries.filter(entry => entry.customer_id === selectedCustomerId);
-
-      // Apply date filters
+      let filteredEntries = allEntries.filter((entry: any) => entry.customer_id === selectedCustomerId);
+      
       if (dateFrom) {
-        filteredEntries = filteredEntries.filter(entry => entry.transaction_date >= dateFrom);
+        filteredEntries = filteredEntries.filter((entry: any) => entry.transaction_date >= dateFrom);
       }
       if (dateTo) {
-        filteredEntries = filteredEntries.filter(entry => entry.transaction_date <= dateTo);
+        filteredEntries = filteredEntries.filter((entry: any) => entry.transaction_date <= dateTo);
       }
-
-      // Sort by transaction date (oldest first for running balance)
-      filteredEntries.sort((a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime());
-
-      // Calculate running balance
-      let runningBalance = 0;
-      const entriesWithBalance = filteredEntries.map(entry => {
-        runningBalance += entry.debit_amount - entry.credit_amount;
-        return {
-          ...entry,
-          balance: runningBalance
-        };
-      });
-
-      setLedgerEntries(entriesWithBalance);
-      setCustomerBalance(runningBalance);
+      
+      // Sort by transaction date
+      filteredEntries.sort((a: any, b: any) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime());
+      
+      setLedgerEntries(filteredEntries);
+      
+      // Calculate current balance
+      const balance = filteredEntries.reduce((acc, entry) => {
+        return acc + entry.debit_amount - entry.credit_amount;
+      }, 0);
+      setCustomerBalance(balance);
+      
     } catch (error) {
-      console.error('Error fetching offline customer ledger:', error);
+      console.error('Error fetching ledger entries:', error);
     } finally {
       setLoading(false);
     }
@@ -92,7 +85,7 @@ const MobileCustomerLedgerOffline: React.FC = () => {
     return ledgerEntries.reduce((sum, entry) => sum + entry.credit_amount, 0);
   };
 
-  const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
+  const selectedCustomer = customers.find((c: any) => c.id === selectedCustomerId);
 
   return (
     <div className="min-h-screen bg-background">
@@ -127,6 +120,11 @@ const MobileCustomerLedgerOffline: React.FC = () => {
 
         {/* Customer Selection & Filters */}
         <div className="p-4 border-t bg-muted/30">
+          <OfflineStatusBanner 
+            isOnline={isOnline} 
+            isServicesReady={isServicesReady}
+            error={error}
+          />
           <div className="space-y-4">
             <div>
               <Label>Customer</Label>
@@ -135,7 +133,7 @@ const MobileCustomerLedgerOffline: React.FC = () => {
                   <SelectValue placeholder="Choose customer..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {customers.map((customer) => (
+                  {customers.map((customer: any) => (
                     <SelectItem key={customer.id} value={customer.id}>
                       {customer.name_english} {customer.code && `(${customer.code})`}
                     </SelectItem>
@@ -178,8 +176,8 @@ const MobileCustomerLedgerOffline: React.FC = () => {
             <Card className="mb-4">
               <CardContent className="p-4">
                 <div className="text-center">
-                  <h2 className="text-lg font-semibold">{selectedCustomer.name_english}</h2>
-                  <p className="text-sm text-muted-foreground">{selectedCustomer.code}</p>
+                  <h2 className="text-lg font-semibold">{(selectedCustomer as any)?.name_english}</h2>
+                  <p className="text-sm text-muted-foreground">{(selectedCustomer as any)?.code}</p>
                 </div>
               </CardContent>
             </Card>
@@ -236,7 +234,8 @@ const MobileCustomerLedgerOffline: React.FC = () => {
               <CardContent className="p-0">
                 {loading ? (
                   <div className="flex items-center justify-center p-8">
-                    <div className="text-muted-foreground">Loading...</div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                    <div className="ml-2 text-muted-foreground">Loading...</div>
                   </div>
                 ) : ledgerEntries.length > 0 ? (
                   <div className="divide-y">

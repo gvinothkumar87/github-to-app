@@ -5,17 +5,23 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { MobileLayout } from '../components/MobileLayout';
-import { useOfflineData } from '../hooks/useOfflineData';
+import { useEnhancedOfflineData } from '../hooks/useEnhancedOfflineData';
+import { OfflineStatusBanner } from '../components/OfflineStatusBanner';
 import { ArrowLeft, Plus, Package, Percent, Tag, Wifi, WifiOff } from 'lucide-react';
 
 const MobileItemList: React.FC = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
-  const { data: items, loading, isOnline } = useOfflineData('offline_items');
+  const { data: items, loading, isOnline, isServicesReady, error } = useEnhancedOfflineData('items');
 
   return (
     <MobileLayout title="Items">
       <div className="space-y-4">
+        <OfflineStatusBanner 
+          isOnline={isOnline} 
+          isServicesReady={isServicesReady}
+          error={error}
+        />
         <div className="flex items-center justify-between">
           <Button
             variant="outline"

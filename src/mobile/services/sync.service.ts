@@ -211,17 +211,25 @@ export class SyncService {
 
     switch (operation) {
       case 'CREATE':
+        // Check for receipt number conflicts and resolve them
+        const resolvedData = await this.resolveReceiptNumberConflicts(data);
+        
         const { error: insertError } = await table.insert({
-          id: data.id,
-          receipt_no: data.receipt_no,
-          customer_id: data.customer_id,
-          amount: data.amount,
-          receipt_date: data.receipt_date,
-          payment_method: data.payment_method,
-          remarks: data.remarks,
-          created_by: data.created_by
+          id: resolvedData.id,
+          receipt_no: resolvedData.receipt_no, // This will be the new resolved receipt number
+          customer_id: resolvedData.customer_id,
+          amount: resolvedData.amount,
+          receipt_date: resolvedData.receipt_date,
+          payment_method: resolvedData.payment_method,
+          remarks: resolvedData.remarks,
+          created_by: resolvedData.created_by
         });
         if (insertError) throw insertError;
+        
+        // Update local database with new receipt number if it changed
+        if (resolvedData.receipt_no !== data.receipt_no) {
+          await this.updateLocalReceiptNumber(data.id, resolvedData.receipt_no);
+        }
         break;
 
       case 'UPDATE':
@@ -250,21 +258,30 @@ export class SyncService {
 
     switch (operation) {
       case 'CREATE':
+        // Check for serial number conflicts and resolve them
+        const resolvedData = await this.resolveSerialNumberConflicts(data);
+        
         const { error: insertError } = await table.insert({
-          id: data.id,
-          entry_date: data.entry_date,
-          customer_id: data.customer_id,
-          item_id: data.item_id,
-          lorry_no: data.lorry_no,
-          driver_mobile: data.driver_mobile,
-          empty_weight: data.empty_weight,
-          load_weight: data.load_weight,
-          net_weight: data.net_weight,
-          remarks: data.remarks,
-          loading_place: data.loading_place,
-          is_completed: data.is_completed
+          id: resolvedData.id,
+          serial_no: resolvedData.serial_no, // This will be the new resolved serial number
+          entry_date: resolvedData.entry_date,
+          customer_id: resolvedData.customer_id,
+          item_id: resolvedData.item_id,
+          lorry_no: resolvedData.lorry_no,
+          driver_mobile: resolvedData.driver_mobile,
+          empty_weight: resolvedData.empty_weight,
+          load_weight: resolvedData.load_weight,
+          net_weight: resolvedData.net_weight,
+          remarks: resolvedData.remarks,
+          loading_place: resolvedData.loading_place,
+          is_completed: resolvedData.is_completed
         });
         if (insertError) throw insertError;
+        
+        // Update local database with new serial number if it changed
+        if (resolvedData.serial_no !== data.serial_no) {
+          await this.updateLocalSerialNumber(data.id, resolvedData.serial_no);
+        }
         break;
 
       case 'UPDATE':
@@ -298,19 +315,27 @@ export class SyncService {
 
     switch (operation) {
       case 'CREATE':
+        // Check for bill number conflicts and resolve them
+        const resolvedData = await this.resolveBillNumberConflicts(data);
+        
         const { error: insertError } = await table.insert({
-          id: data.id,
-          outward_entry_id: data.outward_entry_id,
-          customer_id: data.customer_id,
-          item_id: data.item_id,
-          quantity: data.quantity,
-          rate: data.rate,
-          total_amount: data.total_amount,
-          bill_serial_no: data.bill_serial_no,
-          sale_date: data.sale_date,
-          created_by: data.created_by
+          id: resolvedData.id,
+          outward_entry_id: resolvedData.outward_entry_id,
+          customer_id: resolvedData.customer_id,
+          item_id: resolvedData.item_id,
+          quantity: resolvedData.quantity,
+          rate: resolvedData.rate,
+          total_amount: resolvedData.total_amount,
+          bill_serial_no: resolvedData.bill_serial_no, // This will be the new resolved bill number
+          sale_date: resolvedData.sale_date,
+          created_by: resolvedData.created_by
         });
         if (insertError) throw insertError;
+        
+        // Update local database with new bill number if it changed
+        if (resolvedData.bill_serial_no !== data.bill_serial_no) {
+          await this.updateLocalBillNumber(data.id, resolvedData.bill_serial_no);
+        }
         break;
 
       case 'UPDATE':
@@ -535,6 +560,224 @@ export class SyncService {
 
   async getSyncStats() {
     return await databaseService.getStats();
+  }
+
+  // Conflict resolution methods for serial numbers and bill numbers
+  private async resolveSerialNumberConflicts(data: any): Promise<any> {
+    try {
+      // Check if serial number already exists in Supabase
+      const { data: existingEntries, error } = await supabase
+        .from('outward_entries')
+        .select('serial_no')
+        .eq('serial_no', data.serial_no)
+        .limit(1);
+
+      if (error) throw error;
+
+      // If serial number already exists, get the next available serial number
+      if (existingEntries && existingEntries.length > 0) {
+        const { data: maxEntry, error: maxError } = await supabase
+          .from('outward_entries')
+          .select('serial_no')
+          .order('serial_no', { ascending: false })
+          .limit(1);
+
+        if (maxError) throw maxError;
+
+        const newSerialNo = maxEntry && maxEntry.length > 0 
+          ? (maxEntry[0].serial_no + 1) 
+          : 1;
+
+        console.log(`Serial number conflict resolved: ${data.serial_no} → ${newSerialNo}`);
+        
+        return {
+          ...data,
+          serial_no: newSerialNo,
+          remarks: data.remarks 
+            ? `${data.remarks} [Serial auto-updated from ${data.serial_no}]`
+            : `[Serial auto-updated from ${data.serial_no}]`
+        };
+      }
+
+      return data; // No conflict, return as-is
+    } catch (error) {
+      console.error('Error resolving serial number conflict:', error);
+      // Fallback: use timestamp-based serial number
+      const fallbackSerial = Date.now() % 1000000; // Use timestamp as fallback
+      return {
+        ...data,
+        serial_no: fallbackSerial,
+        remarks: data.remarks 
+          ? `${data.remarks} [Serial auto-generated: ${fallbackSerial}]`
+          : `[Serial auto-generated: ${fallbackSerial}]`
+      };
+    }
+  }
+
+  private async resolveBillNumberConflicts(data: any): Promise<any> {
+    if (!data.bill_serial_no) return data; // No bill number to check
+
+    try {
+      // Check if bill number already exists in Supabase
+      const { data: existingSales, error } = await supabase
+        .from('sales')
+        .select('bill_serial_no')
+        .eq('bill_serial_no', data.bill_serial_no)
+        .limit(1);
+
+      if (error) throw error;
+
+      // If bill number already exists, generate a new one
+      if (existingSales && existingSales.length > 0) {
+        // Get the highest existing bill number
+        const { data: maxSale, error: maxError } = await supabase
+          .from('sales')
+          .select('bill_serial_no')
+          .not('bill_serial_no', 'is', null)
+          .order('bill_serial_no', { ascending: false })
+          .limit(1);
+
+        if (maxError) throw maxError;
+
+        // Generate new bill number based on pattern
+        let newBillNo: string;
+        if (maxSale && maxSale.length > 0 && maxSale[0].bill_serial_no) {
+          // Extract number from existing bill and increment
+          const match = maxSale[0].bill_serial_no.match(/(\d+)$/);
+          if (match) {
+            const currentNum = parseInt(match[1]);
+            const prefix = maxSale[0].bill_serial_no.replace(/\d+$/, '');
+            newBillNo = `${prefix}${(currentNum + 1).toString().padStart(match[1].length, '0')}`;
+          } else {
+            // Fallback if pattern doesn't match
+            newBillNo = `BILL-${Date.now()}`;
+          }
+        } else {
+          // No existing bills, create first one
+          newBillNo = data.bill_serial_no.includes('-') 
+            ? data.bill_serial_no.replace(/\d+$/, '1')
+            : 'BILL-1';
+        }
+
+        console.log(`Bill number conflict resolved: ${data.bill_serial_no} → ${newBillNo}`);
+        
+        return {
+          ...data,
+          bill_serial_no: newBillNo
+        };
+      }
+
+      return data; // No conflict, return as-is
+    } catch (error) {
+      console.error('Error resolving bill number conflict:', error);
+      // Fallback: use timestamp-based bill number
+      const fallbackBill = `BILL-${Date.now()}`;
+      return {
+        ...data,
+        bill_serial_no: fallbackBill
+      };
+    }
+  }
+
+  private async updateLocalSerialNumber(id: string, newSerialNo: number): Promise<void> {
+    try {
+      await databaseService.update('outward_entries', id, { 
+        serial_no: newSerialNo,
+        sync_status: 'synced' // Mark as synced since it's now updated with server data
+      });
+      console.log(`Updated local outward entry ${id} with new serial number: ${newSerialNo}`);
+    } catch (error) {
+      console.error('Error updating local serial number:', error);
+    }
+  }
+
+  private async updateLocalBillNumber(id: string, newBillNo: string): Promise<void> {
+    try {
+      await databaseService.update('sales', id, { 
+        bill_serial_no: newBillNo,
+        sync_status: 'synced' // Mark as synced since it's now updated with server data
+      });
+      console.log(`Updated local sale ${id} with new bill number: ${newBillNo}`);
+    } catch (error) {
+      console.error('Error updating local bill number:', error);
+    }
+  }
+
+  private async resolveReceiptNumberConflicts(data: any): Promise<any> {
+    if (!data.receipt_no) return data; // No receipt number to check
+
+    try {
+      // Check if receipt number already exists in Supabase
+      const { data: existingReceipts, error } = await supabase
+        .from('receipts')
+        .select('receipt_no')
+        .eq('receipt_no', data.receipt_no)
+        .limit(1);
+
+      if (error) throw error;
+
+      // If receipt number already exists, generate a new one
+      if (existingReceipts && existingReceipts.length > 0) {
+        // Get the highest existing receipt number
+        const { data: maxReceipt, error: maxError } = await supabase
+          .from('receipts')
+          .select('receipt_no')
+          .not('receipt_no', 'is', null)
+          .order('receipt_no', { ascending: false })
+          .limit(1);
+
+        if (maxError) throw maxError;
+
+        // Generate new receipt number based on pattern
+        let newReceiptNo: string;
+        if (maxReceipt && maxReceipt.length > 0 && maxReceipt[0].receipt_no) {
+          // Extract number from existing receipt and increment
+          const match = maxReceipt[0].receipt_no.match(/(\d+)$/);
+          if (match) {
+            const currentNum = parseInt(match[1]);
+            const prefix = maxReceipt[0].receipt_no.replace(/\d+$/, '');
+            newReceiptNo = `${prefix}${(currentNum + 1).toString().padStart(match[1].length, '0')}`;
+          } else {
+            // Fallback if pattern doesn't match
+            newReceiptNo = `REC-${Date.now()}`;
+          }
+        } else {
+          // No existing receipts, create first one
+          newReceiptNo = data.receipt_no.includes('-') 
+            ? data.receipt_no.replace(/\d+$/, '1')
+            : 'REC-1';
+        }
+
+        console.log(`Receipt number conflict resolved: ${data.receipt_no} → ${newReceiptNo}`);
+        
+        return {
+          ...data,
+          receipt_no: newReceiptNo
+        };
+      }
+
+      return data; // No conflict, return as-is
+    } catch (error) {
+      console.error('Error resolving receipt number conflict:', error);
+      // Fallback: use timestamp-based receipt number
+      const fallbackReceipt = `REC-${Date.now()}`;
+      return {
+        ...data,
+        receipt_no: fallbackReceipt
+      };
+    }
+  }
+
+  private async updateLocalReceiptNumber(id: string, newReceiptNo: string): Promise<void> {
+    try {
+      await databaseService.update('receipts', id, { 
+        receipt_no: newReceiptNo,
+        sync_status: 'synced' // Mark as synced since it's now updated with server data
+      });
+      console.log(`Updated local receipt ${id} with new receipt number: ${newReceiptNo}`);
+    } catch (error) {
+      console.error('Error updating local receipt number:', error);
+    }
   }
 }
 

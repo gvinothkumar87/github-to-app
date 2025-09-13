@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { networkService } from '../services/network.service';
 import { syncService } from '../services/sync.service';
+import { SyncStatusDisplay } from '../components/SyncStatusDisplay';
 import { useMobileServices } from '../providers/MobileServiceProvider';
 
 const MobileIndex: React.FC = () => {
@@ -138,6 +139,9 @@ const MobileIndex: React.FC = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Sync Status Display */}
+        <SyncStatusDisplay showProgress={true} compact={false} />
 
         {/* Menu Grid */}
         <div className="grid grid-cols-2 gap-4">

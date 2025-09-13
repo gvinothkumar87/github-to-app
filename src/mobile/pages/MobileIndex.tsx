@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MobileLayout } from '../components/MobileLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const MobileIndex: React.FC = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const initializeServices = async () => {
@@ -55,7 +57,7 @@ const MobileIndex: React.FC = () => {
       icon: Truck,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
-      href: '/mobile/transit'
+      href: '/transit'
     },
     {
       title: 'Customers',
@@ -63,7 +65,7 @@ const MobileIndex: React.FC = () => {
       icon: Users,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
-      href: '/mobile/customers'
+      href: '/customers'
     },
     {
       title: 'Items',
@@ -71,7 +73,7 @@ const MobileIndex: React.FC = () => {
       icon: Package,
       color: 'text-purple-600',
       bgColor: 'bg-purple-50',
-      href: '/mobile/items'
+      href: '/items'
     },
     {
       title: 'Receipts',
@@ -79,7 +81,7 @@ const MobileIndex: React.FC = () => {
       icon: Receipt,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
-      href: '/mobile/receipts'
+      href: '/receipts/new'
     },
     {
       title: 'Sales',
@@ -87,7 +89,7 @@ const MobileIndex: React.FC = () => {
       icon: FileText,
       color: 'text-red-600',
       bgColor: 'bg-red-50',
-      href: '/mobile/sales'
+      href: '/sales'
     },
     {
       title: 'Settings',
@@ -95,16 +97,12 @@ const MobileIndex: React.FC = () => {
       icon: Settings,
       color: 'text-gray-600',
       bgColor: 'bg-gray-50',
-      href: '/mobile/settings'
+      href: '/settings'
     }
   ];
 
   const handleMenuClick = (href: string) => {
-    // For now, just show a toast since we haven't implemented routing
-    toast({
-      title: "Feature Coming Soon",
-      description: `${href} will be available in the next update`,
-    });
+    navigate(href);
   };
 
   return (
@@ -165,7 +163,7 @@ const MobileIndex: React.FC = () => {
             <Button 
               className="w-full justify-start" 
               variant="outline"
-              onClick={() => handleMenuClick('/mobile/transit/new')}
+              onClick={() => handleMenuClick('/transit/new')}
             >
               <Truck className="h-4 w-4 mr-2" />
               New Outward Entry
@@ -173,7 +171,7 @@ const MobileIndex: React.FC = () => {
             <Button 
               className="w-full justify-start" 
               variant="outline"
-              onClick={() => handleMenuClick('/mobile/receipts/new')}
+              onClick={() => handleMenuClick('/receipts/new')}
             >
               <Receipt className="h-4 w-4 mr-2" />
               New Receipt
@@ -181,7 +179,7 @@ const MobileIndex: React.FC = () => {
             <Button 
               className="w-full justify-start" 
               variant="outline"
-              onClick={() => handleMenuClick('/mobile/customers/new')}
+              onClick={() => handleMenuClick('/customers/new')}
             >
               <Users className="h-4 w-4 mr-2" />
               Add Customer

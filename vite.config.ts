@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: isMobile ? 'dist-mobile' : 'dist',
       rollupOptions: isMobile ? {
-        input: path.resolve(__dirname, 'index.html')
+        input: path.resolve(__dirname, 'mobile-index.html')
       } : undefined,
     },
     server: {

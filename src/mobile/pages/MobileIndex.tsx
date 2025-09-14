@@ -44,7 +44,12 @@ const MobileIndex: React.FC = () => {
     
     setIsSyncing(true);
     try {
+      // Upload local changes first
       await syncService.startSync();
+      // Then download latest data from server
+      await syncService.downloadLatestData();
+      // Notify the app that offline data has updated
+      window.dispatchEvent(new CustomEvent('offline-data-updated', { detail: { source: 'mobile-index-manual-sync' } }));
       toast.success('Sync completed successfully');
     } catch (error) {
       console.error('Sync failed:', error);

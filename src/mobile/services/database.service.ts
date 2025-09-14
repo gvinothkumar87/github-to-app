@@ -110,6 +110,8 @@ export class DatabaseService {
         empty_weight REAL NOT NULL,
         load_weight REAL,
         net_weight REAL,
+        load_weight_updated_at TEXT,
+        load_weight_updated_by TEXT,
         remarks TEXT,
         loading_place TEXT DEFAULT 'PULIVANTHI',
         is_completed BOOLEAN DEFAULT false,
@@ -186,6 +188,26 @@ export class DatabaseService {
       await this.db.execute(indexSQL);
     }
 
+    // Ensure schema migrations for existing installs
+    await this.ensureOutwardEntryColumns();
+
+  }
+
+  // Schema migration helpers
+  private async ensureOutwardEntryColumns(): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+    try {
+      const res = await this.db.query(`PRAGMA table_info(offline_outward_entries)`);
+      const cols = (res.values || []).map((r: any) => r.name);
+      if (!cols.includes('load_weight_updated_at')) {
+        await this.db.execute(`ALTER TABLE offline_outward_entries ADD COLUMN load_weight_updated_at TEXT`);
+      }
+      if (!cols.includes('load_weight_updated_by')) {
+        await this.db.execute(`ALTER TABLE offline_outward_entries ADD COLUMN load_weight_updated_by TEXT`);
+      }
+    } catch (e) {
+      console.warn('ensureOutwardEntryColumns failed:', e);
+    }
   }
 
   // Generic CRUD operations

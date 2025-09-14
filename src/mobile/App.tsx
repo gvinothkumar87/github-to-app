@@ -26,6 +26,7 @@ import MobileInvoiceGenerator from './components/MobileInvoiceGenerator';
 import MobileCreditNoteForm from './pages/MobileCreditNoteForm';
 import MobileDebitNoteForm from './pages/MobileDebitNoteForm';
 import MobileReceiptList from './pages/MobileReceiptList';
+import MobileReports from './pages/MobileReports';
 
 // Create a query client for React Query
 const queryClient = new QueryClient({
@@ -111,16 +112,51 @@ const MobileApp: React.FC = () => {
                   <MobileSalesForm />
                 </MobileProtectedRoute>
               } />
-            <Route path="/sales-ledger" element={
-              <MobileProtectedRoute>
-                <MobileSalesLedgerOffline />
-              </MobileProtectedRoute>
-            } />
-            <Route path="/customer-ledger" element={
-              <MobileProtectedRoute>
-                <MobileCustomerLedgerOffline />
-              </MobileProtectedRoute>
-            } />
+              <Route path="/sales/:id/edit" element={
+                <MobileProtectedRoute>
+                  <MobileEditSaleForm />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/sales-ledger" element={
+                <MobileProtectedRoute>
+                  <MobileSalesLedgerOffline />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/customer-ledger" element={
+                <MobileProtectedRoute>
+                  <MobileCustomerLedgerOffline />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/bills" element={
+                <MobileProtectedRoute>
+                  <MobileBillsList />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/bills/:billId/invoice" element={
+                <MobileProtectedRoute>
+                  <MobileInvoiceGenerator />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/receipts" element={
+                <MobileProtectedRoute>
+                  <MobileReceiptList />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/credit-note" element={
+                <MobileProtectedRoute>
+                  <MobileCreditNoteForm />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/debit-note" element={
+                <MobileProtectedRoute>
+                  <MobileDebitNoteForm />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/reports" element={
+                <MobileProtectedRoute>
+                  <MobileReports />
+                </MobileProtectedRoute>
+              } />
               <Route path="/settings" element={
                 <MobileProtectedRoute>
                   <MobileSettings />

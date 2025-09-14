@@ -117,6 +117,22 @@ const MobileIndex: React.FC = () => {
       href: '/customer-ledger'
     },
     {
+      title: 'Bills',
+      description: 'Manage sales bills and invoices',
+      icon: FileText,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      href: '/bills'
+    },
+    {
+      title: 'Reports',
+      description: 'Generate business reports',
+      icon: FileText,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50',
+      href: '/reports'
+    },
+    {
       title: 'Settings',
       description: 'App configuration and sync',
       icon: Settings,

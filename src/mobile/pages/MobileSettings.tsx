@@ -12,9 +12,8 @@ import { syncService } from '../services/sync.service';
 import { networkService } from '../services/network.service';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { 
-  ArrowLeft, 
   Wifi, 
-  WifiOff, 
+  WifiOff,
   Database, 
   RefreshCw, 
   Trash2, 
@@ -179,14 +178,6 @@ const MobileSettings: React.FC = () => {
   return (
     <MobileLayout title="Settings">
       <div className="space-y-4">
-        <Button
-          variant="outline"
-          onClick={() => navigate('/')}
-          className="mb-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          {language === 'english' ? 'Back' : 'பின்'}
-        </Button>
 
         {/* Network Status */}
         <Card>

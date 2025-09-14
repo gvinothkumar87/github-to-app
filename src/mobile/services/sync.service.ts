@@ -58,7 +58,11 @@ export class SyncService {
         this.notifyListeners(progress);
 
         await this.syncItem(item);
+        
+        // Mark local record as synced and update sync status
         await databaseService.markSyncCompleted(item.id);
+        await databaseService.updateLocal(item.table_name, item.data.id, { sync_status: 'synced' });
+        
         progress.completed++;
         
         console.log(`Synced: ${item.operation} ${item.table_name} (${item.data.id})`);
@@ -80,6 +84,13 @@ export class SyncService {
 
     this.notifyListeners(progress);
     console.log(`Sync completed: ${progress.completed} successful, ${progress.failed} failed`);
+
+    // Dispatch event to refresh UI after sync completion
+    if (progress.completed > 0) {
+      window.dispatchEvent(new CustomEvent('offline-data-updated', { 
+        detail: { source: 'auto-sync', completed: progress.completed } 
+      }));
+    }
 
     return progress;
   }

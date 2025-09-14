@@ -9,7 +9,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { MobileLayout } from '../components/MobileLayout';
 import { useEnhancedOfflineData } from '../hooks/useEnhancedOfflineData';
-import { ArrowLeft } from 'lucide-react';
+
 
 interface MobileCustomerFormProps {
   customerId?: string;
@@ -97,14 +97,6 @@ const MobileCustomerForm: React.FC<MobileCustomerFormProps> = ({ customerId }) =
   return (
     <MobileLayout title={customerId ? 'Edit Customer' : 'New Customer'}>
       <div className="space-y-4">
-        <Button
-          variant="outline"
-          onClick={() => navigate('/customers')}
-          className="mb-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          {language === 'english' ? 'Back' : 'பின்'}
-        </Button>
 
         <Card>
           <CardHeader>

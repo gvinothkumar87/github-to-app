@@ -19,6 +19,9 @@ export function useEnhancedOfflineData<T>(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(networkService.isOnline());
+  
+  // Enable autoSync by default if not explicitly disabled
+  const autoSyncEnabled = options.autoSync !== false;
 
   const normalizeTableName = (tableName: string) => {
     // Remove 'offline_' prefix if it exists to avoid double-prefixing
@@ -74,7 +77,7 @@ export function useEnhancedOfflineData<T>(
       await loadData(); // Refresh data
       
       // Auto-sync if online and enabled
-      if (options.autoSync && networkService.isOnline() && !syncService.isSyncInProgress()) {
+      if (autoSyncEnabled && networkService.isOnline() && !syncService.isSyncInProgress()) {
         syncService.startSync().catch(syncError => {
           console.warn('Auto-sync failed:', syncError);
         });
@@ -107,7 +110,7 @@ export function useEnhancedOfflineData<T>(
       await loadData(); // Refresh data
       
       // Auto-sync if online and enabled
-      if (options.autoSync && networkService.isOnline() && !syncService.isSyncInProgress()) {
+      if (autoSyncEnabled && networkService.isOnline() && !syncService.isSyncInProgress()) {
         syncService.startSync().catch(syncError => {
           console.warn('Auto-sync failed:', syncError);
         });
@@ -130,7 +133,7 @@ export function useEnhancedOfflineData<T>(
       await loadData(); // Refresh data
       
       // Auto-sync if online and enabled
-      if (options.autoSync && networkService.isOnline() && !syncService.isSyncInProgress()) {
+      if (autoSyncEnabled && networkService.isOnline() && !syncService.isSyncInProgress()) {
         syncService.startSync().catch(syncError => {
           console.warn('Auto-sync failed:', syncError);
         });

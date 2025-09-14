@@ -7,7 +7,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { MobileLayout } from '../components/MobileLayout';
 import { useEnhancedOfflineData } from '../hooks/useEnhancedOfflineData';
 import { OfflineStatusBanner } from '../components/OfflineStatusBanner';
-import { ArrowLeft, Plus, FileText, User, Package, Truck, IndianRupee, Wifi, WifiOff } from 'lucide-react';
+import { Plus, FileText, User, Package, Truck, IndianRupee, Wifi, WifiOff } from 'lucide-react';
 
 const MobileSalesList: React.FC = () => {
   const { language } = useLanguage();
@@ -41,13 +41,6 @@ const MobileSalesList: React.FC = () => {
           error={error}
         />
         <div className="flex items-center justify-between">
-          <Button
-            variant="outline"
-            onClick={() => navigate('/')}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            {language === 'english' ? 'Back' : 'பின்'}
-          </Button>
           
           <div className="flex items-center gap-2">
             <Badge variant={isOnline ? 'default' : 'secondary'} className="flex items-center gap-1">

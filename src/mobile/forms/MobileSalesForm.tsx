@@ -9,7 +9,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { MobileLayout } from '../components/MobileLayout';
 import { useEnhancedOfflineData } from '../hooks/useEnhancedOfflineData';
-import { ArrowLeft } from 'lucide-react';
+
 
 const MobileSalesForm: React.FC = () => {
   const { language } = useLanguage();
@@ -18,10 +18,10 @@ const MobileSalesForm: React.FC = () => {
   const { outwardEntryId } = useParams();
   const [loading, setLoading] = useState(false);
   
-  const { create: createSale } = useEnhancedOfflineData('offline_sales');
-  const { data: outwardEntries } = useEnhancedOfflineData('offline_outward_entries');
-  const { data: customers } = useEnhancedOfflineData('offline_customers');
-  const { data: items } = useEnhancedOfflineData('offline_items');
+  const { create: createSale } = useEnhancedOfflineData('offline_sales', [], { autoSync: true });
+  const { data: outwardEntries } = useEnhancedOfflineData('offline_outward_entries', [], { autoSync: true });
+  const { data: customers } = useEnhancedOfflineData('offline_customers', [], { autoSync: true });
+  const { data: items } = useEnhancedOfflineData('offline_items', [], { autoSync: true });
 
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
   const [formData, setFormData] = useState({
@@ -158,14 +158,6 @@ const MobileSalesForm: React.FC = () => {
   return (
     <MobileLayout title="New Sale">
       <div className="space-y-4">
-        <Button
-          variant="outline"
-          onClick={() => navigate('/sales')}
-          className="mb-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          {language === 'english' ? 'Back' : 'பின்'}
-        </Button>
 
         <Card>
           <CardHeader>

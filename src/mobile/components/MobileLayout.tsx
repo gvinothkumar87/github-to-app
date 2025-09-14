@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { OfflineIndicator } from './OfflineIndicator';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -39,9 +39,9 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
                 </Button>
               </div>
             </div>
+            <OfflineIndicator />
           </div>
         )}
-        <OfflineIndicator />
       </header>
 
       {/* Main content */}

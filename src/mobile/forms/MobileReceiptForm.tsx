@@ -27,8 +27,8 @@ interface ReceiptFormData {
 
 export const MobileReceiptForm: React.FC = () => {
   const { toast } = useToast();
-  const { data: customers } = useEnhancedOfflineData('offline_customers');
-  const { create: createReceipt } = useEnhancedOfflineData('offline_receipts');
+  const { data: customers } = useEnhancedOfflineData('offline_customers', [], { autoSync: true });
+  const { create: createReceipt } = useEnhancedOfflineData('offline_receipts', [], { autoSync: true });
   
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<ReceiptFormData>({

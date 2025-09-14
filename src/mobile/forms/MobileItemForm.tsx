@@ -10,7 +10,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { MobileLayout } from '../components/MobileLayout';
 import { useEnhancedOfflineData } from '../hooks/useEnhancedOfflineData';
-import { ArrowLeft } from 'lucide-react';
+
 
 interface MobileItemFormProps {
   itemId?: string;
@@ -103,14 +103,6 @@ const MobileItemForm: React.FC<MobileItemFormProps> = ({ itemId }) => {
   return (
     <MobileLayout title={itemId ? 'Edit Item' : 'New Item'}>
       <div className="space-y-4">
-        <Button
-          variant="outline"
-          onClick={() => navigate('/items')}
-          className="mb-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          {language === 'english' ? 'Back' : 'பின்'}
-        </Button>
 
         <Card>
           <CardHeader>

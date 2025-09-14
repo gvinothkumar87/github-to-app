@@ -17,9 +17,9 @@ const MobileOutwardEntryForm: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   
-  const { data: customers } = useEnhancedOfflineData('offline_customers');
-  const { data: items } = useEnhancedOfflineData('offline_items');
-  const { create: createEntry } = useEnhancedOfflineData('offline_outward_entries');
+  const { data: customers } = useEnhancedOfflineData('offline_customers', [], { autoSync: true });
+  const { data: items } = useEnhancedOfflineData('offline_items', [], { autoSync: true });
+  const { create: createEntry } = useEnhancedOfflineData('offline_outward_entries', [], { autoSync: true });
 
   const [formData, setFormData] = useState({
     entry_date: new Date().toISOString().split('T')[0],
@@ -64,14 +64,6 @@ const MobileOutwardEntryForm: React.FC = () => {
   return (
     <MobileLayout title="New Outward Entry">
       <div className="space-y-4">
-        <Button
-          variant="outline"
-          onClick={() => navigate('/transit')}
-          className="mb-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          {language === 'english' ? 'Back' : 'பின்'}
-        </Button>
 
         <Card>
           <CardHeader>

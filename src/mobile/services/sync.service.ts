@@ -268,31 +268,36 @@ export class SyncService {
 
     switch (operation) {
       case 'CREATE':
-        // Check for serial number conflicts and resolve them
-        const resolvedData = await this.resolveSerialNumberConflicts(data);
+        // Don't send serial_no for CREATE operations - let Supabase auto-generate it
+        // This prevents conflicts with the auto-increment sequence
+        const insertData: any = {
+          id: data.id,
+          entry_date: data.entry_date,
+          customer_id: data.customer_id,
+          item_id: data.item_id,
+          lorry_no: data.lorry_no,
+          driver_mobile: data.driver_mobile,
+          empty_weight: data.empty_weight,
+          load_weight: data.load_weight,
+          net_weight: data.net_weight,
+          load_weight_updated_at: data.load_weight_updated_at,
+          load_weight_updated_by: data.load_weight_updated_by,
+          remarks: data.remarks,
+          loading_place: data.loading_place,
+          is_completed: data.is_completed
+        };
         
-        const { error: insertError } = await table.insert({
-          id: resolvedData.id,
-          serial_no: resolvedData.serial_no, // This will be the new resolved serial number
-          entry_date: resolvedData.entry_date,
-          customer_id: resolvedData.customer_id,
-          item_id: resolvedData.item_id,
-          lorry_no: resolvedData.lorry_no,
-          driver_mobile: resolvedData.driver_mobile,
-          empty_weight: resolvedData.empty_weight,
-          load_weight: resolvedData.load_weight,
-          net_weight: resolvedData.net_weight,
-          load_weight_updated_at: resolvedData.load_weight_updated_at,
-          load_weight_updated_by: resolvedData.load_weight_updated_by,
-          remarks: resolvedData.remarks,
-          loading_place: resolvedData.loading_place,
-          is_completed: resolvedData.is_completed
-        });
+        // Let Supabase auto-generate the serial_no via its sequence
+        const { data: insertedData, error: insertError } = await table
+          .insert(insertData)
+          .select('serial_no')
+          .single();
+          
         if (insertError) throw insertError;
         
-        // Update local database with new serial number if it changed
-        if (resolvedData.serial_no !== data.serial_no) {
-          await this.updateLocalSerialNumber(data.id, resolvedData.serial_no);
+        // Update local database with the Supabase-generated serial number
+        if (insertedData && insertedData.serial_no !== data.serial_no) {
+          await this.updateLocalSerialNumber(data.id, insertedData.serial_no);
         }
         break;
 
@@ -329,8 +334,15 @@ export class SyncService {
 
     switch (operation) {
       case 'CREATE':
-        // Check for bill number conflicts and resolve them
-        const resolvedData = await this.resolveBillNumberConflicts(data);
+        // Generate bill number if empty, otherwise check for conflicts
+        let resolvedData = data;
+        if (!data.bill_serial_no || data.bill_serial_no.trim() === '') {
+          // Generate a new bill number based on loading place pattern
+          resolvedData = await this.generateMissingBillNumber(data);
+        } else {
+          // Check for conflicts and resolve them
+          resolvedData = await this.resolveBillNumberConflicts(data);
+        }
         
         const { error: insertError } = await table.insert({
           id: resolvedData.id,
@@ -340,7 +352,7 @@ export class SyncService {
           quantity: resolvedData.quantity,
           rate: resolvedData.rate,
           total_amount: resolvedData.total_amount,
-          bill_serial_no: resolvedData.bill_serial_no, // This will be the new resolved bill number
+          bill_serial_no: resolvedData.bill_serial_no,
           sale_date: resolvedData.sale_date,
           created_by: resolvedData.created_by
         });
@@ -913,6 +925,67 @@ export class SyncService {
       console.log(`Updated local sale ${id} with new bill number: ${newBillNo}`);
     } catch (error) {
       console.error('Error updating local bill number:', error);
+    }
+  }
+
+  // Generate bill number for sales that don't have one
+  private async generateMissingBillNumber(data: any): Promise<any> {
+    try {
+      // Get outward entry to determine loading place
+      const { data: outwardEntry, error } = await supabase
+        .from('outward_entries')
+        .select('loading_place')
+        .eq('id', data.outward_entry_id)
+        .single();
+      
+      if (error) throw error;
+      
+      const loadingPlace = outwardEntry.loading_place || 'PULIVANTHI';
+      
+      // Get latest bill number pattern and generate next one
+      let prefix = '';
+      let query = supabase.from('sales').select('bill_serial_no');
+      
+      if (loadingPlace === 'PULIVANTHI') {
+        query = query.like('bill_serial_no', '[0-9][0-9][0-9]');
+      } else if (loadingPlace === 'MATTAPARAI') {
+        prefix = 'GRM';
+        query = query.like('bill_serial_no', 'GRM%');
+      }
+      
+      const { data: existingBills, error: billError } = await query
+        .order('bill_serial_no', { ascending: false })
+        .limit(1);
+      
+      if (billError) throw billError;
+      
+      let nextNumber = 1;
+      if (existingBills && existingBills.length > 0 && existingBills[0].bill_serial_no) {
+        const lastSerial = existingBills[0].bill_serial_no;
+        if (loadingPlace === 'PULIVANTHI') {
+          nextNumber = parseInt(lastSerial || '000') + 1;
+        } else if (loadingPlace === 'MATTAPARAI') {
+          nextNumber = parseInt((lastSerial || 'GRM000').replace('GRM', '')) + 1;
+        }
+      }
+      
+      const serialNumber = nextNumber.toString().padStart(3, '0');
+      const newBillNo = loadingPlace === 'PULIVANTHI' ? serialNumber : `${prefix}${serialNumber}`;
+      
+      console.log(`Generated missing bill number: ${newBillNo} for loading place: ${loadingPlace}`);
+      
+      return {
+        ...data,
+        bill_serial_no: newBillNo
+      };
+    } catch (error) {
+      console.error('Error generating missing bill number:', error);
+      // Fallback bill number
+      const fallbackBill = `BILL-${Date.now()}`;
+      return {
+        ...data,
+        bill_serial_no: fallbackBill
+      };
     }
   }
 

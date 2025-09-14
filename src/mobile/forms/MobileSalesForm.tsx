@@ -35,6 +35,15 @@ const MobileSalesForm: React.FC = () => {
     sale_date: new Date().toISOString().split('T')[0],
   });
 
+  // Auto-generate bill serial number when selected entry changes
+  useEffect(() => {
+    if (selectedEntry && !formData.bill_serial_no) {
+      generateBillSerial(selectedEntry.loading_place).then(billSerial => {
+        setFormData(prev => ({ ...prev, bill_serial_no: billSerial }));
+      });
+    }
+  }, [selectedEntry, formData.bill_serial_no]);
+
   useEffect(() => {
     if (outwardEntryId) {
       const entry = outwardEntries.find((e: any) => e.id === outwardEntryId) as any;
@@ -58,17 +67,76 @@ const MobileSalesForm: React.FC = () => {
     }
   }, [formData.quantity, formData.rate]);
 
+  // Get sales data for bill generation
+  const { data: salesData } = useEnhancedOfflineData('offline_sales');
+
+  // Generate bill serial number like desktop version
+  const generateBillSerial = async (loadingPlace: string): Promise<string> => {
+    try {
+      const sales = salesData || [];
+      let prefix = '';
+      let existingBills: any[] = [];
+      
+      if (loadingPlace === 'PULIVANTHI') {
+        // For PULIVANTHI, get numeric serials like 001, 002, 003
+        existingBills = sales.filter((sale: any) => 
+          sale.bill_serial_no && /^[0-9]{3}$/.test(sale.bill_serial_no)
+        );
+      } else if (loadingPlace === 'MATTAPARAI') {
+        // For MATTAPARAI, get GRM prefixed serials like GRM001, GRM002, GRM003
+        prefix = 'GRM';
+        existingBills = sales.filter((sale: any) => 
+          sale.bill_serial_no && sale.bill_serial_no.startsWith('GRM')
+        );
+      }
+      
+      let nextNumber = 1;
+      if (existingBills.length > 0) {
+        const sortedBills = existingBills.sort((a: any, b: any) => {
+          const aNum = loadingPlace === 'PULIVANTHI' 
+            ? parseInt(a.bill_serial_no || '0')
+            : parseInt((a.bill_serial_no || 'GRM0').replace('GRM', ''));
+          const bNum = loadingPlace === 'PULIVANTHI' 
+            ? parseInt(b.bill_serial_no || '0')
+            : parseInt((b.bill_serial_no || 'GRM0').replace('GRM', ''));
+          return bNum - aNum;
+        });
+        
+        const lastBill = sortedBills[0];
+        if (loadingPlace === 'PULIVANTHI') {
+          nextNumber = parseInt(lastBill.bill_serial_no || '0') + 1;
+        } else {
+          nextNumber = parseInt((lastBill.bill_serial_no || 'GRM0').replace('GRM', '')) + 1;
+        }
+      }
+      
+      const serialNumber = nextNumber.toString().padStart(3, '0');
+      return loadingPlace === 'PULIVANTHI' ? serialNumber : `${prefix}${serialNumber}`;
+    } catch (error) {
+      console.error('Error generating bill serial:', error);
+      return loadingPlace === 'PULIVANTHI' ? '001' : 'GRM001';
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      await createSale({
+      // Ensure bill_serial_no is not empty before submission
+      const finalFormData = {
         ...formData,
         quantity: parseFloat(formData.quantity),
         rate: parseFloat(formData.rate),
         total_amount: parseFloat(formData.total_amount),
-      });
+      };
+
+      // If bill_serial_no is empty, generate one
+      if (!finalFormData.bill_serial_no && selectedEntry) {
+        finalFormData.bill_serial_no = await generateBillSerial(selectedEntry.loading_place);
+      }
+
+      await createSale(finalFormData);
       
       toast({
         title: language === 'english' ? 'Success' : 'வெற்றி',
@@ -206,7 +274,9 @@ const MobileSalesForm: React.FC = () => {
                   id="bill_serial_no"
                   value={formData.bill_serial_no}
                   onChange={(e) => setFormData({ ...formData, bill_serial_no: e.target.value })}
-                  placeholder={language === 'english' ? 'Enter bill number' : 'பில் எண்ணை உள்ளிடவும்'}
+                  placeholder={language === 'english' ? 'Auto-generated' : 'தானாக உருவாக்கப்பட்டது'}
+                  className="bg-muted"
+                  readOnly
                 />
               </div>
               

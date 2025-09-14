@@ -32,11 +32,11 @@ const MobileIndex: React.FC = () => {
       setIsOnline(status.connected);
     });
 
-    // Handle mobile back button - close app instead of navigating back
+    // Handle mobile back button - navigate back to dashboard
     let backButtonListener: any;
     if (Capacitor.isNativePlatform()) {
       App.addListener('backButton', () => {
-        App.exitApp();
+        navigate('/');
       }).then((listener) => {
         backButtonListener = listener;
       });
@@ -48,7 +48,7 @@ const MobileIndex: React.FC = () => {
         backButtonListener.remove();
       }
     };
-  }, []);
+  }, [navigate]);
 
   const menuItems = [
     {

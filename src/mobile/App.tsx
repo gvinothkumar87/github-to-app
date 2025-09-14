@@ -20,6 +20,12 @@ import MobileSalesList from './pages/MobileSalesList';
 import MobileSettings from './pages/MobileSettings';
 import MobileSalesLedgerOffline from './pages/MobileSalesLedgerOffline';
 import MobileCustomerLedgerOffline from './pages/MobileCustomerLedgerOffline';
+import MobileBillsList from './pages/MobileBillsList';
+import MobileEditSaleForm from './forms/MobileEditSaleForm';
+import MobileInvoiceGenerator from './components/MobileInvoiceGenerator';
+import MobileCreditNoteForm from './pages/MobileCreditNoteForm';
+import MobileDebitNoteForm from './pages/MobileDebitNoteForm';
+import MobileReceiptList from './pages/MobileReceiptList';
 
 // Create a query client for React Query
 const queryClient = new QueryClient({

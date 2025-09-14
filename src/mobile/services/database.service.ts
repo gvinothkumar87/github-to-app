@@ -357,6 +357,58 @@ export class DatabaseService {
       totalRecords: totalResult.values?.[0]?.count || 0
     };
   }
+
+  async getTableCounts(): Promise<{
+    customers: number;
+    items: number;
+    outward_entries: number;
+    sales: number;
+    receipts: number;
+    customer_ledger: number;
+  }> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    const tables = ['customers', 'items', 'outward_entries', 'sales', 'receipts', 'customer_ledger'];
+    const counts: any = {};
+
+    for (const table of tables) {
+      try {
+        const result = await this.db.query(`SELECT COUNT(*) as count FROM offline_${table}`);
+        counts[table] = result.values?.[0]?.count || 0;
+      } catch (error) {
+        console.warn(`Error counting ${table}:`, error);
+        counts[table] = 0;
+      }
+    }
+
+    return counts;
+  }
+
+  async resetDatabase(): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    // Drop all tables and recreate
+    const tables = [
+      'sync_queue',
+      'offline_customers', 
+      'offline_items', 
+      'offline_outward_entries', 
+      'offline_receipts', 
+      'offline_sales', 
+      'offline_customer_ledger'
+    ];
+
+    for (const table of tables) {
+      try {
+        await this.db.run(`DROP TABLE IF EXISTS ${table}`);
+      } catch (error) {
+        console.warn(`Error dropping table ${table}:`, error);
+      }
+    }
+
+    // Recreate tables
+    await this.createTables();
+  }
 }
 
 export const databaseService = new DatabaseService();

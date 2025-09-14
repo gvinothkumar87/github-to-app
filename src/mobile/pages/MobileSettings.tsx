@@ -31,8 +31,11 @@ const MobileSettings: React.FC = () => {
   const { toast } = useToast();
   const [syncStatus, setSyncStatus] = useState<any>(null);
   const [dbStats, setDbStats] = useState<any>(null);
+  const [tableCounts, setTableCounts] = useState<any>(null);
   const [isOnline, setIsOnline] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [forceDownloading, setForceDownloading] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     loadStats();
@@ -48,8 +51,12 @@ const MobileSettings: React.FC = () => {
 
   const loadStats = async () => {
     try {
-      const stats = await databaseService.getStats();
+      const [stats, counts] = await Promise.all([
+        databaseService.getStats(),
+        databaseService.getTableCounts()
+      ]);
       setDbStats(stats);
+      setTableCounts(counts);
     } catch (error) {
       console.error('Error loading stats:', error);
     }
@@ -71,7 +78,10 @@ const MobileSettings: React.FC = () => {
 
     setSyncing(true);
     try {
-      // await syncService.syncAllData(); // Method implementation pending
+      // Upload local changes first
+      await syncService.startSync();
+      // Then download latest data from server
+      await syncService.downloadLatestData();
       await loadStats();
       toast({
         title: language === 'english' ? 'Sync Complete' : 'ஒத்திசைவு முடிந்தது',
@@ -85,6 +95,61 @@ const MobileSettings: React.FC = () => {
       });
     } finally {
       setSyncing(false);
+    }
+  };
+
+  const handleForceRedownload = async () => {
+    if (!isOnline) {
+      toast({
+        variant: 'destructive',
+        title: language === 'english' ? 'No Connection' : 'இணைப்பு இல்லை',
+        description: language === 'english' ? 'Connect to internet to download data' : 'தரவு பதிவிறக்க இணையத்துடன் இணைக்கவும்',
+      });
+      return;
+    }
+
+    setForceDownloading(true);
+    try {
+      await syncService.forceRedownload();
+      await loadStats();
+      toast({
+        title: language === 'english' ? 'Download Complete' : 'பதிவிறக்கம் முடிந்தது',
+        description: language === 'english' ? 'Latest data downloaded successfully' : 'சமீபத்திய தரவு வெற்றிகரமாக பதிவிறக்கப்பட்டது',
+      });
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: language === 'english' ? 'Download Failed' : 'பதிவிறக்கம் தோல்வி',
+        description: error.message,
+      });
+    } finally {
+      setForceDownloading(false);
+    }
+  };
+
+  const handleResetDatabase = async () => {
+    if (!confirm(language === 'english' 
+      ? 'Reset the entire offline database? This will delete ALL local data and cannot be undone!' 
+      : 'முழு ஆஃப்லைன் தரவுத்தளத்தையும் மீட்டமைக்கவா? இது அனைத்து உள்ளூர் தரவையும் நீக்கும் மற்றும் இதை மாற்ற முடியாது!')) {
+      return;
+    }
+
+    setResetting(true);
+    try {
+      await databaseService.resetDatabase();
+      await loadStats();
+      toast({
+        title: language === 'english' ? 'Database Reset' : 'தரவுத்தளம் மீட்டமைக்கப்பட்டது',
+        description: language === 'english' ? 'Database reset successfully. Download data to begin.' : 'தரவுத்தளம் வெற்றிகரமாக மீட்டமைக்கப்பட்டது. தொடங்க தரவை பதிவிறக்கவும்.',
+      });
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: language === 'english' ? 'Reset Failed' : 'மீட்டமைப்பு தோல்வி',
+        description: error.message,
+      });
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -163,26 +228,57 @@ const MobileSettings: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="text-center p-3 bg-blue-50 rounded">
-                  <div className="text-2xl font-bold text-blue-600">{dbStats.pending}</div>
-                  <div className="text-blue-700">Pending Sync</div>
+              {/* Upload Queue Stats */}
+              <div>
+                <h4 className="text-sm font-medium mb-2">Upload Queue</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="text-center p-3 bg-blue-50 rounded">
+                    <div className="text-2xl font-bold text-blue-600">{dbStats.pending}</div>
+                    <div className="text-blue-700">Pending Upload</div>
+                  </div>
+                  <div className="text-center p-3 bg-green-50 rounded">
+                    <div className="text-2xl font-bold text-green-600">{dbStats.synced}</div>
+                    <div className="text-green-700">Upload Synced</div>
+                  </div>
                 </div>
-                <div className="text-center p-3 bg-green-50 rounded">
-                  <div className="text-2xl font-bold text-green-600">{dbStats.synced}</div>
-                  <div className="text-green-700">Synced</div>
-                </div>
-              </div>
-              
-              <div className="text-center p-3 bg-muted rounded">
-                <div className="text-lg font-semibold">{dbStats.totalRecords}</div>
-                <div className="text-sm text-muted-foreground">Total Records</div>
+                {dbStats.failed > 0 && (
+                  <div className="text-center p-3 bg-red-50 rounded mt-2">
+                    <div className="text-2xl font-bold text-red-600">{dbStats.failed}</div>
+                    <div className="text-red-700">Upload Failed</div>
+                  </div>
+                )}
               </div>
 
-              {dbStats.failed > 0 && (
-                <div className="text-center p-3 bg-red-50 rounded">
-                  <div className="text-2xl font-bold text-red-600">{dbStats.failed}</div>
-                  <div className="text-red-700">Failed</div>
+              {/* Local Data Counts */}
+              {tableCounts && (
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Local Data</h4>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="flex justify-between p-2 bg-muted rounded">
+                      <span>Customers:</span>
+                      <span className="font-medium">{tableCounts.customers}</span>
+                    </div>
+                    <div className="flex justify-between p-2 bg-muted rounded">
+                      <span>Items:</span>
+                      <span className="font-medium">{tableCounts.items}</span>
+                    </div>
+                    <div className="flex justify-between p-2 bg-muted rounded">
+                      <span>Outward Entries:</span>
+                      <span className="font-medium">{tableCounts.outward_entries}</span>
+                    </div>
+                    <div className="flex justify-between p-2 bg-muted rounded">
+                      <span>Sales:</span>
+                      <span className="font-medium">{tableCounts.sales}</span>
+                    </div>
+                    <div className="flex justify-between p-2 bg-muted rounded">
+                      <span>Receipts:</span>
+                      <span className="font-medium">{tableCounts.receipts}</span>
+                    </div>
+                    <div className="flex justify-between p-2 bg-muted rounded">
+                      <span>Customer Ledger:</span>
+                      <span className="font-medium">{tableCounts.customer_ledger}</span>
+                    </div>
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -200,23 +296,50 @@ const MobileSettings: React.FC = () => {
           <CardContent className="space-y-3">
             <Button 
               onClick={handleSync}
-              disabled={!isOnline || syncing}
+              disabled={!isOnline || syncing || forceDownloading || resetting}
               className="w-full"
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
               {syncing 
                 ? (language === 'english' ? 'Syncing...' : 'ஒத்திசைக்கிறது...')
-                : (language === 'english' ? 'Sync Now' : 'இப்போது ஒத்திசைக்கவும்')
+                : (language === 'english' ? 'Full Sync (Upload + Download)' : 'முழு ஒத்திசைவு (பதிவேற்று + பதிவிறக்கு)')
+              }
+            </Button>
+
+            <Button 
+              onClick={handleForceRedownload}
+              disabled={!isOnline || syncing || forceDownloading || resetting}
+              variant="secondary"
+              className="w-full"
+            >
+              <Cloud className={`h-4 w-4 mr-2 ${forceDownloading ? 'animate-pulse' : ''}`} />
+              {forceDownloading 
+                ? (language === 'english' ? 'Downloading...' : 'பதிவிறக்குகிறது...')
+                : (language === 'english' ? 'Force Re-download' : 'வலுக்கட்டாயமாக மீண்டும் பதிவிறக்கு')
               }
             </Button>
             
             <Button 
               onClick={handleClearData}
               variant="outline"
+              disabled={syncing || forceDownloading || resetting}
               className="w-full"
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              {language === 'english' ? 'Clear Synced Data' : 'ஒத்திசைக்கப்பட்ட தரவை அழிக்கவும்'}
+              {language === 'english' ? 'Clear Synced Upload Queue' : 'ஒத்திசைக்கப்பட்ட பதிவேற்ற வரிசையை அழிக்கவும்'}
+            </Button>
+
+            <Button 
+              onClick={handleResetDatabase}
+              variant="destructive"
+              disabled={syncing || forceDownloading || resetting}
+              className="w-full"
+            >
+              <HardDrive className={`h-4 w-4 mr-2 ${resetting ? 'animate-pulse' : ''}`} />
+              {resetting 
+                ? (language === 'english' ? 'Resetting...' : 'மீட்டமைக்கிறது...')
+                : (language === 'english' ? 'Reset Offline Database' : 'ஆஃப்லைன் தரவுத்தளத்தை மீட்டமைக்கவும்')
+              }
             </Button>
           </CardContent>
         </Card>

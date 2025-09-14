@@ -407,10 +407,16 @@ export class SyncService {
       throw new Error('Cannot download data while offline');
     }
 
+    // Check authentication first
+    const { data: { session }, error: authError } = await supabase.auth.getSession();
+    if (authError || !session) {
+      throw new Error('Not authenticated. Please login first.');
+    }
+
     console.log('Downloading latest data from server...');
 
     try {
-      // Download customers
+      // Download customers (all active)
       const { data: customers, error: customersError } = await supabase
         .from('customers')
         .select('*')
@@ -418,7 +424,7 @@ export class SyncService {
 
       if (customersError) throw customersError;
 
-      // Download items
+      // Download items (all active)
       const { data: items, error: itemsError } = await supabase
         .from('items')
         .select('*')
@@ -426,49 +432,49 @@ export class SyncService {
 
       if (itemsError) throw itemsError;
 
-      // Download outward entries (last 30 days)
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      // Download outward entries (last 90 days for better coverage)
+      const ninetyDaysAgo = new Date();
+      ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
       
       const { data: outwardEntries, error: outwardError } = await supabase
         .from('outward_entries')
         .select('*')
-        .gte('entry_date', thirtyDaysAgo.toISOString().split('T')[0])
+        .gte('entry_date', ninetyDaysAgo.toISOString().split('T')[0])
         .order('entry_date', { ascending: false });
 
       if (outwardError) throw outwardError;
 
-      // Download sales (last 30 days)
+      // Download sales (last 90 days)
       const { data: sales, error: salesError } = await supabase
         .from('sales')
         .select('*')
-        .gte('sale_date', thirtyDaysAgo.toISOString().split('T')[0])
+        .gte('sale_date', ninetyDaysAgo.toISOString().split('T')[0])
         .order('sale_date', { ascending: false });
 
       if (salesError) throw salesError;
 
-      // Download receipts (last 30 days)
+      // Download receipts (last 90 days)
       const { data: receipts, error: receiptsError } = await supabase
         .from('receipts')
         .select('*')
-        .gte('receipt_date', thirtyDaysAgo.toISOString().split('T')[0])
+        .gte('receipt_date', ninetyDaysAgo.toISOString().split('T')[0])
         .order('receipt_date', { ascending: false });
 
       if (receiptsError) throw receiptsError;
 
-      // Download customer ledger (last 90 days)
-      const ninetyDaysAgo = new Date();
-      ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+      // Download customer ledger (last 180 days)
+      const oneEightyDaysAgo = new Date();
+      oneEightyDaysAgo.setDate(oneEightyDaysAgo.getDate() - 180);
       
       const { data: customerLedger, error: ledgerError } = await supabase
         .from('customer_ledger')
         .select('*')
-        .gte('transaction_date', ninetyDaysAgo.toISOString().split('T')[0])
+        .gte('transaction_date', oneEightyDaysAgo.toISOString().split('T')[0])
         .order('transaction_date', { ascending: false });
 
       if (ledgerError) throw ledgerError;
 
-      // Store all data in local database
+      // Store all data in local database with progress updates
       const dataToStore = [
         { table: 'customers', data: customers },
         { table: 'items', data: items },
@@ -478,18 +484,45 @@ export class SyncService {
         { table: 'customer_ledger', data: customerLedger }
       ];
 
+      const totalCounts: any = {};
       for (const { table, data } of dataToStore) {
         if (data && data.length > 0) {
           await this.storeDownloadedData(table, data);
+          totalCounts[table] = data.length;
           console.log(`Stored ${data.length} ${table} records`);
+          
+          // Dispatch event after each table is stored
+          window.dispatchEvent(new CustomEvent('offline-data-updated', { 
+            detail: { 
+              source: 'download-progress', 
+              table, 
+              count: data.length 
+            } 
+          }));
+        } else {
+          totalCounts[table] = 0;
         }
       }
+
+      // Final notification with all counts
+      window.dispatchEvent(new CustomEvent('offline-data-updated', { 
+        detail: { 
+          source: 'download-complete',
+          counts: totalCounts
+        } 
+      }));
 
       console.log('Complete data download and storage completed successfully');
     } catch (error) {
       console.error('Failed to download latest data:', error);
       throw error;
     }
+  }
+
+  // Force re-download without uploading local changes
+  async forceRedownload(): Promise<void> {
+    console.log('Force re-downloading all data...');
+    await this.downloadLatestData();
   }
 
   private async storeDownloadedData(table: string, data: any[]): Promise<void> {
@@ -780,6 +813,11 @@ export class SyncService {
     } catch (error) {
       console.error('Error updating local receipt number:', error);
     }
+  }
+
+  // Additional helper methods
+  getTableCounts() {
+    return databaseService.getTableCounts();
   }
 }
 

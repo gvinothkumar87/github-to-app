@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { AlertTriangle, CheckCircle, XCircle, RefreshCw, Wifi, WifiOff } from 'lucide-react';
 import { syncService, SyncProgress } from '../services/sync.service';
+import { databaseService } from '../services/database.service';
 import { networkService } from '../services/network.service';
 import { useMobileServices } from '../providers/MobileServiceProvider';
 
@@ -19,6 +20,7 @@ export const SyncStatusDisplay: React.FC<SyncStatusDisplayProps> = ({
   const [syncProgress, setSyncProgress] = React.useState<SyncProgress | null>(null);
   const [isOnline, setIsOnline] = React.useState(networkService.isOnline());
   const [stats, setStats] = React.useState({ pending: 0, failed: 0, synced: 0 });
+  const [tableCounts, setTableCounts] = React.useState<any>(null);
   const { isReady } = useMobileServices();
 
   React.useEffect(() => {
@@ -45,8 +47,12 @@ export const SyncStatusDisplay: React.FC<SyncStatusDisplayProps> = ({
 
   const loadStats = async () => {
     try {
-      const newStats = await syncService.getSyncStats();
+      const [newStats, counts] = await Promise.all([
+        syncService.getSyncStats(),
+        databaseService.getTableCounts()
+      ]);
       setStats(newStats);
+      setTableCounts(counts);
     } catch (error) {
       console.error('Error loading sync stats:', error);
     }
@@ -157,34 +163,70 @@ export const SyncStatusDisplay: React.FC<SyncStatusDisplayProps> = ({
           </div>
         )}
 
-        {/* Sync Stats */}
-        <div className="grid grid-cols-3 gap-3 text-center">
-          <div className="flex flex-col items-center">
-            {stats.pending > 0 ? (
-              <AlertTriangle className="h-5 w-5 text-orange-600 mb-1" />
-            ) : (
+        {/* Upload Queue Stats */}
+        <div className="mb-4">
+          <h4 className="text-sm font-medium mb-2">Upload Queue</h4>
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div className="flex flex-col items-center">
+              {stats.pending > 0 ? (
+                <AlertTriangle className="h-5 w-5 text-orange-600 mb-1" />
+              ) : (
+                <CheckCircle className="h-5 w-5 text-green-600 mb-1" />
+              )}
+              <div className="text-sm font-medium">{stats.pending}</div>
+              <div className="text-xs text-muted-foreground">Pending</div>
+            </div>
+            
+            <div className="flex flex-col items-center">
               <CheckCircle className="h-5 w-5 text-green-600 mb-1" />
-            )}
-            <div className="text-sm font-medium">{stats.pending}</div>
-            <div className="text-xs text-muted-foreground">Pending</div>
-          </div>
-          
-          <div className="flex flex-col items-center">
-            <CheckCircle className="h-5 w-5 text-green-600 mb-1" />
-            <div className="text-sm font-medium">{stats.synced}</div>
-            <div className="text-xs text-muted-foreground">Synced</div>
-          </div>
-          
-          <div className="flex flex-col items-center">
-            {stats.failed > 0 ? (
-              <XCircle className="h-5 w-5 text-red-600 mb-1" />
-            ) : (
-              <CheckCircle className="h-5 w-5 text-gray-400 mb-1" />
-            )}
-            <div className="text-sm font-medium">{stats.failed}</div>
-            <div className="text-xs text-muted-foreground">Failed</div>
+              <div className="text-sm font-medium">{stats.synced}</div>
+              <div className="text-xs text-muted-foreground">Synced</div>
+            </div>
+            
+            <div className="flex flex-col items-center">
+              {stats.failed > 0 ? (
+                <XCircle className="h-5 w-5 text-red-600 mb-1" />
+              ) : (
+                <CheckCircle className="h-5 w-5 text-gray-400 mb-1" />
+              )}
+              <div className="text-sm font-medium">{stats.failed}</div>
+              <div className="text-xs text-muted-foreground">Failed</div>
+            </div>
           </div>
         </div>
+
+        {/* Local Data Counts */}
+        {tableCounts && (
+          <div>
+            <h4 className="text-sm font-medium mb-2">Local Data</h4>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="flex justify-between bg-muted p-2 rounded">
+                <span>Customers:</span>
+                <span className="font-medium">{tableCounts.customers}</span>
+              </div>
+              <div className="flex justify-between bg-muted p-2 rounded">
+                <span>Items:</span>
+                <span className="font-medium">{tableCounts.items}</span>
+              </div>
+              <div className="flex justify-between bg-muted p-2 rounded">
+                <span>Outward:</span>
+                <span className="font-medium">{tableCounts.outward_entries}</span>
+              </div>
+              <div className="flex justify-between bg-muted p-2 rounded">
+                <span>Sales:</span>
+                <span className="font-medium">{tableCounts.sales}</span>
+              </div>
+              <div className="flex justify-between bg-muted p-2 rounded">
+                <span>Receipts:</span>
+                <span className="font-medium">{tableCounts.receipts}</span>
+              </div>
+              <div className="flex justify-between bg-muted p-2 rounded">
+                <span>Ledger:</span>
+                <span className="font-medium">{tableCounts.customer_ledger}</span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Help Text */}
         {stats.pending > 0 && (

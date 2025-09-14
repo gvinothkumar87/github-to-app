@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { OfflineIndicator } from './OfflineIndicator';
@@ -18,6 +19,32 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
   onBack, 
   action 
 }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  const handleBackClick = () => {
+    if (onBack) {
+      onBack();
+      return;
+    }
+    
+    // If we're on the home page (/), exit the app
+    if (location.pathname === '/') {
+      // For mobile/capacitor apps, we can use history.back() to potentially exit
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        // If there's no history, we're at the root - this should exit the app
+        if (window.navigator && 'app' in window.navigator) {
+          // @ts-ignore - Capacitor specific
+          window.navigator.app?.exitApp?.();
+        }
+      }
+    } else {
+      // For other pages, navigate back to home
+      navigate('/');
+    }
+  };
   return (
     <div className="min-h-screen bg-background">
       {/* Header with offline indicator */}
@@ -26,8 +53,8 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
           <div className="border-b px-4 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                {showBackButton && onBack && (
-                  <Button variant="ghost" size="sm" onClick={onBack}>
+                {showBackButton && (
+                  <Button variant="ghost" size="sm" onClick={handleBackClick}>
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
                 )}

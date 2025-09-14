@@ -17,11 +17,13 @@ import {
 } from 'lucide-react';
 import { networkService } from '../services/network.service';
 import { useMobileServices } from '../providers/MobileServiceProvider';
+import { useAdminCheck } from '@/hooks/useAdminCheck';
 
 const MobileIndex: React.FC = () => {
   const { isReady } = useMobileServices();
   const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState(networkService.isOnline());
+  const isAdmin = useAdminCheck();
 
   useEffect(() => {
     const unsubscribe = networkService.onStatusChange((status) => {
@@ -114,6 +116,15 @@ const MobileIndex: React.FC = () => {
     }
   ];
 
+  // Filter menu items for admin users
+  const getFilteredMenuItems = () => {
+    if (isAdmin) {
+      const adminAllowedItems = ['Receipts', 'Sales', 'Sales Ledger', 'Customer Ledger', 'Bills'];
+      return menuItems.filter(item => adminAllowedItems.includes(item.title));
+    }
+    return menuItems;
+  };
+
   const handleMenuClick = (href: string) => {
     navigate(href);
   };
@@ -127,7 +138,7 @@ const MobileIndex: React.FC = () => {
 
         {/* Menu Grid */}
         <div className="grid grid-cols-2 gap-4">
-          {menuItems.map((item) => (
+          {getFilteredMenuItems().map((item) => (
             <Card 
               key={item.title}
               className="cursor-pointer transition-all hover:shadow-md"
@@ -150,14 +161,16 @@ const MobileIndex: React.FC = () => {
             <CardTitle className="text-base">Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button 
-              className="w-full justify-start" 
-              variant="outline"
-              onClick={() => handleMenuClick('/transit/new')}
-            >
-              <Truck className="h-4 w-4 mr-2" />
-              New Outward Entry
-            </Button>
+            {!isAdmin && (
+              <Button 
+                className="w-full justify-start" 
+                variant="outline"
+                onClick={() => handleMenuClick('/transit/new')}
+              >
+                <Truck className="h-4 w-4 mr-2" />
+                New Outward Entry
+              </Button>
+            )}
             <Button 
               className="w-full justify-start" 
               variant="outline"
@@ -166,14 +179,16 @@ const MobileIndex: React.FC = () => {
               <Receipt className="h-4 w-4 mr-2" />
               New Receipt
             </Button>
-            <Button 
-              className="w-full justify-start" 
-              variant="outline"
-              onClick={() => handleMenuClick('/customers/new')}
-            >
-              <Users className="h-4 w-4 mr-2" />
-              Add Customer
-            </Button>
+            {!isAdmin && (
+              <Button 
+                className="w-full justify-start" 
+                variant="outline"
+                onClick={() => handleMenuClick('/customers/new')}
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Add Customer
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>

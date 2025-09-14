@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { useOfflineData } from '../hooks/useOfflineData';
+import { useEnhancedOfflineData } from '../hooks/useEnhancedOfflineData';
 import { MobileLayout } from '../components/MobileLayout';
 import { Receipt, Save, Camera } from 'lucide-react';
 
@@ -27,8 +27,8 @@ interface ReceiptFormData {
 
 export const MobileReceiptForm: React.FC = () => {
   const { toast } = useToast();
-  const { data: customers, loading: loadingCustomers } = useOfflineData<Customer>('customers');
-  const { create: createReceipt } = useOfflineData('receipts');
+  const { data: customers } = useEnhancedOfflineData('offline_customers');
+  const { create: createReceipt } = useEnhancedOfflineData('offline_receipts');
   
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<ReceiptFormData>({
@@ -144,12 +144,12 @@ export const MobileReceiptForm: React.FC = () => {
                 <SelectTrigger>
                   <SelectValue placeholder="Select customer" />
                 </SelectTrigger>
-                <SelectContent>
-                  {customers.map((customer) => (
-                    <SelectItem key={customer.id} value={customer.id}>
-                      {customer.name_english} ({customer.code})
-                    </SelectItem>
-                  ))}
+                 <SelectContent>
+                   {customers.map((customer: any) => (
+                     <SelectItem key={customer.id} value={customer.id}>
+                       {customer.name_english} ({customer.code})
+                     </SelectItem>
+                   ))}
                 </SelectContent>
               </Select>
             </div>

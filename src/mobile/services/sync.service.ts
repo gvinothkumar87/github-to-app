@@ -39,6 +39,7 @@ export class SyncService {
 
     this.isSyncing = true;
     const pendingItems = await databaseService.getPendingSyncItems();
+    console.log(`🔄 SyncService: Starting sync with ${pendingItems.length} pending items`);
     
     const progress: SyncProgress = {
       total: pendingItems.length,

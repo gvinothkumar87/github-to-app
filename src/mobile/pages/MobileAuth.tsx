@@ -64,12 +64,17 @@ const MobileAuth = () => {
         // Continue even if this fails
       }
 
+      console.log('🔐 MobileAuth: Attempting login with Supabase...');
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('🔐 MobileAuth: Login failed:', error);
+        throw error;
+      }
+      console.log('🔐 MobileAuth: Login successful');
 
       if (data.user) {
         toast({
@@ -79,6 +84,7 @@ const MobileAuth = () => {
         navigate('/');
       }
     } catch (error: any) {
+      console.error('🔐 MobileAuth: SignIn catch block error:', error);
       toast({
         variant: "destructive",
         title: "Sign in failed",
@@ -115,6 +121,7 @@ const MobileAuth = () => {
         });
       }
     } catch (error: any) {
+      console.error('🔐 MobileAuth: SignUp catch block error:', error);
       toast({
         variant: "destructive",
         title: "Sign up failed",

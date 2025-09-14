@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { MobileLayout } from '../components/MobileLayout';
-import { useOfflineData } from '../hooks/useOfflineData';
+import { useEnhancedOfflineData } from '../hooks/useEnhancedOfflineData';
 import { ArrowLeft } from 'lucide-react';
 
 const MobileOutwardEntryForm: React.FC = () => {
@@ -17,9 +17,9 @@ const MobileOutwardEntryForm: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   
-  const { create: createEntry } = useOfflineData('offline_outward_entries');
-  const { data: customers } = useOfflineData('offline_customers');
-  const { data: items } = useOfflineData('offline_items');
+  const { data: customers } = useEnhancedOfflineData('offline_customers');
+  const { data: items } = useEnhancedOfflineData('offline_items');
+  const { create: createEntry } = useEnhancedOfflineData('offline_outward_entries');
 
   const [formData, setFormData] = useState({
     entry_date: new Date().toISOString().split('T')[0],

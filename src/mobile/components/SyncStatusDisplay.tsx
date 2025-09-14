@@ -110,17 +110,16 @@ export const SyncStatusDisplay: React.FC<SyncStatusDisplayProps> = ({
             )}
           </div>
           
-          {isOnline && isReady && !syncProgress?.inProgress && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleManualSync}
-              className="h-8"
-            >
-              <RefreshCw className="h-3 w-3 mr-1" />
-              Sync Now
-            </Button>
-          )}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleManualSync}
+            disabled={!isOnline || !isReady || syncProgress?.inProgress}
+            className="h-8"
+          >
+            <RefreshCw className={`h-3 w-3 mr-1 ${syncProgress?.inProgress ? 'animate-spin' : ''}`} />
+            {syncProgress?.inProgress ? 'Syncing...' : 'Sync Now'}
+          </Button>
         </div>
 
         {/* Sync Progress */}

@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
+import fs from "fs";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -11,7 +12,13 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: isMobile ? 'dist-mobile' : 'dist',
       rollupOptions: isMobile ? {
-        input: path.resolve(__dirname, 'mobile-index.html')
+        input: {
+          main: path.resolve(__dirname, 'mobile-index.html')
+        },
+        output: {
+          entryFileNames: 'assets/[name]-[hash].js',
+          assetFileNames: 'assets/[name]-[hash].[ext]'
+        }
       } : undefined,
     },
     server: {
@@ -22,6 +29,17 @@ export default defineConfig(({ mode }) => {
       react(),
       mode === 'development' &&
       componentTagger(),
+      // Custom plugin to copy mobile-index.html to index.html for Capacitor
+      isMobile && {
+        name: 'mobile-index-copy',
+        writeBundle() {
+          const srcPath = path.resolve(__dirname, 'dist-mobile/mobile-index.html');
+          const destPath = path.resolve(__dirname, 'dist-mobile/index.html');
+          if (fs.existsSync(srcPath)) {
+            fs.copyFileSync(srcPath, destPath);
+          }
+        }
+      }
     ].filter(Boolean),
     resolve: {
       alias: {

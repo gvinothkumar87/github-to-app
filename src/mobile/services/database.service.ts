@@ -502,6 +502,43 @@ export class DatabaseService {
     return 'offline-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
   }
 
+  // Replace a local record ID with the server UUID
+  async replaceLocalId(table: string, oldId: string, newId: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+    const sql = `UPDATE offline_${table} SET id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`;
+    await this.db.run(sql, [newId, oldId]);
+  }
+
+  // Update references in offline_sales for outward_entry_id remapping
+  async updateSalesOutwardEntryId(oldId: string, newId: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+    const sql = `UPDATE offline_sales SET outward_entry_id = ?, updated_at = CURRENT_TIMESTAMP WHERE outward_entry_id = ?`;
+    await this.db.run(sql, [newId, oldId]);
+  }
+
+  // Remap IDs inside pending sync queue JSON payloads
+  async remapIdsInSyncQueue(oldId: string, newId: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+    const res = await this.db.query(`SELECT id, data FROM sync_queue WHERE sync_status = 'pending'`);
+    const items = res.values || [];
+    for (const row of items) {
+      try {
+        const data = JSON.parse(row.data);
+        let changed = false;
+        if (data && typeof data === 'object') {
+          if (data.id === oldId) { data.id = newId; changed = true; }
+          if (data.outward_entry_id === oldId) { data.outward_entry_id = newId; changed = true; }
+          // Common nested references can be added here if needed
+        }
+        if (changed) {
+          await this.db.run(`UPDATE sync_queue SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, [JSON.stringify(data), row.id]);
+        }
+      } catch (e) {
+        console.warn('Failed to remap sync_queue item', row.id, e);
+      }
+    }
+  }
+
   async close(): Promise<void> {
     if (this.db) {
       await this.db.close();

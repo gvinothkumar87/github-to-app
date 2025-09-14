@@ -225,7 +225,6 @@ export class SyncService {
         const resolvedData = await this.resolveReceiptNumberConflicts(data);
         
         const { error: insertError } = await table.insert({
-          id: resolvedData.id,
           receipt_no: resolvedData.receipt_no, // This will be the new resolved receipt number
           customer_id: resolvedData.customer_id,
           amount: resolvedData.amount,
@@ -268,10 +267,9 @@ export class SyncService {
 
     switch (operation) {
       case 'CREATE':
-        // Don't send serial_no for CREATE operations - let Supabase auto-generate it
-        // This prevents conflicts with the auto-increment sequence
+        // Avoid sending local offline id; let Supabase generate UUID and serial_no
+        const oldId = data.id;
         const insertData: any = {
-          id: data.id,
           entry_date: data.entry_date,
           customer_id: data.customer_id,
           item_id: data.item_id,
@@ -287,17 +285,21 @@ export class SyncService {
           is_completed: data.is_completed
         };
         
-        // Let Supabase auto-generate the serial_no via its sequence
         const { data: insertedData, error: insertError } = await table
           .insert(insertData)
-          .select('serial_no')
+          .select('id, serial_no')
           .single();
           
         if (insertError) throw insertError;
         
-        // Update local database with the Supabase-generated serial number
-        if (insertedData && insertedData.serial_no !== data.serial_no) {
-          await this.updateLocalSerialNumber(data.id, insertedData.serial_no);
+        // Update local database with the Supabase-generated id and serial number
+        if (insertedData) {
+          if (insertedData.serial_no !== data.serial_no) {
+            await this.updateLocalSerialNumber(oldId, insertedData.serial_no);
+          }
+          await databaseService.replaceLocalId('outward_entries', oldId, insertedData.id);
+          await databaseService.updateSalesOutwardEntryId(oldId, insertedData.id);
+          await databaseService.remapIdsInSyncQueue(oldId, insertedData.id);
         }
         break;
 
@@ -345,7 +347,6 @@ export class SyncService {
         }
         
         const { error: insertError } = await table.insert({
-          id: resolvedData.id,
           outward_entry_id: resolvedData.outward_entry_id,
           customer_id: resolvedData.customer_id,
           item_id: resolvedData.item_id,

@@ -7,11 +7,11 @@ export const useAdminCheck = () => {
   
   useEffect(() => {
     console.log('useAdminCheck: Current user:', user);
-    console.log('useAdminCheck: User ID:', user?.id);
-    console.log('useAdminCheck: Admin UUID:', '6fad72cb-61e3-4507-9ade-11d1c3a6ffa4');
+    console.log('useAdminCheck: User email:', user?.email);
+    console.log('useAdminCheck: Admin email:', 'gvinothkumar87@gmail.com');
     
     if (user) {
-      const isAdminUser = user.id === '6fad72cb-61e3-4507-9ade-11d1c3a6ffa4';
+      const isAdminUser = user.email === 'gvinothkumar87@gmail.com';
       console.log('useAdminCheck: Is admin?', isAdminUser);
       setIsAdmin(isAdminUser);
     } else {

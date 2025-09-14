@@ -62,8 +62,12 @@ export function useEnhancedOfflineData<T>(
 
     try {
       const normalizedTable = normalizeTableName(table);
+      
+      // Validate and convert data types before insertion
+      const validatedItem = validateAndConvertData(item);
+      
       const id = await databaseService.insert(normalizedTable, {
-        ...item,
+        ...validatedItem,
         sync_status: 'pending'
       });
       
@@ -91,8 +95,12 @@ export function useEnhancedOfflineData<T>(
 
     try {
       const normalizedTable = normalizeTableName(table);
+      
+      // Validate and convert data types before update
+      const validatedItem = validateAndConvertData(item);
+      
       await databaseService.update(normalizedTable, id, {
-        ...item,
+        ...validatedItem,
         sync_status: 'pending'
       });
       
@@ -176,6 +184,53 @@ export function useEnhancedOfflineData<T>(
       loadData();
     }
   }, [isReady, ...dependencies]);
+
+  // Data validation and type conversion helper
+  function validateAndConvertData(data: any): any {
+    if (!data) return data;
+    
+    const converted = { ...data };
+    
+    // Convert dates to ISO string format
+    if (converted.entry_date && typeof converted.entry_date === 'object') {
+      converted.entry_date = converted.entry_date.toISOString().split('T')[0];
+    }
+    if (converted.sale_date && typeof converted.sale_date === 'object') {
+      converted.sale_date = converted.sale_date.toISOString().split('T')[0];
+    }
+    if (converted.receipt_date && typeof converted.receipt_date === 'object') {
+      converted.receipt_date = converted.receipt_date.toISOString().split('T')[0];
+    }
+    if (converted.note_date && typeof converted.note_date === 'object') {
+      converted.note_date = converted.note_date.toISOString().split('T')[0];
+    }
+    
+    // Ensure numeric fields are proper numbers
+    const numericFields = ['empty_weight', 'load_weight', 'net_weight', 'quantity', 'rate', 'total_amount', 'amount', 'pin_code'];
+    numericFields.forEach(field => {
+      if (converted[field] !== undefined && converted[field] !== null) {
+        const num = typeof converted[field] === 'string' ? parseFloat(converted[field]) : converted[field];
+        if (!isNaN(num)) {
+          converted[field] = num;
+        }
+      }
+    });
+    
+    // Convert boolean fields
+    const booleanFields = ['is_active', 'is_completed'];
+    booleanFields.forEach(field => {
+      if (converted[field] !== undefined && converted[field] !== null) {
+        converted[field] = Boolean(converted[field]);
+      }
+    });
+    
+    // Ensure pin_code is string for consistency with Supabase schema
+    if (converted.pin_code !== undefined && converted.pin_code !== null) {
+      converted.pin_code = String(converted.pin_code);
+    }
+    
+    return converted;
+  }
 
   return {
     data,

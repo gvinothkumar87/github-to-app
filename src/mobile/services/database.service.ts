@@ -188,25 +188,181 @@ export class DatabaseService {
       await this.db.execute(indexSQL);
     }
 
+    // Create missing tables for credit_notes, debit_notes, company_settings
+    await this.createMissingTables();
+
     // Ensure schema migrations for existing installs
-    await this.ensureOutwardEntryColumns();
+    await this.ensureAllTablesMigration();
 
   }
 
-  // Schema migration helpers
+  // Create missing tables that exist in Supabase but not in mobile DB
+  private async createMissingTables(): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    try {
+      // Create credit_notes table
+      const creditNotesSQL = `
+        CREATE TABLE IF NOT EXISTS offline_credit_notes (
+          id TEXT PRIMARY KEY,
+          note_no TEXT NOT NULL,
+          customer_id TEXT NOT NULL,
+          reference_bill_no TEXT,
+          amount REAL NOT NULL,
+          reason TEXT NOT NULL,
+          note_date TEXT NOT NULL,
+          created_by TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          sync_status TEXT DEFAULT 'pending'
+        )
+      `;
+      await this.db.execute(creditNotesSQL);
+
+      // Create debit_notes table
+      const debitNotesSQL = `
+        CREATE TABLE IF NOT EXISTS offline_debit_notes (
+          id TEXT PRIMARY KEY,
+          note_no TEXT NOT NULL,
+          customer_id TEXT NOT NULL,
+          reference_bill_no TEXT,
+          amount REAL NOT NULL,
+          reason TEXT NOT NULL,
+          note_date TEXT NOT NULL,
+          created_by TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          sync_status TEXT DEFAULT 'pending'
+        )
+      `;
+      await this.db.execute(debitNotesSQL);
+
+      // Create company_settings table
+      const companySettingsSQL = `
+        CREATE TABLE IF NOT EXISTS offline_company_settings (
+          id TEXT PRIMARY KEY,
+          company_name TEXT NOT NULL,
+          gstin TEXT NOT NULL,
+          address_line1 TEXT NOT NULL,
+          address_line2 TEXT,
+          locality TEXT NOT NULL,
+          location_name TEXT NOT NULL,
+          location_code TEXT NOT NULL,
+          pin_code TEXT NOT NULL,
+          state_code TEXT NOT NULL DEFAULT '33',
+          phone TEXT,
+          email TEXT,
+          bank_name TEXT,
+          bank_branch TEXT,
+          bank_account_no TEXT,
+          bank_ifsc TEXT,
+          is_active BOOLEAN DEFAULT true,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          sync_status TEXT DEFAULT 'pending'
+        )
+      `;
+      await this.db.execute(companySettingsSQL);
+
+      console.log('Missing tables created successfully');
+    } catch (error) {
+      console.error('Error creating missing tables:', error);
+    }
+  }
+
+  // Enhanced schema migration system
+  private async ensureAllTablesMigration(): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+    
+    try {
+      // Migrate outward_entries table
+      await this.ensureOutwardEntryColumns();
+      
+      // Migrate other tables if needed in the future
+      await this.ensureCustomerColumns();
+      await this.ensureItemColumns();
+      await this.ensureReceiptColumns();
+      await this.ensureSalesColumns();
+      
+      console.log('Schema migrations completed successfully');
+    } catch (error) {
+      console.error('Schema migration failed:', error);
+    }
+  }
+
+  // Schema migration for outward_entries
   private async ensureOutwardEntryColumns(): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
     try {
       const res = await this.db.query(`PRAGMA table_info(offline_outward_entries)`);
       const cols = (res.values || []).map((r: any) => r.name);
+      
       if (!cols.includes('load_weight_updated_at')) {
         await this.db.execute(`ALTER TABLE offline_outward_entries ADD COLUMN load_weight_updated_at TEXT`);
+        console.log('Added load_weight_updated_at column to outward_entries');
       }
       if (!cols.includes('load_weight_updated_by')) {
         await this.db.execute(`ALTER TABLE offline_outward_entries ADD COLUMN load_weight_updated_by TEXT`);
+        console.log('Added load_weight_updated_by column to outward_entries');
       }
     } catch (e) {
       console.warn('ensureOutwardEntryColumns failed:', e);
+    }
+  }
+
+  // Schema migration for customers (for future extensions)
+  private async ensureCustomerColumns(): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+    try {
+      const res = await this.db.query(`PRAGMA table_info(offline_customers)`);
+      const cols = (res.values || []).map((r: any) => r.name);
+      
+      // Add any missing columns for customers if needed in future
+      // Currently customers table is complete
+    } catch (e) {
+      console.warn('ensureCustomerColumns failed:', e);
+    }
+  }
+
+  // Schema migration for items (for future extensions)
+  private async ensureItemColumns(): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+    try {
+      const res = await this.db.query(`PRAGMA table_info(offline_items)`);
+      const cols = (res.values || []).map((r: any) => r.name);
+      
+      // Add any missing columns for items if needed in future
+      // Currently items table is complete
+    } catch (e) {
+      console.warn('ensureItemColumns failed:', e);
+    }
+  }
+
+  // Schema migration for receipts (for future extensions)
+  private async ensureReceiptColumns(): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+    try {
+      const res = await this.db.query(`PRAGMA table_info(offline_receipts)`);
+      const cols = (res.values || []).map((r: any) => r.name);
+      
+      // Add any missing columns for receipts if needed in future
+      // Currently receipts table is complete
+    } catch (e) {
+      console.warn('ensureReceiptColumns failed:', e);
+    }
+  }
+
+  // Schema migration for sales (for future extensions)
+  private async ensureSalesColumns(): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+    try {
+      const res = await this.db.query(`PRAGMA table_info(offline_sales)`);
+      const cols = (res.values || []).map((r: any) => r.name);
+      
+      // Add any missing columns for sales if needed in future
+      // Currently sales table is complete
+    } catch (e) {
+      console.warn('ensureSalesColumns failed:', e);
     }
   }
 
@@ -390,7 +546,7 @@ export class DatabaseService {
   }> {
     if (!this.db) throw new Error('Database not initialized');
 
-    const tables = ['customers', 'items', 'outward_entries', 'sales', 'receipts', 'customer_ledger'];
+    const tables = ['customers', 'items', 'outward_entries', 'sales', 'receipts', 'customer_ledger', 'credit_notes', 'debit_notes', 'company_settings'];
     const counts: any = {};
 
     for (const table of tables) {
@@ -417,7 +573,10 @@ export class DatabaseService {
       'offline_outward_entries', 
       'offline_receipts', 
       'offline_sales', 
-      'offline_customer_ledger'
+      'offline_customer_ledger',
+      'offline_credit_notes',
+      'offline_debit_notes',
+      'offline_company_settings'
     ];
 
     for (const table of tables) {

@@ -106,6 +106,15 @@ export class SyncService {
       case 'customer_ledger':
         await this.syncCustomerLedger(operation, data);
         break;
+      case 'credit_notes':
+        await this.syncCreditNote(operation, data);
+        break;
+      case 'debit_notes':
+        await this.syncDebitNote(operation, data);
+        break;
+      case 'company_settings':
+        await this.syncCompanySettings(operation, data);
+        break;
       default:
         throw new Error(`Unknown table: ${table_name}`);
     }
@@ -273,6 +282,8 @@ export class SyncService {
           empty_weight: resolvedData.empty_weight,
           load_weight: resolvedData.load_weight,
           net_weight: resolvedData.net_weight,
+          load_weight_updated_at: resolvedData.load_weight_updated_at,
+          load_weight_updated_by: resolvedData.load_weight_updated_by,
           remarks: resolvedData.remarks,
           loading_place: resolvedData.loading_place,
           is_completed: resolvedData.is_completed
@@ -296,6 +307,8 @@ export class SyncService {
             empty_weight: data.empty_weight,
             load_weight: data.load_weight,
             net_weight: data.net_weight,
+            load_weight_updated_at: data.load_weight_updated_at,
+            load_weight_updated_by: data.load_weight_updated_by,
             remarks: data.remarks,
             loading_place: data.loading_place,
             is_completed: data.is_completed
@@ -401,6 +414,142 @@ export class SyncService {
     }
   }
 
+  private async syncCreditNote(operation: string, data: any): Promise<void> {
+    const table = supabase.from('credit_notes');
+
+    switch (operation) {
+      case 'CREATE':
+        const { error: insertError } = await table.insert({
+          id: data.id,
+          note_no: data.note_no,
+          customer_id: data.customer_id,
+          reference_bill_no: data.reference_bill_no,
+          amount: data.amount,
+          reason: data.reason,
+          note_date: data.note_date,
+          created_by: data.created_by
+        });
+        if (insertError) throw insertError;
+        break;
+
+      case 'UPDATE':
+        const { error: updateError } = await table
+          .update({
+            note_no: data.note_no,
+            customer_id: data.customer_id,
+            reference_bill_no: data.reference_bill_no,
+            amount: data.amount,
+            reason: data.reason,
+            note_date: data.note_date
+          })
+          .eq('id', data.id);
+        if (updateError) throw updateError;
+        break;
+
+      case 'DELETE':
+        const { error: deleteError } = await table.delete().eq('id', data.id);
+        if (deleteError) throw deleteError;
+        break;
+    }
+  }
+
+  private async syncDebitNote(operation: string, data: any): Promise<void> {
+    const table = supabase.from('debit_notes');
+
+    switch (operation) {
+      case 'CREATE':
+        const { error: insertError } = await table.insert({
+          id: data.id,
+          note_no: data.note_no,
+          customer_id: data.customer_id,
+          reference_bill_no: data.reference_bill_no,
+          amount: data.amount,
+          reason: data.reason,
+          note_date: data.note_date,
+          created_by: data.created_by
+        });
+        if (insertError) throw insertError;
+        break;
+
+      case 'UPDATE':
+        const { error: updateError } = await table
+          .update({
+            note_no: data.note_no,
+            customer_id: data.customer_id,
+            reference_bill_no: data.reference_bill_no,
+            amount: data.amount,
+            reason: data.reason,
+            note_date: data.note_date
+          })
+          .eq('id', data.id);
+        if (updateError) throw updateError;
+        break;
+
+      case 'DELETE':
+        const { error: deleteError } = await table.delete().eq('id', data.id);
+        if (deleteError) throw deleteError;
+        break;
+    }
+  }
+
+  private async syncCompanySettings(operation: string, data: any): Promise<void> {
+    const table = supabase.from('company_settings');
+
+    switch (operation) {
+      case 'CREATE':
+        const { error: insertError } = await table.insert({
+          id: data.id,
+          company_name: data.company_name,
+          gstin: data.gstin,
+          address_line1: data.address_line1,
+          address_line2: data.address_line2,
+          locality: data.locality,
+          location_name: data.location_name,
+          location_code: data.location_code,
+          pin_code: data.pin_code,
+          state_code: data.state_code,
+          phone: data.phone,
+          email: data.email,
+          bank_name: data.bank_name,
+          bank_branch: data.bank_branch,
+          bank_account_no: data.bank_account_no,
+          bank_ifsc: data.bank_ifsc,
+          is_active: data.is_active
+        });
+        if (insertError) throw insertError;
+        break;
+
+      case 'UPDATE':
+        const { error: updateError } = await table
+          .update({
+            company_name: data.company_name,
+            gstin: data.gstin,
+            address_line1: data.address_line1,
+            address_line2: data.address_line2,
+            locality: data.locality,
+            location_name: data.location_name,
+            location_code: data.location_code,
+            pin_code: data.pin_code,
+            state_code: data.state_code,
+            phone: data.phone,
+            email: data.email,
+            bank_name: data.bank_name,
+            bank_branch: data.bank_branch,
+            bank_account_no: data.bank_account_no,
+            bank_ifsc: data.bank_ifsc,
+            is_active: data.is_active
+          })
+          .eq('id', data.id);
+        if (updateError) throw updateError;
+        break;
+
+      case 'DELETE':
+        const { error: deleteError } = await table.delete().eq('id', data.id);
+        if (deleteError) throw deleteError;
+        break;
+    }
+  }
+
   // Download latest data from server when online
   async downloadLatestData(): Promise<void> {
     if (!networkService.isOnline()) {
@@ -474,6 +623,32 @@ export class SyncService {
 
       if (ledgerError) throw ledgerError;
 
+      // Download credit notes (last 90 days)
+      const { data: creditNotes, error: creditNotesError } = await supabase
+        .from('credit_notes')
+        .select('*')
+        .gte('note_date', ninetyDaysAgo.toISOString().split('T')[0])
+        .order('note_date', { ascending: false });
+
+      if (creditNotesError) throw creditNotesError;
+
+      // Download debit notes (last 90 days)
+      const { data: debitNotes, error: debitNotesError } = await supabase
+        .from('debit_notes')
+        .select('*')
+        .gte('note_date', ninetyDaysAgo.toISOString().split('T')[0])
+        .order('note_date', { ascending: false });
+
+      if (debitNotesError) throw debitNotesError;
+
+      // Download company settings (active only)
+      const { data: companySettings, error: companyError } = await supabase
+        .from('company_settings')
+        .select('*')
+        .eq('is_active', true);
+
+      if (companyError) throw companyError;
+
       // Store all data in local database with progress updates
       const dataToStore = [
         { table: 'customers', data: customers },
@@ -481,7 +656,10 @@ export class SyncService {
         { table: 'outward_entries', data: outwardEntries },
         { table: 'sales', data: sales },
         { table: 'receipts', data: receipts },
-        { table: 'customer_ledger', data: customerLedger }
+        { table: 'customer_ledger', data: customerLedger },
+        { table: 'credit_notes', data: creditNotes },
+        { table: 'debit_notes', data: debitNotes },
+        { table: 'company_settings', data: companySettings }
       ];
 
       const totalCounts: any = {};

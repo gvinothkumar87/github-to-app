@@ -224,6 +224,18 @@ export const SyncStatusDisplay: React.FC<SyncStatusDisplayProps> = ({
                 <span>Ledger:</span>
                 <span className="font-medium">{tableCounts.customer_ledger}</span>
               </div>
+              <div className="flex justify-between bg-muted p-2 rounded">
+                <span>Credit Notes:</span>
+                <span className="font-medium">{tableCounts.credit_notes || 0}</span>
+              </div>
+              <div className="flex justify-between bg-muted p-2 rounded">
+                <span>Debit Notes:</span>
+                <span className="font-medium">{tableCounts.debit_notes || 0}</span>
+              </div>
+              <div className="flex justify-between bg-muted p-2 rounded">
+                <span>Settings:</span>
+                <span className="font-medium">{tableCounts.company_settings || 0}</span>
+              </div>
             </div>
           </div>
         )}

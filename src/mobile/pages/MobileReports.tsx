@@ -159,7 +159,7 @@ const MobileReports: React.FC = () => {
   };
 
   return (
-    <MobileLayout title="Reports" showBackButton>
+    <MobileLayout title="Reports">
       <div className="space-y-6">
         {/* Report Configuration */}
         <Card>

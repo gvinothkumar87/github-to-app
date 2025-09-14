@@ -86,8 +86,6 @@ export const MobileDebitNoteForm = () => {
   return (
     <MobileLayout 
       title={language === 'english' ? 'Create Debit Note' : 'டெபிட் நோட் உருவாக்கவும்'}
-      showBackButton
-      onBack={() => navigate('/')}
     >
       <div className="space-y-4">
         <Card>

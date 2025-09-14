@@ -8,30 +8,15 @@ import { supabase } from '@/integrations/supabase/client';
 interface MobileLayoutProps {
   children: React.ReactNode;
   title?: string;
-  showBackButton?: boolean;
-  onBack?: () => void;
   action?: React.ReactNode;
 }
 
 export const MobileLayout: React.FC<MobileLayoutProps> = ({ 
   children, 
   title, 
-  showBackButton, 
-  onBack, 
   action 
 }) => {
   const navigate = useNavigate();
-  const location = useLocation();
-  
-  const handleBackClick = () => {
-    if (onBack) {
-      onBack();
-      return;
-    }
-    
-    // Always navigate back to dashboard for mobile
-    navigate('/');
-  };
   
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -45,11 +30,6 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
           <div className="border-b px-4 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                {showBackButton && (
-                  <Button variant="ghost" size="sm" onClick={handleBackClick}>
-                    <ArrowLeft className="h-4 w-4" />
-                  </Button>
-                )}
                 <h1 className="text-lg font-semibold">{title}</h1>
               </div>
               <div className="flex items-center gap-2">

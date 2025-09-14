@@ -52,8 +52,6 @@ export const MobileBillsList = () => {
     return (
       <MobileLayout 
         title={language === 'english' ? 'Bills Management' : 'பில் மேலாண்மை'}
-        showBackButton
-        onBack={() => navigate('/')}
       >
       <OfflineStatusBanner isOnline={true} isServicesReady={true} />
         <Card>
@@ -70,8 +68,6 @@ export const MobileBillsList = () => {
   return (
     <MobileLayout 
       title={language === 'english' ? 'Bills Management' : 'பில் மேலாண்மை'}
-      showBackButton
-      onBack={() => navigate('/')}
       action={
         <Button
           size="sm"

@@ -69,8 +69,6 @@ export const MobileInvoiceGenerator = () => {
     return (
       <MobileLayout 
         title={language === 'english' ? 'Invoice' : 'விலைப்பட்டியல்'}
-        showBackButton
-        onBack={() => navigate('/bills')}
       >
         <Card>
           <CardContent className="p-6 text-center">
@@ -84,8 +82,6 @@ export const MobileInvoiceGenerator = () => {
   return (
     <MobileLayout 
       title={language === 'english' ? 'Invoice' : 'விலைப்பட்டியல்'}
-      showBackButton
-      onBack={() => navigate('/bills')}
       action={
         <div className="flex gap-2">
           {navigator.share && (

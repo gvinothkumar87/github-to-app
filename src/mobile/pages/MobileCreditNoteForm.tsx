@@ -86,8 +86,6 @@ export const MobileCreditNoteForm = () => {
   return (
     <MobileLayout 
       title={language === 'english' ? 'Create Credit Note' : 'கிரெடிட் நோட் உருவாக்கவும்'}
-      showBackButton
-      onBack={() => navigate('/')}
     >
       <div className="space-y-4">
         <Card>

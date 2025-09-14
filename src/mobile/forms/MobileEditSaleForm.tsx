@@ -105,8 +105,6 @@ export const MobileEditSaleForm = () => {
     return (
       <MobileLayout 
         title={language === 'english' ? 'Edit Sale' : 'விற்பனையை திருத்து'}
-        showBackButton
-        onBack={() => navigate('/bills')}
       >
         <Card>
           <CardContent className="p-6 text-center">
@@ -120,8 +118,6 @@ export const MobileEditSaleForm = () => {
   return (
     <MobileLayout 
       title={language === 'english' ? 'Edit Sale' : 'விற்பனையை திருத்து'}
-      showBackButton
-      onBack={() => navigate('/bills')}
     >
       <div className="space-y-4">
         <Card>

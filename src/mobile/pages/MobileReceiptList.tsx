@@ -53,8 +53,6 @@ export const MobileReceiptList = () => {
     return (
       <MobileLayout 
         title={language === 'english' ? 'Receipts' : 'ரசீதுகள்'}
-        showBackButton
-        onBack={() => navigate('/')}
       >
         <OfflineStatusBanner isOnline={true} isServicesReady={true} />
         <Card>
@@ -71,8 +69,6 @@ export const MobileReceiptList = () => {
   return (
     <MobileLayout 
       title={language === 'english' ? 'Receipts' : 'ரசீதுகள்'}
-      showBackButton
-      onBack={() => navigate('/')}
       action={
         <Button
           size="sm"

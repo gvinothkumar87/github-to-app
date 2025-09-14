@@ -247,6 +247,21 @@ const MobileSettings: React.FC = () => {
                     <div className="text-red-700">Upload Failed</div>
                   </div>
                 )}
+                
+                {/* Show breakdown of pending items by table */}
+                {dbStats.pending > 0 && (
+                  <div className="mt-3 p-3 bg-gray-50 rounded">
+                    <h5 className="text-xs font-medium mb-2 text-gray-700">Pending Items Breakdown:</h5>
+                    <div className="text-xs space-y-1">
+                      {dbStats.pendingByTable && Object.entries(dbStats.pendingByTable).map(([table, count]) => (
+                        <div key={table} className="flex justify-between">
+                          <span className="capitalize">{table.replace('_', ' ')}:</span>
+                          <span className="font-medium">{String(count)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Local Data Counts */}

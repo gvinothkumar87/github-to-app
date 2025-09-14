@@ -551,6 +551,7 @@ export class DatabaseService {
     synced: number;
     failed: number;
     totalRecords: number;
+    pendingByTable?: Record<string, number>;
   }> {
     if (!this.db) throw new Error('Database not initialized');
 
@@ -565,11 +566,24 @@ export class DatabaseService {
     );
     const totalResult = await this.db.query(`SELECT COUNT(*) as count FROM sync_queue`);
 
+    // Get pending count by table
+    const pendingByTableResult = await this.db.query(
+      `SELECT table_name, COUNT(*) as count FROM sync_queue WHERE sync_status = 'pending' GROUP BY table_name`
+    );
+    
+    const pendingByTable: Record<string, number> = {};
+    if (pendingByTableResult.values) {
+      for (const row of pendingByTableResult.values) {
+        pendingByTable[row.table_name] = row.count;
+      }
+    }
+
     return {
       pending: pendingResult.values?.[0]?.count || 0,
       synced: syncedResult.values?.[0]?.count || 0,
       failed: failedResult.values?.[0]?.count || 0,
-      totalRecords: totalResult.values?.[0]?.count || 0
+      totalRecords: totalResult.values?.[0]?.count || 0,
+      pendingByTable: Object.keys(pendingByTable).length > 0 ? pendingByTable : undefined
     };
   }
 

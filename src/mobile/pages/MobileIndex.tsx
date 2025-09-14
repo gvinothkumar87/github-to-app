@@ -136,9 +136,8 @@ const MobileIndex: React.FC = () => {
   // Filter menu items based on user type
   const getFilteredMenuItems = () => {
     if (isAdmin) {
-      // Admin users can see: receipts, sales, sales ledger, customer ledger, bills
-      const adminAllowedItems = ['Receipts', 'Sales', 'Sales Ledger', 'Customer Ledger', 'Bills'];
-      return menuItems.filter(item => adminAllowedItems.includes(item.title));
+      // Admin users can see ALL functions including normal user functions
+      return menuItems;
     } else {
       // Non-admin users can only see: Transit Logbook, Customers, Items, Settings
       const normalUserAllowedItems = ['Transit Logbook', 'Customers', 'Items', 'Settings'];
@@ -193,14 +192,24 @@ const MobileIndex: React.FC = () => {
               </Button>
             )}
             {isAdmin && (
-              <Button 
-                className="w-full justify-start" 
-                variant="outline"
-                onClick={() => handleMenuClick('/receipts/new')}
-              >
-                <Receipt className="h-4 w-4 mr-2" />
-                New Receipt
-              </Button>
+              <>
+                <Button 
+                  className="w-full justify-start" 
+                  variant="outline"
+                  onClick={() => handleMenuClick('/receipts/new')}
+                >
+                  <Receipt className="h-4 w-4 mr-2" />
+                  New Receipt
+                </Button>
+                <Button 
+                  className="w-full justify-start" 
+                  variant="outline"
+                  onClick={() => handleMenuClick('/transit/new')}
+                >
+                  <Truck className="h-4 w-4 mr-2" />
+                  New Outward Entry
+                </Button>
+              </>
             )}
             {!isAdmin && (
               <Button 

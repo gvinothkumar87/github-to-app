@@ -67,7 +67,8 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
         load_weight_updated_at: new Date().toISOString(),
         load_weight_updated_by: user?.id,
         remarks: remarks || null,
-        is_completed: true
+        is_completed: true,
+        sync_status: 'pending'
       });
 
       toast({

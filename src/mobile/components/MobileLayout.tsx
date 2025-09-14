@@ -1,8 +1,9 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, LogOut } from 'lucide-react';
 import { OfflineIndicator } from './OfflineIndicator';
+import { supabase } from '@/integrations/supabase/client';
 
 interface MobileLayoutProps {
   children: React.ReactNode;
@@ -28,22 +29,13 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
       return;
     }
     
-    // If we're on the home page (/), exit the app
-    if (location.pathname === '/') {
-      // For mobile/capacitor apps, we can use history.back() to potentially exit
-      if (window.history.length > 1) {
-        window.history.back();
-      } else {
-        // If there's no history, we're at the root - this should exit the app
-        if (window.navigator && 'app' in window.navigator) {
-          // @ts-ignore - Capacitor specific
-          window.navigator.app?.exitApp?.();
-        }
-      }
-    } else {
-      // For other pages, navigate back to home
-      navigate('/');
-    }
+    // Always navigate back to dashboard for mobile
+    navigate('/');
+  };
+  
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate('/auth');
   };
   return (
     <div className="min-h-screen bg-background">
@@ -60,7 +52,12 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
                 )}
                 <h1 className="text-lg font-semibold">{title}</h1>
               </div>
-              {action}
+              <div className="flex items-center gap-2">
+                {action}
+                <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         )}

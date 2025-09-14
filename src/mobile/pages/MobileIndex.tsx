@@ -124,36 +124,6 @@ const MobileIndex: React.FC = () => {
         {/* Service Status Indicator */}
         <ServiceStatusIndicator />
 
-        {/* Welcome Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Database className="h-5 w-5" />
-              Welcome to GRM Sales Mobile
-            </CardTitle>
-            <CardDescription>
-              Offline-capable mobile app for managing your sales operations
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1">
-                {isOnline ? (
-                  <Wifi className="h-4 w-4 text-green-600" />
-                ) : (
-                  <WifiOff className="h-4 w-4 text-red-600" />
-                )}
-                <span>
-                  {isOnline ? 'Online' : 'Offline Mode'}
-                </span>
-              </div>
-              <div className="text-xs">
-                Services: {isReady ? 'Ready' : 'Loading...'}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
 
         {/* Menu Grid */}
         <div className="grid grid-cols-2 gap-4">

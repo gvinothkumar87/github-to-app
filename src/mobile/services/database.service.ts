@@ -193,11 +193,13 @@ export class DatabaseService {
     if (!this.db) throw new Error('Database not initialized');
 
     const id = data.id || this.generateUUID();
-    const columns = Object.keys(data).join(', ');
-    const placeholders = Object.keys(data).map(() => '?').join(', ');
-    const values = Object.values(data);
+    // Exclude 'id' from columns/values to avoid duplicate column in INSERT
+    const entries = Object.entries(data).filter(([key]) => key !== 'id');
+    const columns = entries.map(([key]) => key).join(', ');
+    const placeholders = entries.map(() => '?').join(', ');
+    const values = entries.map(([, value]) => value);
 
-    const sql = `INSERT INTO offline_${table} (id, ${columns}) VALUES (?, ${placeholders})`;
+    const sql = `INSERT INTO offline_${table} (id${columns ? ', ' + columns : ''}) VALUES (?${placeholders ? ', ' + placeholders : ''})`;
     await this.db.run(sql, [id, ...values]);
 
     // Add to sync queue
@@ -211,11 +213,13 @@ export class DatabaseService {
     if (!this.db) throw new Error('Database not initialized');
 
     const id = data.id || this.generateUUID();
-    const columns = Object.keys(data).join(', ');
-    const placeholders = Object.keys(data).map(() => '?').join(', ');
-    const values = Object.values(data);
+    // Exclude 'id' from columns/values to avoid duplicate column in INSERT
+    const entries = Object.entries(data).filter(([key]) => key !== 'id');
+    const columns = entries.map(([key]) => key).join(', ');
+    const placeholders = entries.map(() => '?').join(', ');
+    const values = entries.map(([, value]) => value);
 
-    const sql = `INSERT OR REPLACE INTO offline_${table} (id, ${columns}) VALUES (?, ${placeholders})`;
+    const sql = `INSERT OR REPLACE INTO offline_${table} (id${columns ? ', ' + columns : ''}) VALUES (?${placeholders ? ', ' + placeholders : ''})`;
     await this.db.run(sql, [id, ...values]);
 
     return id;

@@ -56,8 +56,14 @@ export const SyncStatusDisplay: React.FC<SyncStatusDisplayProps> = ({
     if (!isOnline || !isReady) return;
     
     try {
+      // Upload local changes first
       await syncService.startSync();
-      await loadStats(); // Refresh stats after sync
+      // Then download latest data from server
+      await syncService.downloadLatestData();
+      // Notify the app that offline data has updated
+      window.dispatchEvent(new CustomEvent('offline-data-updated', { detail: { source: 'manual-sync' } }));
+      // Refresh stats after sync
+      await loadStats();
     } catch (error) {
       console.error('Manual sync failed:', error);
     }

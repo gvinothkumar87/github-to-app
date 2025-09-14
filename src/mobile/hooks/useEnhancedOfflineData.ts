@@ -159,6 +159,17 @@ export function useEnhancedOfflineData<T>(
     return unsubscribe;
   }, []);
 
+  // Refresh data when a global offline data update event is dispatched (e.g., after manual sync)
+  useEffect(() => {
+    const handler = () => {
+      loadData();
+    };
+    window.addEventListener('offline-data-updated', handler as EventListener);
+    return () => {
+      window.removeEventListener('offline-data-updated', handler as EventListener);
+    };
+  }, [isReady]);
+
   // Load data when services are ready or dependencies change
   useEffect(() => {
     if (isReady) {

@@ -18,6 +18,8 @@ import {
 import { networkService } from '../services/network.service';
 import { useMobileServices } from '../providers/MobileServiceProvider';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
+import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
 
 const MobileIndex: React.FC = () => {
   const { isReady } = useMobileServices();
@@ -30,7 +32,22 @@ const MobileIndex: React.FC = () => {
       setIsOnline(status.connected);
     });
 
-    return unsubscribe;
+    // Handle mobile back button - close app instead of navigating back
+    let backButtonListener: any;
+    if (Capacitor.isNativePlatform()) {
+      App.addListener('backButton', () => {
+        App.exitApp();
+      }).then((listener) => {
+        backButtonListener = listener;
+      });
+    }
+
+    return () => {
+      unsubscribe();
+      if (backButtonListener) {
+        backButtonListener.remove();
+      }
+    };
   }, []);
 
   const menuItems = [
@@ -116,13 +133,17 @@ const MobileIndex: React.FC = () => {
     }
   ];
 
-  // Filter menu items for admin users
+  // Filter menu items based on user type
   const getFilteredMenuItems = () => {
     if (isAdmin) {
+      // Admin users can see: receipts, sales, sales ledger, customer ledger, bills
       const adminAllowedItems = ['Receipts', 'Sales', 'Sales Ledger', 'Customer Ledger', 'Bills'];
       return menuItems.filter(item => adminAllowedItems.includes(item.title));
+    } else {
+      // Non-admin users can only see: Transit Logbook, Customers, Items, Settings
+      const normalUserAllowedItems = ['Transit Logbook', 'Customers', 'Items', 'Settings'];
+      return menuItems.filter(item => normalUserAllowedItems.includes(item.title));
     }
-    return menuItems;
   };
 
   const handleMenuClick = (href: string) => {
@@ -171,14 +192,16 @@ const MobileIndex: React.FC = () => {
                 New Outward Entry
               </Button>
             )}
-            <Button 
-              className="w-full justify-start" 
-              variant="outline"
-              onClick={() => handleMenuClick('/receipts/new')}
-            >
-              <Receipt className="h-4 w-4 mr-2" />
-              New Receipt
-            </Button>
+            {isAdmin && (
+              <Button 
+                className="w-full justify-start" 
+                variant="outline"
+                onClick={() => handleMenuClick('/receipts/new')}
+              >
+                <Receipt className="h-4 w-4 mr-2" />
+                New Receipt
+              </Button>
+            )}
             {!isAdmin && (
               <Button 
                 className="w-full justify-start" 

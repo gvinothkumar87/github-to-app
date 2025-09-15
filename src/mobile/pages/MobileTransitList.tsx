@@ -171,11 +171,10 @@ const MobileTransitList: React.FC = () => {
                   {filteredEntries
                     .sort((a: any, b: any) => new Date(b.entry_date).getTime() - new Date(a.entry_date).getTime())
                     .map((entry: any) => (
-                <Card 
-                  key={entry.id}
-                  className="cursor-pointer transition-all hover:shadow-md"
-                  onClick={() => navigate(`/transit/${entry.id}/edit`)}
-                >
+              <Card 
+                key={entry.id}
+                className="transition-all"
+              >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-2">
@@ -303,8 +302,7 @@ const MobileTransitList: React.FC = () => {
                     .map((entry: any) => (
                       <Card 
                         key={entry.id}
-                        className="cursor-pointer transition-all hover:shadow-md"
-                        onClick={() => navigate(`/transit/${entry.id}/edit`)}
+                        className="transition-all"
                       >
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between mb-3">

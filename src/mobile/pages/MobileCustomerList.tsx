@@ -71,8 +71,7 @@ const MobileCustomerList: React.FC = () => {
             {customers.map((customer: any) => (
               <Card 
                 key={customer.id}
-                className="cursor-pointer transition-all hover:shadow-md"
-                onClick={() => navigate(`/customers/${customer.id}/edit`)}
+                className="transition-all"
               >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">

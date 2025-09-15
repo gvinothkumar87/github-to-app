@@ -68,8 +68,7 @@ const MobileItemList: React.FC = () => {
             {items.map((item: any) => (
               <Card 
                 key={item.id}
-                className="cursor-pointer transition-all hover:shadow-md"
-                onClick={() => navigate(`/items/${item.id}/edit`)}
+                className="transition-all"
               >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">

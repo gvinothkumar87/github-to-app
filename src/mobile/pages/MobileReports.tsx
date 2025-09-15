@@ -269,31 +269,31 @@ const MobileReports: React.FC = () => {
               {selectedReport === 'sales-summary' && (
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <div className="text-2xl font-bold text-blue-600">
+                    <div className="text-center p-4 bg-primary/10 rounded-lg">
+                      <div className="text-2xl font-bold text-primary">
                         {reportData.totalRecords}
                       </div>
-                      <div className="text-sm text-blue-600">Total Sales</div>
+                      <div className="text-sm text-primary">Total Sales</div>
                     </div>
-                    <div className="text-center p-4 bg-green-50 rounded-lg">
-                      <div className="text-2xl font-bold text-green-600">
+                    <div className="text-center p-4 bg-secondary/20 rounded-lg">
+                      <div className="text-2xl font-bold text-secondary-foreground">
                         ₹{reportData.totalAmount.toFixed(2)}
                       </div>
-                      <div className="text-sm text-green-600">Total Amount</div>
+                      <div className="text-sm text-secondary-foreground">Total Amount</div>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-4 bg-purple-50 rounded-lg">
-                      <div className="text-2xl font-bold text-purple-600">
+                    <div className="text-center p-4 bg-accent/20 rounded-lg">
+                      <div className="text-2xl font-bold text-accent-foreground">
                         {reportData.totalQuantity.toFixed(2)}
                       </div>
-                      <div className="text-sm text-purple-600">Total Quantity</div>
+                      <div className="text-sm text-accent-foreground">Total Quantity</div>
                     </div>
-                    <div className="text-center p-4 bg-orange-50 rounded-lg">
-                      <div className="text-2xl font-bold text-orange-600">
+                    <div className="text-center p-4 bg-muted rounded-lg">
+                      <div className="text-2xl font-bold text-muted-foreground">
                         ₹{reportData.averagePerSale.toFixed(2)}
                       </div>
-                      <div className="text-sm text-orange-600">Avg Per Sale</div>
+                      <div className="text-sm text-muted-foreground">Avg Per Sale</div>
                     </div>
                   </div>
                 </div>
@@ -301,11 +301,11 @@ const MobileReports: React.FC = () => {
 
               {(selectedReport === 'customer-summary' || selectedReport === 'item-summary') && (
                 <div className="space-y-4">
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">
+                  <div className="text-center p-4 bg-primary/10 rounded-lg">
+                    <div className="text-2xl font-bold text-primary">
                       {selectedReport === 'customer-summary' ? reportData.totalCustomers : reportData.totalItems}
                     </div>
-                    <div className="text-sm text-blue-600">
+                    <div className="text-sm text-primary">
                       {selectedReport === 'customer-summary' ? 'Total Customers' : 'Total Items'}
                     </div>
                   </div>

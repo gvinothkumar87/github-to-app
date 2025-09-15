@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { FileText, Download, Calendar, Users, Package, TrendingUp, TrendingDown } from 'lucide-react';
 import { useEnhancedOfflineData } from '../hooks/useEnhancedOfflineData';
 import { format } from 'date-fns';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/use-toast';
 
 const MobileReports: React.FC = () => {
   const [selectedReport, setSelectedReport] = useState<string>('');
@@ -17,7 +17,7 @@ const MobileReports: React.FC = () => {
   const [customerId, setCustomerId] = useState<string>('');
   const [itemId, setItemId] = useState<string>('');
 
-  const { data: sales, loading: salesLoading } = useEnhancedOfflineData('sales');
+  const { data: sales, loading: salesLoading, isServicesReady, error } = useEnhancedOfflineData('sales');
   const { data: customers } = useEnhancedOfflineData('customers');
   const { data: items } = useEnhancedOfflineData('items');
   const { data: receipts } = useEnhancedOfflineData('receipts');
@@ -35,7 +35,7 @@ const MobileReports: React.FC = () => {
 
   const generateReport = () => {
     if (!selectedReport) {
-      toast.error('Please select a report type');
+      toast({ title: 'Error', description: 'Please select a report type', variant: 'destructive' });
       return;
     }
 
@@ -135,12 +135,12 @@ const MobileReports: React.FC = () => {
         setReportData(null);
     }
 
-    toast.success('Report generated successfully');
+    toast({ title: 'Report generated', description: 'Report generated successfully' });
   };
 
   const exportReport = () => {
     if (!reportData) {
-      toast.error('Please generate a report first');
+      toast({ title: 'Error', description: 'Please generate a report first', variant: 'destructive' });
       return;
     }
 
@@ -155,8 +155,16 @@ const MobileReports: React.FC = () => {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     
-    toast.success('Report exported successfully');
+    toast({ title: 'Report exported', description: 'Report exported successfully' });
   };
+
+  if (salesLoading) {
+    return (
+      <MobileLayout title="Reports">
+        <div className="py-10 text-center text-muted-foreground">Loading reports...</div>
+      </MobileLayout>
+    );
+  }
 
   return (
     <MobileLayout title="Reports">

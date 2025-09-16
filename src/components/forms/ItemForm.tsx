@@ -28,6 +28,7 @@ export const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel })
     name_tamil: item?.name_tamil || '',
     code: item?.code || '',
     unit: item?.unit || 'KG',
+    unit_weight: item?.unit_weight || 1,
     hsn_no: item?.hsn_no || '',
     gst_percentage: item?.gst_percentage || 0,
     description_english: item?.description_english || '',
@@ -188,21 +189,36 @@ export const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel })
                />
              </div>
              
-             <div>
-               <Label htmlFor="gst_percentage">
-                 {language === 'english' ? 'GST %' : 'ஜிஎஸ்டி %'}
-               </Label>
-               <Input
-                 id="gst_percentage"
-                 type="number"
-                 step="0.01"
-                 min="0"
-                 max="100"
-                 value={formData.gst_percentage}
-                 onChange={(e) => setFormData({ ...formData, gst_percentage: parseFloat(e.target.value) || 0 })}
-                 placeholder={language === 'english' ? 'e.g., 18.00' : 'உதா: 18.00'}
-               />
-             </div>
+              <div>
+                <Label htmlFor="unit_weight">
+                  {language === 'english' ? 'Unit Weight (KG)' : 'யூனிட் எடை (கிலோ)'}
+                </Label>
+                <Input
+                  id="unit_weight"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  value={formData.unit_weight}
+                  onChange={(e) => setFormData({ ...formData, unit_weight: parseFloat(e.target.value) || 1 })}
+                  placeholder={language === 'english' ? 'e.g., 50' : 'உதா: 50'}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="gst_percentage">
+                  {language === 'english' ? 'GST %' : 'ஜிஎஸ்டி %'}
+                </Label>
+                <Input
+                  id="gst_percentage"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  value={formData.gst_percentage}
+                  onChange={(e) => setFormData({ ...formData, gst_percentage: parseFloat(e.target.value) || 0 })}
+                  placeholder={language === 'english' ? 'e.g., 18.00' : 'உதா: 18.00'}
+                />
+              </div>
            </div>
           
           <div>

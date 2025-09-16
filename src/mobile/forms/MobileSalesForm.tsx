@@ -60,6 +60,17 @@ const MobileSalesForm: React.FC = () => {
     }
   }, [outwardEntryId, outwardEntries]);
 
+  // Auto-calculate quantity based on net weight and unit weight
+  useEffect(() => {
+    if (selectedEntry) {
+      const item = items.find((i: any) => i.id === selectedEntry.item_id) as any;
+      if (item && selectedEntry.net_weight) {
+        const calculatedQuantity = (selectedEntry.net_weight / (item.unit_weight || 1));
+        setFormData(prev => ({ ...prev, quantity: calculatedQuantity.toFixed(2) }));
+      }
+    }
+  }, [selectedEntry, items]);
+
   useEffect(() => {
     if (formData.quantity && formData.rate) {
       const totalAmount = parseFloat(formData.quantity) * parseFloat(formData.rate);
@@ -181,7 +192,7 @@ const MobileSalesForm: React.FC = () => {
                       outward_entry_id: value,
                       customer_id: entry?.customer_id || '',
                       item_id: entry?.item_id || '',
-                      quantity: entry?.net_weight?.toString() || '',
+                      quantity: '', // Will be auto-calculated
                     }));
                   }}
                 >
@@ -208,6 +219,12 @@ const MobileSalesForm: React.FC = () => {
                     <strong>Net Weight:</strong> {selectedEntry.net_weight} KG
                   </p>
                   <p className="text-sm">
+                    <strong>Unit Weight:</strong> {(items.find((i: any) => i.id === selectedEntry.item_id) as any)?.unit_weight || 1} KG
+                  </p>
+                  <p className="text-sm">
+                    <strong>Calculated Quantity:</strong> {formData.quantity} Units
+                  </p>
+                  <p className="text-sm">
                     <strong>Lorry:</strong> {selectedEntry.lorry_no}
                   </p>
                 </div>
@@ -215,22 +232,22 @@ const MobileSalesForm: React.FC = () => {
               
               <div>
                 <Label htmlFor="quantity">
-                  {language === 'english' ? 'Quantity (KG)' : 'அளவு (கிலோ)'} *
+                  {language === 'english' ? 'Calculated Quantity (Units)' : 'கணக்கிடப்பட்ட அளவு (யூனிட்)'} *
                 </Label>
                 <Input
                   id="quantity"
                   type="number"
                   step="0.01"
                   value={formData.quantity}
-                  onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                  required
-                  placeholder={language === 'english' ? 'Enter quantity' : 'அளவை உள்ளிடவும்'}
+                  readOnly
+                  className="bg-muted"
+                  placeholder={language === 'english' ? 'Auto-calculated' : 'தானாக கணக்கிடப்பட்டது'}
                 />
               </div>
               
               <div>
                 <Label htmlFor="rate">
-                  {language === 'english' ? 'Rate per KG (₹)' : 'கிலோ வீத விலை (₹)'} *
+                  {language === 'english' ? 'Rate per Unit (₹)' : 'யூனிட் வீத விலை (₹)'} *
                 </Label>
                 <Input
                   id="rate"
@@ -239,7 +256,7 @@ const MobileSalesForm: React.FC = () => {
                   value={formData.rate}
                   onChange={(e) => setFormData({ ...formData, rate: e.target.value })}
                   required
-                  placeholder={language === 'english' ? 'Enter rate per kg' : 'கிலோ வீத விலையை உள்ளிடவும்'}
+                  placeholder={language === 'english' ? 'Enter rate per unit' : 'யூனிட் வீத விலையை உள்ளிடவும்'}
                 />
               </div>
               

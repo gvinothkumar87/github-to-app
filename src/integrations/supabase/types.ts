@@ -439,6 +439,7 @@ export type Database = {
           name_english: string
           name_tamil: string | null
           unit: string
+          unit_weight: number
           updated_at: string
         }
         Insert: {
@@ -453,6 +454,7 @@ export type Database = {
           name_english: string
           name_tamil?: string | null
           unit?: string
+          unit_weight?: number
           updated_at?: string
         }
         Update: {
@@ -467,6 +469,7 @@ export type Database = {
           name_english?: string
           name_tamil?: string | null
           unit?: string
+          unit_weight?: number
           updated_at?: string
         }
         Relationships: []

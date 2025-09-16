@@ -66,9 +66,16 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
     }
   };
 
+  const calculateQuantity = () => {
+    if (!selectedEntry) return 0;
+    const netWeight = selectedEntry.net_weight || 0;
+    const unitWeight = selectedEntry.items?.unit_weight || 1;
+    return netWeight / unitWeight;
+  };
+
   const calculateTotalAmount = () => {
     if (!selectedEntry || !rate) return 0;
-    const quantity = selectedEntry.net_weight || 0;
+    const quantity = calculateQuantity();
     const baseAmount = quantity * parseFloat(rate);
     const gstPercent = selectedEntry.items?.gst_percentage || 0;
     const gstAmount = baseAmount * (gstPercent / 100);
@@ -77,7 +84,7 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
 
   const getBaseAmount = () => {
     if (!selectedEntry || !rate) return 0;
-    const quantity = selectedEntry.net_weight || 0;
+    const quantity = calculateQuantity();
     return quantity * parseFloat(rate);
   };
 
@@ -146,7 +153,7 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
         outward_entry_id: selectedEntry.id,
         customer_id: selectedEntry.customer_id,
         item_id: selectedEntry.item_id,
-        quantity: selectedEntry.net_weight || 0,
+        quantity: calculateQuantity(),
         rate: parseFloat(rate),
         total_amount: calculateTotalAmount(),
         bill_serial_no: billSerial,
@@ -260,7 +267,15 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
                 </div>
                 <div>
                   <Label className="text-xs font-medium">{language === 'english' ? 'Net Weight' : 'நிகர எடை'}:</Label>
-                  <p>{selectedEntry.net_weight} {selectedEntry.items?.unit}</p>
+                  <p>{selectedEntry.net_weight} KG</p>
+                </div>
+                <div>
+                  <Label className="text-xs font-medium">{language === 'english' ? 'Unit Weight' : 'யூனிட் எடை'}:</Label>
+                  <p>{selectedEntry.items?.unit_weight} KG</p>
+                </div>
+                <div>
+                  <Label className="text-xs font-medium">{language === 'english' ? 'Calculated Quantity' : 'கணக்கிடப்பட்ட அளவு'}:</Label>
+                  <p>{calculateQuantity().toFixed(2)} {selectedEntry.items?.unit}</p>
                 </div>
                 <div>
                   <Label className="text-xs font-medium">{language === 'english' ? 'Lorry No' : 'லாரி எண்'}:</Label>
@@ -280,7 +295,7 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
 
           <div>
             <Label htmlFor="rate">
-              {language === 'english' ? 'Rate per Unit' : 'யூனிட் ஒன்றுக்கான விலை'}
+              {language === 'english' ? 'Rate per Unit (₹)' : 'யூனிட் ஒன்றுக்கான விலை (₹)'}
             </Label>
             <Input
               id="rate"

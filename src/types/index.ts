@@ -23,6 +23,7 @@ export interface Item {
   name_tamil?: string;
   code: string;
   unit: string;
+  unit_weight: number;
   hsn_no?: string;
   gst_percentage: number;
   description_english?: string;

@@ -28,6 +28,7 @@ const MobileItemForm: React.FC<MobileItemFormProps> = ({ itemId }) => {
     name_tamil: '',
     code: '',
     unit: 'KG',
+    unit_weight: '1',
     hsn_no: '',
     gst_percentage: '0',
     description_english: '',
@@ -50,7 +51,8 @@ const MobileItemForm: React.FC<MobileItemFormProps> = ({ itemId }) => {
       if (item) {
         setFormData({
           ...item,
-          gst_percentage: item.gst_percentage?.toString() || '0'
+          gst_percentage: item.gst_percentage?.toString() || '0',
+          unit_weight: item.unit_weight?.toString() || '1'
         });
       }
     } catch (error) {
@@ -72,6 +74,7 @@ const MobileItemForm: React.FC<MobileItemFormProps> = ({ itemId }) => {
       const itemData = {
         ...formData,
         gst_percentage: parseFloat(formData.gst_percentage),
+        unit_weight: parseFloat(formData.unit_weight),
       };
 
       if (itemId) {
@@ -180,6 +183,21 @@ const MobileItemForm: React.FC<MobileItemFormProps> = ({ itemId }) => {
                   value={formData.hsn_no}
                   onChange={(e) => setFormData({ ...formData, hsn_no: e.target.value })}
                   placeholder={language === 'english' ? 'HSN classification number' : 'HSN வகைப்பாடு எண்'}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="unit_weight">
+                  {language === 'english' ? 'Unit Weight (KG)' : 'யூனிட் எடை (கிலோ)'}
+                </Label>
+                <Input
+                  id="unit_weight"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  value={formData.unit_weight}
+                  onChange={(e) => setFormData({ ...formData, unit_weight: e.target.value })}
+                  placeholder={language === 'english' ? 'Enter unit weight' : 'யூனிட் எடையை உள்ளிடவும்'}
                 />
               </div>
               

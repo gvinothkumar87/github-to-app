@@ -770,6 +770,7 @@ export type Database = {
           created_by: string | null
           customer_id: string
           id: string
+          irn: string | null
           item_id: string
           outward_entry_id: string
           quantity: number
@@ -784,6 +785,7 @@ export type Database = {
           created_by?: string | null
           customer_id: string
           id?: string
+          irn?: string | null
           item_id: string
           outward_entry_id: string
           quantity: number
@@ -798,6 +800,7 @@ export type Database = {
           created_by?: string | null
           customer_id?: string
           id?: string
+          irn?: string | null
           item_id?: string
           outward_entry_id?: string
           quantity?: number

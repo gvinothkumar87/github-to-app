@@ -63,6 +63,7 @@ export interface Sale {
   rate: number;
   total_amount: number;
   bill_serial_no?: string;
+  irn?: string;
   sale_date: string;
   created_by?: string;
   created_at: string;

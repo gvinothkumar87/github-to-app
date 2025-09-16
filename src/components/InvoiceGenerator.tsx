@@ -5,6 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Download, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useState, useEffect } from 'react';
+import QRCode from 'qrcode';
 
 interface InvoiceGeneratorProps {
   sale: Sale;
@@ -191,7 +192,24 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
     URL.revokeObjectURL(url);
   };
 
-  const printInvoice = () => {
+  const printInvoice = async () => {
+    // Generate QR code if IRN exists
+    let qrCodeDataUrl = '';
+    if (sale.irn) {
+      try {
+        qrCodeDataUrl = await QRCode.toDataURL(sale.irn, {
+          width: 120,
+          margin: 1,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          }
+        });
+      } catch (error) {
+        console.error('Error generating QR code:', error);
+      }
+    }
+
     const printWindow = window.open('', '_blank');
     if (printWindow) {
       printWindow.document.write(`
@@ -257,7 +275,11 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
             <!-- Header Section -->
             <div class="header">
               <div class="logo-section">
-                <img src="${window.location.origin}/lovable-uploads/8ef45f84-cd7a-4909-9f31-86a578d28f2f.png" alt="GRM Logo" class="logo" onerror="this.style.display='none'" />
+                ${sale.irn && qrCodeDataUrl ? `
+                  <img src="${qrCodeDataUrl}" alt="IRN QR Code" class="logo" />
+                ` : `
+                  <img src="${window.location.origin}/lovable-uploads/8ef45f84-cd7a-4909-9f31-86a578d28f2f.png" alt="GRM Logo" class="logo" onerror="this.style.display='none'" />
+                `}
               </div>
               <div class="company-section">
                 <div class="company-name">${companySettings?.company_name || "GOVINDAN RICE MILL"}</div>

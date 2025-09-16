@@ -15,6 +15,7 @@ export const MobileEditSaleForm = () => {
   const { language, getDisplayName } = useLanguage();
   const { toast } = useToast();
   const [rate, setRate] = useState('');
+  const [irn, setIrn] = useState('');
   const [loading, setLoading] = useState(false);
   const [sale, setSale] = useState<any>(null);
 
@@ -30,6 +31,7 @@ export const MobileEditSaleForm = () => {
       if (foundSale) {
         setSale(foundSale);
         setRate((foundSale as any).rate.toString());
+        setIrn((foundSale as any).irn || '');
       }
     }
   }, [saleId, sales]);
@@ -79,6 +81,7 @@ export const MobileEditSaleForm = () => {
       await update(sale.id, {
         rate: newRate,
         total_amount: newTotalAmount,
+        irn: irn || null,
       });
 
       toast({
@@ -181,6 +184,19 @@ export const MobileEditSaleForm = () => {
                   onChange={(e) => setRate(e.target.value)}
                   placeholder={language === 'english' ? 'Enter rate...' : 'விலையை உள்ளிடவும்...'}
                   required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="irn">
+                  {language === 'english' ? 'IRN (Invoice Reference Number)' : 'IRN (விலைப்பட்டியல் குறிப்பு எண்)'}
+                </Label>
+                <Input
+                  id="irn"
+                  type="text"
+                  value={irn}
+                  onChange={(e) => setIrn(e.target.value)}
+                  placeholder={language === 'english' ? 'Enter IRN...' : 'IRN ஐ உள்ளிடவும்...'}
                 />
               </div>
 

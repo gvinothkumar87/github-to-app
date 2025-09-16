@@ -19,6 +19,7 @@ interface EditSaleFormProps {
 
 export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, onCancel }: EditSaleFormProps) => {
   const [rate, setRate] = useState(sale.rate.toString());
+  const [irn, setIrn] = useState(sale.irn || '');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { language, getDisplayName } = useLanguage();
@@ -65,6 +66,7 @@ export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, on
         .update({
           rate: newRate,
           total_amount: newTotalAmount,
+          irn: irn || null,
         })
         .eq('id', sale.id);
 
@@ -156,6 +158,19 @@ export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, on
               onChange={(e) => setRate(e.target.value)}
               placeholder={language === 'english' ? 'Enter rate...' : 'விலையை உள்ளிடவும்...'}
               required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="irn">
+              {language === 'english' ? 'IRN (Invoice Reference Number)' : 'IRN (விலைப்பட்டியல் குறிப்பு எண்)'}
+            </Label>
+            <Input
+              id="irn"
+              type="text"
+              value={irn}
+              onChange={(e) => setIrn(e.target.value)}
+              placeholder={language === 'english' ? 'Enter IRN...' : 'IRN ஐ உள்ளிடவும்...'}
             />
           </div>
 

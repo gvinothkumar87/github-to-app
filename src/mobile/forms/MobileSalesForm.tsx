@@ -214,7 +214,10 @@ const MobileSalesForm: React.FC = () => {
               </div>
 
               {selectedEntry && (
-                <div className="bg-muted p-3 rounded">
+                <div className="bg-muted p-3 rounded space-y-2">
+                  <p className="text-xs font-semibold text-primary">
+                    {language === 'english' ? 'Calculation: (Net Weight ÷ Unit Weight) × Rate' : 'கணக்கீடு: (நிகர எடை ÷ யூனிட் எடை) × விலை'}
+                  </p>
                   <p className="text-sm">
                     <strong>Net Weight:</strong> {selectedEntry.net_weight} KG
                   </p>

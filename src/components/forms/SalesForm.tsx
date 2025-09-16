@@ -311,7 +311,11 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
           {selectedEntry && rate && (
             <div className="bg-primary/10 p-4 rounded-lg space-y-2">
               <div className="flex justify-between items-center text-sm">
-                <span>{language === 'english' ? 'Base Amount:' : 'அடிப்படை தொகை:'}</span>
+                <span>{language === 'english' ? 'Quantity (Net÷Unit):' : 'அளவு (நிகர÷யூனிட்):'}</span>
+                <span>{calculateQuantity().toFixed(2)} {selectedEntry.items?.unit}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span>{language === 'english' ? 'Base Amount (Qty×Rate):' : 'அடிப்படை தொகை (அளவு×விலை):'}</span>
                 <span>₹{getBaseAmount().toFixed(2)}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
@@ -320,7 +324,7 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
               </div>
               <div className="border-t pt-2 flex justify-between items-center">
                 <span className="font-medium">
-                  {language === 'english' ? 'Total Amount:' : 'மொத்த தொகை:'}
+                  {language === 'english' ? 'Total Amount (Base+GST):' : 'மொத்த தொகை (அடிப்படை+ஜிஎஸ்டி):'}
                 </span>
                 <span className="text-lg font-bold">
                   ₹{calculateTotalAmount().toFixed(2)}

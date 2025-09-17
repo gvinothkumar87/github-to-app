@@ -209,7 +209,7 @@ export function useEnhancedOfflineData<T>(
     }
     
     // Ensure numeric fields are proper numbers
-    const numericFields = ['empty_weight', 'load_weight', 'net_weight', 'quantity', 'rate', 'total_amount', 'amount', 'pin_code'];
+    const numericFields = ['empty_weight', 'load_weight', 'net_weight', 'unit_weight', 'quantity', 'rate', 'total_amount', 'amount', 'pin_code'];
     numericFields.forEach(field => {
       if (converted[field] !== undefined && converted[field] !== null) {
         const num = typeof converted[field] === 'string' ? parseFloat(converted[field]) : converted[field];

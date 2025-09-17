@@ -88,6 +88,7 @@ export class DatabaseService {
         name_tamil TEXT,
         code TEXT NOT NULL,
         unit TEXT DEFAULT 'KG',
+        unit_weight REAL DEFAULT 1,
         hsn_no TEXT,
         gst_percentage REAL DEFAULT 0.00,
         description_english TEXT,
@@ -330,9 +331,12 @@ export class DatabaseService {
     try {
       const res = await this.db.query(`PRAGMA table_info(offline_items)`);
       const cols = (res.values || []).map((r: any) => r.name);
-      
-      // Add any missing columns for items if needed in future
-      // Currently items table is complete
+
+      if (!cols.includes('unit_weight')) {
+        await this.db.execute(`ALTER TABLE offline_items ADD COLUMN unit_weight REAL DEFAULT 1`);
+        await this.db.execute(`UPDATE offline_items SET unit_weight = 1 WHERE unit_weight IS NULL`);
+        console.log('Added unit_weight column to offline_items');
+      }
     } catch (e) {
       console.warn('ensureItemColumns failed:', e);
     }

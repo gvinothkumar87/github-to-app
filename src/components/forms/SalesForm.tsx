@@ -311,7 +311,11 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
           {selectedEntry && rate && (
             <div className="bg-primary/10 p-4 rounded-lg space-y-2">
               <div className="flex justify-between items-center text-sm">
-                <span>{language === 'english' ? 'Quantity (Net÷Unit):' : 'அளவு (நிகர÷யூனிட்):'}</span>
+                <span>{language === 'english' ? 'Net Weight:' : 'நிகர எடை:'}</span>
+                <span>{selectedEntry.net_weight} KG</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span>{language === 'english' ? 'Bill Quantity (Net÷Unit):' : 'பில் அளவு (நிகர÷யூனிட்):'}</span>
                 <span>{calculateQuantity().toFixed(2)} {selectedEntry.items?.unit}</span>
               </div>
               <div className="flex justify-between items-center text-sm">

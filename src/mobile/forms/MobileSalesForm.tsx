@@ -220,7 +220,7 @@ const MobileSalesForm: React.FC = () => {
               {selectedEntry && (
                 <div className="bg-muted p-3 rounded space-y-2">
                   <p className="text-xs font-semibold text-primary">
-                    {language === 'english' ? 'Calculation: (Net Weight ÷ Unit Weight) × Rate' : 'கணக்கீடு: (நிகர எடை ÷ யூனிட் எடை) × விலை'}
+                    {language === 'english' ? 'Note: Weights are in KG, Bill Quantity = Net Weight ÷ Unit Weight' : 'குறிப்பு: எடைகள் கிலோவில், பில் அளவு = நிகர எடை ÷ யூனிட் எடை'}
                   </p>
                   <p className="text-sm">
                     <strong>Net Weight:</strong> {selectedEntry.net_weight} KG
@@ -229,7 +229,7 @@ const MobileSalesForm: React.FC = () => {
                     <strong>Unit Weight:</strong> {(items.find((i: any) => i.id === selectedEntry.item_id) as any)?.unit_weight || 1} KG
                   </p>
                   <p className="text-sm">
-                    <strong>Calculated Quantity:</strong> {formData.quantity} Units
+                    <strong>Calculated Bill Quantity:</strong> {formData.quantity} Units
                   </p>
                   <p className="text-sm">
                     <strong>Lorry:</strong> {selectedEntry.lorry_no}

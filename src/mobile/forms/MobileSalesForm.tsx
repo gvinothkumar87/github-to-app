@@ -54,7 +54,7 @@ const MobileSalesForm: React.FC = () => {
           outward_entry_id: outwardEntryId,
           customer_id: entry.customer_id,
           item_id: entry.item_id,
-          quantity: entry.net_weight?.toString() || '',
+          quantity: '',  // Will be calculated in the next useEffect
         }));
       }
     }
@@ -72,11 +72,15 @@ const MobileSalesForm: React.FC = () => {
   }, [selectedEntry, items]);
 
   useEffect(() => {
-    if (formData.quantity && formData.rate) {
-      const totalAmount = parseFloat(formData.quantity) * parseFloat(formData.rate);
+    if (formData.quantity && formData.rate && selectedEntry) {
+      const baseAmount = parseFloat(formData.quantity) * parseFloat(formData.rate);
+      const item = items.find((i: any) => i.id === selectedEntry.item_id) as any;
+      const gstPercent = item?.gst_percentage || 0;
+      const gstAmount = baseAmount * (gstPercent / 100);
+      const totalAmount = baseAmount + gstAmount;
       setFormData(prev => ({ ...prev, total_amount: totalAmount.toFixed(2) }));
     }
-  }, [formData.quantity, formData.rate]);
+  }, [formData.quantity, formData.rate, selectedEntry, items]);
 
   // Get sales data for bill generation
   const { data: salesData } = useEnhancedOfflineData('offline_sales');

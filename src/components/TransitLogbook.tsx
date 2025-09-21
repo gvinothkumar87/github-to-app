@@ -483,7 +483,7 @@ export const TransitLogbook = () => {
                             {language === 'english' ? 'Empty Weight' : 'காலி எடை'}
                           </div>
                           <div className="font-medium">
-                            {entry.empty_weight} {entry.items?.unit}
+                            {entry.empty_weight} KG
                           </div>
                         </div>
                         <div className="text-center">
@@ -491,7 +491,7 @@ export const TransitLogbook = () => {
                             {language === 'english' ? 'Load Weight' : 'மொத்த எடை'}
                           </div>
                           <div className="font-medium">
-                            {entry.load_weight ? `${entry.load_weight} ${entry.items?.unit}` : '-'}
+                            {entry.load_weight ? `${entry.load_weight} KG` : '-'}
                           </div>
                         </div>
                       </div>
@@ -537,10 +537,10 @@ export const TransitLogbook = () => {
                              : (language === 'english' ? 'MATTAPARAI' : 'மட்டப்பாறை')}
                          </TableCell>
                          <TableCell className="font-mono">{entry.lorry_no}</TableCell>
-                         <TableCell>{entry.empty_weight} {entry.items?.unit}</TableCell>
-                         <TableCell>
-                           {entry.load_weight ? `${entry.load_weight} ${entry.items?.unit}` : '-'}
-                         </TableCell>
+                          <TableCell>{entry.empty_weight} KG</TableCell>
+                          <TableCell>
+                            {entry.load_weight ? `${entry.load_weight} KG` : '-'}
+                          </TableCell>
                          <TableCell>
                            <Badge variant={entry.is_completed ? 'default' : 'secondary'}>
                              {entry.is_completed 
@@ -712,7 +712,7 @@ export const TransitLogbook = () => {
                            <span className="font-medium">
                              {language === 'english' ? 'Empty Weight: ' : 'காலி எடை: '}
                            </span>
-                           {entry.empty_weight} {entry.items?.unit}
+                            {entry.empty_weight} KG
                          </div>
                        </div>
                       
@@ -790,7 +790,7 @@ export const TransitLogbook = () => {
                                : (language === 'english' ? 'MATTAPARAI' : 'மட்டப்பாறை')}
                            </TableCell>
                            <TableCell className="font-mono">{entry.lorry_no}</TableCell>
-                           <TableCell>{entry.empty_weight} {entry.items?.unit}</TableCell>
+                            <TableCell>{entry.empty_weight} KG</TableCell>
                           <TableCell>
                             <Input
                               type="number"
@@ -1060,7 +1060,7 @@ export const TransitLogbook = () => {
                                 {language === 'english' ? 'Empty' : 'காலி'}
                               </div>
                               <div className="font-medium">
-                                {entry.empty_weight} {entry.items?.unit}
+                                {entry.empty_weight} KG
                               </div>
                             </div>
                             <div className="text-center">
@@ -1068,7 +1068,7 @@ export const TransitLogbook = () => {
                                 {language === 'english' ? 'Load' : 'மொத்த'}
                               </div>
                               <div className="font-medium">
-                                {entry.load_weight || 0} {entry.items?.unit}
+                                {entry.load_weight || 0} KG
                               </div>
                             </div>
                             <div className="text-center">
@@ -1076,7 +1076,7 @@ export const TransitLogbook = () => {
                                 {language === 'english' ? 'Net' : 'நிகர'}
                               </div>
                               <div className="font-medium text-primary">
-                                {entry.load_weight ? (entry.load_weight - entry.empty_weight) : 0} {entry.items?.unit}
+                                {entry.load_weight ? (entry.load_weight - entry.empty_weight) : 0} KG
                               </div>
                             </div>
                           </div>
@@ -1118,11 +1118,11 @@ export const TransitLogbook = () => {
                              </TableCell>
                              <TableCell className="font-mono">{entry.lorry_no}</TableCell>
                              <TableCell className="font-mono">{entry.driver_mobile}</TableCell>
-                            <TableCell>{entry.empty_weight} {entry.items?.unit}</TableCell>
-                            <TableCell>{entry.load_weight || 0} {entry.items?.unit}</TableCell>
-                            <TableCell className="font-medium text-primary">
-                              {entry.load_weight ? (entry.load_weight - entry.empty_weight) : 0} {entry.items?.unit}
-                            </TableCell>
+                             <TableCell>{entry.empty_weight} KG</TableCell>
+                             <TableCell>{entry.load_weight || 0} KG</TableCell>
+                             <TableCell className="font-medium text-primary">
+                               {entry.load_weight ? (entry.load_weight - entry.empty_weight) : 0} KG
+                             </TableCell>
                             <TableCell>{entry.items?.unit}</TableCell>
                             <TableCell>{entry.remarks || '-'}</TableCell>
                           </TableRow>

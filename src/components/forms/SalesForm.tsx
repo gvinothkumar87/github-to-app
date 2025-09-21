@@ -37,7 +37,7 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
         .select(`
           *,
           customers (id, name_english, name_tamil, code, is_active, created_at, updated_at),
-          items (id, name_english, name_tamil, code, unit, gst_percentage, hsn_no, is_active, created_at, updated_at)
+          items (id, name_english, name_tamil, code, unit, unit_weight, gst_percentage, hsn_no, is_active, created_at, updated_at)
         `)
         .eq('is_completed', true)
         .order('created_at', { ascending: false });
@@ -247,7 +247,7 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
               <SelectContent>
                 {outwardEntries.map((entry) => (
                   <SelectItem key={entry.id} value={entry.id}>
-                    S.No: {entry.serial_no} - {getDisplayName(entry.customers!)} - {getDisplayName(entry.items!)} ({entry.net_weight} {entry.items?.unit})
+                    S.No: {entry.serial_no} - {getDisplayName(entry.customers!)} - {getDisplayName(entry.items!)} ({entry.net_weight} KG)
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -271,7 +271,7 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
                 </div>
                 <div>
                   <Label className="text-xs font-medium">{language === 'english' ? 'Unit Weight' : 'யூனிட் எடை'}:</Label>
-                  <p>{selectedEntry.items?.unit_weight} KG</p>
+                  <p>{selectedEntry.items?.unit_weight} KG per {selectedEntry.items?.unit}</p>
                 </div>
                 <div>
                   <Label className="text-xs font-medium">{language === 'english' ? 'Calculated Quantity' : 'கணக்கிடப்பட்ட அளவு'}:</Label>

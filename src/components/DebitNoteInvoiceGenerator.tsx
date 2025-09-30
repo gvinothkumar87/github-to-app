@@ -227,18 +227,18 @@ export const DebitNoteInvoiceGenerator = ({ debitNote, customer, item, onClose }
         {
           SlNo: '1',
           IsServc: 'N',
-          HsnCd: '1006',
+          HsnCd: item.hsn_no || '',
           Qty: 1,
-          Unit: 'NOS',
-          UnitPrice: currentNote.amount,
-          TotAmt: currentNote.amount,
+          Unit: item.unit || 'NOS',
+          UnitPrice: calculateGST(currentNote.amount, currentNote.gst_percentage).taxableAmount,
+          TotAmt: calculateGST(currentNote.amount, currentNote.gst_percentage).taxableAmount,
           Discount: 0,
-          PreTaxVal: currentNote.amount,
-          AssAmt: currentNote.amount,
-          GstRt: 0,
+          PreTaxVal: calculateGST(currentNote.amount, currentNote.gst_percentage).taxableAmount,
+          AssAmt: calculateGST(currentNote.amount, currentNote.gst_percentage).taxableAmount,
+          GstRt: currentNote.gst_percentage || 18,
           IgstAmt: 0,
-          CgstAmt: 0,
-          SgstAmt: 0,
+          CgstAmt: calculateGST(currentNote.amount, currentNote.gst_percentage).cgstAmount,
+          SgstAmt: calculateGST(currentNote.amount, currentNote.gst_percentage).sgstAmount,
           TotItemVal: currentNote.amount
         }
       ]

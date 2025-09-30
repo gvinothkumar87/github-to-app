@@ -373,8 +373,8 @@ export const CreditNoteInvoiceGenerator = ({ creditNote, customer, onClose }: Cr
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <p>Taxable Amount:</p>
-                      <p>CGST @ 9%:</p>
-                      <p>SGST @ 9%:</p>
+                      <p>CGST @ {((currentNote.gst_percentage || 18) / 2).toFixed(1)}%:</p>
+                      <p>SGST @ {((currentNote.gst_percentage || 18) / 2).toFixed(1)}%:</p>
                       <p>GST Amount:</p>
                     </div>
                     <div className="text-right">

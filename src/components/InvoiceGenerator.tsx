@@ -140,7 +140,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
         Addr1: customer.address_english || customer.address_tamil || buyerAddr1,
         Addr2: buyerAddr2,
         Loc: buyerLoc,
-        Pin: customer.pin_code ? parseInt(customer.pin_code) : null,
+        Pin: parseInt(buyerPinCode),
         Pos: customer.place_of_supply || customer.state_code || "33",
         Stcd: customer.state_code || "33",
         Ph: customer.phone && customer.phone.trim() !== "" ? customer.phone : null,
@@ -326,6 +326,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
                 <div class="customer-name">${getDisplayName(customer)}</div>
                 <div class="customer-details">
                   ${customer.address_english || customer.address_tamil || ''}<br>
+                  ${customer.pin_code ? `PIN: ${customer.pin_code}<br>` : ''}
                   ${customer.phone ? `Phone: ${customer.phone}<br>` : ''}
                   ${customer.gstin ? `GSTIN/UIN: ${customer.gstin}<br>` : ''}
                   State Name: Tamil Nadu, Code: 33
@@ -336,6 +337,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
                 <div class="customer-name">${getDisplayName(customer)}</div>
                 <div class="customer-details">
                   ${customer.address_english || customer.address_tamil || ''}<br>
+                  ${customer.pin_code ? `PIN: ${customer.pin_code}<br>` : ''}
                   ${customer.phone ? `Phone: ${customer.phone}<br>` : ''}
                   ${customer.gstin ? `GSTIN/UIN: ${customer.gstin}<br>` : ''}
                   State Name: Tamil Nadu, Code: 33
@@ -547,6 +549,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
                 {(customer.address_english || customer.address_tamil) && (
                   <p>{customer.address_english || customer.address_tamil}</p>
                 )}
+                {customer.pin_code && <p><strong>{language === 'english' ? 'PIN:' : 'பின்:'}</strong> {customer.pin_code}</p>}
                 {customer.phone && <p><strong>{language === 'english' ? 'Phone:' : 'தொலைபேசி:'}</strong> {customer.phone}</p>}
                 {customer.gstin && <p><strong>GSTIN:</strong> {customer.gstin}</p>}
               </div>

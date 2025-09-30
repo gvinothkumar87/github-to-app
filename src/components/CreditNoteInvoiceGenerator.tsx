@@ -15,7 +15,7 @@ interface CreditNote {
   amount: number;
   gst_percentage?: number;
   reason: string;
-  reference_bill_no: string | null;
+  reference_bill_no?: string | null;
   irn?: string | null;
   customer_id: string;
 }

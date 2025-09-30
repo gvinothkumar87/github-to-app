@@ -102,7 +102,12 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
     // Round amounts to 2 decimal places to avoid floating-point precision errors
     const roundedBaseAmount = Math.round(baseAmount * 100) / 100;
     const roundedGstAmount = Math.round(gstAmount * 100) / 100;
-    const roundedTotalAmount = Math.round(totalAmount * 100) / 100;
+    const roundedCgstAmount = Math.round((roundedGstAmount / 2) * 100) / 100;
+    const roundedSgstAmount = Math.round((roundedGstAmount / 2) * 100) / 100;
+    
+    // Calculate total to ensure exact match with components
+    const calculatedTotal = roundedBaseAmount + roundedCgstAmount + roundedSgstAmount;
+    const roundedTotalAmount = Math.round(calculatedTotal * 100) / 100;
 
     const eInvoiceData = {
       Version: "1.1",
@@ -144,8 +149,8 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
       ValDtls: {
         AssVal: roundedBaseAmount,
         IgstVal: 0,
-        CgstVal: Math.round((roundedGstAmount / 2) * 100) / 100,
-        SgstVal: Math.round((roundedGstAmount / 2) * 100) / 100,
+        CgstVal: roundedCgstAmount,
+        SgstVal: roundedSgstAmount,
         CesVal: 0,
         StCesVal: 0,
         Discount: 0,
@@ -172,8 +177,8 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
           AssAmt: roundedBaseAmount,
           GstRt: item.gst_percentage,
           IgstAmt: 0,
-          CgstAmt: Math.round((roundedGstAmount / 2) * 100) / 100,
-          SgstAmt: Math.round((roundedGstAmount / 2) * 100) / 100,
+          CgstAmt: roundedCgstAmount,
+          SgstAmt: roundedSgstAmount,
           CesRt: 0,
           CesAmt: 0,
           CesNonAdvlAmt: 0,

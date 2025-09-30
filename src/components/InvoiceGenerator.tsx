@@ -191,7 +191,10 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
       ]
     };
 
-    const blob = new Blob([JSON.stringify(eInvoiceData, null, 2)], { type: 'application/json' });
+    // Wrap the invoice in an array as required by NIC API
+    const eInvoiceArray = [eInvoiceData];
+
+    const blob = new Blob([JSON.stringify(eInvoiceArray, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

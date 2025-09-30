@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { BillsList } from '@/components/BillsList';
 import { EditSaleForm } from '@/components/forms/EditSaleForm';
 import { InvoiceGenerator } from '@/components/InvoiceGenerator';
+import { IrnInputDialog } from '@/components/IrnInputDialog';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { Sale, OutwardEntry, Customer, Item } from '@/types';
@@ -25,13 +26,42 @@ const Bills = () => {
     item: Item;
   } | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [showIrnDialog, setShowIrnDialog] = useState(false);
+  const [pendingPrintSale, setPendingPrintSale] = useState<{
+    sale: Sale;
+    outwardEntry: OutwardEntry;
+    customer: Customer;
+    item: Item;
+  } | null>(null);
 
   const handleEditSale = (sale: Sale, outwardEntry: OutwardEntry, customer: Customer, item: Item) => {
     setEditingSale({ sale, outwardEntry, customer, item });
   };
 
   const handlePrintSale = (sale: Sale, outwardEntry: OutwardEntry, customer: Customer, item: Item) => {
-    setPrintingSale({ sale, outwardEntry, customer, item });
+    // Check if sale already has IRN
+    if (sale.irn) {
+      setPrintingSale({ sale, outwardEntry, customer, item });
+    } else {
+      // Show IRN dialog first
+      setPendingPrintSale({ sale, outwardEntry, customer, item });
+      setShowIrnDialog(true);
+    }
+  };
+
+  const handleIrnSaved = (irn: string) => {
+    if (pendingPrintSale) {
+      // Update the sale with IRN and show invoice
+      const updatedSale = { ...pendingPrintSale.sale, irn };
+      setPrintingSale({ 
+        sale: updatedSale, 
+        outwardEntry: pendingPrintSale.outwardEntry, 
+        customer: pendingPrintSale.customer, 
+        item: pendingPrintSale.item 
+      });
+      setPendingPrintSale(null);
+      setRefreshKey(prev => prev + 1); // Refresh the list to show updated IRN
+    }
   };
 
   const handleEditSuccess = () => {
@@ -152,6 +182,14 @@ const Bills = () => {
           key={refreshKey}
           onEditSale={handleEditSale}
           onPrintSale={handlePrintSale}
+        />
+        
+        {/* IRN Input Dialog */}
+        <IrnInputDialog
+          open={showIrnDialog}
+          onOpenChange={setShowIrnDialog}
+          saleId={pendingPrintSale?.sale.id || ''}
+          onIrnSaved={handleIrnSaved}
         />
       </div>
     </div>

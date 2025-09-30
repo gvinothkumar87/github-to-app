@@ -207,6 +207,7 @@ export type Database = {
           customer_id: string
           gst_percentage: number | null
           id: string
+          item_id: string | null
           note_date: string
           note_no: string
           reason: string
@@ -220,6 +221,7 @@ export type Database = {
           customer_id: string
           gst_percentage?: number | null
           id?: string
+          item_id?: string | null
           note_date?: string
           note_no: string
           reason: string
@@ -233,6 +235,7 @@ export type Database = {
           customer_id?: string
           gst_percentage?: number | null
           id?: string
+          item_id?: string | null
           note_date?: string
           note_no?: string
           reason?: string
@@ -245,6 +248,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_notes_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
             referencedColumns: ["id"]
           },
         ]
@@ -406,6 +416,7 @@ export type Database = {
           customer_id: string
           gst_percentage: number | null
           id: string
+          item_id: string | null
           note_date: string
           note_no: string
           reason: string
@@ -419,6 +430,7 @@ export type Database = {
           customer_id: string
           gst_percentage?: number | null
           id?: string
+          item_id?: string | null
           note_date?: string
           note_no: string
           reason: string
@@ -432,6 +444,7 @@ export type Database = {
           customer_id?: string
           gst_percentage?: number | null
           id?: string
+          item_id?: string | null
           note_date?: string
           note_no?: string
           reason?: string
@@ -444,6 +457,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "debit_notes_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
             referencedColumns: ["id"]
           },
         ]

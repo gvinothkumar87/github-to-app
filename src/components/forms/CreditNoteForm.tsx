@@ -12,13 +12,15 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import type { Customer } from "@/types";
+import type { Customer, Item } from "@/types";
 import { CreditNoteInvoiceGenerator } from "@/components/CreditNoteInvoiceGenerator";
 
 const CreditNoteForm = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
   const [formData, setFormData] = useState({
     customer_id: '',
+    item_id: '',
     reference_bill_no: '',
     amount: '',
     gst_percentage: '18.00',
@@ -29,9 +31,11 @@ const CreditNoteForm = () => {
   const [showInvoice, setShowInvoice] = useState(false);
   const [createdNote, setCreatedNote] = useState<any>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
 
   useEffect(() => {
     fetchCustomers();
+    fetchItems();
   }, []);
 
   const fetchCustomers = async () => {
@@ -47,6 +51,21 @@ const CreditNoteForm = () => {
     }
 
     setCustomers(data || []);
+  };
+
+  const fetchItems = async () => {
+    const { data, error } = await supabase
+      .from('items')
+      .select('*')
+      .eq('is_active', true)
+      .order('name_english');
+
+    if (error) {
+      toast.error('Error fetching items');
+      return;
+    }
+
+    setItems(data || []);
   };
 
   const generateCreditNoteNo = async () => {
@@ -74,6 +93,7 @@ const CreditNoteForm = () => {
         .insert({
           note_no: noteNo,
           customer_id: formData.customer_id,
+          item_id: formData.item_id,
           reference_bill_no: formData.reference_bill_no || null,
           amount: parseFloat(formData.amount),
           gst_percentage: parseFloat(formData.gst_percentage),
@@ -93,6 +113,7 @@ const CreditNoteForm = () => {
       // Set created note and show invoice
       setCreatedNote(noteData);
       setSelectedCustomer(customers.find(c => c.id === formData.customer_id) || null);
+      setSelectedItem(items.find(i => i.id === formData.item_id) || null);
       setShowInvoice(true);
     } catch (error) {
       toast.error('Error creating credit note');
@@ -101,17 +122,20 @@ const CreditNoteForm = () => {
     }
   };
 
-  if (showInvoice && createdNote && selectedCustomer) {
+  if (showInvoice && createdNote && selectedCustomer && selectedItem) {
     return (
       <CreditNoteInvoiceGenerator
         creditNote={createdNote}
         customer={selectedCustomer}
+        item={selectedItem}
         onClose={() => {
           setShowInvoice(false);
           setCreatedNote(null);
           setSelectedCustomer(null);
+          setSelectedItem(null);
           setFormData({
             customer_id: '',
+            item_id: '',
             reference_bill_no: '',
             amount: '',
             gst_percentage: '18.00',
@@ -124,6 +148,7 @@ const CreditNoteForm = () => {
   }
 
   const currentSelectedCustomer = customers.find(c => c.id === formData.customer_id);
+  const currentSelectedItem = items.find(i => i.id === formData.item_id);
 
   return (
     <Card className="max-w-2xl mx-auto">
@@ -146,6 +171,26 @@ const CreditNoteForm = () => {
                 {customers.map((customer) => (
                   <SelectItem key={customer.id} value={customer.id}>
                     {customer.name_english} ({customer.code})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="item_id">Product/Item *</Label>
+            <Select
+              value={formData.item_id}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, item_id: value }))}
+              required
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Product/Item" />
+              </SelectTrigger>
+              <SelectContent>
+                {items.map((item) => (
+                  <SelectItem key={item.id} value={item.id}>
+                    {item.name_english} ({item.code}) - HSN: {item.hsn_no || 'N/A'}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -234,6 +279,16 @@ const CreditNoteForm = () => {
               {currentSelectedCustomer.contact_person && (
                 <p><strong>Contact:</strong> {currentSelectedCustomer.contact_person}</p>
               )}
+            </div>
+          )}
+
+          {currentSelectedItem && (
+            <div className="p-3 bg-muted rounded-lg">
+              <h4 className="font-medium mb-2">Product Details</h4>
+              <p><strong>Name:</strong> {currentSelectedItem.name_english}</p>
+              <p><strong>Code:</strong> {currentSelectedItem.code}</p>
+              <p><strong>HSN:</strong> {currentSelectedItem.hsn_no || 'N/A'}</p>
+              <p><strong>GST %:</strong> {currentSelectedItem.gst_percentage}%</p>
             </div>
           )}
 

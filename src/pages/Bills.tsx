@@ -12,6 +12,8 @@ import { LanguageToggle } from '@/components/LanguageToggle';
 import { Sale, OutwardEntry, Customer, Item, DebitNote, CreditNote } from '@/types';
 import { ArrowLeft, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const Bills = () => {
   const { language } = useLanguage();
@@ -48,11 +50,13 @@ const Bills = () => {
   const [printingDebitNote, setPrintingDebitNote] = useState<{
     debitNote: DebitNote;
     customer: Customer;
+    item: Item;
   } | null>(null);
   
   const [printingCreditNote, setPrintingCreditNote] = useState<{
     creditNote: CreditNote;
     customer: Customer;
+    item: Item;
   } | null>(null);
   
   const [refreshKey, setRefreshKey] = useState(0);
@@ -71,8 +75,39 @@ const Bills = () => {
     setEditingDebitNote({ debitNote, customer });
   };
 
-  const handlePrintDebitNote = (debitNote: DebitNote, customer: Customer) => {
-    setPrintingDebitNote({ debitNote, customer });
+  const handlePrintDebitNote = async (debitNote: DebitNote, customer: Customer) => {
+    // Fetch item details
+    if (debitNote.item_id) {
+      const { data: item, error } = await supabase
+        .from('items')
+        .select('*')
+        .eq('id', debitNote.item_id)
+        .single();
+      
+      if (!error && item) {
+        setPrintingDebitNote({ debitNote, customer, item });
+      } else {
+        toast.error('Error fetching item details');
+      }
+    } else {
+      // Fallback for old debit notes without item_id
+      const defaultItem: Item = {
+        id: '',
+        name_english: 'No Product',
+        name_tamil: undefined,
+        code: 'N/A',
+        unit: 'NOS',
+        unit_weight: 1,
+        hsn_no: '',
+        gst_percentage: 18,
+        description_english: undefined,
+        description_tamil: undefined,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      setPrintingDebitNote({ debitNote, customer, item: defaultItem });
+    }
   };
 
   // Credit note handlers
@@ -80,8 +115,39 @@ const Bills = () => {
     setEditingCreditNote({ creditNote, customer });
   };
 
-  const handlePrintCreditNote = (creditNote: CreditNote, customer: Customer) => {
-    setPrintingCreditNote({ creditNote, customer });
+  const handlePrintCreditNote = async (creditNote: CreditNote, customer: Customer) => {
+    // Fetch item details
+    if (creditNote.item_id) {
+      const { data: item, error } = await supabase
+        .from('items')
+        .select('*')
+        .eq('id', creditNote.item_id)
+        .single();
+      
+      if (!error && item) {
+        setPrintingCreditNote({ creditNote, customer, item });
+      } else {
+        toast.error('Error fetching item details');
+      }
+    } else {
+      // Fallback for old credit notes without item_id
+      const defaultItem: Item = {
+        id: '',
+        name_english: 'No Product',
+        name_tamil: undefined,
+        code: 'N/A',
+        unit: 'NOS',
+        unit_weight: 1,
+        hsn_no: '',
+        gst_percentage: 18,
+        description_english: undefined,
+        description_tamil: undefined,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      setPrintingCreditNote({ creditNote, customer, item: defaultItem });
+    }
   };
 
   // Success handlers
@@ -290,6 +356,7 @@ const Bills = () => {
           <DebitNoteInvoiceGenerator
             debitNote={printingDebitNote.debitNote}
             customer={printingDebitNote.customer}
+            item={printingDebitNote.item}
             onClose={handleClosePrint}
           />
         </div>
@@ -327,6 +394,7 @@ const Bills = () => {
           <CreditNoteInvoiceGenerator
             creditNote={printingCreditNote.creditNote}
             customer={printingCreditNote.customer}
+            item={printingCreditNote.item}
             onClose={handleClosePrint}
           />
         </div>

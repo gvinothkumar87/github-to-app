@@ -35,13 +35,24 @@ interface Customer {
   place_of_supply?: string;
 }
 
+interface Item {
+  id: string;
+  name_english: string;
+  name_tamil?: string;
+  code: string;
+  hsn_no?: string;
+  gst_percentage: number;
+  unit: string;
+}
+
 interface CreditNoteInvoiceGeneratorProps {
   creditNote: CreditNote;
   customer: Customer;
+  item: Item;
   onClose: () => void;
 }
 
-export const CreditNoteInvoiceGenerator = ({ creditNote, customer, onClose }: CreditNoteInvoiceGeneratorProps) => {
+export const CreditNoteInvoiceGenerator = ({ creditNote, customer, item, onClose }: CreditNoteInvoiceGeneratorProps) => {
   const { language } = useLanguage();
   const [companySettings, setCompanySettings] = useState<any>(null);
   const [showIrnDialog, setShowIrnDialog] = useState(false);
@@ -360,10 +371,12 @@ export const CreditNoteInvoiceGenerator = ({ creditNote, customer, onClose }: Cr
               </div>
             </div>
 
-            {/* Amount Details */}
+            {/* Item and Amount Details */}
             <div className="border rounded-lg p-4">
               <div className="space-y-4">
                 <div>
+                  <p><strong>Product:</strong> {item.name_english} ({item.code})</p>
+                  <p><strong>HSN Code:</strong> {item.hsn_no || 'N/A'}</p>
                   <p><strong>Reason:</strong> {currentNote.reason}</p>
                 </div>
                 <div className="border-t pt-4">

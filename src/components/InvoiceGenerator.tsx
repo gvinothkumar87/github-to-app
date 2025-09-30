@@ -137,14 +137,14 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
       BuyerDtls: {
         Gstin: customer.gstin && customer.gstin.trim() !== "" ? customer.gstin : null,
         LglNm: getDisplayName(customer),
-        Addr1: buyerAddr1,
+        Addr1: customer.address_english || customer.address_tamil || buyerAddr1,
         Addr2: buyerAddr2,
         Loc: buyerLoc,
-        Pin: parseInt(buyerPinCode),
+        Pin: parseInt(customer.pin_code || buyerPinCode),
         Pos: customer.place_of_supply || customer.state_code || "33",
         Stcd: customer.state_code || "33",
-        Ph: customer.phone || null,
-        Em: customer.email || null
+        Ph: customer.phone && customer.phone.trim() !== "" ? customer.phone : null,
+        Em: customer.email && customer.email.trim() !== "" ? customer.email : null
       },
       ValDtls: {
         AssVal: roundedBaseAmount,

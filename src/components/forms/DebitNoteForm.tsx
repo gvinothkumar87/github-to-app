@@ -191,7 +191,14 @@ const DebitNoteForm = () => {
             <Label htmlFor="item_id">Product/Item *</Label>
             <Select
               value={formData.item_id}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, item_id: value }))}
+              onValueChange={(value) => {
+                const selectedItem = items.find(item => item.id === value);
+                setFormData(prev => ({ 
+                  ...prev, 
+                  item_id: value,
+                  gst_percentage: selectedItem?.gst_percentage.toString() || '18.00'
+                }));
+              }}
               required
             >
               <SelectTrigger>
@@ -221,15 +228,16 @@ const DebitNoteForm = () => {
               />
             </div>
             <div>
-              <Label htmlFor="gst_percentage">GST Percentage *</Label>
+              <Label htmlFor="gst_percentage">GST Percentage (Auto-filled from Product)</Label>
               <Input
                 id="gst_percentage"
                 type="number"
                 step="0.01"
                 value={formData.gst_percentage}
                 onChange={(e) => setFormData(prev => ({ ...prev, gst_percentage: e.target.value }))}
-                placeholder="Enter GST percentage"
-                required
+                placeholder="GST percentage from product"
+                readOnly
+                className="bg-muted"
               />
             </div>
           </div>

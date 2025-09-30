@@ -346,12 +346,9 @@ export const CreditNoteInvoiceGenerator = ({ creditNote, customer, onClose }: Cr
               <div>
                 <h3 className="font-bold mb-2">Bill To:</h3>
                 <p><strong>{customer.name_english}</strong></p>
-                {customer.name_tamil && <p className="text-sm text-muted-foreground">{customer.name_tamil}</p>}
-                <p>Code: {customer.code}</p>
                 {customer.address_english && (
                   <div className="mt-2">
                     <p>{customer.address_english}</p>
-                    {customer.address_tamil && <p className="text-sm text-muted-foreground">{customer.address_tamil}</p>}
                   </div>
                 )}
                 {customer.pin_code && <p>PIN: {customer.pin_code}</p>}

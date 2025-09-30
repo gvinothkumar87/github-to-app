@@ -140,7 +140,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
         Addr1: customer.address_english || customer.address_tamil || buyerAddr1,
         Addr2: buyerAddr2,
         Loc: buyerLoc,
-        Pin: parseInt(customer.pin_code || buyerPinCode),
+        Pin: customer.pin_code ? parseInt(customer.pin_code) : null,
         Pos: customer.place_of_supply || customer.state_code || "33",
         Stcd: customer.state_code || "33",
         Ph: customer.phone && customer.phone.trim() !== "" ? customer.phone : null,

@@ -132,11 +132,11 @@ export const CreditNoteInvoiceGenerator = ({ creditNote, customer, onClose }: Cr
           Stcd: companySettings.state_code || '33'
         },
         BuyerDtls: {
-          Gstin: customer.gstin || '',
+          Gstin: customer.gstin || null,
           LglNm: customer.name_english,
-          Pos: customer.place_of_supply || '33',
-          Addr1: customer.address_english || '',
-          Pin: customer.pin_code || '',
+          Pos: customer.place_of_supply || customer.state_code || '33',
+          Addr1: customer.address_english || 'Address Not Available',
+          Pin: customer.pin_code || 'PIN Not Available',
           Stcd: customer.state_code || '33'
         },
         ValDtls: {
@@ -202,11 +202,11 @@ export const CreditNoteInvoiceGenerator = ({ creditNote, customer, onClose }: Cr
         Stcd: companySettings.state_code || '33'
       },
       BuyerDtls: {
-        Gstin: customer.gstin || '',
+        Gstin: customer.gstin || null,
         LglNm: customer.name_english,
-        Pos: customer.place_of_supply || '33',
-        Addr1: customer.address_english || '',
-        Pin: customer.pin_code || '',
+        Pos: customer.place_of_supply || customer.state_code || '33',
+        Addr1: customer.address_english || 'Address Not Available',
+        Pin: customer.pin_code || 'PIN Not Available',
         Stcd: customer.state_code || '33'
       },
       ValDtls: {

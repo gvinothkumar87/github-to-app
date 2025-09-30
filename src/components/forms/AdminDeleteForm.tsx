@@ -122,6 +122,32 @@ export const AdminDeleteForm: React.FC<AdminDeleteFormProps> = ({ onSuccess, onC
         if (salesError) throw new Error(`Error deleting sales: ${salesError.message}`);
       }
 
+      // Delete credit notes related to sales
+      if (entry.sales && entry.sales.length > 0) {
+        const billNos = entry.sales.map(s => s.bill_serial_no).filter(Boolean);
+        if (billNos.length > 0) {
+          const { error: creditNotesError } = await supabase
+            .from('credit_notes')
+            .delete()
+            .in('reference_bill_no', billNos);
+
+          if (creditNotesError) throw new Error(`Error deleting credit notes: ${creditNotesError.message}`);
+        }
+      }
+
+      // Delete debit notes related to sales
+      if (entry.sales && entry.sales.length > 0) {
+        const billNos = entry.sales.map(s => s.bill_serial_no).filter(Boolean);
+        if (billNos.length > 0) {
+          const { error: debitNotesError } = await supabase
+            .from('debit_notes')
+            .delete()
+            .in('reference_bill_no', billNos);
+
+          if (debitNotesError) throw new Error(`Error deleting debit notes: ${debitNotesError.message}`);
+        }
+      }
+
       // Delete the outward entry
       const { error: entryError } = await supabase
         .from('outward_entries')
@@ -133,8 +159,8 @@ export const AdminDeleteForm: React.FC<AdminDeleteFormProps> = ({ onSuccess, onC
       toast({
         title: language === 'english' ? 'Success' : 'வெற்றி',
         description: language === 'english' 
-          ? `Entry ${entry.serial_no} and all related records deleted successfully`
-          : `என்ட்ரி ${entry.serial_no} மற்றும் அனைத்து தொடர்புடைய பதிவுகளும் வெற்றிகரமாக நீக்கப்பட்டன`,
+          ? `Entry ${entry.serial_no} and all related records (including credit/debit notes) deleted successfully`
+          : `என்ட்ரி ${entry.serial_no} மற்றும் அனைத்து தொடர்புடைய பதிவுகளும் (கிரெடிட்/டெபிட் நோட்கள் உட்பட) வெற்றிகரமாக நீக்கப்பட்டன`,
       });
 
       fetchEntries();
@@ -290,8 +316,8 @@ export const AdminDeleteForm: React.FC<AdminDeleteFormProps> = ({ onSuccess, onC
                         </AlertDialogTitle>
                         <AlertDialogDescription>
                           {language === 'english' 
-                            ? `Are you sure you want to delete entry #${entry.serial_no}? This will also delete all related sales and ledger entries.`
-                            : `என்ட்ரி #${entry.serial_no} ஐ நீக்க நீங்கள் உறுதியாக இருக்கிறீர்களா? இது அனைத்து தொடர்புடைய விற்பனை மற்றும் லெட்ஜர் பதிவுகளையும் நீக்கும்.`}
+                            ? `Are you sure you want to delete entry #${entry.serial_no}? This will also delete all related sales, ledger entries, credit notes, and debit notes.`
+                            : `என்ட்ரி #${entry.serial_no} ஐ நீக்க நீங்கள் உறுதியாக இருக்கிறீர்களா? இது அனைத்து தொடர்புடைய விற்பனை, லெட்ஜர் பதிவுகள், கிரெடிட் நோட்கள் மற்றும் டெபிட் நோட்களையும் நீக்கும்.`}
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -401,15 +427,17 @@ export const AdminDeleteForm: React.FC<AdminDeleteFormProps> = ({ onSuccess, onC
                                   <p className="text-sm font-medium text-destructive">
                                     {language === 'english' ? 'This will also delete:' : 'இது பின்வருவனவற்றையும் நீக்கும்:'}
                                   </p>
-                                  <ul className="text-sm mt-2 space-y-1">
-                                    {entry.sales && entry.sales.length > 0 && (
-                                      <>
-                                        <li>• {entry.sales.length} {language === 'english' ? 'sales record(s)' : 'விற்பனை பதிவுகள்'}</li>
-                                        <li>• {language === 'english' ? 'Customer ledger entries' : 'வாடிக்கையாளர் லெட்ஜர் பதிவுகள்'}</li>
-                                      </>
-                                    )}
-                                    <li>• {language === 'english' ? 'All entry data permanently' : 'அனைத்து என்ட்ரி தரவும் நிரந்தரமாக'}</li>
-                                  </ul>
+                                   <ul className="text-sm mt-2 space-y-1">
+                                     {entry.sales && entry.sales.length > 0 && (
+                                       <>
+                                         <li>• {entry.sales.length} {language === 'english' ? 'sales record(s)' : 'விற்பனை பதிவுகள்'}</li>
+                                         <li>• {language === 'english' ? 'Customer ledger entries' : 'வாடிக்கையாளர் லெட்ஜர் பதிவுகள்'}</li>
+                                         <li>• {language === 'english' ? 'Related credit notes' : 'தொடர்புடைய கிரெடிட் நோட்கள்'}</li>
+                                         <li>• {language === 'english' ? 'Related debit notes' : 'தொடர்புடைய டெபிட் நோட்கள்'}</li>
+                                       </>
+                                     )}
+                                     <li>• {language === 'english' ? 'All entry data permanently' : 'அனைத்து என்ட்ரி தரவும் நிரந்தரமாக'}</li>
+                                   </ul>
                                 </div>
                               </AlertDialogDescription>
                             </AlertDialogHeader>

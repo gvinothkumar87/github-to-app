@@ -19,6 +19,8 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
   const [outwardEntries, setOutwardEntries] = useState<OutwardEntry[]>([]);
   const [selectedEntry, setSelectedEntry] = useState<OutwardEntry | null>(null);
   const [rate, setRate] = useState('');
+  const [saleDate, setSaleDate] = useState(new Date().toISOString().split('T')[0]);
+  const [billSerialNo, setBillSerialNo] = useState('');
   const [loading, setLoading] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
   const [createdSale, setCreatedSale] = useState<any>(null);
@@ -28,6 +30,15 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
   useEffect(() => {
     fetchCompletedEntries();
   }, []);
+
+  // Auto-generate bill serial when entry is selected
+  useEffect(() => {
+    if (selectedEntry && !billSerialNo) {
+      generateBillSerial(selectedEntry.loading_place).then(serial => {
+        setBillSerialNo(serial);
+      });
+    }
+  }, [selectedEntry]);
 
   const fetchCompletedEntries = async () => {
     try {
@@ -108,17 +119,27 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
         query = query.like('bill_serial_no', 'GRM%');
       }
       
-      const { data: existingBills } = await query.order('bill_serial_no', { ascending: false }).limit(1);
+      // Get all existing bills to find the highest number (not just the latest)
+      const { data: existingBills } = await query;
       
       let nextNumber = 1;
       if (existingBills && existingBills.length > 0) {
-        const lastSerial = existingBills[0].bill_serial_no;
-        if (loadingPlace === 'PULIVANTHI') {
-          const lastNumber = parseInt(lastSerial || '000');
-          nextNumber = lastNumber + 1;
-        } else if (loadingPlace === 'MATTAPARAI') {
-          const lastNumber = parseInt((lastSerial || 'GRM049').replace('GRM', ''));
-          nextNumber = Math.max(50, lastNumber + 1); // Start from 050
+        let maxNumber = 0;
+        
+        existingBills.forEach(bill => {
+          const serial = bill.bill_serial_no;
+          if (loadingPlace === 'PULIVANTHI') {
+            const num = parseInt(serial || '0');
+            maxNumber = Math.max(maxNumber, num);
+          } else if (loadingPlace === 'MATTAPARAI') {
+            const num = parseInt((serial || 'GRM0').replace('GRM', ''));
+            maxNumber = Math.max(maxNumber, num);
+          }
+        });
+        
+        nextNumber = maxNumber + 1;
+        if (loadingPlace === 'MATTAPARAI') {
+          nextNumber = Math.max(50, nextNumber); // Ensure GRM starts from 050
         }
       } else {
         // Set starting numbers for new series
@@ -150,8 +171,8 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
     setLoading(true);
 
     try {
-      // Generate bill serial number based on loading place
-      const billSerial = await generateBillSerial(selectedEntry.loading_place);
+      // Use provided bill serial or generate if empty
+      const finalBillSerial = billSerialNo || await generateBillSerial(selectedEntry.loading_place);
       
       // Create sale record
       const saleData = {
@@ -161,7 +182,8 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
         quantity: calculateQuantity(),
         rate: parseFloat(rate),
         total_amount: calculateTotalAmount(),
-        bill_serial_no: billSerial,
+        bill_serial_no: finalBillSerial,
+        sale_date: saleDate,
       };
 
       const { data: sale, error: saleError } = await supabase
@@ -179,7 +201,7 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
         reference_id: sale.id,
         debit_amount: calculateTotalAmount(),
         credit_amount: 0,
-        transaction_date: new Date().toISOString().split('T')[0],
+        transaction_date: saleDate,
         description: `Sale - ${getDisplayName(selectedEntry.items!)} (${selectedEntry.lorry_no})`,
       };
 
@@ -245,6 +267,7 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
             <Select onValueChange={(value) => {
               const entry = outwardEntries.find(e => e.id === value);
               setSelectedEntry(entry || null);
+              setBillSerialNo(''); // Reset bill serial to trigger auto-generation
             }}>
               <SelectTrigger>
                 <SelectValue placeholder={language === 'english' ? 'Choose entry...' : 'என்ட்ரியை தேர்ந்தெடுக்கவும்...'} />
@@ -297,6 +320,32 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
               </div>
             </div>
           )}
+
+          <div>
+            <Label htmlFor="sale-date">
+              {language === 'english' ? 'Sale Date' : 'விற்பனை தேதி'}
+            </Label>
+            <Input
+              id="sale-date"
+              type="date"
+              value={saleDate}
+              onChange={(e) => setSaleDate(e.target.value)}
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="bill-serial">
+              {language === 'english' ? 'Bill Serial Number' : 'பில் எண்'}
+            </Label>
+            <Input
+              id="bill-serial"
+              type="text"
+              value={billSerialNo}
+              onChange={(e) => setBillSerialNo(e.target.value)}
+              placeholder={language === 'english' ? 'Auto-generated' : 'தானாக உருவாக்கப்பட்டது'}
+            />
+          </div>
 
           <div>
             <Label htmlFor="rate">

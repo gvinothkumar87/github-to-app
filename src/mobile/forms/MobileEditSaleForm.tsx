@@ -16,6 +16,8 @@ export const MobileEditSaleForm = () => {
   const { toast } = useToast();
   const [rate, setRate] = useState('');
   const [irn, setIrn] = useState('');
+  const [billSerialNo, setBillSerialNo] = useState('');
+  const [saleDate, setSaleDate] = useState('');
   const [loading, setLoading] = useState(false);
   const [sale, setSale] = useState<any>(null);
 
@@ -32,6 +34,8 @@ export const MobileEditSaleForm = () => {
         setSale(foundSale);
         setRate((foundSale as any).rate.toString());
         setIrn((foundSale as any).irn || '');
+        setBillSerialNo((foundSale as any).bill_serial_no || '');
+        setSaleDate((foundSale as any).sale_date || new Date().toISOString().split('T')[0]);
       }
     }
   }, [saleId, sales]);
@@ -82,6 +86,8 @@ export const MobileEditSaleForm = () => {
         rate: newRate,
         total_amount: newTotalAmount,
         irn: irn || null,
+        bill_serial_no: billSerialNo,
+        sale_date: saleDate,
       });
 
       toast({
@@ -170,6 +176,33 @@ export const MobileEditSaleForm = () => {
                       <p className="font-medium">{(outwardEntry as any).lorry_no}</p>
                     </div>
                 </div>
+              </div>
+
+              <div>
+                <Label htmlFor="sale_date">
+                  {language === 'english' ? 'Sale Date' : 'விற்பனை தேதி'}
+                </Label>
+                <Input
+                  id="sale_date"
+                  type="date"
+                  value={saleDate}
+                  onChange={(e) => setSaleDate(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="bill_serial_no">
+                  {language === 'english' ? 'Bill Serial Number' : 'பில் எண்'}
+                </Label>
+                <Input
+                  id="bill_serial_no"
+                  type="text"
+                  value={billSerialNo}
+                  onChange={(e) => setBillSerialNo(e.target.value)}
+                  placeholder={language === 'english' ? 'Enter bill number...' : 'பில் எண்ணை உள்ளிடவும்...'}
+                  required
+                />
               </div>
 
               <div>

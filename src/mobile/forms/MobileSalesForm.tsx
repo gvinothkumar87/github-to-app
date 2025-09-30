@@ -98,7 +98,7 @@ const MobileSalesForm: React.FC = () => {
           sale.bill_serial_no && /^[0-9]{3}$/.test(sale.bill_serial_no)
         );
       } else if (loadingPlace === 'MATTAPARAI') {
-        // For MATTAPARAI, get GRM prefixed serials like GRM001, GRM002, GRM003
+        // For MATTAPARAI, get GRM prefixed serials like GRM050, GRM051, GRM052
         prefix = 'GRM';
         existingBills = sales.filter((sale: any) => 
           sale.bill_serial_no && sale.bill_serial_no.startsWith('GRM')
@@ -107,21 +107,26 @@ const MobileSalesForm: React.FC = () => {
       
       let nextNumber = 1;
       if (existingBills.length > 0) {
-        const sortedBills = existingBills.sort((a: any, b: any) => {
-          const aNum = loadingPlace === 'PULIVANTHI' 
-            ? parseInt(a.bill_serial_no || '0')
-            : parseInt((a.bill_serial_no || 'GRM0').replace('GRM', ''));
-          const bNum = loadingPlace === 'PULIVANTHI' 
-            ? parseInt(b.bill_serial_no || '0')
-            : parseInt((b.bill_serial_no || 'GRM0').replace('GRM', ''));
-          return bNum - aNum;
+        // Find the highest number (not the latest chronologically)
+        let maxNumber = 0;
+        existingBills.forEach((sale: any) => {
+          if (loadingPlace === 'PULIVANTHI') {
+            const num = parseInt(sale.bill_serial_no || '0');
+            maxNumber = Math.max(maxNumber, num);
+          } else {
+            const num = parseInt((sale.bill_serial_no || 'GRM0').replace('GRM', ''));
+            maxNumber = Math.max(maxNumber, num);
+          }
         });
         
-        const lastBill = sortedBills[0];
-        if (loadingPlace === 'PULIVANTHI') {
-          nextNumber = parseInt(lastBill.bill_serial_no || '0') + 1;
-        } else {
-          nextNumber = parseInt((lastBill.bill_serial_no || 'GRM0').replace('GRM', '')) + 1;
+        nextNumber = maxNumber + 1;
+        if (loadingPlace === 'MATTAPARAI') {
+          nextNumber = Math.max(50, nextNumber); // Ensure GRM starts from 050
+        }
+      } else {
+        // Set starting numbers for new series
+        if (loadingPlace === 'MATTAPARAI') {
+          nextNumber = 50; // Start GRM series from 050
         }
       }
       
@@ -129,7 +134,7 @@ const MobileSalesForm: React.FC = () => {
       return loadingPlace === 'PULIVANTHI' ? serialNumber : `${prefix}${serialNumber}`;
     } catch (error) {
       console.error('Error generating bill serial:', error);
-      return loadingPlace === 'PULIVANTHI' ? '001' : 'GRM001';
+      return loadingPlace === 'PULIVANTHI' ? '001' : 'GRM050';
     }
   };
 
@@ -283,20 +288,6 @@ const MobileSalesForm: React.FC = () => {
               </div>
               
               <div>
-                <Label htmlFor="bill_serial_no">
-                  {language === 'english' ? 'Bill Serial Number' : 'பில் எண்'}
-                </Label>
-                <Input
-                  id="bill_serial_no"
-                  value={formData.bill_serial_no}
-                  onChange={(e) => setFormData({ ...formData, bill_serial_no: e.target.value })}
-                  placeholder={language === 'english' ? 'Auto-generated' : 'தானாக உருவாக்கப்பட்டது'}
-                  className="bg-muted"
-                  readOnly
-                />
-              </div>
-              
-              <div>
                 <Label htmlFor="sale_date">
                   {language === 'english' ? 'Sale Date' : 'விற்பனை தேதி'} *
                 </Label>
@@ -306,6 +297,18 @@ const MobileSalesForm: React.FC = () => {
                   value={formData.sale_date}
                   onChange={(e) => setFormData({ ...formData, sale_date: e.target.value })}
                   required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="bill_serial_no">
+                  {language === 'english' ? 'Bill Serial Number' : 'பில் எண்'}
+                </Label>
+                <Input
+                  id="bill_serial_no"
+                  value={formData.bill_serial_no}
+                  onChange={(e) => setFormData({ ...formData, bill_serial_no: e.target.value })}
+                  placeholder={language === 'english' ? 'Auto-generated' : 'தானாக உருவாக்கப்பட்டது'}
                 />
               </div>
               

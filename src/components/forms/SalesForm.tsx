@@ -103,7 +103,7 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
         // For PULIVANTHI, get numeric serials like 001, 002, 003
         query = query.like('bill_serial_no', '[0-9][0-9][0-9]');
       } else if (loadingPlace === 'MATTAPARAI') {
-        // For MATTAPARAI, get GRM prefixed serials like GRM001, GRM002, GRM003
+        // For MATTAPARAI, get GRM prefixed serials like GRM050, GRM051, GRM052
         prefix = 'GRM';
         query = query.like('bill_serial_no', 'GRM%');
       }
@@ -117,8 +117,13 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
           const lastNumber = parseInt(lastSerial || '000');
           nextNumber = lastNumber + 1;
         } else if (loadingPlace === 'MATTAPARAI') {
-          const lastNumber = parseInt((lastSerial || 'GRM000').replace('GRM', ''));
-          nextNumber = lastNumber + 1;
+          const lastNumber = parseInt((lastSerial || 'GRM049').replace('GRM', ''));
+          nextNumber = Math.max(50, lastNumber + 1); // Start from 050
+        }
+      } else {
+        // Set starting numbers for new series
+        if (loadingPlace === 'MATTAPARAI') {
+          nextNumber = 50; // Start GRM series from 050
         }
       }
       
@@ -126,7 +131,7 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
       return loadingPlace === 'PULIVANTHI' ? serialNumber : `${prefix}${serialNumber}`;
     } catch (error) {
       console.error('Error generating bill serial:', error);
-      return loadingPlace === 'PULIVANTHI' ? '001' : 'GRM001';
+      return loadingPlace === 'PULIVANTHI' ? '001' : 'GRM050';
     }
   };
 

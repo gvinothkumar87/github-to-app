@@ -91,13 +91,18 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
     // Parse customer address
     const customerAddr = customer.address_english || customer.address_tamil || "";
     const customerAddrParts = customerAddr.split(',').map(part => part.trim());
-    const buyerAddr1 = customerAddrParts[0] || "";
+    const buyerAddr1 = customerAddrParts[0] || "ADDRESS NOT PROVIDED";
     const buyerAddr2 = customerAddrParts.slice(1, -1).join(',').trim() || "";
     const buyerLoc = customerAddrParts[customerAddrParts.length - 1]?.trim() || "VILLUPURAM";
     
     // Extract PIN code from customer address or use default
     const pinCodeMatch = customerAddr.match(/\b\d{6}\b/);
     const buyerPinCode = customer.pin_code || pinCodeMatch?.[0] || "605201";
+    
+    // Round amounts to 2 decimal places to avoid floating-point precision errors
+    const roundedBaseAmount = Math.round(baseAmount * 100) / 100;
+    const roundedGstAmount = Math.round(gstAmount * 100) / 100;
+    const roundedTotalAmount = Math.round(totalAmount * 100) / 100;
 
     const eInvoiceData = {
       Version: "1.1",
@@ -125,7 +130,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
         Em: companySettings.email || null
       },
       BuyerDtls: {
-        Gstin: customer.gstin || null,
+        Gstin: customer.gstin && customer.gstin.trim() !== "" ? customer.gstin : null,
         LglNm: getDisplayName(customer),
         Addr1: buyerAddr1,
         Addr2: buyerAddr2,
@@ -137,16 +142,16 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
         Em: customer.email || null
       },
       ValDtls: {
-        AssVal: baseAmount,
+        AssVal: roundedBaseAmount,
         IgstVal: 0,
-        CgstVal: gstAmount / 2,
-        SgstVal: gstAmount / 2,
+        CgstVal: Math.round((roundedGstAmount / 2) * 100) / 100,
+        SgstVal: Math.round((roundedGstAmount / 2) * 100) / 100,
         CesVal: 0,
         StCesVal: 0,
         Discount: 0,
         OthChrg: 0,
         RndOffAmt: 0,
-        TotInvVal: totalAmount
+        TotInvVal: roundedTotalAmount
       },
       RefDtls: {
         InvRm: "NICGEPP2.0"
@@ -160,15 +165,15 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
           Qty: sale.quantity,
           FreeQty: 0,
           Unit: item.unit,
-          UnitPrice: sale.rate,
-          TotAmt: baseAmount,
+          UnitPrice: Math.round(sale.rate * 100) / 100,
+          TotAmt: roundedBaseAmount,
           Discount: 0,
           PreTaxVal: 0,
-          AssAmt: baseAmount,
+          AssAmt: roundedBaseAmount,
           GstRt: item.gst_percentage,
           IgstAmt: 0,
-          CgstAmt: gstAmount / 2,
-          SgstAmt: gstAmount / 2,
+          CgstAmt: Math.round((roundedGstAmount / 2) * 100) / 100,
+          SgstAmt: Math.round((roundedGstAmount / 2) * 100) / 100,
           CesRt: 0,
           CesAmt: 0,
           CesNonAdvlAmt: 0,
@@ -176,7 +181,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
           StateCesAmt: 0,
           StateCesNonAdvlAmt: 0,
           OthChrg: 0,
-          TotItemVal: totalAmount
+          TotItemVal: roundedTotalAmount
         }
       ]
     };

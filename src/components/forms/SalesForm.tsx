@@ -21,7 +21,7 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
   const [rate, setRate] = useState('');
   const [saleDate, setSaleDate] = useState(new Date().toISOString().split('T')[0]);
   const [billSerialNo, setBillSerialNo] = useState('');
-  const [useSpecialSerial, setUseSpecialSerial] = useState(false);
+  const [useSpecialSerial, setUseSpecialSerial] = useState(true);
   const [loading, setLoading] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
   const [createdSale, setCreatedSale] = useState<any>(null);

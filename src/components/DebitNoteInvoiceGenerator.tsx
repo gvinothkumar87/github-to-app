@@ -59,33 +59,54 @@ export const DebitNoteInvoiceGenerator = ({ debitNote, customer, onClose }: Debi
 
   const fetchCompanySettings = async () => {
     try {
+      // Determine location based on reference bill number
+      const locationCode = currentNote.reference_bill_no?.toUpperCase().includes('PULIVANTHI') ? 'PULIVANTHI' : 'MATTAPARAI';
+      
       const { data, error } = await supabase
         .from('company_settings')
         .select('*')
         .eq('is_active', true)
+        .eq('location_code', locationCode)
         .single();
 
       if (error) {
         console.error('Error fetching company settings:', error);
-        setCompanySettings(getDefaultCompanyDetails());
+        setCompanySettings(getDefaultCompanyDetails(locationCode));
       } else {
         setCompanySettings(data);
       }
     } catch (error) {
       console.error('Error:', error);
-      setCompanySettings(getDefaultCompanyDetails());
+      setCompanySettings(getDefaultCompanyDetails('MATTAPARAI'));
     }
   };
 
-  const getDefaultCompanyDetails = () => ({
+  const getDefaultCompanyDetails = (locationCode = 'MATTAPARAI') => ({
     company_name: 'Sri Raghavendra Traders',
-    address_line1: 'No. 123, Main Street',
-    locality: 'Business Area',
-    pin_code: 600001,
-    gstin: '33XXXXX0000X1ZZ',
+    address_line1: locationCode === 'PULIVANTHI' ? 'No. 456, Pulivanthi Road' : 'No. 123, Mattaparai Street',
+    locality: locationCode === 'PULIVANTHI' ? 'Pulivanthi' : 'Mattaparai',
+    pin_code: locationCode === 'PULIVANTHI' ? 600002 : 600001,
+    gstin: locationCode === 'PULIVANTHI' ? '33XXXXX0000X2ZZ' : '33XXXXX0000X1ZZ',
     phone: '+91 9876543210',
-    email: 'info@company.com'
+    email: 'info@company.com',
+    location_code: locationCode
   });
+
+  const calculateGST = (amount: number) => {
+    const gstRate = 18; // 18% GST
+    const taxableAmount = amount / (1 + gstRate / 100);
+    const gstAmount = amount - taxableAmount;
+    const cgstAmount = gstAmount / 2;
+    const sgstAmount = gstAmount / 2;
+    
+    return {
+      taxableAmount: Number(taxableAmount.toFixed(2)),
+      gstAmount: Number(gstAmount.toFixed(2)),
+      cgstAmount: Number(cgstAmount.toFixed(2)),
+      sgstAmount: Number(sgstAmount.toFixed(2)),
+      totalAmount: amount
+    };
+  };
 
   const generateQRCode = async () => {
     try {
@@ -302,9 +323,11 @@ export const DebitNoteInvoiceGenerator = ({ debitNote, customer, onClose }: Debi
             <div className="text-center border-b pb-4">
               <h1 className="text-2xl font-bold">{companySettings.company_name}</h1>
               <p>{companySettings.address_line1}</p>
+              {companySettings.address_line2 && <p>{companySettings.address_line2}</p>}
               <p>{companySettings.locality}, {companySettings.pin_code}</p>
-              <p>GSTIN: {companySettings.gstin}</p>
+              <p><strong>GSTIN: {companySettings.gstin}</strong></p>
               <p>Phone: {companySettings.phone} | Email: {companySettings.email}</p>
+              <p className="text-sm font-semibold">({companySettings.location_code || 'MATTAPARAI'})</p>
             </div>
 
             {/* Debit Note Details */}
@@ -323,21 +346,50 @@ export const DebitNoteInvoiceGenerator = ({ debitNote, customer, onClose }: Debi
               <div>
                 <h3 className="font-bold mb-2">Bill To:</h3>
                 <p><strong>{customer.name_english}</strong></p>
+                {customer.name_tamil && <p className="text-sm text-muted-foreground">{customer.name_tamil}</p>}
                 <p>Code: {customer.code}</p>
-                {customer.address_english && <p>{customer.address_english}</p>}
-                {customer.gstin && <p>GSTIN: {customer.gstin}</p>}
+                {customer.address_english && (
+                  <div className="mt-2">
+                    <p>{customer.address_english}</p>
+                    {customer.address_tamil && <p className="text-sm text-muted-foreground">{customer.address_tamil}</p>}
+                  </div>
+                )}
+                {customer.pin_code && <p>PIN: {customer.pin_code}</p>}
+                {customer.state_code && <p>State Code: {customer.state_code}</p>}
+                {customer.place_of_supply && <p>Place of Supply: {customer.place_of_supply}</p>}
+                {customer.gstin && <p><strong>GSTIN: {customer.gstin}</strong></p>}
                 {customer.phone && <p>Phone: {customer.phone}</p>}
+                {customer.email && <p>Email: {customer.email}</p>}
               </div>
             </div>
 
             {/* Amount Details */}
             <div className="border rounded-lg p-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-4">
                 <div>
                   <p><strong>Reason:</strong> {currentNote.reason}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-xl font-bold">Amount: ₹{currentNote.amount.toFixed(2)}</p>
+                <div className="border-t pt-4">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p>Taxable Amount:</p>
+                      <p>CGST @ 9%:</p>
+                      <p>SGST @ 9%:</p>
+                      <p>GST Amount:</p>
+                    </div>
+                    <div className="text-right">
+                      <p>₹{calculateGST(currentNote.amount).taxableAmount.toFixed(2)}</p>
+                      <p>₹{calculateGST(currentNote.amount).cgstAmount.toFixed(2)}</p>
+                      <p>₹{calculateGST(currentNote.amount).sgstAmount.toFixed(2)}</p>
+                      <p>₹{calculateGST(currentNote.amount).gstAmount.toFixed(2)}</p>
+                    </div>
+                  </div>
+                  <div className="border-t mt-2 pt-2">
+                    <div className="grid grid-cols-2 gap-4 font-bold text-lg">
+                      <p>Total Amount:</p>
+                      <p className="text-right">₹{currentNote.amount.toFixed(2)}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

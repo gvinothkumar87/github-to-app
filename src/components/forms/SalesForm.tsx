@@ -9,7 +9,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { OutwardEntry } from '@/types';
 import { InvoiceGenerator } from '@/components/InvoiceGenerator';
-import { IrnInputDialog } from '@/components/IrnInputDialog';
 
 interface SalesFormProps {
   onSuccess: () => void;
@@ -24,7 +23,6 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
   const [billSerialNo, setBillSerialNo] = useState('');
   const [loading, setLoading] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
-  const [showIrnDialog, setShowIrnDialog] = useState(false);
   const [createdSale, setCreatedSale] = useState<any>(null);
   const { toast } = useToast();
   const { language, getDisplayName } = useLanguage();
@@ -218,9 +216,9 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
         description: language === 'english' ? 'Sale created successfully' : 'விற்பனை வெற்றிகரமாக உருவாக்கப்பட்டது',
       });
 
-      // Set created sale and show IRN dialog first
+      // Set created sale and show invoice
       setCreatedSale(sale);
-      setShowIrnDialog(true);
+      setShowInvoice(true);
       
     } catch (error: any) {
       toast({
@@ -233,20 +231,6 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
     }
   };
 
-  const handleIrnSaved = (irn: string) => {
-    // Update the created sale with IRN and show invoice
-    if (createdSale) {
-      setCreatedSale({ ...createdSale, irn });
-      setShowInvoice(true);
-    }
-  };
-
-  const handleInvoiceClose = () => {
-    setShowInvoice(false);
-    setCreatedSale(null);
-    onSuccess();
-  };
-
   if (showInvoice && createdSale && selectedEntry) {
     return (
       <InvoiceGenerator
@@ -254,7 +238,11 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
         outwardEntry={selectedEntry}
         customer={selectedEntry.customers!}
         item={selectedEntry.items!}
-        onClose={handleInvoiceClose}
+        onClose={() => {
+          setShowInvoice(false);
+          setCreatedSale(null);
+          onSuccess();
+        }}
       />
     );
   }
@@ -416,14 +404,6 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
           </div>
         </form>
       </CardContent>
-      
-      {/* IRN Input Dialog */}
-      <IrnInputDialog
-        open={showIrnDialog}
-        onOpenChange={setShowIrnDialog}
-        saleId={createdSale?.id || ''}
-        onIrnSaved={handleIrnSaved}
-      />
     </Card>
   );
 };

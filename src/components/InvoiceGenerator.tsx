@@ -5,6 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Download, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useState, useEffect } from 'react';
+import { IrnInputDialog } from '@/components/IrnInputDialog';
 import QRCode from 'qrcode';
 
 interface InvoiceGeneratorProps {
@@ -24,6 +25,8 @@ interface CompanyDetails {
 export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }: InvoiceGeneratorProps) => {
   const { language, getDisplayName } = useLanguage();
   const [companySettings, setCompanySettings] = useState<any>(null);
+  const [showIrnDialog, setShowIrnDialog] = useState(false);
+  const [currentSale, setCurrentSale] = useState(sale);
 
   useEffect(() => {
     const fetchCompanySettings = async () => {
@@ -78,7 +81,24 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
       };
     }
   };
-  const baseAmount = sale.quantity * sale.rate;
+
+  const handlePrintButtonClick = () => {
+    // Check if sale already has IRN
+    if (currentSale.irn) {
+      printInvoice();
+    } else {
+      // Show IRN dialog first
+      setShowIrnDialog(true);
+    }
+  };
+
+  const handleIrnSaved = (irn: string) => {
+    // Update the current sale with IRN and print
+    setCurrentSale({ ...currentSale, irn });
+    printInvoice();
+  };
+
+  const baseAmount = currentSale.quantity * currentSale.rate;
   const gstAmount = baseAmount * (item.gst_percentage / 100);
   const totalAmount = baseAmount + gstAmount;
 
@@ -120,7 +140,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
       },
       DocDtls: {
         Typ: "INV",
-        No: sale.bill_serial_no,
+        No: currentSale.bill_serial_no,
         Dt: new Date().toISOString().split('T')[0].split('-').reverse().join('/')
       },
       SellerDtls: {
@@ -198,7 +218,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `einvoice_${sale.bill_serial_no}.json`;
+    a.download = `einvoice_${currentSale.bill_serial_no}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -208,9 +228,9 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
   const printInvoice = async () => {
     // Generate QR code if IRN exists
     let qrCodeDataUrl = '';
-    if (sale.irn) {
+    if (currentSale.irn) {
       try {
-        qrCodeDataUrl = await QRCode.toDataURL(sale.irn, {
+        qrCodeDataUrl = await QRCode.toDataURL(currentSale.irn, {
           width: 120,
           margin: 1,
           color: {
@@ -306,7 +326,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
               <div class="invoice-info-section">
                 <div style="padding: 8px; border-bottom: 1px solid #000;">
                   <div style="font-weight: bold; font-size: 8px;">Invoice No.</div>
-                  <div style="font-size: 9px; margin-top: 2px;">${sale.bill_serial_no}</div>
+                  <div style="font-size: 9px; margin-top: 2px;">${currentSale.bill_serial_no}</div>
                 </div>
                 <div style="padding: 8px; border-bottom: 1px solid #000;">
                   <div style="font-weight: bold; font-size: 8px;">Dated</div>
@@ -613,7 +633,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
 
           {/* Actions */}
           <div className="flex gap-2">
-            <Button onClick={printInvoice} className="flex items-center gap-2">
+            <Button onClick={handlePrintButtonClick} className="flex items-center gap-2">
               <Download className="h-4 w-4" />
               {language === 'english' ? 'Print Invoice' : 'இன்வாய்ஸ் அச்சிடவும்'}
             </Button>
@@ -627,6 +647,14 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
           </div>
         </div>
       </CardContent>
+      
+      {/* IRN Input Dialog */}
+      <IrnInputDialog
+        open={showIrnDialog}
+        onOpenChange={setShowIrnDialog}
+        saleId={currentSale.id}
+        onIrnSaved={handleIrnSaved}
+      />
     </Card>
   );
 };

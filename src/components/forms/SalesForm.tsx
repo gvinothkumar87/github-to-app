@@ -21,6 +21,7 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
   const [rate, setRate] = useState('');
   const [saleDate, setSaleDate] = useState(new Date().toISOString().split('T')[0]);
   const [billSerialNo, setBillSerialNo] = useState('');
+  const [useSpecialSerial, setUseSpecialSerial] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
   const [createdSale, setCreatedSale] = useState<any>(null);
@@ -31,14 +32,20 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
     fetchCompletedEntries();
   }, []);
 
-  // Auto-generate bill serial when entry is selected
+  // Auto-generate bill serial when entry is selected or special serial checkbox changes
   useEffect(() => {
     if (selectedEntry && !billSerialNo) {
-      generateBillSerial(selectedEntry.loading_place).then(serial => {
-        setBillSerialNo(serial);
-      });
+      if (useSpecialSerial) {
+        generateSpecialSerial().then(serial => {
+          setBillSerialNo(serial);
+        });
+      } else {
+        generateBillSerial(selectedEntry.loading_place).then(serial => {
+          setBillSerialNo(serial);
+        });
+      }
     }
-  }, [selectedEntry]);
+  }, [selectedEntry, useSpecialSerial]);
 
   const fetchCompletedEntries = async () => {
     try {
@@ -103,6 +110,35 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
     const baseAmount = getBaseAmount();
     const gstPercent = selectedEntry?.items?.gst_percentage || 0;
     return baseAmount * (gstPercent / 100);
+  };
+
+  const generateSpecialSerial = async () => {
+    try {
+      // For special serial, get D prefixed serials like D001, D002, D003
+      const { data: existingBills } = await supabase
+        .from('sales')
+        .select('bill_serial_no')
+        .like('bill_serial_no', 'D%');
+      
+      let nextNumber = 1;
+      if (existingBills && existingBills.length > 0) {
+        let maxNumber = 0;
+        
+        existingBills.forEach(bill => {
+          const serial = bill.bill_serial_no;
+          const num = parseInt((serial || 'D0').replace('D', ''));
+          maxNumber = Math.max(maxNumber, num);
+        });
+        
+        nextNumber = maxNumber + 1;
+      }
+      
+      const serialNumber = nextNumber.toString().padStart(3, '0');
+      return `D${serialNumber}`;
+    } catch (error) {
+      console.error('Error generating special serial:', error);
+      return 'D001';
+    }
   };
 
   const generateBillSerial = async (loadingPlace: string) => {
@@ -172,7 +208,9 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
 
     try {
       // Use provided bill serial or generate if empty
-      const finalBillSerial = billSerialNo || await generateBillSerial(selectedEntry.loading_place);
+      const finalBillSerial = billSerialNo || (useSpecialSerial 
+        ? await generateSpecialSerial() 
+        : await generateBillSerial(selectedEntry.loading_place));
       
       // Create sale record
       const saleData = {
@@ -268,6 +306,7 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
               const entry = outwardEntries.find(e => e.id === value);
               setSelectedEntry(entry || null);
               setBillSerialNo(''); // Reset bill serial to trigger auto-generation
+              setUseSpecialSerial(false); // Reset special serial checkbox
             }}>
               <SelectTrigger>
                 <SelectValue placeholder={language === 'english' ? 'Choose entry...' : 'என்ட்ரியை தேர்ந்தெடுக்கவும்...'} />
@@ -332,6 +371,22 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
               onChange={(e) => setSaleDate(e.target.value)}
               required
             />
+          </div>
+
+          <div>
+            <Label htmlFor="use-special-serial" className="flex items-center gap-2 cursor-pointer">
+              <input
+                id="use-special-serial"
+                type="checkbox"
+                checked={useSpecialSerial}
+                onChange={(e) => {
+                  setUseSpecialSerial(e.target.checked);
+                  setBillSerialNo(''); // Reset to trigger auto-generation
+                }}
+                className="rounded border-gray-300"
+              />
+              {language === 'english' ? 'Use Special Serial (D001)' : 'சிறப்பு எண் பயன்படுத்தவும் (D001)'}
+            </Label>
           </div>
 
           <div>

@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Customer } from "@/types";
+import { CreditNoteInvoiceGenerator } from "@/components/CreditNoteInvoiceGenerator";
 
 const CreditNoteForm = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -24,6 +25,9 @@ const CreditNoteForm = () => {
     note_date: new Date(),
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [showInvoice, setShowInvoice] = useState(false);
+  const [createdNote, setCreatedNote] = useState<any>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
   useEffect(() => {
     fetchCustomers();
@@ -64,7 +68,7 @@ const CreditNoteForm = () => {
         return;
       }
 
-      const { error } = await supabase
+      const { data: noteData, error } = await supabase
         .from('credit_notes')
         .insert({
           note_no: noteNo,
@@ -73,7 +77,9 @@ const CreditNoteForm = () => {
           amount: parseFloat(formData.amount),
           reason: formData.reason,
           note_date: format(formData.note_date, 'yyyy-MM-dd'),
-        });
+        })
+        .select()
+        .single();
 
       if (error) {
         toast.error('Error creating credit note');
@@ -81,13 +87,11 @@ const CreditNoteForm = () => {
       }
 
       toast.success(`Credit Note ${noteNo} created successfully`);
-      setFormData({
-        customer_id: '',
-        reference_bill_no: '',
-        amount: '',
-        reason: '',
-        note_date: new Date(),
-      });
+      
+      // Set created note and show invoice
+      setCreatedNote(noteData);
+      setSelectedCustomer(customers.find(c => c.id === formData.customer_id) || null);
+      setShowInvoice(true);
     } catch (error) {
       toast.error('Error creating credit note');
     } finally {
@@ -95,7 +99,28 @@ const CreditNoteForm = () => {
     }
   };
 
-  const selectedCustomer = customers.find(c => c.id === formData.customer_id);
+  if (showInvoice && createdNote && selectedCustomer) {
+    return (
+      <CreditNoteInvoiceGenerator
+        creditNote={createdNote}
+        customer={selectedCustomer}
+        onClose={() => {
+          setShowInvoice(false);
+          setCreatedNote(null);
+          setSelectedCustomer(null);
+          setFormData({
+            customer_id: '',
+            reference_bill_no: '',
+            amount: '',
+            reason: '',
+            note_date: new Date(),
+          });
+        }}
+      />
+    );
+  }
+
+  const currentSelectedCustomer = customers.find(c => c.id === formData.customer_id);
 
   return (
     <Card className="max-w-2xl mx-auto">
@@ -184,13 +209,13 @@ const CreditNoteForm = () => {
             </Popover>
           </div>
 
-          {selectedCustomer && (
+          {currentSelectedCustomer && (
             <div className="p-3 bg-muted rounded-lg">
               <h4 className="font-medium mb-2">Customer Details</h4>
-              <p><strong>Name:</strong> {selectedCustomer.name_english}</p>
-              <p><strong>Code:</strong> {selectedCustomer.code}</p>
-              {selectedCustomer.contact_person && (
-                <p><strong>Contact:</strong> {selectedCustomer.contact_person}</p>
+              <p><strong>Name:</strong> {currentSelectedCustomer.name_english}</p>
+              <p><strong>Code:</strong> {currentSelectedCustomer.code}</p>
+              {currentSelectedCustomer.contact_person && (
+                <p><strong>Contact:</strong> {currentSelectedCustomer.contact_person}</p>
               )}
             </div>
           )}

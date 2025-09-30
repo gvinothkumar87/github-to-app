@@ -12,9 +12,10 @@ interface IrnInputDialogProps {
   onOpenChange: (open: boolean) => void;
   saleId: string;
   onIrnSaved: (irn: string) => void;
+  tableType?: 'sales' | 'credit_notes' | 'debit_notes';
 }
 
-export const IrnInputDialog = ({ open, onOpenChange, saleId, onIrnSaved }: IrnInputDialogProps) => {
+export const IrnInputDialog = ({ open, onOpenChange, saleId, onIrnSaved, tableType = 'sales' }: IrnInputDialogProps) => {
   const [irn, setIrn] = useState('');
   const [loading, setLoading] = useState(false);
   const { language } = useLanguage();
@@ -33,7 +34,7 @@ export const IrnInputDialog = ({ open, onOpenChange, saleId, onIrnSaved }: IrnIn
     setLoading(true);
     try {
       const { error } = await supabase
-        .from('sales')
+        .from(tableType)
         .update({ irn: irn.trim() })
         .eq('id', saleId);
 

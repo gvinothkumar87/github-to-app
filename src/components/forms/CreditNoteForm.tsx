@@ -21,6 +21,7 @@ const CreditNoteForm = () => {
     customer_id: '',
     reference_bill_no: '',
     amount: '',
+    gst_percentage: '18.00',
     reason: '',
     note_date: new Date(),
   });
@@ -75,6 +76,7 @@ const CreditNoteForm = () => {
           customer_id: formData.customer_id,
           reference_bill_no: formData.reference_bill_no || null,
           amount: parseFloat(formData.amount),
+          gst_percentage: parseFloat(formData.gst_percentage),
           reason: formData.reason,
           note_date: format(formData.note_date, 'yyyy-MM-dd'),
         })
@@ -112,6 +114,7 @@ const CreditNoteForm = () => {
             customer_id: '',
             reference_bill_no: '',
             amount: '',
+            gst_percentage: '18.00',
             reason: '',
             note_date: new Date(),
           });
@@ -159,17 +162,31 @@ const CreditNoteForm = () => {
             />
           </div>
 
-          <div>
-            <Label htmlFor="amount">Amount *</Label>
-            <Input
-              id="amount"
-              type="number"
-              step="0.01"
-              value={formData.amount}
-              onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
-              placeholder="Enter amount"
-              required
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="amount">Amount *</Label>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                value={formData.amount}
+                onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                placeholder="Enter amount"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="gst_percentage">GST Percentage *</Label>
+              <Input
+                id="gst_percentage"
+                type="number"
+                step="0.01"
+                value={formData.gst_percentage}
+                onChange={(e) => setFormData(prev => ({ ...prev, gst_percentage: e.target.value }))}
+                placeholder="Enter GST percentage"
+                required
+              />
+            </div>
           </div>
 
           <div>

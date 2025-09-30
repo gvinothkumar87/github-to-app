@@ -13,6 +13,7 @@ interface DebitNote {
   note_no: string;
   note_date: string;
   amount: number;
+  gst_percentage?: number;
   reason: string;
   reference_bill_no: string | null;
   irn?: string | null;
@@ -92,9 +93,8 @@ export const DebitNoteInvoiceGenerator = ({ debitNote, customer, onClose }: Debi
     location_code: locationCode
   });
 
-  const calculateGST = (amount: number) => {
-    const gstRate = 18; // 18% GST
-    const taxableAmount = amount / (1 + gstRate / 100);
+  const calculateGST = (amount: number, gstPercentage: number = 18) => {
+    const taxableAmount = amount / (1 + gstPercentage / 100);
     const gstAmount = amount - taxableAmount;
     const cgstAmount = gstAmount / 2;
     const sgstAmount = gstAmount / 2;
@@ -378,10 +378,10 @@ export const DebitNoteInvoiceGenerator = ({ debitNote, customer, onClose }: Debi
                       <p>GST Amount:</p>
                     </div>
                     <div className="text-right">
-                      <p>₹{calculateGST(currentNote.amount).taxableAmount.toFixed(2)}</p>
-                      <p>₹{calculateGST(currentNote.amount).cgstAmount.toFixed(2)}</p>
-                      <p>₹{calculateGST(currentNote.amount).sgstAmount.toFixed(2)}</p>
-                      <p>₹{calculateGST(currentNote.amount).gstAmount.toFixed(2)}</p>
+                      <p>₹{calculateGST(currentNote.amount, currentNote.gst_percentage).taxableAmount.toFixed(2)}</p>
+                      <p>₹{calculateGST(currentNote.amount, currentNote.gst_percentage).cgstAmount.toFixed(2)}</p>
+                      <p>₹{calculateGST(currentNote.amount, currentNote.gst_percentage).sgstAmount.toFixed(2)}</p>
+                      <p>₹{calculateGST(currentNote.amount, currentNote.gst_percentage).gstAmount.toFixed(2)}</p>
                     </div>
                   </div>
                   <div className="border-t mt-2 pt-2">

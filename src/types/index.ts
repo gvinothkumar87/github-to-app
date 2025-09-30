@@ -109,6 +109,7 @@ export interface DebitNote {
   customer_id: string;
   reference_bill_no?: string;
   amount: number;
+  gst_percentage?: number;
   reason: string;
   note_date: string;
   created_by?: string;
@@ -123,6 +124,7 @@ export interface CreditNote {
   customer_id: string;
   reference_bill_no?: string;
   amount: number;
+  gst_percentage?: number;
   reason: string;
   note_date: string;
   created_by?: string;

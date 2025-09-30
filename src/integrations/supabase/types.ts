@@ -205,6 +205,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           customer_id: string
+          gst_percentage: number | null
           id: string
           note_date: string
           note_no: string
@@ -217,6 +218,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           customer_id: string
+          gst_percentage?: number | null
           id?: string
           note_date?: string
           note_no: string
@@ -229,6 +231,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           customer_id?: string
+          gst_percentage?: number | null
           id?: string
           note_date?: string
           note_no?: string
@@ -393,6 +396,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           customer_id: string
+          gst_percentage: number | null
           id: string
           note_date: string
           note_no: string
@@ -405,6 +409,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           customer_id: string
+          gst_percentage?: number | null
           id?: string
           note_date?: string
           note_no: string
@@ -417,6 +422,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           customer_id?: string
+          gst_percentage?: number | null
           id?: string
           note_date?: string
           note_no?: string
@@ -766,6 +772,465 @@ export type Database = {
           },
         ]
       }
+      rice_form_submissions: {
+        Row: {
+          bags: number | null
+          date: string | null
+          driver: string | null
+          email: string | null
+          grade: string | null
+          id: number
+          lorry_no: string | null
+          serial_no: number | null
+          timestamp: string
+          token: string | null
+          token_link: string | null
+          wayment_link: string | null
+          wayment_nett_weight: number | null
+        }
+        Insert: {
+          bags?: number | null
+          date?: string | null
+          driver?: string | null
+          email?: string | null
+          grade?: string | null
+          id?: never
+          lorry_no?: string | null
+          serial_no?: number | null
+          timestamp: string
+          token?: string | null
+          token_link?: string | null
+          wayment_link?: string | null
+          wayment_nett_weight?: number | null
+        }
+        Update: {
+          bags?: number | null
+          date?: string | null
+          driver?: string | null
+          email?: string | null
+          grade?: string | null
+          id?: never
+          lorry_no?: string | null
+          serial_no?: number | null
+          timestamp?: string
+          token?: string | null
+          token_link?: string | null
+          wayment_link?: string | null
+          wayment_nett_weight?: number | null
+        }
+        Relationships: []
+      }
+      rice_mill_batches: {
+        Row: {
+          batch_no: string
+          created_at: string
+          current_location: string
+          current_location_type: string
+          current_weight: number
+          grade: string
+          id: string
+          initial_weight: number
+          inward_entry_id: string | null
+          mill: string
+          thotti_no: string | null
+          updated_at: string
+        }
+        Insert: {
+          batch_no: string
+          created_at?: string
+          current_location: string
+          current_location_type: string
+          current_weight: number
+          grade: string
+          id?: string
+          initial_weight: number
+          inward_entry_id?: string | null
+          mill?: string
+          thotti_no?: string | null
+          updated_at?: string
+        }
+        Update: {
+          batch_no?: string
+          created_at?: string
+          current_location?: string
+          current_location_type?: string
+          current_weight?: number
+          grade?: string
+          id?: string
+          initial_weight?: number
+          inward_entry_id?: string | null
+          mill?: string
+          thotti_no?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rice_mill_batches_inward_entry_id_fkey"
+            columns: ["inward_entry_id"]
+            isOneToOne: false
+            referencedRelation: "rice_mill_inward_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rice_mill_container_contents: {
+        Row: {
+          batch_id: string
+          created_at: string
+          expected_completion_time: string | null
+          grade: string
+          id: string
+          location: string
+          location_type: string
+          mill: string
+          process_start_time: string | null
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          expected_completion_time?: string | null
+          grade: string
+          id?: string
+          location: string
+          location_type: string
+          mill: string
+          process_start_time?: string | null
+          updated_at?: string
+          weight: number
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          expected_completion_time?: string | null
+          grade?: string
+          id?: string
+          location?: string
+          location_type?: string
+          mill?: string
+          process_start_time?: string | null
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rice_mill_container_contents_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "rice_mill_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rice_mill_container_state_history: {
+        Row: {
+          batch_ids_after: Json | null
+          batch_ids_before: Json | null
+          created_at: string
+          id: string
+          location: string
+          location_type: string
+          mill: string
+          operation_timestamp: string
+          operation_type: string
+          related_transfer_id: string | null
+          weight_after: number
+          weight_before: number
+        }
+        Insert: {
+          batch_ids_after?: Json | null
+          batch_ids_before?: Json | null
+          created_at?: string
+          id?: string
+          location: string
+          location_type: string
+          mill: string
+          operation_timestamp?: string
+          operation_type: string
+          related_transfer_id?: string | null
+          weight_after?: number
+          weight_before?: number
+        }
+        Update: {
+          batch_ids_after?: Json | null
+          batch_ids_before?: Json | null
+          created_at?: string
+          id?: string
+          location?: string
+          location_type?: string
+          mill?: string
+          operation_timestamp?: string
+          operation_type?: string
+          related_transfer_id?: string | null
+          weight_after?: number
+          weight_before?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rice_mill_container_state_history_related_transfer_id_fkey"
+            columns: ["related_transfer_id"]
+            isOneToOne: false
+            referencedRelation: "rice_mill_transfers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rice_mill_global_variables: {
+        Row: {
+          category: string
+          created_at: string
+          display_text: string
+          distance: number | null
+          http_link_1: string | null
+          http_link_1_description: string | null
+          http_link_2: string | null
+          http_link_2_description: string | null
+          id: string
+          is_active: boolean
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          display_text: string
+          distance?: number | null
+          http_link_1?: string | null
+          http_link_1_description?: string | null
+          http_link_2?: string | null
+          http_link_2_description?: string | null
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          display_text?: string
+          distance?: number | null
+          http_link_1?: string | null
+          http_link_1_description?: string | null
+          http_link_2?: string | null
+          http_link_2_description?: string | null
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
+      rice_mill_inward_entries: {
+        Row: {
+          bags: number
+          challan_photo_url: string | null
+          created_at: string
+          driver: string
+          entry_date: string
+          grade: string
+          id: string
+          is_unloaded: boolean
+          lorry_number: string
+          mill: string
+          serial_no: string
+          token_id: string | null
+          updated_at: string
+          wayment_photo_url: string | null
+          wayment_weight: number
+        }
+        Insert: {
+          bags: number
+          challan_photo_url?: string | null
+          created_at?: string
+          driver: string
+          entry_date?: string
+          grade: string
+          id?: string
+          is_unloaded?: boolean
+          lorry_number: string
+          mill?: string
+          serial_no: string
+          token_id?: string | null
+          updated_at?: string
+          wayment_photo_url?: string | null
+          wayment_weight: number
+        }
+        Update: {
+          bags?: number
+          challan_photo_url?: string | null
+          created_at?: string
+          driver?: string
+          entry_date?: string
+          grade?: string
+          id?: string
+          is_unloaded?: boolean
+          lorry_number?: string
+          mill?: string
+          serial_no?: string
+          token_id?: string | null
+          updated_at?: string
+          wayment_photo_url?: string | null
+          wayment_weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rice_mill_inward_entries_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "rice_mill_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rice_mill_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          is_used: boolean
+          loading_point: string
+          lorry: string
+          serial_no: string
+          token_value: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_used?: boolean
+          loading_point: string
+          lorry: string
+          serial_no: string
+          token_value: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_used?: boolean
+          loading_point?: string
+          lorry?: string
+          serial_no?: string
+          token_value?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      rice_mill_transfers: {
+        Row: {
+          batch_id: string
+          created_at: string
+          expected_duration_minutes: number | null
+          from_location: string
+          from_location_type: string
+          id: string
+          is_overdue: boolean | null
+          notes: string | null
+          process_duration_minutes: number | null
+          process_end_time: string | null
+          process_start_time: string | null
+          status: string | null
+          thotti_no: string | null
+          to_location: string
+          to_location_type: string
+          transfer_date: string
+          transferred_by: string | null
+          weight_transferred: number
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          expected_duration_minutes?: number | null
+          from_location: string
+          from_location_type: string
+          id?: string
+          is_overdue?: boolean | null
+          notes?: string | null
+          process_duration_minutes?: number | null
+          process_end_time?: string | null
+          process_start_time?: string | null
+          status?: string | null
+          thotti_no?: string | null
+          to_location: string
+          to_location_type: string
+          transfer_date?: string
+          transferred_by?: string | null
+          weight_transferred: number
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          expected_duration_minutes?: number | null
+          from_location?: string
+          from_location_type?: string
+          id?: string
+          is_overdue?: boolean | null
+          notes?: string | null
+          process_duration_minutes?: number | null
+          process_end_time?: string | null
+          process_start_time?: string | null
+          status?: string | null
+          thotti_no?: string | null
+          to_location?: string
+          to_location_type?: string
+          transfer_date?: string
+          transferred_by?: string | null
+          weight_transferred?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rice_mill_transfers_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "rice_mill_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rice_mill_unloading_entries: {
+        Row: {
+          bags: number
+          batch_no: string | null
+          created_at: string
+          id: string
+          inward_entry_id: string | null
+          is_batch_completed: boolean | null
+          mill: string
+          unloading_point: string
+          updated_at: string
+        }
+        Insert: {
+          bags: number
+          batch_no?: string | null
+          created_at?: string
+          id?: string
+          inward_entry_id?: string | null
+          is_batch_completed?: boolean | null
+          mill?: string
+          unloading_point: string
+          updated_at?: string
+        }
+        Update: {
+          bags?: number
+          batch_no?: string | null
+          created_at?: string
+          id?: string
+          inward_entry_id?: string | null
+          is_batch_completed?: boolean | null
+          mill?: string
+          unloading_point?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rice_mill_unloading_entries_inward_entry_id_fkey"
+            columns: ["inward_entry_id"]
+            isOneToOne: false
+            referencedRelation: "rice_mill_inward_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sales: {
         Row: {
           bill_serial_no: string | null
@@ -835,6 +1300,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      thotti_audit_log: {
+        Row: {
+          batch_id: string | null
+          change_reason: string
+          change_timestamp: string
+          changed_by: string | null
+          id: string
+          new_thotti_no: string
+          old_thotti_no: string | null
+          sync_session_id: string | null
+          transfer_id: string | null
+        }
+        Insert: {
+          batch_id?: string | null
+          change_reason: string
+          change_timestamp?: string
+          changed_by?: string | null
+          id?: string
+          new_thotti_no: string
+          old_thotti_no?: string | null
+          sync_session_id?: string | null
+          transfer_id?: string | null
+        }
+        Update: {
+          batch_id?: string | null
+          change_reason?: string
+          change_timestamp?: string
+          changed_by?: string | null
+          id?: string
+          new_thotti_no?: string
+          old_thotti_no?: string | null
+          sync_session_id?: string | null
+          transfer_id?: string | null
+        }
+        Relationships: []
       }
       transaction_cache: {
         Row: {
@@ -948,6 +1449,198 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      unified_offline_batches: {
+        Row: {
+          batch_no: string
+          created_at: string
+          current_location: string
+          current_location_type: string
+          current_weight: number
+          device_id: string
+          grade: string
+          id: string
+          mill: string
+          synced: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          batch_no: string
+          created_at?: string
+          current_location: string
+          current_location_type: string
+          current_weight: number
+          device_id: string
+          grade: string
+          id: string
+          mill: string
+          synced?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          batch_no?: string
+          created_at?: string
+          current_location?: string
+          current_location_type?: string
+          current_weight?: number
+          device_id?: string
+          grade?: string
+          id?: string
+          mill?: string
+          synced?: boolean | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      unified_offline_container_contents: {
+        Row: {
+          batch_id: string
+          created_at: string
+          device_id: string
+          expected_completion_time: string | null
+          grade: string
+          id: string
+          location: string
+          location_type: string
+          mill: string
+          process_start_time: string | null
+          synced: boolean | null
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          device_id: string
+          expected_completion_time?: string | null
+          grade: string
+          id: string
+          location: string
+          location_type: string
+          mill: string
+          process_start_time?: string | null
+          synced?: boolean | null
+          updated_at?: string
+          weight: number
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          device_id?: string
+          expected_completion_time?: string | null
+          grade?: string
+          id?: string
+          location?: string
+          location_type?: string
+          mill?: string
+          process_start_time?: string | null
+          synced?: boolean | null
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: []
+      }
+      unified_offline_transfers: {
+        Row: {
+          batch_id: string
+          created_at: string
+          device_id: string
+          expected_duration_minutes: number | null
+          from_location: string
+          from_location_type: string
+          id: string
+          mill: string
+          status: string | null
+          synced: boolean | null
+          synced_at: string | null
+          thotti_no: string | null
+          to_location: string
+          to_location_type: string
+          transfer_date: string
+          user_intent: string | null
+          weight_transferred: number
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          device_id: string
+          expected_duration_minutes?: number | null
+          from_location: string
+          from_location_type: string
+          id: string
+          mill: string
+          status?: string | null
+          synced?: boolean | null
+          synced_at?: string | null
+          thotti_no?: string | null
+          to_location: string
+          to_location_type: string
+          transfer_date: string
+          user_intent?: string | null
+          weight_transferred: number
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          device_id?: string
+          expected_duration_minutes?: number | null
+          from_location?: string
+          from_location_type?: string
+          id?: string
+          mill?: string
+          status?: string | null
+          synced?: boolean | null
+          synced_at?: string | null
+          thotti_no?: string | null
+          to_location?: string
+          to_location_type?: string
+          transfer_date?: string
+          user_intent?: string | null
+          weight_transferred?: number
+        }
+        Relationships: []
+      }
+      unified_sync_conflicts: {
+        Row: {
+          conflict_reason: string
+          conflict_type: string
+          created_at: string
+          detected_at: string
+          device_id: string
+          id: string
+          resolution_details: string | null
+          resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+          transfer_id: string
+        }
+        Insert: {
+          conflict_reason: string
+          conflict_type: string
+          created_at?: string
+          detected_at: string
+          device_id: string
+          id: string
+          resolution_details?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          transfer_id: string
+        }
+        Update: {
+          conflict_reason?: string
+          conflict_type?: string
+          created_at?: string
+          detected_at?: string
+          device_id?: string
+          id?: string
+          resolution_details?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          transfer_id?: string
+        }
+        Relationships: []
       }
       user_balance_cache: {
         Row: {
@@ -1096,6 +1789,27 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      cleanup_duplicate_container_contents: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cleanup_old_offline_data: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      clear_source_container: {
+        Args: {
+          p_batch_id: string
+          p_location: string
+          p_location_type: string
+          p_mill?: string
+        }
+        Returns: undefined
+      }
+      complete_unloading_batch: {
+        Args: { p_mill: string; p_unloading_point: string }
+        Returns: undefined
+      }
       create_business_contact_auth_user: {
         Args: {
           contact_email: string
@@ -1120,6 +1834,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      generate_and_reserve_thotti_no: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_batch_no: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_credit_note_no: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1131,6 +1853,20 @@ export type Database = {
       generate_receipt_no: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      generate_thotti_no: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_available_source_containers: {
+        Args: { p_mill?: string }
+        Returns: {
+          batch_details: Json
+          location: string
+          location_type: string
+          mill: string
+          total_weight: number
+        }[]
       }
       get_cached_balance: {
         Args: { p_balance_type: string; p_date?: string; p_user_id: string }
@@ -1144,15 +1880,43 @@ export type Database = {
         Args: { p_date: string; p_user_id: string }
         Returns: number
       }
+      get_or_create_batch_for_unloading_point: {
+        Args:
+          | { p_grade: string; p_mill: string; p_unloading_point: string }
+          | { p_mill: string; p_unloading_point: string }
+        Returns: Json
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
+      }
+      handle_rice_storage_transfer: {
+        Args: {
+          p_batch_id: string
+          p_mill: string
+          p_to_location: string
+          p_weight_transferred: number
+        }
+        Returns: undefined
       }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_container_empty_at_timestamp: {
+        Args: {
+          p_location: string
+          p_location_type: string
+          p_mill: string
+          p_timestamp: string
+        }
+        Returns: boolean
+      }
+      is_container_empty_now: {
+        Args: { p_location: string; p_location_type: string; p_mill?: string }
         Returns: boolean
       }
       populate_missing_daily_balances: {
@@ -1176,6 +1940,10 @@ export type Database = {
           p_type: string
           p_user_id: string
         }
+        Returns: Json
+      }
+      reassign_thotti_numbers_chronologically: {
+        Args: { p_sync_session_id?: string }
         Returns: Json
       }
       rebuild_all_daily_balances: {
@@ -1202,8 +1970,33 @@ export type Database = {
         Args: { p_date: string; p_user_id: string }
         Returns: undefined
       }
+      undo_transfer: {
+        Args: { transfer_id: string }
+        Returns: Json
+      }
+      update_overdue_status: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       validate_balance_consistency: {
         Args: { p_user_id?: string }
+        Returns: Json
+      }
+      validate_container_empty_at_timestamp: {
+        Args: {
+          p_location: string
+          p_location_type: string
+          p_mill: string
+          p_timestamp: string
+        }
+        Returns: Json
+      }
+      validate_transfer_sequence: {
+        Args: { p_from_location_type: string; p_to_location_type: string }
+        Returns: boolean
+      }
+      validate_undo_operation: {
+        Args: { transfer_id: string }
         Returns: Json
       }
       verify_daily_balance_chain: {

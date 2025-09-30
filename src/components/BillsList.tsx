@@ -32,7 +32,7 @@ export const BillsList = ({ onEditSale, onPrintSale }: BillsListProps) => {
         .from('sales')
         .select(`
           *,
-          customers (id, name_english, name_tamil, code, contact_person, phone, email, address_english, address_tamil, gstin),
+          customers (id, name_english, name_tamil, code, contact_person, phone, email, address_english, address_tamil, gstin, pin_code, state_code, place_of_supply),
           items (id, name_english, name_tamil, code, unit, gst_percentage, hsn_no),
           outward_entries!sales_outward_entry_id_fkey (
             id, serial_no, lorry_no, driver_mobile, loading_place, empty_weight, load_weight, net_weight, entry_date, remarks

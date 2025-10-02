@@ -32,7 +32,8 @@ const AppSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabChange
   const allTabs = [
     { id: 'entries', label: language === 'english' ? 'Outward Entries' : 'வெளியீட்டு பதிவுகள்', icon: Truck },
     { id: 'load-weight', label: language === 'english' ? 'Load Weight' : 'மொத்த எடை', icon: Scale },
-    { id: 'sales', label: language === 'english' ? 'Sales' : 'விற்பனை', icon: ShoppingCart, adminOnly: true },
+    { id: 'direct-sales', label: language === 'english' ? 'Direct Sales' : 'நேரடி விற்பனை', icon: ShoppingCart, adminOnly: true },
+    { id: 'outward-sales', label: language === 'english' ? 'Sales from Transit' : 'போக்குவரத்து விற்பனை', icon: Truck, adminOnly: true },
     { id: 'sales-ledger', label: language === 'english' ? 'Sales Ledger' : 'விற்பனை லெட்ஜர்', icon: ClipboardList, adminOnly: true },
     { id: 'amount-received', label: language === 'english' ? 'Amount Received' : 'பெற்ற தொகை', icon: Receipt, adminOnly: true },
     { id: 'customer-ledger', label: language === 'english' ? 'Customer Ledger' : 'வாடிக்கையாளர் லெட்ஜர்', icon: Book, adminOnly: true },

@@ -64,7 +64,7 @@ export const TransitLogbook = () => {
       fetchCustomers();
       fetchItems();
       fetchReportData();
-    } else if (activeTab === 'sales' || activeTab === 'sales-ledger' || activeTab === 'amount-received') {
+    } else if (activeTab === 'direct-sales' || activeTab === 'outward-sales' || activeTab === 'sales-ledger' || activeTab === 'amount-received') {
       // These tabs handle their own data fetching
     }
   }, [activeTab]);
@@ -374,9 +374,16 @@ export const TransitLogbook = () => {
             onCancel={() => setShowForm(false)}
           />
         );
-      } else if (activeTab === 'sales') {
+      } else if (activeTab === 'direct-sales') {
         return (
           <DirectSalesForm
+            onSuccess={handleFormSuccess}
+            onCancel={() => setShowForm(false)}
+          />
+        );
+      } else if (activeTab === 'outward-sales') {
+        return (
+          <SalesForm
             onSuccess={handleFormSuccess}
             onCancel={() => setShowForm(false)}
           />
@@ -1187,8 +1194,20 @@ export const TransitLogbook = () => {
           </div>
         )}
 
-        {/* Sales tab content */}
-        {activeTab === 'sales' && !showForm && (
+        {/* Direct Sales tab content */}
+        {activeTab === 'direct-sales' && !showForm && (
+          <div className="text-center py-12">
+            <div className="text-muted-foreground mb-4">
+              {language === 'english' 
+                ? 'Click "Add New" to create a direct sale without outward entry'
+                : 'வெளிச்செல்லும் என்ட்ரி இல்லாமல் நேரடி விற்பனை உருவாக்க "புதியது சேர்க்கவும்" என்பதை கிளிக் செய்யவும்'
+              }
+            </div>
+          </div>
+        )}
+
+        {/* Outward Sales tab content */}
+        {activeTab === 'outward-sales' && !showForm && (
           <div className="text-center py-12">
             <div className="text-muted-foreground mb-4">
               {language === 'english' 

@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Customer, Item } from '@/types';
@@ -17,7 +18,7 @@ interface DirectSalesFormProps {
 }
 
 export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) => {
-  const { getDisplayName } = useLanguage();
+  const { language, getDisplayName } = useLanguage();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
@@ -29,6 +30,7 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
   const [lorryNo, setLorryNo] = useState<string>('');
   const [remarks, setRemarks] = useState<string>('');
   const [saleDate, setSaleDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [useSpecialSerial, setUseSpecialSerial] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
   const [createdSale, setCreatedSale] = useState<any>(null);
@@ -36,14 +38,20 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
   useEffect(() => {
     fetchCustomers();
     fetchItems();
-    generateBillSerial(loadingPlace);
   }, []);
 
+  // Auto-generate bill serial when loading place or special serial checkbox changes
   useEffect(() => {
-    if (loadingPlace) {
-      generateBillSerial(loadingPlace);
+    if (useSpecialSerial) {
+      generateSpecialSerial().then(serial => {
+        setBillSerialNo(serial);
+      });
+    } else if (loadingPlace) {
+      generateBillSerial(loadingPlace).then(serial => {
+        setBillSerialNo(serial);
+      });
     }
-  }, [loadingPlace]);
+  }, [loadingPlace, useSpecialSerial]);
 
   const fetchCustomers = async () => {
     try {
@@ -77,38 +85,83 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
     }
   };
 
+  const generateSpecialSerial = async () => {
+    try {
+      // For special serial, get D prefixed serials like D001, D002, D003
+      const { data: existingBills } = await supabase
+        .from('sales')
+        .select('bill_serial_no')
+        .like('bill_serial_no', 'D%');
+      
+      let nextNumber = 1;
+      if (existingBills && existingBills.length > 0) {
+        let maxNumber = 0;
+        
+        existingBills.forEach(bill => {
+          const serial = bill.bill_serial_no;
+          const num = parseInt((serial || 'D0').replace('D', ''));
+          maxNumber = Math.max(maxNumber, num);
+        });
+        
+        nextNumber = maxNumber + 1;
+      }
+      
+      const serialNumber = nextNumber.toString().padStart(3, '0');
+      return `D${serialNumber}`;
+    } catch (error) {
+      console.error('Error generating special serial:', error);
+      return 'D001';
+    }
+  };
+
   const generateBillSerial = async (location: string) => {
     try {
       let prefix = '';
+      let query = supabase.from('sales').select('bill_serial_no');
+      
       if (location === 'PULIVANTHI') {
-        prefix = 'G';
+        // For PULIVANTHI, get numeric serials like 001, 002, 003
+        query = query.like('bill_serial_no', '[0-9][0-9][0-9]');
       } else if (location === 'MATTAPARAI') {
-        prefix = 'M';
+        // For MATTAPARAI, get GRM prefixed serials like GRM050, GRM051, GRM052
+        prefix = 'GRM';
+        query = query.like('bill_serial_no', 'GRM%');
       }
-
-      const { data, error } = await supabase
-        .from('sales')
-        .select('bill_serial_no')
-        .like('bill_serial_no', `${prefix}%`)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        throw error;
-      }
-
+      
+      // Get all existing bills to find the highest number (not just the latest)
+      const { data: existingBills } = await query;
+      
       let nextNumber = 1;
-      if (data?.bill_serial_no) {
-        const currentNumber = parseInt(data.bill_serial_no.substring(1));
-        nextNumber = currentNumber + 1;
+      if (existingBills && existingBills.length > 0) {
+        let maxNumber = 0;
+        
+        existingBills.forEach(bill => {
+          const serial = bill.bill_serial_no;
+          if (location === 'PULIVANTHI') {
+            const num = parseInt(serial || '0');
+            maxNumber = Math.max(maxNumber, num);
+          } else if (location === 'MATTAPARAI') {
+            const num = parseInt((serial || 'GRM0').replace('GRM', ''));
+            maxNumber = Math.max(maxNumber, num);
+          }
+        });
+        
+        nextNumber = maxNumber + 1;
+        if (location === 'MATTAPARAI') {
+          nextNumber = Math.max(50, nextNumber); // Ensure GRM starts from 050
+        }
+      } else {
+        // Set starting numbers for new series
+        if (location === 'MATTAPARAI') {
+          nextNumber = 50; // Start GRM series from 050
+        }
       }
-
-      const newSerial = `${prefix}${nextNumber.toString().padStart(6, '0')}`;
-      setBillSerialNo(newSerial);
+      
+      const serialNumber = nextNumber.toString().padStart(3, '0');
+      return location === 'PULIVANTHI' ? serialNumber : `${prefix}${serialNumber}`;
     } catch (error) {
       console.error('Error generating bill serial:', error);
-      setBillSerialNo(`${location === 'PULIVANTHI' ? 'G' : 'M'}000001`);
+      return location === 'PULIVANTHI' ? '001' : 'GRM050';
     }
   };
 
@@ -291,26 +344,44 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="loadingPlace">Loading Place *</Label>
+              <Label htmlFor="loadingPlace">
+                {language === 'english' ? 'Loading Place *' : 'ஏற்றும் இடம் *'}
+              </Label>
               <Select value={loadingPlace} onValueChange={setLoadingPlace}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="PULIVANTHI">PULIVANTHI</SelectItem>
-                  <SelectItem value="MATTAPARAI">MATTAPARAI</SelectItem>
+                  <SelectItem value="PULIVANTHI">
+                    {language === 'english' ? 'PULIVANTHI' : 'புலியந்தி'}
+                  </SelectItem>
+                  <SelectItem value="MATTAPARAI">
+                    {language === 'english' ? 'MATTAPARAI' : 'மட்டப்பாறை'}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="billSerialNo">Bill Serial Number *</Label>
+              <div className="flex items-center space-x-2 mb-2">
+                <Checkbox 
+                  id="specialSerial" 
+                  checked={useSpecialSerial}
+                  onCheckedChange={(checked) => setUseSpecialSerial(checked as boolean)}
+                />
+                <Label htmlFor="specialSerial" className="text-sm font-normal cursor-pointer">
+                  {language === 'english' ? 'Use Special Serial (D-series)' : 'சிறப்பு வரிசை பயன்படுத்து (D-தொடர்)'}
+                </Label>
+              </div>
+              <Label htmlFor="billSerialNo">
+                {language === 'english' ? 'Bill Serial Number *' : 'பில் வரிசை எண் *'}
+              </Label>
               <Input
                 id="billSerialNo"
                 type="text"
                 value={billSerialNo}
                 onChange={(e) => setBillSerialNo(e.target.value)}
-                placeholder="Enter bill serial number"
+                placeholder={language === 'english' ? 'Enter bill serial number' : 'பில் வரிசை எண்ணை உள்ளிடவும்'}
               />
             </div>
 

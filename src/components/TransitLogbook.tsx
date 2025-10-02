@@ -414,14 +414,15 @@ export const TransitLogbook = () => {
             {activeTab === 'items' && (language === 'english' ? 'Items' : 'பொருட்கள்')}
             {activeTab === 'load-weight' && (language === 'english' ? 'Load Weight Update' : 'மொத்த எடை புதுப்பிப்பு')}
             {activeTab === 'reports' && (language === 'english' ? 'Reports' : 'அறிக்கைகள்')}
-            {activeTab === 'sales' && (language === 'english' ? 'Sales' : 'விற்பனை')}
+            {activeTab === 'direct-sales' && (language === 'english' ? 'Direct Sales' : 'நேரடி விற்பனை')}
+            {activeTab === 'outward-sales' && (language === 'english' ? 'Sales from Transit' : 'போக்குவரத்து விற்பனை')}
             {activeTab === 'sales-ledger' && (language === 'english' ? 'Sales Ledger' : 'விற்பனை லெட்ஜர்')}
             {activeTab === 'amount-received' && (language === 'english' ? 'Amount Received' : 'பெற்ற தொகை')}
             {activeTab === 'admin-delete' && (language === 'english' ? 'Delete Entry' : 'என்ட்ரி நீக்கு')}
             {activeTab === 'customer-ledger' && (language === 'english' ? 'Customer Ledger' : 'வாடிக்கையாளர் லெட்ஜர்')}
           </h2>
           
-          {(activeTab === 'entries' || activeTab === 'customers' || activeTab === 'items' || activeTab === 'sales' || activeTab === 'amount-received') && (
+          {(activeTab === 'entries' || activeTab === 'customers' || activeTab === 'items' || activeTab === 'direct-sales' || activeTab === 'outward-sales' || activeTab === 'amount-received') && (
             <Button onClick={() => setShowForm(true)} className="bg-gradient-primary text-primary-foreground shadow-card">
               <Plus className="h-4 w-4 mr-2" />
               {language === 'english' ? 'Add New' : 'புதியது சேர்க்கவும்'}

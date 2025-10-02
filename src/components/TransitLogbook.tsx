@@ -4,6 +4,7 @@ import { CustomerForm } from './forms/CustomerForm';
 import { ItemForm } from './forms/ItemForm';
 import { OutwardEntryForm } from './forms/OutwardEntryForm';
 import { SalesForm } from './forms/SalesForm';
+import { DirectSalesForm } from './forms/DirectSalesForm';
 import { SalesLedgerView } from './SalesLedgerView';
 import { AmountReceivedForm } from './forms/AmountReceivedForm';
 import { CustomerLedgerView } from './CustomerLedgerView';
@@ -375,7 +376,7 @@ export const TransitLogbook = () => {
         );
       } else if (activeTab === 'sales') {
         return (
-          <SalesForm
+          <DirectSalesForm
             onSuccess={handleFormSuccess}
             onCancel={() => setShowForm(false)}
           />

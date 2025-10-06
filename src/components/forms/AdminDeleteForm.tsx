@@ -40,8 +40,8 @@ export const AdminDeleteForm: React.FC<AdminDeleteFormProps> = ({ onSuccess, onC
         .from('outward_entries')
         .select(`
           *,
-          customers!inner(name_english, name_tamil, code),
-          items!inner(name_english, name_tamil, code, unit, gst_percentage)
+          customers!inner(id, name_english, name_tamil, code, is_active, created_at, updated_at, address_english, address_tamil, contact_person, phone, email, gstin, state_code, place_of_supply, pin_code),
+          items!inner(id, name_english, name_tamil, code, unit, gst_percentage, is_active, created_at, updated_at, hsn_no, description_english, description_tamil, unit_weight)
         `)
         .order('entry_date', { ascending: false })
         .order('serial_no', { ascending: false })

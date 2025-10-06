@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,9 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { MobileLayout } from '../components/MobileLayout';
 import { useEnhancedOfflineData } from '../hooks/useEnhancedOfflineData';
-import { ArrowLeft } from 'lucide-react';
+import { Camera, Upload, X } from 'lucide-react';
+import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { supabase } from '@/integrations/supabase/client';
 
 const MobileOutwardEntryForm: React.FC = () => {
   const { language, getDisplayName } = useLanguage();
@@ -31,17 +33,83 @@ const MobileOutwardEntryForm: React.FC = () => {
     empty_weight: '',
     remarks: '',
     is_completed: false,
+    weighment_photo_url: '',
   });
+
+  const [photoDataUrl, setPhotoDataUrl] = useState<string>('');
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const takePhoto = async () => {
+    try {
+      const photo = await CapCamera.getPhoto({
+        quality: 80,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera,
+      });
+
+      if (photo.dataUrl) {
+        setPhotoDataUrl(photo.dataUrl);
+      }
+    } catch (error: any) {
+      console.error('Error taking photo:', error);
+      toast({
+        variant: 'destructive',
+        title: language === 'english' ? 'Error' : 'பிழை',
+        description: language === 'english' ? 'Failed to take photo' : 'புகைப்படம் எடுக்க முடியவில்லை',
+      });
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoDataUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadToGoogleDrive = async (dataUrl: string): Promise<string> => {
+    const blob = await fetch(dataUrl).then(r => r.blob());
+    const file = new File([blob], `weighment_${Date.now()}.jpg`, { type: 'image/jpeg' });
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('fileName', file.name);
+
+    const { data, error } = await supabase.functions.invoke('upload-to-google-drive', {
+      body: formData,
+    });
+
+    if (error) throw error;
+    if (!data.success) throw new Error('Upload failed');
+    
+    return data.viewUrl;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      let photoUrl = formData.weighment_photo_url;
+      
+      // Upload photo if captured/selected
+      if (photoDataUrl) {
+        setUploading(true);
+        photoUrl = await uploadToGoogleDrive(photoDataUrl);
+        setUploading(false);
+      }
+
       await createEntry({
         ...formData,
         empty_weight: parseFloat(formData.empty_weight),
-        serial_no: Date.now(), // Generate unique serial number offline
+        serial_no: Date.now(),
+        weighment_photo_url: photoUrl,
       });
       
       toast({
@@ -58,6 +126,7 @@ const MobileOutwardEntryForm: React.FC = () => {
       });
     } finally {
       setLoading(false);
+      setUploading(false);
     }
   };
 
@@ -195,9 +264,58 @@ const MobileOutwardEntryForm: React.FC = () => {
                 />
               </div>
               
+              <div>
+                <Label htmlFor="weighment_photo">
+                  {language === 'english' ? 'Weighment Photo' : 'எடை புகைப்படம்'}
+                </Label>
+                <input
+                  ref={fileInputRef}
+                  id="weighment_photo"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <div className="flex gap-2 mt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={takePhoto}
+                    className="flex-1"
+                  >
+                    <Camera className="mr-2 h-4 w-4" />
+                    {language === 'english' ? 'Take Photo' : 'புகைப்படம் எடு'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex-1"
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    {language === 'english' ? 'Upload' : 'பதிவேற்று'}
+                  </Button>
+                </div>
+                {photoDataUrl && (
+                  <div className="mt-2 relative">
+                    <img src={photoDataUrl} alt="Preview" className="max-h-40 rounded border w-full object-cover" />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-1 right-1"
+                      onClick={() => setPhotoDataUrl('')}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+              
               <div className="flex gap-3 pt-4">
-                <Button type="submit" disabled={loading} className="flex-1">
-                  {loading ? (language === 'english' ? 'Creating...' : 'உருவாக்குகிறது...') : 
+                <Button type="submit" disabled={loading || uploading} className="flex-1">
+                  {uploading ? (language === 'english' ? 'Uploading...' : 'பதிவேற்றுகிறது...') :
+                   loading ? (language === 'english' ? 'Creating...' : 'உருவாக்குகிறது...') : 
                    (language === 'english' ? 'Create Entry' : 'பதிவு உருவாக்கவும்')}
                 </Button>
                 <Button 

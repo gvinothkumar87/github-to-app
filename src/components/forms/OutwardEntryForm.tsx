@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,6 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Customer, Item } from '@/types';
+import { Camera, Upload, X } from 'lucide-react';
 
 interface OutwardEntryFormProps {
   onSuccess: () => void;
@@ -30,7 +31,13 @@ export const OutwardEntryForm: React.FC<OutwardEntryFormProps> = ({ onSuccess, o
     driver_mobile: '',
     empty_weight: '',
     remarks: '',
+    weighment_photo_url: '',
   });
+  
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchCustomers();
@@ -67,16 +74,59 @@ export const OutwardEntryForm: React.FC<OutwardEntryFormProps> = ({ onSuccess, o
     setItems(data || []);
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setSelectedFile(null);
+    setPreviewUrl('');
+    setFormData({ ...formData, weighment_photo_url: '' });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const uploadToGoogleDrive = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('fileName', `weighment_${Date.now()}_${file.name}`);
+
+    const { data, error } = await supabase.functions.invoke('upload-to-google-drive', {
+      body: formData,
+    });
+
+    if (error) throw error;
+    if (!data.success) throw new Error('Upload failed');
+    
+    return data.viewUrl;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      let photoUrl = formData.weighment_photo_url;
+      
+      // Upload photo if selected
+      if (selectedFile) {
+        setUploading(true);
+        photoUrl = await uploadToGoogleDrive(selectedFile);
+        setUploading(false);
+      }
+
       const { error } = await supabase
         .from('outward_entries')
         .insert([{
           ...formData,
           empty_weight: parseFloat(formData.empty_weight),
+          weighment_photo_url: photoUrl,
         }]);
       
       if (error) throw error;
@@ -95,6 +145,7 @@ export const OutwardEntryForm: React.FC<OutwardEntryFormProps> = ({ onSuccess, o
       });
     } finally {
       setLoading(false);
+      setUploading(false);
     }
   };
 
@@ -231,9 +282,49 @@ export const OutwardEntryForm: React.FC<OutwardEntryFormProps> = ({ onSuccess, o
             />
           </div>
           
+          <div>
+            <Label htmlFor="weighment_photo">
+              {language === 'english' ? 'Weighment Photo' : 'எடை புகைப்படம்'}
+            </Label>
+            <input
+              ref={fileInputRef}
+              id="weighment_photo"
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            <div className="flex gap-2 mt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex-1"
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                {language === 'english' ? 'Upload Photo' : 'புகைப்படம் பதிவேற்று'}
+              </Button>
+            </div>
+            {previewUrl && (
+              <div className="mt-2 relative">
+                <img src={previewUrl} alt="Preview" className="max-h-40 rounded border" />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="absolute top-1 right-1"
+                  onClick={handleRemovePhoto}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+          
           <div className="flex gap-3 pt-4">
-            <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? (language === 'english' ? 'Creating...' : 'உருவாக்குகிறது...') : 
+            <Button type="submit" disabled={loading || uploading} className="flex-1">
+              {uploading ? (language === 'english' ? 'Uploading...' : 'பதிவேற்றுகிறது...') :
+               loading ? (language === 'english' ? 'Creating...' : 'உருவாக்குகிறது...') : 
                (language === 'english' ? 'Create Entry' : 'பதிவு உருவாக்கவும்')}
             </Button>
             <Button type="button" variant="outline" onClick={onCancel} className="flex-1">

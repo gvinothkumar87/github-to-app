@@ -609,6 +609,7 @@ export type Database = {
           remarks: string | null
           serial_no: number
           updated_at: string
+          weighment_photo_url: string | null
         }
         Insert: {
           created_at?: string
@@ -628,6 +629,7 @@ export type Database = {
           remarks?: string | null
           serial_no?: number
           updated_at?: string
+          weighment_photo_url?: string | null
         }
         Update: {
           created_at?: string
@@ -647,6 +649,7 @@ export type Database = {
           remarks?: string | null
           serial_no?: number
           updated_at?: string
+          weighment_photo_url?: string | null
         }
         Relationships: [
           {
@@ -664,6 +667,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      page_permissions: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          page_name: string
+          page_route: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          page_name: string
+          page_route: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          page_name?: string
+          page_route?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       performance_metrics: {
         Row: {
@@ -853,6 +886,60 @@ export type Database = {
           token_link?: string | null
           wayment_link?: string | null
           wayment_nett_weight?: number | null
+        }
+        Relationships: []
+      }
+      rice_loading_entries: {
+        Row: {
+          allotment_month: string
+          bags: number
+          bill_no: string
+          bill_photo_url: string | null
+          created_at: string
+          driver: string
+          entry_date: string
+          godown: string
+          grade: string
+          id: string
+          lorry_no: string
+          mill: string
+          rice_storage: string
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          allotment_month: string
+          bags: number
+          bill_no: string
+          bill_photo_url?: string | null
+          created_at?: string
+          driver: string
+          entry_date?: string
+          godown: string
+          grade: string
+          id?: string
+          lorry_no: string
+          mill: string
+          rice_storage: string
+          updated_at?: string
+          weight: number
+        }
+        Update: {
+          allotment_month?: string
+          bags?: number
+          bill_no?: string
+          bill_photo_url?: string | null
+          created_at?: string
+          driver?: string
+          entry_date?: string
+          godown?: string
+          grade?: string
+          id?: string
+          lorry_no?: string
+          mill?: string
+          rice_storage?: string
+          updated_at?: string
+          weight?: number
         }
         Relationships: []
       }
@@ -1171,6 +1258,7 @@ export type Database = {
           to_location_type: string
           transfer_date: string
           transferred_by: string | null
+          updated_at: string
           weight_transferred: number
         }
         Insert: {
@@ -1191,6 +1279,7 @@ export type Database = {
           to_location_type: string
           transfer_date?: string
           transferred_by?: string | null
+          updated_at?: string
           weight_transferred: number
         }
         Update: {
@@ -1211,6 +1300,7 @@ export type Database = {
           to_location_type?: string
           transfer_date?: string
           transferred_by?: string | null
+          updated_at?: string
           weight_transferred?: number
         }
         Relationships: [
@@ -1344,7 +1434,7 @@ export type Database = {
           change_timestamp: string
           changed_by: string | null
           id: string
-          new_thotti_no: string
+          new_thotti_no: string | null
           old_thotti_no: string | null
           sync_session_id: string | null
           transfer_id: string | null
@@ -1355,7 +1445,7 @@ export type Database = {
           change_timestamp?: string
           changed_by?: string | null
           id?: string
-          new_thotti_no: string
+          new_thotti_no?: string | null
           old_thotti_no?: string | null
           sync_session_id?: string | null
           transfer_id?: string | null
@@ -1366,7 +1456,7 @@ export type Database = {
           change_timestamp?: string
           changed_by?: string | null
           id?: string
-          new_thotti_no?: string
+          new_thotti_no?: string | null
           old_thotti_no?: string | null
           sync_session_id?: string | null
           transfer_id?: string | null
@@ -1576,6 +1666,225 @@ export type Database = {
         }
         Relationships: []
       }
+      unified_offline_global_variables: {
+        Row: {
+          category: string
+          created_at: string | null
+          device_id: string
+          display_text: string
+          distance: number | null
+          http_link_1: string | null
+          http_link_1_description: string | null
+          http_link_2: string | null
+          http_link_2_description: string | null
+          id: string
+          is_active: boolean | null
+          synced: boolean | null
+          synced_at: string | null
+          updated_at: string | null
+          value: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          device_id: string
+          display_text: string
+          distance?: number | null
+          http_link_1?: string | null
+          http_link_1_description?: string | null
+          http_link_2?: string | null
+          http_link_2_description?: string | null
+          id: string
+          is_active?: boolean | null
+          synced?: boolean | null
+          synced_at?: string | null
+          updated_at?: string | null
+          value: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          device_id?: string
+          display_text?: string
+          distance?: number | null
+          http_link_1?: string | null
+          http_link_1_description?: string | null
+          http_link_2?: string | null
+          http_link_2_description?: string | null
+          id?: string
+          is_active?: boolean | null
+          synced?: boolean | null
+          synced_at?: string | null
+          updated_at?: string | null
+          value?: string
+        }
+        Relationships: []
+      }
+      unified_offline_inward_entries: {
+        Row: {
+          bags: number
+          challan_photo_url: string | null
+          created_at: string | null
+          device_id: string
+          driver: string
+          entry_date: string
+          grade: string
+          id: string
+          is_unloaded: boolean | null
+          lorry_number: string
+          mill: string
+          serial_no: string
+          synced: boolean | null
+          synced_at: string | null
+          token_id: string | null
+          updated_at: string | null
+          wayment_photo_url: string | null
+          wayment_weight: number
+        }
+        Insert: {
+          bags: number
+          challan_photo_url?: string | null
+          created_at?: string | null
+          device_id: string
+          driver: string
+          entry_date: string
+          grade: string
+          id: string
+          is_unloaded?: boolean | null
+          lorry_number: string
+          mill?: string
+          serial_no: string
+          synced?: boolean | null
+          synced_at?: string | null
+          token_id?: string | null
+          updated_at?: string | null
+          wayment_photo_url?: string | null
+          wayment_weight: number
+        }
+        Update: {
+          bags?: number
+          challan_photo_url?: string | null
+          created_at?: string | null
+          device_id?: string
+          driver?: string
+          entry_date?: string
+          grade?: string
+          id?: string
+          is_unloaded?: boolean | null
+          lorry_number?: string
+          mill?: string
+          serial_no?: string
+          synced?: boolean | null
+          synced_at?: string | null
+          token_id?: string | null
+          updated_at?: string | null
+          wayment_photo_url?: string | null
+          wayment_weight?: number
+        }
+        Relationships: []
+      }
+      unified_offline_rice_loading_entries: {
+        Row: {
+          allotment_month: string
+          bags: number
+          bill_no: string
+          bill_photo_url: string | null
+          created_at: string
+          device_id: string
+          driver: string
+          entry_date: string
+          godown: string
+          grade: string
+          id: string
+          lorry_no: string
+          mill: string
+          rice_storage: string
+          synced: boolean | null
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          allotment_month: string
+          bags: number
+          bill_no: string
+          bill_photo_url?: string | null
+          created_at?: string
+          device_id: string
+          driver: string
+          entry_date?: string
+          godown: string
+          grade: string
+          id: string
+          lorry_no: string
+          mill: string
+          rice_storage: string
+          synced?: boolean | null
+          updated_at?: string
+          weight: number
+        }
+        Update: {
+          allotment_month?: string
+          bags?: number
+          bill_no?: string
+          bill_photo_url?: string | null
+          created_at?: string
+          device_id?: string
+          driver?: string
+          entry_date?: string
+          godown?: string
+          grade?: string
+          id?: string
+          lorry_no?: string
+          mill?: string
+          rice_storage?: string
+          synced?: boolean | null
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: []
+      }
+      unified_offline_tokens: {
+        Row: {
+          created_at: string | null
+          device_id: string
+          id: string
+          is_used: boolean | null
+          loading_point: string
+          lorry: string
+          serial_no: string
+          synced: boolean | null
+          synced_at: string | null
+          token_value: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          device_id: string
+          id: string
+          is_used?: boolean | null
+          loading_point: string
+          lorry: string
+          serial_no: string
+          synced?: boolean | null
+          synced_at?: string | null
+          token_value: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          device_id?: string
+          id?: string
+          is_used?: boolean | null
+          loading_point?: string
+          lorry?: string
+          serial_no?: string
+          synced?: boolean | null
+          synced_at?: string | null
+          token_value?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       unified_offline_transfers: {
         Row: {
           batch_id: string
@@ -1633,6 +1942,51 @@ export type Database = {
           transfer_date?: string
           user_intent?: string | null
           weight_transferred?: number
+        }
+        Relationships: []
+      }
+      unified_offline_unloading_entries: {
+        Row: {
+          bags: number
+          batch_no: string | null
+          created_at: string | null
+          device_id: string
+          id: string
+          inward_entry_id: string | null
+          is_batch_completed: boolean | null
+          mill: string
+          synced: boolean | null
+          synced_at: string | null
+          unloading_point: string
+          updated_at: string | null
+        }
+        Insert: {
+          bags: number
+          batch_no?: string | null
+          created_at?: string | null
+          device_id: string
+          id: string
+          inward_entry_id?: string | null
+          is_batch_completed?: boolean | null
+          mill?: string
+          synced?: boolean | null
+          synced_at?: string | null
+          unloading_point: string
+          updated_at?: string | null
+        }
+        Update: {
+          bags?: number
+          batch_no?: string | null
+          created_at?: string | null
+          device_id?: string
+          id?: string
+          inward_entry_id?: string | null
+          is_batch_completed?: boolean | null
+          mill?: string
+          synced?: boolean | null
+          synced_at?: string | null
+          unloading_point?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1791,6 +2145,38 @@ export type Database = {
             columns: ["ledger_id"]
             isOneToOne: false
             referencedRelation: "ledgers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_page_access: {
+        Row: {
+          granted_at: string | null
+          granted_by: string
+          id: string
+          page_id: string | null
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string | null
+          granted_by: string
+          id?: string
+          page_id?: string | null
+          user_id: string
+        }
+        Update: {
+          granted_at?: string | null
+          granted_by?: string
+          id?: string
+          page_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_page_access_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "page_permissions"
             referencedColumns: ["id"]
           },
         ]
@@ -2013,6 +2399,10 @@ export type Database = {
       update_overdue_status: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      user_has_page_access: {
+        Args: { _page_route: string; _user_id: string }
+        Returns: boolean
       }
       validate_balance_consistency: {
         Args: { p_user_id?: string }

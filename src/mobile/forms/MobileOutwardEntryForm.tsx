@@ -9,8 +9,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { MobileLayout } from '../components/MobileLayout';
 import { useEnhancedOfflineData } from '../hooks/useEnhancedOfflineData';
-import { Camera, Upload, X } from 'lucide-react';
-import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Camera, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 const MobileOutwardEntryForm: React.FC = () => {
@@ -39,28 +38,6 @@ const MobileOutwardEntryForm: React.FC = () => {
   const [photoDataUrl, setPhotoDataUrl] = useState<string>('');
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const takePhoto = async () => {
-    try {
-      const photo = await CapCamera.getPhoto({
-        quality: 80,
-        allowEditing: false,
-        resultType: CameraResultType.DataUrl,
-        source: CameraSource.Camera,
-      });
-
-      if (photo.dataUrl) {
-        setPhotoDataUrl(photo.dataUrl);
-      }
-    } catch (error: any) {
-      console.error('Error taking photo:', error);
-      toast({
-        variant: 'destructive',
-        title: language === 'english' ? 'Error' : 'பிழை',
-        description: language === 'english' ? 'Failed to take photo' : 'புகைப்படம் எடுக்க முடியவில்லை',
-      });
-    }
-  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -273,6 +250,7 @@ const MobileOutwardEntryForm: React.FC = () => {
                   id="weighment_photo"
                   type="file"
                   accept="image/*"
+                  capture="environment"
                   onChange={handleFileSelect}
                   className="hidden"
                 />
@@ -280,20 +258,11 @@ const MobileOutwardEntryForm: React.FC = () => {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={takePhoto}
+                    onClick={() => fileInputRef.current?.click()}
                     className="flex-1"
                   >
                     <Camera className="mr-2 h-4 w-4" />
                     {language === 'english' ? 'Take Photo' : 'புகைப்படம் எடு'}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex-1"
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    {language === 'english' ? 'Upload' : 'பதிவேற்று'}
                   </Button>
                 </div>
                 {photoDataUrl && (

@@ -73,14 +73,24 @@ serve(async (req) => {
   }
 
   try {
-    const GOOGLE_DRIVE_SERVICE_ACCOUNT = Deno.env.get('GOOGLE_DRIVE_SERVICE_ACCOUNT');
+    const rawServiceAccount = Deno.env.get('GOOGLE_DRIVE_SERVICE_ACCOUNT');
     const GOOGLE_DRIVE_FOLDER_ID = Deno.env.get('GOOGLE_DRIVE_FOLDER_ID');
-    
-    if (!GOOGLE_DRIVE_SERVICE_ACCOUNT || !GOOGLE_DRIVE_FOLDER_ID) {
-      throw new Error('Google Drive service account credentials not configured');
+
+    if (!rawServiceAccount) {
+      return new Response(JSON.stringify({ error: 'Missing GOOGLE_DRIVE_SERVICE_ACCOUNT secret' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    if (!GOOGLE_DRIVE_FOLDER_ID) {
+      return new Response(JSON.stringify({ error: 'Missing GOOGLE_DRIVE_FOLDER_ID secret' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const serviceAccount = JSON.parse(GOOGLE_DRIVE_SERVICE_ACCOUNT);
+    let serviceAccount: any;
+    try {
+      serviceAccount = JSON.parse(rawServiceAccount);
+    } catch (e) {
+      console.error('Invalid GOOGLE_DRIVE_SERVICE_ACCOUNT JSON:', e);
+      return new Response(JSON.stringify({ error: 'Invalid GOOGLE_DRIVE_SERVICE_ACCOUNT JSON. Paste the FULL service account key JSON from Google Cloud.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     const access_token = await getServiceAccountAccessToken(serviceAccount);
 
     // Parse the multipart form data

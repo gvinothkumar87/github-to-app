@@ -94,53 +94,45 @@ serve(async (req) => {
 
     const fileBuffer = await file.arrayBuffer();
 
-    // Upload metadata first (start a resumable upload session)
+    // Use multipart upload for small files (simpler and reliable)
     const metadata = {
       name: fileName,
       parents: [GOOGLE_DRIVE_FOLDER_ID],
     };
 
-    const metadataResponse = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable', {
+    const boundary = 'foo_bar_' + crypto.randomUUID();
+    const delimiter = `--${boundary}\r\n`;
+    const closeDelimiter = `\r\n--${boundary}--`;
+
+    const metaPart = `${delimiter}Content-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n`;
+    const fileHeader = `${delimiter}Content-Type: ${file.type || 'application/octet-stream'}\r\n\r\n`;
+
+    const multipartBody = new Blob([
+      metaPart,
+      fileHeader,
+      new Uint8Array(fileBuffer),
+      closeDelimiter,
+    ]);
+
+    const uploadResponse = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${access_token}`,
-        'Content-Type': 'application/json',
-        'X-Upload-Content-Type': file.type || 'application/octet-stream',
+        'Content-Type': `multipart/related; boundary=${boundary}`,
       },
-      body: JSON.stringify(metadata),
-    });
-
-    if (!metadataResponse.ok) {
-      const t = await metadataResponse.text();
-      console.error('Failed to initiate upload', metadataResponse.status, t);
-      throw new Error('Failed to initiate upload');
-    }
-
-    const uploadUrl = metadataResponse.headers.get('Location');
-    if (!uploadUrl) {
-      throw new Error('No upload URL received');
-    }
-
-    // Upload the file to the resumable session URL
-    const uploadResponse = await fetch(uploadUrl, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': file.type || 'application/octet-stream',
-        'Content-Length': String(fileBuffer.byteLength),
-      },
-      body: fileBuffer,
+      body: multipartBody,
     });
 
     if (!uploadResponse.ok) {
       const t = await uploadResponse.text();
-      console.error('Resumable upload failed', uploadResponse.status, t);
+      console.error('Multipart upload failed', uploadResponse.status, t);
       throw new Error('Failed to upload file');
     }
 
     const uploadResult = await uploadResponse.json();
 
     // Make the file publicly accessible
-    await fetch(`https://www.googleapis.com/drive/v3/files/${uploadResult.id}/permissions`, {
+    await fetch(`https://www.googleapis.com/drive/v3/files/${uploadResult.id}/permissions?supportsAllDrives=true`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${access_token}`,

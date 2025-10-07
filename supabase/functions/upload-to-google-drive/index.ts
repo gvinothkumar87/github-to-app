@@ -1,9 +1,64 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { create, getNumericDate } from "https://deno.land/x/djwt@v2.8/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Helper function to create JWT for service account
+async function createServiceAccountJWT(serviceAccount: any): Promise<string> {
+  const header = { alg: "RS256", typ: "JWT" };
+  const now = getNumericDate(new Date());
+  
+  const payload = {
+    iss: serviceAccount.client_email,
+    scope: "https://www.googleapis.com/auth/drive.file",
+    aud: "https://oauth2.googleapis.com/token",
+    exp: now + 3600,
+    iat: now,
+  };
+
+  // Import the private key
+  const privateKey = serviceAccount.private_key.replace(/\\n/g, '\n');
+  const key = await crypto.subtle.importKey(
+    "pkcs8",
+    new TextEncoder().encode(privateKey)
+      .reduce((acc, byte, i) => {
+        const pem = privateKey.replace(/-----BEGIN PRIVATE KEY-----/, '')
+          .replace(/-----END PRIVATE KEY-----/, '')
+          .replace(/\s/g, '');
+        return Uint8Array.from(atob(pem), c => c.charCodeAt(0));
+      }, new Uint8Array()),
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+
+  return await create(header, payload, key);
+}
+
+// Get access token using service account
+async function getServiceAccountAccessToken(serviceAccount: any): Promise<string> {
+  const jwt = await createServiceAccountJWT(serviceAccount);
+  
+  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: jwt,
+    }),
+  });
+
+  if (!tokenResponse.ok) {
+    const error = await tokenResponse.text();
+    throw new Error(`Failed to get access token: ${error}`);
+  }
+
+  const { access_token } = await tokenResponse.json();
+  return access_token;
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -11,32 +66,17 @@ serve(async (req) => {
   }
 
   try {
-    const GOOGLE_DRIVE_CREDENTIALS = Deno.env.get('GOOGLE_DRIVE_CREDENTIALS');
+    const GOOGLE_DRIVE_SERVICE_ACCOUNT = Deno.env.get('GOOGLE_DRIVE_SERVICE_ACCOUNT');
     const GOOGLE_DRIVE_FOLDER_ID = Deno.env.get('GOOGLE_DRIVE_FOLDER_ID');
     
-    if (!GOOGLE_DRIVE_CREDENTIALS || !GOOGLE_DRIVE_FOLDER_ID) {
-      throw new Error('Google Drive credentials not configured');
+    if (!GOOGLE_DRIVE_SERVICE_ACCOUNT || !GOOGLE_DRIVE_FOLDER_ID) {
+      throw new Error('Google Drive service account credentials not configured');
     }
 
-    const credentials = JSON.parse(GOOGLE_DRIVE_CREDENTIALS);
+    const serviceAccount = JSON.parse(GOOGLE_DRIVE_SERVICE_ACCOUNT);
     
-    // Get OAuth token
-    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        client_id: credentials.client_id,
-        client_secret: credentials.client_secret,
-        refresh_token: credentials.refresh_token,
-        grant_type: 'refresh_token',
-      }),
-    });
-
-    if (!tokenResponse.ok) {
-      throw new Error('Failed to get access token');
-    }
-
-    const { access_token } = await tokenResponse.json();
+    // Get access token using service account
+    const access_token = await getServiceAccountAccessToken(serviceAccount);
 
     // Parse the multipart form data
     const formData = await req.formData();

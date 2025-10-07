@@ -6,39 +6,46 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Helper function to create JWT for service account
+function pemToArrayBuffer(pem: string): ArrayBuffer {
+  const pemContents = pem
+    .replace('-----BEGIN PRIVATE KEY-----', '')
+    .replace('-----END PRIVATE KEY-----', '')
+    .replace(/\n/g, '')
+    .replace(/\r/g, '')
+    .replace(/\s/g, '');
+  const binary = atob(pemContents);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes.buffer;
+}
+
+async function importPrivateKey(pem: string): Promise<CryptoKey> {
+  const keyData = pemToArrayBuffer(pem);
+  return await crypto.subtle.importKey(
+    'pkcs8',
+    keyData,
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+}
+
 async function createServiceAccountJWT(serviceAccount: any): Promise<string> {
-  const header = { alg: "RS256", typ: "JWT" };
-  const now = getNumericDate(new Date());
-  
+  const header = { alg: 'RS256', typ: 'JWT' };
   const payload = {
     iss: serviceAccount.client_email,
-    scope: "https://www.googleapis.com/auth/drive.file",
-    aud: "https://oauth2.googleapis.com/token",
-    exp: now + 3600,
-    iat: now,
+    scope: 'https://www.googleapis.com/auth/drive.file',
+    aud: 'https://oauth2.googleapis.com/token',
+    exp: getNumericDate(60 * 60), // 1 hour expiry
+    iat: getNumericDate(0),
   };
 
-  // Import the private key
-  const privateKey = serviceAccount.private_key.replace(/\\n/g, '\n');
-  const key = await crypto.subtle.importKey(
-    "pkcs8",
-    new TextEncoder().encode(privateKey)
-      .reduce((acc, byte, i) => {
-        const pem = privateKey.replace(/-----BEGIN PRIVATE KEY-----/, '')
-          .replace(/-----END PRIVATE KEY-----/, '')
-          .replace(/\s/g, '');
-        return Uint8Array.from(atob(pem), c => c.charCodeAt(0));
-      }, new Uint8Array()),
-    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-
+  const key = await importPrivateKey(serviceAccount.private_key);
   return await create(header, payload, key);
 }
 
-// Get access token using service account
 async function getServiceAccountAccessToken(serviceAccount: any): Promise<string> {
   const jwt = await createServiceAccountJWT(serviceAccount);
   
@@ -74,14 +81,12 @@ serve(async (req) => {
     }
 
     const serviceAccount = JSON.parse(GOOGLE_DRIVE_SERVICE_ACCOUNT);
-    
-    // Get access token using service account
     const access_token = await getServiceAccountAccessToken(serviceAccount);
 
     // Parse the multipart form data
     const formData = await req.formData();
     const file = formData.get('file') as File;
-    const fileName = formData.get('fileName') as string || file.name;
+    const fileName = (formData.get('fileName') as string) || file?.name || `upload_${Date.now()}`;
 
     if (!file) {
       throw new Error('No file provided');
@@ -89,7 +94,7 @@ serve(async (req) => {
 
     const fileBuffer = await file.arrayBuffer();
 
-    // Upload metadata first
+    // Upload metadata first (start a resumable upload session)
     const metadata = {
       name: fileName,
       parents: [GOOGLE_DRIVE_FOLDER_ID],
@@ -100,11 +105,14 @@ serve(async (req) => {
       headers: {
         'Authorization': `Bearer ${access_token}`,
         'Content-Type': 'application/json',
+        'X-Upload-Content-Type': file.type || 'application/octet-stream',
       },
       body: JSON.stringify(metadata),
     });
 
     if (!metadataResponse.ok) {
+      const t = await metadataResponse.text();
+      console.error('Failed to initiate upload', metadataResponse.status, t);
       throw new Error('Failed to initiate upload');
     }
 
@@ -113,16 +121,19 @@ serve(async (req) => {
       throw new Error('No upload URL received');
     }
 
-    // Upload the file
+    // Upload the file to the resumable session URL
     const uploadResponse = await fetch(uploadUrl, {
       method: 'PUT',
       headers: {
         'Content-Type': file.type || 'application/octet-stream',
+        'Content-Length': String(fileBuffer.byteLength),
       },
       body: fileBuffer,
     });
 
     if (!uploadResponse.ok) {
+      const t = await uploadResponse.text();
+      console.error('Resumable upload failed', uploadResponse.status, t);
       throw new Error('Failed to upload file');
     }
 
@@ -154,7 +165,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error uploading to Google Drive:', error);
     return new Response(
       JSON.stringify({ error: error.message }),

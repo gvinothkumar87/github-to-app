@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,8 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2 } from 'lucide-react';
+import { Camera, Upload, X, Loader2 } from 'lucide-react';
+import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { useEnhancedOfflineData } from '../hooks/useEnhancedOfflineData';
+import { supabase } from '@/integrations/supabase/client';
 
 interface LoadWeightModalProps {
   isOpen: boolean;
@@ -33,9 +35,68 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
   const [loadWeight, setLoadWeight] = useState(outwardEntry.load_weight?.toString() || '');
   const [remarks, setRemarks] = useState('');
   const [loading, setLoading] = useState(false);
+  const [photoDataUrl, setPhotoDataUrl] = useState<string>('');
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   const { update: updateOutwardEntry } = useEnhancedOfflineData('outward_entries', [], { autoSync: true });
+
+  const takePhoto = async () => {
+    try {
+      const photo = await CapCamera.getPhoto({
+        quality: 60,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera,
+      });
+
+      if (photo.dataUrl) {
+        setPhotoDataUrl(photo.dataUrl);
+      }
+    } catch (error: any) {
+      console.error('Error taking photo:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to take photo. Please check camera permissions.',
+      });
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoDataUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setPhotoDataUrl('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const uploadToGoogleDrive = async (dataUrl: string): Promise<string> => {
+    const blob = await (await fetch(dataUrl)).blob();
+    const file = new File([blob], `load-weight-${Date.now()}.jpg`, { type: 'image/jpeg' });
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('fileName', file.name);
+
+    const { data, error } = await supabase.functions.invoke('upload-to-google-drive', {
+      body: formData,
+    });
+
+    if (error) throw error;
+    return data.viewUrl;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,6 +120,30 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
 
     setLoading(true);
     try {
+      let photoUrl = null;
+      
+      // Upload photo if provided
+      if (photoDataUrl) {
+        setUploading(true);
+        toast({
+          title: "Uploading",
+          description: "Uploading weighment photo...",
+        });
+        
+        try {
+          photoUrl = await uploadToGoogleDrive(photoDataUrl);
+        } catch (uploadError: any) {
+          console.error('Photo upload error:', uploadError);
+          toast({
+            variant: "destructive",
+            title: "Warning",
+            description: "Failed to upload photo, but will save other data",
+          });
+        } finally {
+          setUploading(false);
+        }
+      }
+
       const netWeight = parseFloat(loadWeight) - outwardEntry.empty_weight;
       
       await updateOutwardEntry(outwardEntry.id, {
@@ -68,7 +153,8 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
         load_weight_updated_by: user?.id,
         remarks: remarks || null,
         is_completed: true,
-        sync_status: 'pending'
+        sync_status: 'pending',
+        ...(photoUrl && { weighment_photo_url: photoUrl })
       });
 
       toast({
@@ -155,13 +241,63 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
             />
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="weighment_photo">Weighment Photo (Optional)</Label>
+            <input
+              ref={fileInputRef}
+              id="weighment_photo"
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={takePhoto}
+                className="flex-1"
+              >
+                <Camera className="mr-2 h-4 w-4" />
+                Take Photo
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex-1"
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                Upload
+              </Button>
+            </div>
+            {photoDataUrl && (
+              <div className="relative mt-2">
+                <img 
+                  src={photoDataUrl} 
+                  alt="Weighment preview" 
+                  className="w-full h-48 object-cover rounded-md border"
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="absolute top-2 right-2"
+                  onClick={handleRemovePhoto}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+
           <DialogFooter className="gap-2">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || !loadWeight}>
-              {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Update Weight
+            <Button type="submit" disabled={loading || uploading || !loadWeight}>
+              {(loading || uploading) && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {uploading ? 'Uploading...' : 'Update Weight'}
             </Button>
           </DialogFooter>
         </form>

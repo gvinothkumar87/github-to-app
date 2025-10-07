@@ -36,7 +36,7 @@ async function createServiceAccountJWT(serviceAccount: any): Promise<string> {
   const header = { alg: 'RS256', typ: 'JWT' };
   const payload = {
     iss: serviceAccount.client_email,
-    scope: 'https://www.googleapis.com/auth/drive.file',
+    scope: 'https://www.googleapis.com/auth/drive',
     aud: 'https://oauth2.googleapis.com/token',
     exp: getNumericDate(60 * 60), // 1 hour expiry
     iat: getNumericDate(0),
@@ -119,6 +119,7 @@ serve(async (req) => {
       headers: {
         'Authorization': `Bearer ${access_token}`,
         'Content-Type': `multipart/related; boundary=${boundary}`,
+        'Content-Length': String(multipartBody.size),
       },
       body: multipartBody,
     });
@@ -126,7 +127,7 @@ serve(async (req) => {
     if (!uploadResponse.ok) {
       const t = await uploadResponse.text();
       console.error('Multipart upload failed', uploadResponse.status, t);
-      throw new Error('Failed to upload file');
+      throw new Error(`Failed to upload file: ${uploadResponse.status} ${t}`);
     }
 
     const uploadResult = await uploadResponse.json();

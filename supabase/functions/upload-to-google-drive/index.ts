@@ -114,7 +114,7 @@ serve(async (req) => {
       closeDelimiter,
     ]);
 
-    const uploadResponse = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true', {
+    const uploadResponse = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${access_token}`,
@@ -133,7 +133,7 @@ serve(async (req) => {
     const uploadResult = await uploadResponse.json();
 
     // Make the file publicly accessible
-    await fetch(`https://www.googleapis.com/drive/v3/files/${uploadResult.id}/permissions?supportsAllDrives=true`, {
+    await fetch(`https://www.googleapis.com/drive/v3/files/${uploadResult.id}/permissions`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${access_token}`,

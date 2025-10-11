@@ -1,1 +1,4 @@
 project_id = "swxbydfypyojcerentsz"
+
+[functions.google-drive-oauth]
+verify_jwt = true

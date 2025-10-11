@@ -43,6 +43,8 @@ export const TransitLogbook = () => {
   
   // Load weight input tracking
   const [loadWeights, setLoadWeights] = useState<{[key: string]: string}>({});
+  const [photoData, setPhotoData] = useState<{[key: string]: string}>({});
+  const [uploadingMap, setUploadingMap] = useState<{[key: string]: boolean}>({});
   
   // Reports filters
   const [startDate, setStartDate] = useState<Date>();
@@ -224,16 +226,53 @@ export const TransitLogbook = () => {
     setShowForm(true);
   };
 
-  const updateLoadWeight = async (entryId: string, loadWeight: number) => {
+  const handlePhotoFileChange = (entryId: string, file: File) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPhotoData(prev => ({ ...prev, [entryId]: reader.result as string }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const updateLoadWeight = async (entry: any, loadWeight: number) => {
     try {
+      if (!photoData[entry.id]) {
+        toast({
+          variant: 'destructive',
+          title: language === 'english' ? 'Photo required' : 'புகைப்படம் தேவை',
+          description: language === 'english' ? 'Please upload the weighment photo before updating.' : 'புதுப்பிப்பதற்கு முன் எடைப் புகைப்படத்தை பதிவேற்றவும்.'
+        });
+        return;
+      }
+
+      if (loadWeight <= entry.empty_weight) {
+        toast({
+          variant: 'destructive',
+          title: language === 'english' ? 'Invalid weight' : 'தவறான எடை',
+          description: language === 'english' ? 'Load weight must be greater than empty weight.' : 'மொத்த எடை காலி எடையை விட அதிகமாக இருக்க வேண்டும்.'
+        });
+        return;
+      }
+
+      setUploadingMap(prev => ({ ...prev, [entry.id]: true }));
+
+      // Upload photo via OAuth edge function
+      const { GoogleDriveOAuth } = await import('@/lib/googleDriveOAuth');
+      const fileName = `load-weight-${entry.serial_no}-${Date.now()}.jpg`;
+      const viewUrl = await GoogleDriveOAuth.uploadFile(photoData[entry.id], fileName);
+
+      const netWeight = loadWeight - entry.empty_weight;
+
       const { error } = await supabase
         .from('outward_entries')
         .update({
           load_weight: loadWeight,
+          net_weight: netWeight,
+          weighment_photo_url: viewUrl,
           load_weight_updated_at: new Date().toISOString(),
           is_completed: true,
         })
-        .eq('id', entryId);
+        .eq('id', entry.id);
 
       if (error) throw error;
 
@@ -249,17 +288,17 @@ export const TransitLogbook = () => {
         fetchEntries();
       }
       
-      // Clear the input value after successful update
-      setLoadWeights(prev => ({
-        ...prev,
-        [entryId]: ''
-      }));
+      // Clear the input and photo after successful update
+      setLoadWeights(prev => ({ ...prev, [entry.id]: '' }));
+      setPhotoData(prev => { const p = { ...prev }; delete p[entry.id]; return p; });
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: language === 'english' ? 'Error' : 'பிழை',
         description: error.message,
       });
+    } finally {
+      setUploadingMap(prev => ({ ...prev, [entry.id]: false }));
     }
   };
 
@@ -781,9 +820,10 @@ export const TransitLogbook = () => {
                          <TableHead>{language === 'english' ? 'Item' : 'பொருள்'}</TableHead>
                          <TableHead>{language === 'english' ? 'Loading Place' : 'ஏற்றும் இடம்'}</TableHead>
                          <TableHead>{language === 'english' ? 'Lorry No' : 'லாரி எண்'}</TableHead>
-                         <TableHead>{language === 'english' ? 'Empty Weight' : 'காலி எடை'}</TableHead>
-                         <TableHead>{language === 'english' ? 'Load Weight' : 'மொத்த எடை'}</TableHead>
-                         <TableHead>{language === 'english' ? 'Action' : 'செயல்'}</TableHead>
+                          <TableHead>{language === 'english' ? 'Empty Weight' : 'காலி எடை'}</TableHead>
+                          <TableHead>{language === 'english' ? 'Photo' : 'புகைப்படம்'}</TableHead>
+                          <TableHead>{language === 'english' ? 'Load Weight' : 'மொத்த எடை'}</TableHead>
+                          <TableHead>{language === 'english' ? 'Action' : 'செயல்'}</TableHead>
                        </TableRow>
                      </TableHeader>
                     <TableBody>
@@ -798,42 +838,68 @@ export const TransitLogbook = () => {
                                ? (language === 'english' ? 'PULIVANTHI' : 'புலியந்தி')
                                : (language === 'english' ? 'MATTAPARAI' : 'மட்டப்பாறை')}
                            </TableCell>
-                           <TableCell className="font-mono">{entry.lorry_no}</TableCell>
-                            <TableCell>{entry.empty_weight} KG</TableCell>
-                          <TableCell>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              placeholder={language === 'english' ? 'Enter load weight' : 'மொத்த எடையை உள்ளிடவும்'}
-                              value={loadWeights[entry.id] || ''}
-                              onChange={(e) => setLoadWeights(prev => ({
-                                ...prev,
-                                [entry.id]: e.target.value
-                              }))}
-                              className="w-32"
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  const value = parseFloat(loadWeights[entry.id] || '0');
-                                  if (value > 0) {
-                                    updateLoadWeight(entry.id, value);
-                                  }
-                                }
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              size="sm"
-                              onClick={() => {
-                                const value = parseFloat(loadWeights[entry.id] || '0');
-                                if (value > 0) {
-                                  updateLoadWeight(entry.id, value);
-                                }
-                              }}
-                            >
-                              {language === 'english' ? 'Update' : 'புதுப்பிக்கவும்'}
-                            </Button>
-                          </TableCell>
+                            <TableCell className="font-mono">{entry.lorry_no}</TableCell>
+                             <TableCell>{entry.empty_weight} KG</TableCell>
+                           <TableCell>
+                             <input
+                               id={`photo_${entry.id}`}
+                               type="file"
+                               accept="image/*"
+                               className="hidden"
+                               onChange={(e) => {
+                                 const file = e.target.files?.[0];
+                                 if (file) handlePhotoFileChange(entry.id, file);
+                               }}
+                             />
+                             <div className="flex items-center gap-2">
+                               <Button
+                                 type="button"
+                                 variant="outline"
+                                 size="sm"
+                                 onClick={() => document.getElementById(`photo_${entry.id}`)?.click()}
+                               >
+                                 {language === 'english' ? 'Upload Photo' : 'புகைப்படம் பதிவேற்று'}
+                               </Button>
+                               {photoData[entry.id] && (
+                                 <img src={photoData[entry.id]} alt="Preview" className="h-10 w-14 object-cover rounded border" />
+                               )}
+                             </div>
+                           </TableCell>
+                           <TableCell>
+                             <Input
+                               type="number"
+                               step="0.01"
+                               placeholder={language === 'english' ? 'Enter load weight' : 'மொத்த எடையை உள்ளிடவும்'}
+                               value={loadWeights[entry.id] || ''}
+                               onChange={(e) => setLoadWeights(prev => ({
+                                 ...prev,
+                                 [entry.id]: e.target.value
+                               }))}
+                               className="w-32"
+                               onKeyDown={(e) => {
+                                 if (e.key === 'Enter') {
+                                   const value = parseFloat(loadWeights[entry.id] || '0');
+                                   if (value > 0) {
+                                     updateLoadWeight(entry, value);
+                                   }
+                                 }
+                               }}
+                             />
+                           </TableCell>
+                           <TableCell>
+                             <Button
+                               size="sm"
+                               disabled={!photoData[entry.id] || uploadingMap[entry.id]}
+                               onClick={() => {
+                                 const value = parseFloat(loadWeights[entry.id] || '0');
+                                 if (value > 0) {
+                                   updateLoadWeight(entry, value);
+                                 }
+                               }}
+                             >
+                               {uploadingMap[entry.id] ? (language === 'english' ? 'Uploading...' : 'பதிவேற்றுகிறது...') : (language === 'english' ? 'Update' : 'புதுப்பிக்கவும்')}
+                             </Button>
+                           </TableCell>
                         </TableRow>
                       ))}
                       

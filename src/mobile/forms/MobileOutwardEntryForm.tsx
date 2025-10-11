@@ -74,21 +74,9 @@ const MobileOutwardEntryForm: React.FC = () => {
   };
 
   const uploadToGoogleDrive = async (dataUrl: string): Promise<string> => {
-    const blob = await fetch(dataUrl).then(r => r.blob());
-    const file = new File([blob], `weighment_${Date.now()}.jpg`, { type: 'image/jpeg' });
-    
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('fileName', file.name);
-
-    const { data, error } = await supabase.functions.invoke('upload-to-google-drive', {
-      body: formData,
-    });
-
-    if (error) throw error;
-    if (!data.success) throw new Error('Upload failed');
-    
-    return data.viewUrl;
+    const { GoogleDriveOAuth } = await import('@/lib/googleDriveOAuth');
+    const fileName = `weighment_${Date.now()}.jpg`;
+    return await GoogleDriveOAuth.uploadFile(dataUrl, fileName);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

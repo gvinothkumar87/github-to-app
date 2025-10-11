@@ -93,18 +93,21 @@ export const OutwardEntryForm: React.FC<OutwardEntryFormProps> = ({ onSuccess, o
   };
 
   const uploadToGoogleDrive = async (file: File): Promise<string> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('fileName', `weighment_${Date.now()}_${file.name}`);
-
-    const { data, error } = await supabase.functions.invoke('upload-to-google-drive', {
-      body: formData,
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+          const { GoogleDriveOAuth } = await import('@/lib/googleDriveOAuth');
+          const fileName = `weighment_${Date.now()}_${file.name}`;
+          const viewUrl = await GoogleDriveOAuth.uploadFile(reader.result as string, fileName);
+          resolve(viewUrl);
+        } catch (error) {
+          reject(error);
+        }
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
     });
-
-    if (error) throw error;
-    if (!data.success) throw new Error('Upload failed');
-    
-    return data.viewUrl;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

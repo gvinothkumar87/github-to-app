@@ -83,19 +83,9 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
   };
 
   const uploadToGoogleDrive = async (dataUrl: string): Promise<string> => {
-    const blob = await (await fetch(dataUrl)).blob();
-    const file = new File([blob], `load-weight-${Date.now()}.jpg`, { type: 'image/jpeg' });
-    
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('fileName', file.name);
-
-    const { data, error } = await supabase.functions.invoke('upload-to-google-drive', {
-      body: formData,
-    });
-
-    if (error) throw error;
-    return data.viewUrl;
+    const { GoogleDriveOAuth } = await import('@/lib/googleDriveOAuth');
+    const fileName = `load-weight-${Date.now()}.jpg`;
+    return await GoogleDriveOAuth.uploadFile(dataUrl, fileName);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -118,31 +108,25 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
       return;
     }
 
+    if (!photoDataUrl) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please upload a weighment photo",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      let photoUrl = null;
+      setUploading(true);
+      toast({
+        title: "Uploading",
+        description: "Uploading weighment photo...",
+      });
       
-      // Upload photo if provided
-      if (photoDataUrl) {
-        setUploading(true);
-        toast({
-          title: "Uploading",
-          description: "Uploading weighment photo...",
-        });
-        
-        try {
-          photoUrl = await uploadToGoogleDrive(photoDataUrl);
-        } catch (uploadError: any) {
-          console.error('Photo upload error:', uploadError);
-          toast({
-            variant: "destructive",
-            title: "Warning",
-            description: "Failed to upload photo, but will save other data",
-          });
-        } finally {
-          setUploading(false);
-        }
-      }
+      const photoUrl = await uploadToGoogleDrive(photoDataUrl);
+      setUploading(false);
 
       const netWeight = parseFloat(loadWeight) - outwardEntry.empty_weight;
       
@@ -154,7 +138,7 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
         remarks: remarks || null,
         is_completed: true,
         sync_status: 'pending',
-        ...(photoUrl && { weighment_photo_url: photoUrl })
+        weighment_photo_url: photoUrl
       });
 
       toast({
@@ -242,7 +226,7 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="weighment_photo">Weighment Photo (Optional)</Label>
+            <Label htmlFor="weighment_photo">Weighment Photo *</Label>
             <input
               ref={fileInputRef}
               id="weighment_photo"
@@ -295,7 +279,7 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || uploading || !loadWeight}>
+            <Button type="submit" disabled={loading || uploading || !loadWeight || !photoDataUrl}>
               {(loading || uploading) && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               {uploading ? 'Uploading...' : 'Update Weight'}
             </Button>

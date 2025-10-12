@@ -8,7 +8,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { OutwardEntry, Customer, Item, Sale } from '@/types';
-import { Trash2, AlertTriangle, Package, Truck, Receipt, Eye, Loader2 } from 'lucide-react';
+import { Trash2, AlertTriangle, Package, Truck, Receipt, Eye, Loader2, Edit, ExternalLink } from 'lucide-react';
+import { EditSaleForm } from './EditSaleForm';
 import { format } from 'date-fns';
 
 interface AdminDeleteFormProps {
@@ -27,6 +28,7 @@ export const AdminDeleteForm: React.FC<AdminDeleteFormProps> = ({ onSuccess, onC
   const [entries, setEntries] = useState<ExtendedOutwardEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingEntry, setEditingEntry] = useState<ExtendedOutwardEntry | null>(null);
 
   useEffect(() => {
     fetchEntries();
@@ -191,6 +193,23 @@ export const AdminDeleteForm: React.FC<AdminDeleteFormProps> = ({ onSuccess, onC
     );
   }
 
+  // Show edit form if editing
+  if (editingEntry && editingEntry.sales && editingEntry.sales.length > 0) {
+    return (
+      <EditSaleForm
+        sale={editingEntry.sales[0]}
+        outwardEntry={editingEntry}
+        customer={editingEntry.customers}
+        item={editingEntry.items}
+        onSuccess={() => {
+          setEditingEntry(null);
+          fetchEntries();
+        }}
+        onCancel={() => setEditingEntry(null)}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <Card>
@@ -293,7 +312,31 @@ export const AdminDeleteForm: React.FC<AdminDeleteFormProps> = ({ onSuccess, onC
                   </div>
                 )}
 
-                <div className="flex justify-end pt-2">
+                {/* Image Links */}
+                {entry.weighment_photo_url && (
+                  <div className="pt-2 border-t">
+                    <a 
+                      href={entry.weighment_photo_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary hover:underline flex items-center gap-1"
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      {language === 'english' ? 'Empty Weight Image' : 'வெற்று எடை படம்'}
+                    </a>
+                  </div>
+                )}
+
+                <div className="flex justify-end gap-2 pt-2">
+                  {entry.sales && entry.sales.length > 0 && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setEditingEntry(entry)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  )}
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button 
@@ -357,8 +400,9 @@ export const AdminDeleteForm: React.FC<AdminDeleteFormProps> = ({ onSuccess, onC
                   <TableHead>{language === 'english' ? 'Load Wt' : 'லோட் எடை'}</TableHead>
                   <TableHead>{language === 'english' ? 'Net Wt' : 'நிகர எடை'}</TableHead>
                   <TableHead>{language === 'english' ? 'Bill Details' : 'பில் விவரங்கள்'}</TableHead>
+                  <TableHead>{language === 'english' ? 'Images' : 'படங்கள்'}</TableHead>
                   <TableHead>{language === 'english' ? 'Status' : 'நிலை'}</TableHead>
-                  <TableHead className="text-center">{language === 'english' ? 'Action' : 'செயல்'}</TableHead>
+                  <TableHead className="text-center">{language === 'english' ? 'Actions' : 'செயல்கள்'}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -392,12 +436,37 @@ export const AdminDeleteForm: React.FC<AdminDeleteFormProps> = ({ onSuccess, onC
                         )}
                       </TableCell>
                       <TableCell>
+                        <div className="space-y-1 text-xs">
+                          {entry.weighment_photo_url && (
+                            <a 
+                              href={entry.weighment_photo_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline flex items-center gap-1"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                              {language === 'english' ? 'Empty Wt' : 'காலி எடை'}
+                            </a>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
                         <Badge className={`${status.color} text-white`}>
                           {status.label}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-center">
-                        <AlertDialog>
+                      <TableCell>
+                        <div className="flex justify-center gap-2">
+                          {entry.sales && entry.sales.length > 0 && (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => setEditingEntry(entry)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button 
                               variant="destructive" 
@@ -452,8 +521,9 @@ export const AdminDeleteForm: React.FC<AdminDeleteFormProps> = ({ onSuccess, onC
                                 {language === 'english' ? 'Delete Permanently' : 'நிரந்தரமாக நீக்கு'}
                               </AlertDialogAction>
                             </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );

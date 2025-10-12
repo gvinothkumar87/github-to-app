@@ -48,6 +48,7 @@ export interface OutwardEntry {
   load_weight_updated_by?: string;
   remarks?: string;
   loading_place: string;
+  weighment_photo_url?: string;
   is_completed: boolean;
   created_at: string;
   updated_at: string;

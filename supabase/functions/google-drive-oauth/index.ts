@@ -11,12 +11,12 @@ serve(async (req) => {
   }
 
   try {
-    const { action, code, file, fileName } = await req.json();
+    const { action, code, file, fileName, accessToken } = await req.json();
     
-    const CLIENT_ID = Deno.env.get('GOOGLE_OAUTH_CLIENT_ID');
-    const CLIENT_SECRET = Deno.env.get('GOOGLE_OAUTH_CLIENT_SECRET');
-    const REDIRECT_URI = Deno.env.get('GOOGLE_OAUTH_REDIRECT_URI');
-    const FOLDER_ID = Deno.env.get('GOOGLE_DRIVE_FOLDER_ID');
+    const CLIENT_ID = Deno.env.get('GOOGLE_OAUTH_CLIENT_ID')?.trim();
+    const CLIENT_SECRET = Deno.env.get('GOOGLE_OAUTH_CLIENT_SECRET')?.trim();
+    const REDIRECT_URI = Deno.env.get('GOOGLE_OAUTH_REDIRECT_URI')?.trim();
+    const FOLDER_ID = Deno.env.get('GOOGLE_DRIVE_FOLDER_ID')?.trim();
 
     if (!CLIENT_ID || !CLIENT_SECRET) {
       return new Response(
@@ -83,8 +83,6 @@ serve(async (req) => {
 
     // Upload file with access token
     if (action === 'upload' && file && fileName) {
-      const { accessToken } = await req.json();
-      
       if (!accessToken) {
         return new Response(
           JSON.stringify({ error: 'Missing access token' }), 

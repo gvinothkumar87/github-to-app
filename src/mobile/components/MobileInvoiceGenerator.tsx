@@ -1,19 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { MobileLayout } from './MobileLayout';
 import { useEnhancedOfflineData } from '../hooks/useEnhancedOfflineData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Share2, Printer } from 'lucide-react';
+import { Share2, Printer, Download, FileJson, Edit } from 'lucide-react';
 import { format } from 'date-fns';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import QRCode from 'qrcode';
+import jsPDF from 'jspdf';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export const MobileInvoiceGenerator: React.FC = () => {
-  const { saleId } = useParams();
+  const { billId } = useParams();
+  const navigate = useNavigate();
   const { language, getDisplayName } = useLanguage();
+  const { toast } = useToast();
   const [sale, setSale] = useState<any>(null);
   const [companySettings, setCompanySettings] = useState<any>(null);
+  const [showIrnDialog, setShowIrnDialog] = useState(false);
+  const [irnValue, setIrnValue] = useState('');
+  const [irnLoading, setIrnLoading] = useState(false);
 
   const { data: sales } = useEnhancedOfflineData('sales');
   const { data: customers } = useEnhancedOfflineData('customers');
@@ -22,19 +33,20 @@ export const MobileInvoiceGenerator: React.FC = () => {
   const { data: companySettingsData } = useEnhancedOfflineData('company_settings');
 
   useEffect(() => {
-    if (saleId && sales.length > 0) {
-      const foundSale = sales.find((s: any) => s.id === saleId);
+    if (billId && sales.length > 0) {
+      const foundSale = sales.find((s: any) => s.id === billId);
       if (foundSale) {
         setSale(foundSale);
+        setIrnValue((foundSale as any).irn || '');
       }
     }
-  }, [saleId, sales]);
+  }, [billId, sales]);
 
   useEffect(() => {
     if (companySettingsData.length > 0 && sale) {
       const outwardEntry = outwardEntries.find((entry: any) => entry.id === sale.outward_entry_id);
       if (outwardEntry) {
-        const settings = companySettingsData.find((cs: any) => cs.location_name === (outwardEntry as any).loading_place);
+        const settings = companySettingsData.find((cs: any) => cs.location_code === (outwardEntry as any).loading_place);
         setCompanySettings(settings || companySettingsData[0]);
       }
     }
@@ -57,12 +69,245 @@ export const MobileInvoiceGenerator: React.FC = () => {
     return { baseAmount, gstAmount, totalAmount };
   };
 
-  const handlePrint = async () => {
-    // For mobile, we'll open a new window with the print-optimized invoice
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
+  const handleUpdateIrn = async () => {
+    if (!irnValue.trim()) {
+      toast({
+        title: language === 'english' ? 'Error' : 'பிழை',
+        description: language === 'english' ? 'Please enter IRN' : 'IRN உள்ளிடவும்',
+        variant: 'destructive',
+      });
+      return;
+    }
 
-    // Generate QR code if IRN exists
+    setIrnLoading(true);
+    try {
+      const { error } = await supabase
+        .from('sales')
+        .update({ irn: irnValue.trim() })
+        .eq('id', billId);
+
+      if (error) throw error;
+
+      toast({
+        title: language === 'english' ? 'Success' : 'வெற்றி',
+        description: language === 'english' ? 'IRN updated successfully' : 'IRN வெற்றிகரமாக புதுப்பிக்கப்பட்டது',
+      });
+
+      setSale({ ...sale, irn: irnValue.trim() });
+      setShowIrnDialog(false);
+    } catch (error: any) {
+      toast({
+        title: language === 'english' ? 'Error' : 'பிழை',
+        description: error.message || (language === 'english' ? 'Failed to update IRN' : 'IRN புதுப்பிப்பதில் தோல்வி'),
+        variant: 'destructive',
+      });
+    } finally {
+      setIrnLoading(false);
+    }
+  };
+
+  const generateEInvoiceJSON = () => {
+    if (!sale || !customer || !item || !outwardEntry || !companySettings) {
+      toast({
+        title: language === 'english' ? 'Error' : 'பிழை',
+        description: language === 'english' ? 'Missing required data' : 'தேவையான தகவல் இல்லை',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const { baseAmount, gstAmount } = calculateAmounts();
+    const roundedBaseAmount = Math.round(baseAmount * 100) / 100;
+    const roundedGstAmount = Math.round(gstAmount * 100) / 100;
+    const roundedCgstAmount = Math.round((roundedGstAmount / 2) * 100) / 100;
+    const roundedSgstAmount = Math.round((roundedGstAmount / 2) * 100) / 100;
+    const roundedTotalAmount = Math.round((roundedBaseAmount + roundedCgstAmount + roundedSgstAmount) * 100) / 100;
+
+    const eInvoiceData = {
+      Version: "1.1",
+      TranDtls: {
+        TaxSch: "GST",
+        SupTyp: "B2B",
+        IgstOnIntra: "N",
+        RegRev: "N",
+        EcmGstin: null
+      },
+      DocDtls: {
+        Typ: "INV",
+        No: sale.bill_serial_no,
+        Dt: new Date(sale.sale_date).toISOString().split('T')[0].split('-').reverse().join('/')
+      },
+      SellerDtls: {
+        Gstin: companySettings.gstin,
+        LglNm: companySettings.company_name,
+        Addr1: companySettings.address_line1,
+        Addr2: companySettings.address_line2 || "",
+        Loc: companySettings.locality,
+        Pin: companySettings.pin_code,
+        Stcd: companySettings.state_code,
+        Ph: companySettings.phone || null,
+        Em: companySettings.email || null
+      },
+      BuyerDtls: {
+        Gstin: customer.gstin || "URP",
+        LglNm: getDisplayName(customer),
+        Pos: customer.state_code || "33",
+        Addr1: customer.address_english || customer.address_tamil || "",
+        Addr2: "",
+        Loc: customer.pin_code || "",
+        Pin: parseInt(customer.pin_code) || 0,
+        Stcd: customer.state_code || "33",
+        Ph: customer.phone || null,
+        Em: customer.email || null
+      },
+      ItemList: [
+        {
+          SlNo: "1",
+          PrdDesc: getDisplayName(item),
+          IsServc: "N",
+          HsnCd: item.hsn_no,
+          Qty: sale.quantity,
+          Unit: item.unit,
+          UnitPrice: sale.rate,
+          TotAmt: roundedBaseAmount,
+          Discount: 0,
+          AssAmt: roundedBaseAmount,
+          GstRt: item.gst_percentage,
+          CgstAmt: roundedCgstAmount,
+          SgstAmt: roundedSgstAmount,
+          IgstAmt: 0,
+          CesRt: 0,
+          CesAmt: 0,
+          CesNonAdvlAmt: 0,
+          StateCesRt: 0,
+          StateCesAmt: 0,
+          StateCesNonAdvlAmt: 0,
+          OthChrg: 0,
+          TotItemVal: roundedTotalAmount
+        }
+      ]
+    };
+
+    const eInvoiceArray = [eInvoiceData];
+    const blob = new Blob([JSON.stringify(eInvoiceArray, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `einvoice_${sale.bill_serial_no}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: language === 'english' ? 'Success' : 'வெற்றி',
+      description: language === 'english' ? 'JSON file downloaded' : 'JSON கோப்பு பதிவிறக்கப்பட்டது',
+    });
+  };
+
+  const downloadPDF = async () => {
+    if (!sale || !customer || !item || !outwardEntry || !companySettings) {
+      toast({
+        title: language === 'english' ? 'Error' : 'பிழை',
+        description: language === 'english' ? 'Missing required data' : 'தேவையான தகவல் இல்லை',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const pdf = new jsPDF();
+      const { baseAmount, gstAmount, totalAmount } = calculateAmounts();
+
+      // Title
+      pdf.setFontSize(20);
+      pdf.text(companySettings.company_name, 105, 20, { align: 'center' });
+      
+      pdf.setFontSize(10);
+      pdf.text(companySettings.address_line1, 105, 28, { align: 'center' });
+      pdf.text(`${companySettings.locality} - ${companySettings.pin_code}`, 105, 34, { align: 'center' });
+      pdf.text(`GSTIN: ${companySettings.gstin}`, 105, 40, { align: 'center' });
+
+      // Invoice details
+      pdf.setFontSize(14);
+      pdf.text('TAX INVOICE', 105, 52, { align: 'center' });
+      
+      pdf.setFontSize(10);
+      pdf.text(`Invoice No: ${sale.bill_serial_no}`, 20, 62);
+      pdf.text(`Date: ${new Date(sale.sale_date).toLocaleDateString('en-IN')}`, 20, 68);
+      pdf.text(`Vehicle: ${outwardEntry.lorry_no}`, 20, 74);
+
+      // Customer details
+      pdf.text('Bill To:', 20, 86);
+      pdf.text(getDisplayName(customer), 20, 92);
+      if (customer.address_english || customer.address_tamil) {
+        pdf.text(customer.address_english || customer.address_tamil, 20, 98, { maxWidth: 180 });
+      }
+      if (customer.gstin) {
+        pdf.text(`GSTIN: ${customer.gstin}`, 20, 108);
+      }
+
+      // Items table
+      const tableY = 120;
+      pdf.line(20, tableY, 190, tableY);
+      pdf.text('Description', 22, tableY + 6);
+      pdf.text('HSN', 100, tableY + 6);
+      pdf.text('Qty', 125, tableY + 6);
+      pdf.text('Rate', 145, tableY + 6);
+      pdf.text('Amount', 170, tableY + 6);
+      pdf.line(20, tableY + 10, 190, tableY + 10);
+
+      pdf.text(getDisplayName(item), 22, tableY + 18);
+      pdf.text(item.hsn_no || '', 100, tableY + 18);
+      pdf.text(`${sale.quantity} ${item.unit}`, 125, tableY + 18);
+      pdf.text(`₹${sale.rate.toFixed(2)}`, 145, tableY + 18);
+      pdf.text(`₹${baseAmount.toFixed(2)}`, 170, tableY + 18);
+
+      pdf.line(20, tableY + 22, 190, tableY + 22);
+
+      // Totals
+      const totalsY = tableY + 32;
+      pdf.text('Taxable Amount:', 130, totalsY);
+      pdf.text(`₹${baseAmount.toFixed(2)}`, 170, totalsY);
+
+      if (gstAmount > 0) {
+        pdf.text(`CGST (${item.gst_percentage / 2}%):`, 130, totalsY + 6);
+        pdf.text(`₹${(gstAmount / 2).toFixed(2)}`, 170, totalsY + 6);
+        
+        pdf.text(`SGST (${item.gst_percentage / 2}%):`, 130, totalsY + 12);
+        pdf.text(`₹${(gstAmount / 2).toFixed(2)}`, 170, totalsY + 12);
+      }
+
+      pdf.setFontSize(12);
+      pdf.text('Total Amount:', 130, totalsY + 22);
+      pdf.text(`₹${totalAmount.toFixed(2)}`, 170, totalsY + 22);
+
+      // IRN if available
+      if (sale.irn) {
+        pdf.setFontSize(8);
+        pdf.text(`IRN: ${sale.irn}`, 20, 280);
+      }
+
+      pdf.save(`invoice_${sale.bill_serial_no}.pdf`);
+
+      toast({
+        title: language === 'english' ? 'Success' : 'வெற்றி',
+        description: language === 'english' ? 'PDF downloaded successfully' : 'PDF வெற்றிகரமாக பதிவிறக்கப்பட்டது',
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: language === 'english' ? 'Error' : 'பிழை',
+        description: language === 'english' ? 'Failed to generate PDF' : 'PDF உருவாக்குவதில் தோல்வி',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handlePrint = async () => {
+    // Use the same print logic from the web app
+    if (!sale || !customer || !item || !outwardEntry || !companySettings) return;
+
     let qrCodeDataUrl = '';
     if (sale.irn) {
       try {
@@ -80,39 +325,31 @@ export const MobileInvoiceGenerator: React.FC = () => {
     }
 
     const { baseAmount, gstAmount, totalAmount } = calculateAmounts();
+    const printWindow = window.open('', '_blank');
+    
+    if (!printWindow) return;
 
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
         <head>
           <title>Invoice - ${sale.bill_serial_no || 'N/A'}</title>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { font-family: Arial, sans-serif; font-size: 12px; padding: 10px; }
-            .invoice-container { max-width: 100%; }
-            .header { display: flex; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-            .qr-section { width: 80px; height: 80px; margin-right: 15px; display: flex; align-items: center; justify-content: center; }
-            .qr-code { max-width: 100%; max-height: 100%; }
+            .invoice-container { max-width: 100%; border: 2px solid #000; }
+            .header { display: flex; align-items: center; padding: 10px; border-bottom: 2px solid #000; }
+            .qr-section { width: 80px; margin-right: 15px; }
             .company-info { flex: 1; text-align: center; }
             .company-name { font-size: 16px; font-weight: bold; margin-bottom: 5px; }
-            .company-details { font-size: 9px; line-height: 1.3; }
-            .invoice-title { font-size: 14px; font-weight: bold; background: #f0f0f0; padding: 5px; text-align: center; margin-bottom: 15px; }
-            .details-section { margin-bottom: 15px; }
-            .details-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-            .details-table td { padding: 3px 5px; border: 1px solid #ddd; font-size: 9px; }
-            .details-label { font-weight: bold; background: #f9f9f9; width: 40%; }
-            .items-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-            .items-table th, .items-table td { border: 1px solid #000; padding: 3px; text-align: center; font-size: 9px; }
-            .items-table th { background: #f0f0f0; font-weight: bold; }
-            .totals-section { margin-top: 15px; }
-            .total-row { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 10px; }
-            .grand-total { font-weight: bold; font-size: 12px; border-top: 2px solid #000; padding-top: 5px; }
-            .amount-words { margin: 15px 0; padding: 8px; border: 1px solid #000; background: #f9f9f9; font-size: 9px; }
-            .footer { margin-top: 20px; text-align: right; font-size: 9px; }
+            .details { padding: 10px; }
+            table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+            th, td { border: 1px solid #000; padding: 8px; text-align: left; }
+            th { background-color: #f0f0f0; }
+            .totals { text-align: right; padding: 10px; }
+            .total-row { margin: 5px 0; }
             @media print {
-              body { -webkit-print-color-adjust: exact; padding: 5px; }
+              body { margin: 0; }
             }
           </style>
         </head>
@@ -121,53 +358,32 @@ export const MobileInvoiceGenerator: React.FC = () => {
             <div class="header">
               ${sale.irn && qrCodeDataUrl ? `
                 <div class="qr-section">
-                  <img src="${qrCodeDataUrl}" alt="IRN QR Code" class="qr-code" />
+                  <img src="${qrCodeDataUrl}" style="width: 100%;" />
                 </div>
-              ` : '<div class="qr-section"></div>'}
+              ` : ''}
               <div class="company-info">
-                <div class="company-name">${companySettings?.company_name || 'Company Name'}</div>
-                <div class="company-details">
-                  ${companySettings?.address_line1 || ''} ${companySettings?.address_line2 || ''}<br>
-                  ${companySettings?.locality || ''} - ${companySettings?.pin_code || ''}<br>
-                  Phone: ${companySettings?.phone || 'N/A'}<br>
-                  GSTIN: ${companySettings?.gstin || 'N/A'}
-                </div>
+                <div class="company-name">${companySettings.company_name}</div>
+                <div>${companySettings.address_line1}</div>
+                <div>${companySettings.locality} - ${companySettings.pin_code}</div>
+                <div>GSTIN: ${companySettings.gstin}</div>
               </div>
             </div>
             
-            <div class="invoice-title">TAX INVOICE</div>
-            
-            <div class="details-section">
-              <table class="details-table">
-                <tr>
-                  <td class="details-label">Invoice No:</td>
-                  <td>${sale.bill_serial_no || 'N/A'}</td>
-                  <td class="details-label">Date:</td>
-                  <td>${format(new Date(sale.sale_date), 'dd/MM/yyyy')}</td>
-                </tr>
-                <tr>
-                  <td class="details-label">Customer:</td>
-                  <td colspan="3">${customer?.name_english || 'N/A'}</td>
-                </tr>
-                <tr>
-                  <td class="details-label">GSTIN:</td>
-                  <td>${customer?.gstin || 'N/A'}</td>
-                  <td class="details-label">Lorry No:</td>
-                  <td>${outwardEntry?.lorry_no || 'N/A'}</td>
-                </tr>
-                ${sale.irn ? `
-                <tr>
-                  <td class="details-label">IRN:</td>
-                  <td colspan="3">${sale.irn}</td>
-                </tr>
-                ` : ''}
-              </table>
+            <div class="details">
+              <h3>Tax Invoice</h3>
+              <p><strong>Invoice No:</strong> ${sale.bill_serial_no}</p>
+              <p><strong>Date:</strong> ${new Date(sale.sale_date).toLocaleDateString('en-IN')}</p>
+              <p><strong>Vehicle:</strong> ${outwardEntry.lorry_no}</p>
+              
+              <h4>Bill To:</h4>
+              <p><strong>${getDisplayName(customer)}</strong></p>
+              ${customer.address_english || customer.address_tamil ? `<p>${customer.address_english || customer.address_tamil}</p>` : ''}
+              ${customer.gstin ? `<p>GSTIN: ${customer.gstin}</p>` : ''}
             </div>
-            
-            <table class="items-table">
+
+            <table>
               <thead>
                 <tr>
-                  <th>S.No</th>
                   <th>Description</th>
                   <th>HSN</th>
                   <th>Qty</th>
@@ -177,36 +393,27 @@ export const MobileInvoiceGenerator: React.FC = () => {
               </thead>
               <tbody>
                 <tr>
-                  <td>1</td>
-                  <td>${item?.name_english || 'N/A'}</td>
-                  <td>${item?.hsn_no || 'N/A'}</td>
-                  <td>${sale.quantity} ${item?.unit || 'KG'}</td>
+                  <td>${getDisplayName(item)}</td>
+                  <td>${item.hsn_no || ''}</td>
+                  <td>${sale.quantity} ${item.unit}</td>
                   <td>₹${sale.rate.toFixed(2)}</td>
                   <td>₹${baseAmount.toFixed(2)}</td>
                 </tr>
               </tbody>
             </table>
-            
-            <div class="totals-section">
-              <div class="total-row">
-                <span>Taxable Amount:</span>
-                <span>₹${baseAmount.toFixed(2)}</span>
-              </div>
-              <div class="total-row">
-                <span>GST (${item?.gst_percentage || 0}%):</span>
-                <span>₹${gstAmount.toFixed(2)}</span>
-              </div>
-              <div class="total-row grand-total">
-                <span>Total Amount:</span>
-                <span>₹${totalAmount.toFixed(2)}</span>
+
+            <div class="totals">
+              <div class="total-row"><strong>Taxable Amount:</strong> ₹${baseAmount.toFixed(2)}</div>
+              ${gstAmount > 0 ? `
+                <div class="total-row">CGST (${item.gst_percentage / 2}%): ₹${(gstAmount / 2).toFixed(2)}</div>
+                <div class="total-row">SGST (${item.gst_percentage / 2}%): ₹${(gstAmount / 2).toFixed(2)}</div>
+              ` : ''}
+              <div class="total-row" style="font-size: 16px; margin-top: 10px;">
+                <strong>Total Amount: ₹${totalAmount.toFixed(2)}</strong>
               </div>
             </div>
-            
-            <div class="footer">
-              <p>For ${companySettings?.company_name || 'Company Name'}</p>
-              <br><br>
-              <p>Authorized Signatory</p>
-            </div>
+
+            ${sale.irn ? `<div style="padding: 10px; font-size: 8px;">IRN: ${sale.irn}</div>` : ''}
           </div>
           <script>
             window.onload = function() {
@@ -219,29 +426,18 @@ export const MobileInvoiceGenerator: React.FC = () => {
         </body>
       </html>
     `);
-
+    
     printWindow.document.close();
   };
 
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `Invoice ${sale.bill_serial_no}`,
-          text: `Invoice for ${customer?.name_english} - Amount: ₹${calculateAmounts().totalAmount.toFixed(2)}`,
-        });
-      } catch (error) {
-        console.error('Error sharing:', error);
-      }
-    }
-  };
-
-  if (!sale || !customer || !item || !outwardEntry) {
+  if (!sale || !customer || !item) {
     return (
-      <MobileLayout title={language === 'english' ? 'Invoice' : 'விலைப்பட்டியல்'}>
-        <div className="py-10 text-center text-muted-foreground">
-          {language === 'english' ? 'Loading invoice...' : 'விலைப்பட்டியல் ஏற்றுகிறது...'}
-        </div>
+      <MobileLayout title={language === 'english' ? 'Invoice' : 'பில்'}>
+        <Card>
+          <CardContent className="p-6 text-center">
+            {language === 'english' ? 'Loading invoice...' : 'பில் ஏற்றுகிறது...'}
+          </CardContent>
+        </Card>
       </MobileLayout>
     );
   }
@@ -249,154 +445,142 @@ export const MobileInvoiceGenerator: React.FC = () => {
   const { baseAmount, gstAmount, totalAmount } = calculateAmounts();
 
   return (
-    <MobileLayout title={language === 'english' ? 'Invoice' : 'விலைப்பட்டியல்'}>
+    <MobileLayout 
+      title={`${language === 'english' ? 'Invoice' : 'பில்'} - ${sale.bill_serial_no}`}
+    >
       <div className="space-y-4">
-        {/* Company Header */}
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-lg">
-              {companySettings?.company_name || 'Company Name'}
-            </CardTitle>
-            <div className="text-xs text-muted-foreground">
-              {companySettings?.address_line1 && (
-                <div>{companySettings.address_line1} {companySettings.address_line2}</div>
-              )}
-              {companySettings?.locality && (
-                <div>{companySettings.locality} - {companySettings.pin_code}</div>
-              )}
-              {companySettings?.phone && <div>Phone: {companySettings.phone}</div>}
-              {companySettings?.gstin && <div>GSTIN: {companySettings.gstin}</div>}
-            </div>
-          </CardHeader>
-        </Card>
-
-        {/* Invoice Header */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-center">
-              {language === 'english' ? 'TAX INVOICE' : 'வரி விலைப்பட்டியல்'}
-            </CardTitle>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Bill Serial No</p>
-                <p className="font-medium">{sale.bill_serial_no || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Sale Date</p>
-                <p className="font-medium">{format(new Date(sale.sale_date), 'dd/MM/yyyy')}</p>
-              </div>
-              {sale.irn && (
-                <div className="col-span-2">
-                  <p className="text-sm text-muted-foreground">IRN</p>
-                  <p className="font-medium text-xs break-all">{sale.irn}</p>
-                </div>
-              )}
-            </div>
-          </CardHeader>
-        </Card>
-
-        {/* Customer Details */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">
-              {language === 'english' ? 'Customer Details' : 'வாடிக்கையாளர் விவரங்கள்'}
-            </CardTitle>
-            <div className="space-y-2">
-              <div>
-                <p className="text-sm text-muted-foreground">Name</p>
-                <p className="font-medium">{getDisplayName(customer)}</p>
-              </div>
-              {customer.gstin && (
-                <div>
-                  <p className="text-sm text-muted-foreground">GSTIN</p>
-                  <p className="font-medium">{customer.gstin}</p>
-                </div>
-              )}
-              {customer.address_english && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Address</p>
-                  <p className="font-medium text-sm">{customer.address_english}</p>
-                </div>
-              )}
-            </div>
-          </CardHeader>
-        </Card>
-
-        {/* Transport Details */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">
-              {language === 'english' ? 'Transport Details' : 'போக்குவரத்து விவரங்கள்'}
-            </CardTitle>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Lorry No</p>
-                <p className="font-medium">{outwardEntry.lorry_no}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Driver Mobile</p>
-                <p className="font-medium">{outwardEntry.driver_mobile}</p>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
-
-        {/* Item Details */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">
-              {language === 'english' ? 'Item Details' : 'பொருள் விவரங்கள்'}
-            </CardTitle>
-            <div className="space-y-3">
-              <div className="grid grid-cols-3 gap-2 text-xs font-medium bg-muted p-2 rounded">
-                <div>Description</div>
-                <div className="text-center">Qty</div>
-                <div className="text-right">Rate</div>
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-sm">
-                <div className="space-y-1">
-                  <p className="font-medium">{getDisplayName(item)}</p>
-                  <p className="text-xs text-muted-foreground">HSN: {item.hsn_no || 'N/A'}</p>
-                </div>
-                <div className="text-center">{sale.quantity} {item.unit}</div>
-                <div className="text-right">₹{sale.rate.toFixed(2)}</div>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
-
-        {/* Totals */}
+        {/* Action Buttons */}
         <Card>
           <CardContent className="p-4">
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Taxable Amount:</span>
-                <span>₹{baseAmount.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>GST ({item.gst_percentage || 0}%):</span>
-                <span>₹{gstAmount.toFixed(2)}</span>
-              </div>
-              <div className="border-t pt-2 flex justify-between font-bold">
-                <span>Total Amount:</span>
-                <span>₹{totalAmount.toFixed(2)}</span>
-              </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Button onClick={handlePrint} className="gap-2">
+                <Printer className="h-4 w-4" />
+                {language === 'english' ? 'Print' : 'அச்சிடு'}
+              </Button>
+              <Button onClick={downloadPDF} variant="outline" className="gap-2">
+                <Download className="h-4 w-4" />
+                {language === 'english' ? 'PDF' : 'PDF'}
+              </Button>
+              <Button onClick={generateEInvoiceJSON} variant="outline" className="gap-2">
+                <FileJson className="h-4 w-4" />
+                {language === 'english' ? 'JSON' : 'JSON'}
+              </Button>
+              <Button onClick={() => setShowIrnDialog(true)} variant="outline" className="gap-2">
+                <Edit className="h-4 w-4" />
+                {language === 'english' ? 'IRN' : 'IRN'}
+              </Button>
             </div>
           </CardContent>
         </Card>
 
-        {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-4">
-          <Button onClick={handlePrint} className="flex items-center gap-2">
-            <Printer size={16} />
-            {language === 'english' ? 'Print' : 'அச்சிடு'}
-          </Button>
-          <Button onClick={handleShare} variant="outline" className="flex items-center gap-2">
-            <Share2 size={16} />
-            {language === 'english' ? 'Share' : 'பகிர்'}
-          </Button>
-        </div>
+        {/* Invoice Details */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">
+              {language === 'english' ? 'Invoice Details' : 'பில் விவரங்கள்'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <span className="text-muted-foreground">{language === 'english' ? 'Bill No:' : 'பில் எண்:'}</span>
+                <p className="font-semibold">{sale.bill_serial_no}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">{language === 'english' ? 'Date:' : 'தேதி:'}</span>
+                <p className="font-semibold">{format(new Date(sale.sale_date), 'dd/MM/yyyy')}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">{language === 'english' ? 'Customer:' : 'வாடிக்கையாளர்:'}</span>
+                <p className="font-semibold">{getDisplayName(customer)}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">{language === 'english' ? 'Vehicle:' : 'வாகனம்:'}</span>
+                <p className="font-semibold">{outwardEntry?.lorry_no}</p>
+              </div>
+            </div>
+
+            <div className="border-t pt-3">
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>{getDisplayName(item)}</span>
+                  <span>{sale.quantity} {item.unit}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">{language === 'english' ? 'Rate:' : 'விலை:'}</span>
+                  <span>₹{sale.rate.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">{language === 'english' ? 'Taxable Amount:' : 'வரி விதிக்கக்கூடிய தொகை:'}</span>
+                  <span>₹{baseAmount.toFixed(2)}</span>
+                </div>
+                {gstAmount > 0 && (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">CGST ({item.gst_percentage / 2}%):</span>
+                      <span>₹{(gstAmount / 2).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">SGST ({item.gst_percentage / 2}%):</span>
+                      <span>₹{(gstAmount / 2).toFixed(2)}</span>
+                    </div>
+                  </>
+                )}
+                <div className="flex justify-between font-bold text-lg border-t pt-2">
+                  <span>{language === 'english' ? 'Total:' : 'மொத்தம்:'}</span>
+                  <span className="text-primary">₹{totalAmount.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+
+            {sale.irn && (
+              <div className="border-t pt-3">
+                <span className="text-xs text-muted-foreground">IRN:</span>
+                <p className="text-xs font-mono break-all">{sale.irn}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
+
+      {/* IRN Dialog */}
+      <Dialog open={showIrnDialog} onOpenChange={setShowIrnDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {language === 'english' ? 'Update IRN' : 'IRN புதுப்பிக்கவும்'}
+            </DialogTitle>
+            <DialogDescription>
+              {language === 'english' 
+                ? 'Enter or update the Invoice Reference Number (IRN) for this bill.'
+                : 'இந்த பில்லுக்கான Invoice Reference Number (IRN) உள்ளிடவும் அல்லது புதுப்பிக்கவும்.'
+              }
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="irn">IRN</Label>
+              <Input
+                id="irn"
+                value={irnValue}
+                onChange={(e) => setIrnValue(e.target.value)}
+                placeholder={language === 'english' ? 'Enter IRN...' : 'IRN உள்ளிடவும்...'}
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowIrnDialog(false)}>
+              {language === 'english' ? 'Cancel' : 'ரத்து'}
+            </Button>
+            <Button onClick={handleUpdateIrn} disabled={irnLoading}>
+              {irnLoading 
+                ? (language === 'english' ? 'Saving...' : 'சேமிக்கிறது...') 
+                : (language === 'english' ? 'Save' : 'சேமி')
+              }
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </MobileLayout>
   );
 };

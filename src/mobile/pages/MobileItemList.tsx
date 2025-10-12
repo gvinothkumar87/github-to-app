@@ -10,7 +10,7 @@ import { OfflineStatusBanner } from '../components/OfflineStatusBanner';
 import { Plus, Package, Percent, Tag, Wifi, WifiOff } from 'lucide-react';
 
 const MobileItemList: React.FC = () => {
-  const { language } = useLanguage();
+  const { language, getDisplayName } = useLanguage();
   const navigate = useNavigate();
   const { data: items, loading, isOnline, isServicesReady, error } = useEnhancedOfflineData('items');
 
@@ -72,15 +72,10 @@ const MobileItemList: React.FC = () => {
               >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0">
                       <h3 className="font-medium text-sm truncate">
-                        {item.name_english}
+                        {getDisplayName(item)}
                       </h3>
-                      {item.name_tamil && (
-                        <p className="text-xs text-muted-foreground truncate mt-1">
-                          {item.name_tamil}
-                        </p>
-                      )}
                       
                       <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                         <div className="flex items-center gap-1">
@@ -92,9 +87,9 @@ const MobileItemList: React.FC = () => {
                         </span>
                       </div>
 
-                      {item.description_english && (
+                      {(language === 'tamil' ? item.description_tamil : item.description_english) && (
                         <p className="text-xs text-muted-foreground mt-2 truncate">
-                          {item.description_english}
+                          {language === 'tamil' && item.description_tamil ? item.description_tamil : item.description_english}
                         </p>
                       )}
 

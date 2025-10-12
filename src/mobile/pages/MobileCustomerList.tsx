@@ -10,7 +10,7 @@ import { useEnhancedOfflineData } from '../hooks/useEnhancedOfflineData';
 import { Plus, User, Phone, MapPin, Wifi, WifiOff } from 'lucide-react';
 
 const MobileCustomerList: React.FC = () => {
-  const { language } = useLanguage();
+  const { language, getDisplayName } = useLanguage();
   const navigate = useNavigate();
   const { data: customers, loading, isOnline, refresh, isServicesReady } = useEnhancedOfflineData('customers');
 
@@ -75,15 +75,10 @@ const MobileCustomerList: React.FC = () => {
               >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0">
                       <h3 className="font-medium text-sm truncate">
-                        {customer.name_english}
+                        {getDisplayName(customer)}
                       </h3>
-                      {customer.name_tamil && (
-                        <p className="text-xs text-muted-foreground truncate mt-1">
-                          {customer.name_tamil}
-                        </p>
-                      )}
                       <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                         <span className="font-mono">{customer.code}</span>
                         {customer.phone && (
@@ -93,10 +88,10 @@ const MobileCustomerList: React.FC = () => {
                           </div>
                         )}
                       </div>
-                      {customer.address_english && (
+                      {(language === 'tamil' ? customer.address_tamil : customer.address_english) && (
                         <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                           <MapPin className="h-3 w-3" />
-                          <span className="truncate">{customer.address_english}</span>
+                          <span className="truncate">{language === 'tamil' && customer.address_tamil ? customer.address_tamil : customer.address_english}</span>
                         </div>
                       )}
                     </div>

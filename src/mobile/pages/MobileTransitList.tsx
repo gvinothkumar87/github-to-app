@@ -14,7 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from 'sonner';
 
 const MobileTransitList: React.FC = () => {
-  const { language } = useLanguage();
+  const { language, getDisplayName } = useLanguage();
   const navigate = useNavigate();
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
   const [showLoadWeightModal, setShowLoadWeightModal] = useState(false);
@@ -26,12 +26,12 @@ const MobileTransitList: React.FC = () => {
 
   const getCustomerName = (customerId: string) => {
     const customer = customers.find((c: any) => c.id === customerId) as any;
-    return customer?.name_english || 'Unknown Customer';
+    return customer ? getDisplayName(customer) : 'Unknown Customer';
   };
 
   const getItemName = (itemId: string) => {
     const item = items.find((i: any) => i.id === itemId) as any;
-    return item?.name_english || 'Unknown Item';
+    return item ? getDisplayName(item) : 'Unknown Item';
   };
 
   const getStatus = (entry: any) => {

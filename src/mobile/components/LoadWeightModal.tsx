@@ -155,13 +155,12 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
         load_weight_updated_by: user?.id,
         remarks: remarks || null,
         is_completed: true,
-        sync_status: 'pending',
         load_weight_photo_url: photoUrl
       });
 
       toast({
         title: "Success", 
-        description: "Load weight updated successfully (will sync when online)",
+        description: "Load weight updated successfully",
       });
       
       onSuccess();

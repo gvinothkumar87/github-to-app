@@ -120,9 +120,8 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
       let query = supabase.from('sales').select('bill_serial_no');
       
       if (location === 'PULIVANTHI') {
-        // For PULIVANTHI, get P prefixed serials like P001, P002, P003
-        prefix = 'P';
-        query = query.like('bill_serial_no', 'P%');
+        // For PULIVANTHI, get numeric serials without leading zeros
+        query = query.or('bill_serial_no.like.[0-9]%,bill_serial_no.like.[1-9][0-9]%');
       } else if (location === 'MATTAPARAI') {
         // For MATTAPARAI, get GRM prefixed serials like GRM050, GRM051, GRM052
         prefix = 'GRM';
@@ -139,8 +138,11 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
         existingBills.forEach(bill => {
           const serial = bill.bill_serial_no;
           if (location === 'PULIVANTHI') {
-            const num = parseInt((serial || 'P0').replace('P', ''));
-            maxNumber = Math.max(maxNumber, num);
+            // Parse as integer to get the number without leading zeros
+            const num = parseInt(serial || '0');
+            if (!isNaN(num)) {
+              maxNumber = Math.max(maxNumber, num);
+            }
           } else if (location === 'MATTAPARAI') {
             const num = parseInt((serial || 'GRM0').replace('GRM', ''));
             maxNumber = Math.max(maxNumber, num);
@@ -158,11 +160,17 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
         }
       }
       
-      const serialNumber = nextNumber.toString().padStart(3, '0');
-      return `${prefix}${serialNumber}`;
+      // For PULIVANTHI: return number without leading zeros (e.g., 1, 2, 46)
+      // For MATTAPARAI: return with GRM prefix and padded (e.g., GRM050)
+      if (location === 'PULIVANTHI') {
+        return nextNumber.toString();
+      } else {
+        const serialNumber = nextNumber.toString().padStart(3, '0');
+        return `${prefix}${serialNumber}`;
+      }
     } catch (error) {
       console.error('Error generating bill serial:', error);
-      return location === 'PULIVANTHI' ? 'P001' : 'GRM050';
+      return location === 'PULIVANTHI' ? '1' : 'GRM050';
     }
   };
 

@@ -86,14 +86,12 @@ serve(async (req) => {
       throw new Error('Missing dataUrl or fileName');
     }
 
-    // Convert base64 data URL to blob
-    console.log('📦 Converting file data to blob...');
+    // Convert base64 data URL to binary (avoid large Blob to reduce memory)
+    console.log('📦 Decoding base64 data...');
     const base64Data = dataUrl.split(',')[1];
     const mimeType = dataUrl.split(';')[0].split(':')[1];
-    const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
-    const fileBlob = new Blob([binaryData], { type: mimeType });
-    
-    console.log('✅ File blob created, size:', fileBlob.size, 'bytes');
+    const binaryData = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
+    console.log('✅ Decoded bytes:', binaryData.byteLength, 'bytes');
 
     // Prepare multipart upload
     console.log('☁️ Uploading to Google Drive...');
@@ -109,21 +107,28 @@ serve(async (req) => {
     const metaPart = `${delimiter}Content-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n`;
     const fileHeader = `${delimiter}Content-Type: ${mimeType}\r\n\r\n`;
 
-    const multipartBody = new Blob([
-      metaPart,
-      fileHeader,
-      binaryData,
-      closeDelimiter,
-    ]);
+    const encoder = new TextEncoder();
+    const metaUint8 = encoder.encode(metaPart);
+    const headerUint8 = encoder.encode(fileHeader);
+    const closeUint8 = encoder.encode(closeDelimiter);
+
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(metaUint8);
+        controller.enqueue(headerUint8);
+        controller.enqueue(binaryData);
+        controller.enqueue(closeUint8);
+        controller.close();
+      }
+    });
 
     const uploadResponse = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${access_token}`,
         'Content-Type': `multipart/related; boundary=${boundary}`,
-        'Content-Length': String(multipartBody.size),
       },
-      body: multipartBody,
+      body: stream as any,
     });
 
     if (!uploadResponse.ok) {

@@ -40,6 +40,7 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
   const [uploading, setUploading] = useState(false);
   const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   const { update: updateOutwardEntry } = useEnhancedOfflineData('outward_entries', [], { autoSync: true });
@@ -81,6 +82,9 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
     setPhotoDataUrl('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+    if (uploadInputRef.current) {
+      uploadInputRef.current.value = '';
     }
   };
 
@@ -248,6 +252,15 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
               id="weighment_photo"
               type="file"
               accept="image/*"
+              capture="environment"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            <input
+              ref={uploadInputRef}
+              id="weighment_upload"
+              type="file"
+              accept="image/*"
               onChange={handleFileSelect}
               className="hidden"
             />
@@ -264,7 +277,7 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => uploadInputRef.current?.click()}
                 className="flex-1"
               >
                 <Upload className="mr-2 h-4 w-4" />

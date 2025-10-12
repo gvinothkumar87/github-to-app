@@ -108,16 +108,12 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
       return;
     }
 
-    // Parse customer address
-    const customerAddr = customer.address_english || customer.address_tamil || "";
-    const customerAddrParts = customerAddr.split(',').map(part => part.trim());
-    const buyerAddr1 = customerAddrParts[0] || "ADDRESS NOT PROVIDED";
-    const buyerAddr2 = customerAddrParts.slice(1, -1).join(',').trim() || "";
-    const buyerLoc = customerAddrParts[customerAddrParts.length - 1]?.trim() || "VILLUPURAM";
-    
-    // Extract PIN code from customer address or use default
-    const pinCodeMatch = customerAddr.match(/\b\d{6}\b/);
-    const buyerPinCode = customer.pin_code || pinCodeMatch?.[0] || "605201";
+    // Use customer details directly from database
+    const customerAddress = customer.address_english || customer.address_tamil || "";
+    const addressParts = customerAddress.split(',').map(part => part.trim());
+    const buyerAddr1 = addressParts[0] || "";
+    const buyerAddr2 = addressParts.slice(1).join(', ') || "";
+    const buyerLoc = customer.pin_code ? addressParts[addressParts.length - 1] || "" : "";
     
     // Round amounts to 2 decimal places to avoid floating-point precision errors
     const roundedBaseAmount = Math.round(baseAmount * 100) / 100;
@@ -157,10 +153,10 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
       BuyerDtls: {
         Gstin: customer.gstin || null,
         LglNm: getDisplayName(customer),
-        Addr1: customer.address_english || customer.address_tamil || buyerAddr1,
+        Addr1: buyerAddr1,
         Addr2: buyerAddr2,
         Loc: buyerLoc,
-        Pin: parseInt(buyerPinCode),
+        Pin: parseInt(customer.pin_code) || 605201,
         Pos: customer.place_of_supply || customer.state_code || "33",
         Stcd: customer.state_code || "33",
         Ph: customer.phone || null,

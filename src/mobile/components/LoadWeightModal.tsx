@@ -37,6 +37,7 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [photoDataUrl, setPhotoDataUrl] = useState<string>('');
   const [uploading, setUploading] = useState(false);
+  const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -126,6 +127,7 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
       });
       
       const photoUrl = await uploadToGoogleDrive(photoDataUrl);
+      setUploadedPhotoUrl(photoUrl);
       setUploading(false);
 
       const netWeight = parseFloat(loadWeight) - outwardEntry.empty_weight;
@@ -272,6 +274,17 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
                   <X className="h-4 w-4" />
                 </Button>
               </div>
+            )}
+            {uploadedPhotoUrl && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-2 w-full"
+                onClick={() => window.open(uploadedPhotoUrl, '_blank')}
+              >
+                View in Google Drive
+              </Button>
             )}
           </div>
 

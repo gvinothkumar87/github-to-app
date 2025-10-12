@@ -38,6 +38,7 @@ const MobileOutwardEntryForm: React.FC = () => {
 
   const [photoDataUrl, setPhotoDataUrl] = useState<string>('');
   const [uploading, setUploading] = useState(false);
+  const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const takePhoto = async () => {
@@ -90,6 +91,7 @@ const MobileOutwardEntryForm: React.FC = () => {
       if (photoDataUrl) {
         setUploading(true);
         photoUrl = await uploadToGoogleDrive(photoDataUrl);
+        setUploadedPhotoUrl(photoUrl);
         setUploading(false);
       }
 
@@ -297,6 +299,17 @@ const MobileOutwardEntryForm: React.FC = () => {
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
+                )}
+                {uploadedPhotoUrl && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 w-full"
+                    onClick={() => window.open(uploadedPhotoUrl, '_blank')}
+                  >
+                    {language === 'english' ? 'View in Google Drive' : 'Google Drive இல் பார்க்கவும்'}
+                  </Button>
                 )}
               </div>
               

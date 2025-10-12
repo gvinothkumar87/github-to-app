@@ -37,6 +37,7 @@ export const OutwardEntryForm: React.FC<OutwardEntryFormProps> = ({ onSuccess, o
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [uploading, setUploading] = useState(false);
+  const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -121,6 +122,7 @@ export const OutwardEntryForm: React.FC<OutwardEntryFormProps> = ({ onSuccess, o
       if (selectedFile) {
         setUploading(true);
         photoUrl = await uploadToGoogleDrive(selectedFile);
+        setUploadedPhotoUrl(photoUrl);
         setUploading(false);
       }
 
@@ -321,6 +323,17 @@ export const OutwardEntryForm: React.FC<OutwardEntryFormProps> = ({ onSuccess, o
                   <X className="h-4 w-4" />
                 </Button>
               </div>
+            )}
+            {uploadedPhotoUrl && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={() => window.open(uploadedPhotoUrl, '_blank')}
+              >
+                {language === 'english' ? 'View in Google Drive' : 'Google Drive இல் பார்க்கவும்'}
+              </Button>
             )}
           </div>
           

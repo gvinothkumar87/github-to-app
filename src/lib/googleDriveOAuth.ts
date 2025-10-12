@@ -64,9 +64,32 @@ export class GoogleDriveOAuth {
   }
 
   private static async refreshToken(): Promise<void> {
-    // Implement refresh token logic if needed
-    // For now, we'll just clear tokens and require re-auth
-    this.clearTokens();
+    if (!this.tokens?.refresh_token) {
+      this.clearTokens();
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('google-drive-oauth', {
+        body: { 
+          action: 'refreshAccessToken',
+          refreshToken: this.tokens.refresh_token 
+        },
+      });
+
+      if (error) throw error;
+
+      this.tokens = {
+        access_token: data.tokens.access_token,
+        refresh_token: this.tokens.refresh_token, // Keep the existing refresh token
+        expires_at: Date.now() + (data.tokens.expires_in * 1000),
+      };
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.tokens));
+    } catch (error) {
+      console.error('Failed to refresh token:', error);
+      this.clearTokens();
+    }
   }
 
   static clearTokens(): void {

@@ -40,7 +40,7 @@ serve(async (req) => {
         `&response_type=code` +
         `&scope=${encodeURIComponent('https://www.googleapis.com/auth/drive.file')}` +
         `&access_type=offline` +
-        `&prompt=consent`;
+        `&prompt=select_account`;
 
       return new Response(
         JSON.stringify({ authUrl }),
@@ -72,6 +72,40 @@ serve(async (req) => {
       if (!tokenResponse.ok) {
         const error = await tokenResponse.text();
         throw new Error(`Failed to exchange code: ${error}`);
+      }
+
+      const tokens = await tokenResponse.json();
+      return new Response(
+        JSON.stringify({ tokens }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Refresh access token using refresh token
+    if (action === 'refreshAccessToken') {
+      const { refreshToken } = await req.json();
+      
+      if (!refreshToken) {
+        return new Response(
+          JSON.stringify({ error: 'Missing refresh token' }), 
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: CLIENT_ID,
+          client_secret: CLIENT_SECRET,
+          refresh_token: refreshToken,
+          grant_type: 'refresh_token',
+        }),
+      });
+
+      if (!tokenResponse.ok) {
+        const error = await tokenResponse.text();
+        throw new Error(`Failed to refresh token: ${error}`);
       }
 
       const tokens = await tokenResponse.json();

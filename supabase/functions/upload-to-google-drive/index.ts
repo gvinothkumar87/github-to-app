@@ -1,60 +1,25 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { create, getNumericDate } from "https://deno.land/x/djwt@v2.8/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-function pemToArrayBuffer(pem: string): ArrayBuffer {
-  const pemContents = pem
-    .replace('-----BEGIN PRIVATE KEY-----', '')
-    .replace('-----END PRIVATE KEY-----', '')
-    .replace(/\n/g, '')
-    .replace(/\r/g, '')
-    .replace(/\s/g, '');
-  const binary = atob(pemContents);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes.buffer;
-}
-
-async function importPrivateKey(pem: string): Promise<CryptoKey> {
-  const keyData = pemToArrayBuffer(pem);
-  return await crypto.subtle.importKey(
-    'pkcs8',
-    keyData,
-    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-    false,
-    ['sign']
-  );
-}
-
-async function createServiceAccountJWT(serviceAccount: any): Promise<string> {
-  const header = { alg: 'RS256', typ: 'JWT' };
-  const payload = {
-    iss: serviceAccount.client_email,
-    scope: 'https://www.googleapis.com/auth/drive',
-    aud: 'https://oauth2.googleapis.com/token',
-    exp: getNumericDate(60 * 60), // 1 hour expiry
-    iat: getNumericDate(0),
-  };
-
-  const key = await importPrivateKey(serviceAccount.private_key);
-  return await create(header, payload, key);
-}
-
-async function getServiceAccountAccessToken(serviceAccount: any): Promise<string> {
-  const jwt = await createServiceAccountJWT(serviceAccount);
+async function getAccessTokenFromRefreshToken(
+  clientId: string,
+  clientSecret: string,
+  refreshToken: string
+): Promise<string> {
+  console.log('🔄 Requesting access token from Google...');
   
   const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      assertion: jwt,
+      client_id: clientId,
+      client_secret: clientSecret,
+      refresh_token: refreshToken,
+      grant_type: 'refresh_token',
     }),
   });
 
@@ -64,6 +29,7 @@ async function getServiceAccountAccessToken(serviceAccount: any): Promise<string
   }
 
   const { access_token } = await tokenResponse.json();
+  console.log('✅ Access token obtained successfully');
   return access_token;
 }
 
@@ -73,38 +39,64 @@ serve(async (req) => {
   }
 
   try {
-    const rawServiceAccount = Deno.env.get('GOOGLE_DRIVE_SERVICE_ACCOUNT');
+    console.log('📤 Upload request received');
+    
+    const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_OAUTH_CLIENT_ID_CASH');
+    const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_OAUTH_CLIENT_SECRET_CASH');
+    const GOOGLE_REFRESH_TOKEN = Deno.env.get('GOOGLE_OAUTH_REFRESH_TOKEN_CASH');
     const GOOGLE_DRIVE_FOLDER_ID = Deno.env.get('GOOGLE_DRIVE_FOLDER_ID');
 
-    if (!rawServiceAccount) {
-      return new Response(JSON.stringify({ error: 'Missing GOOGLE_DRIVE_SERVICE_ACCOUNT secret' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    console.log('🔑 Checking secrets:', {
+      hasClientId: !!GOOGLE_CLIENT_ID,
+      hasClientSecret: !!GOOGLE_CLIENT_SECRET,
+      hasRefreshToken: !!GOOGLE_REFRESH_TOKEN,
+      hasFolderId: !!GOOGLE_DRIVE_FOLDER_ID,
+    });
+
+    if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_REFRESH_TOKEN) {
+      return new Response(
+        JSON.stringify({ error: 'Missing required Google OAuth secrets' }), 
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
+    
     if (!GOOGLE_DRIVE_FOLDER_ID) {
-      return new Response(JSON.stringify({ error: 'Missing GOOGLE_DRIVE_FOLDER_ID secret' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return new Response(
+        JSON.stringify({ error: 'Missing GOOGLE_DRIVE_FOLDER_ID secret' }), 
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    let serviceAccount: any;
-    try {
-      serviceAccount = JSON.parse(rawServiceAccount);
-    } catch (e) {
-      console.error('Invalid GOOGLE_DRIVE_SERVICE_ACCOUNT JSON:', e);
-      return new Response(JSON.stringify({ error: 'Invalid GOOGLE_DRIVE_SERVICE_ACCOUNT JSON. Paste the FULL service account key JSON from Google Cloud.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const access_token = await getAccessTokenFromRefreshToken(
+      GOOGLE_CLIENT_ID,
+      GOOGLE_CLIENT_SECRET,
+      GOOGLE_REFRESH_TOKEN
+    );
+
+    // Parse the request body
+    const { dataUrl, fileName } = await req.json();
+    
+    console.log('📝 File details:', {
+      fileName,
+      mimeType: dataUrl?.split(';')[0]?.split(':')[1],
+      hasData: !!dataUrl,
+    });
+
+    if (!dataUrl || !fileName) {
+      throw new Error('Missing dataUrl or fileName');
     }
 
-    const access_token = await getServiceAccountAccessToken(serviceAccount);
+    // Convert base64 data URL to blob
+    console.log('📦 Converting file data to blob...');
+    const base64Data = dataUrl.split(',')[1];
+    const mimeType = dataUrl.split(';')[0].split(':')[1];
+    const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+    const fileBlob = new Blob([binaryData], { type: mimeType });
+    
+    console.log('✅ File blob created, size:', fileBlob.size, 'bytes');
 
-    // Parse the multipart form data
-    const formData = await req.formData();
-    const file = formData.get('file') as File;
-    const fileName = (formData.get('fileName') as string) || file?.name || `upload_${Date.now()}`;
-
-    if (!file) {
-      throw new Error('No file provided');
-    }
-
-    const fileBuffer = await file.arrayBuffer();
-
-    // Use multipart upload for small files (simpler and reliable)
+    // Prepare multipart upload
+    console.log('☁️ Uploading to Google Drive...');
     const metadata = {
       name: fileName,
       parents: [GOOGLE_DRIVE_FOLDER_ID],
@@ -115,12 +107,12 @@ serve(async (req) => {
     const closeDelimiter = `\r\n--${boundary}--`;
 
     const metaPart = `${delimiter}Content-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n`;
-    const fileHeader = `${delimiter}Content-Type: ${file.type || 'application/octet-stream'}\r\n\r\n`;
+    const fileHeader = `${delimiter}Content-Type: ${mimeType}\r\n\r\n`;
 
     const multipartBody = new Blob([
       metaPart,
       fileHeader,
-      new Uint8Array(fileBuffer),
+      binaryData,
       closeDelimiter,
     ]);
 
@@ -141,8 +133,10 @@ serve(async (req) => {
     }
 
     const uploadResult = await uploadResponse.json();
+    console.log('✅ File uploaded successfully! File ID:', uploadResult.id);
 
     // Make the file publicly accessible
+    console.log('🔓 Making file publicly accessible...');
     await fetch(`https://www.googleapis.com/drive/v3/files/${uploadResult.id}/permissions`, {
       method: 'POST',
       headers: {
@@ -158,6 +152,7 @@ serve(async (req) => {
     // Get the shareable link
     const fileUrl = `https://drive.google.com/file/d/${uploadResult.id}/view`;
 
+    console.log('🎉 Upload complete! Returning response...');
     return new Response(
       JSON.stringify({ 
         success: true, 

@@ -85,29 +85,17 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
   };
 
   const uploadToGoogleDrive = async (dataUrl: string): Promise<string> => {
-    const isMobile = Capacitor.isNativePlatform();
+    const fileName = `${Date.now()}_${outwardEntry.serial_no}.jpg`;
     
-    if (isMobile) {
-      const { GoogleDriveOAuthMobile } = await import('@/lib/googleDriveOAuthMobile');
-      const fileName = `load-weight-${Date.now()}.jpg`;
-      return await GoogleDriveOAuthMobile.uploadFile(dataUrl, fileName);
-    } else {
-      const { GoogleDriveOAuth } = await import('@/lib/googleDriveOAuth');
-      const fileName = `load-weight-${Date.now()}.jpg`;
-      return await GoogleDriveOAuth.uploadFile(dataUrl, fileName);
-    }
-  };
+    const { data, error } = await supabase.functions.invoke('upload-to-google-drive', {
+      body: { dataUrl, fileName },
+    });
 
-  // Initialize mobile OAuth on mount
-  useEffect(() => {
-    const initMobileOAuth = async () => {
-      if (Capacitor.isNativePlatform()) {
-        const { GoogleDriveOAuthMobile } = await import('@/lib/googleDriveOAuthMobile');
-        await GoogleDriveOAuthMobile.initialize();
-      }
-    };
-    initMobileOAuth();
-  }, []);
+    if (error) throw error;
+    if (!data?.viewUrl) throw new Error('No URL returned from upload');
+
+    return data.viewUrl;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -171,33 +159,15 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
       onSuccess();
       onClose();
     } catch (error: any) {
-      const msg = error?.message || '';
-      
-      // Web/mobile-web: redirecting to Google auth (not an error)
-      if (msg === 'GOOGLE_AUTH_REDIRECT' || msg.includes('Google authentication')) {
-        toast({
-          title: 'Connecting Google Drive',
-          description: 'Redirecting to Google to authorize your account...',
-        });
-        return; // let the redirect happen
-      }
-
-      // Native mobile: user cancelled
-      if (msg.includes('cancelled')) {
-        toast({
-          title: 'Upload cancelled',
-          description: 'You cancelled the Google Drive authorization',
-        });
-        return;
-      }
-      
+      console.error('Error updating load weight:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: msg || 'Failed to update load weight',
+        description: error?.message || 'Failed to update load weight',
       });
     } finally {
       setLoading(false);
+      setUploading(false);
     }
   };
 

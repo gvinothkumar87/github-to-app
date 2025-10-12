@@ -495,6 +495,18 @@ export class DatabaseService {
     );
   }
 
+  async clearTable(table: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+    
+    try {
+      await this.db.run(`DELETE FROM offline_${table}`);
+      console.log(`Cleared table: offline_${table}`);
+    } catch (error) {
+      console.error(`Error clearing table ${table}:`, error);
+      throw error;
+    }
+  }
+
   async clearSyncedItems(): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
 

@@ -588,7 +588,10 @@ export class SyncService {
       throw new Error('Not authenticated. Please login first.');
     }
 
-    console.log('Downloading latest data from server...');
+    console.log('Starting fresh download of all data from Supabase...');
+    
+    // Clear existing data first for clean sync
+    await this.clearAllLocalData();
 
     try {
       // Download customers (all active)
@@ -729,28 +732,43 @@ export class SyncService {
     await this.downloadLatestData();
   }
 
+  private async clearAllLocalData(): Promise<void> {
+    console.log('Clearing local database for fresh sync...');
+    const tables = [
+      'customers',
+      'items', 
+      'outward_entries',
+      'sales',
+      'receipts',
+      'customer_ledger',
+      'credit_notes',
+      'debit_notes',
+      'company_settings'
+    ];
+
+    for (const table of tables) {
+      try {
+        await databaseService.clearTable(table);
+        console.log(`Cleared table: ${table}`);
+      } catch (error) {
+        console.warn(`Failed to clear table ${table}:`, error);
+      }
+    }
+  }
+
   private async storeDownloadedData(table: string, data: any[]): Promise<void> {
+    console.log(`Storing ${data.length} ${table} records...`);
+    
     try {
       for (const item of data) {
-        const existing = await databaseService.findById(table, item.id);
-        
-        if (existing) {
-          // Update existing record but preserve sync_status for user-modified items
-          const updateData = { ...item };
-          if (existing.sync_status === 'pending') {
-            // Don't overwrite user changes
-            continue;
-          }
-          updateData.sync_status = 'synced';
-          
-          // Use local update to avoid adding to sync queue
-          await databaseService.updateLocal(table, item.id, updateData);
-        } else {
+        try {
           // Insert new record using local method (no sync queue)
           await databaseService.insertLocal(table, {
             ...item,
             sync_status: 'synced'
           });
+        } catch (itemError) {
+          console.warn(`Failed to insert ${table} item ${item.id}:`, itemError);
         }
       }
       

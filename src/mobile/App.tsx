@@ -27,6 +27,7 @@ import MobileCreditNoteForm from './pages/MobileCreditNoteForm';
 import MobileDebitNoteForm from './pages/MobileDebitNoteForm';
 import MobileReceiptList from './pages/MobileReceiptList';
 import MobileReports from './pages/MobileReports';
+import MobileDirectSalesForm from './forms/MobileDirectSalesForm';
 
 // Create a query client for React Query
 const queryClient = new QueryClient({
@@ -155,6 +156,11 @@ const MobileApp: React.FC = () => {
               <Route path="/reports" element={
                 <MobileProtectedRoute>
                   <MobileReports />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/direct-sales" element={
+                <MobileProtectedRoute>
+                  <MobileDirectSalesForm />
                 </MobileProtectedRoute>
               } />
               <Route path="/settings" element={

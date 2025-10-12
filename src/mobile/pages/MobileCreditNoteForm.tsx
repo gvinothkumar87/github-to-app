@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export const MobileCreditNoteForm = () => {
   const navigate = useNavigate();
@@ -18,21 +19,29 @@ export const MobileCreditNoteForm = () => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     customer_id: '',
+    item_id: '',
     reference_bill_no: '',
     amount: '',
+    gst_percentage: '18.00',
     reason: '',
     note_date: new Date().toISOString().split('T')[0],
   });
 
   const { data: customers } = useEnhancedOfflineData('customers');
-  const { create } = useEnhancedOfflineData('credit_notes');
+  const { data: items } = useEnhancedOfflineData('items');
 
   const selectedCustomer = customers.find((c: any) => c.id === formData.customer_id);
+  const selectedItem = items.find((i: any) => i.id === formData.item_id);
 
-  const generateCreditNoteNo = () => {
-    // Simple client-side generation for offline mode
-    const timestamp = Date.now();
-    return `CN${timestamp.toString().slice(-6)}`;
+  const generateCreditNoteNo = async () => {
+    try {
+      const { data, error } = await supabase.rpc('generate_credit_note_no');
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error generating credit note number:', error);
+      return `CN${Date.now().toString().slice(-6)}`;
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,19 +59,26 @@ export const MobileCreditNoteForm = () => {
     setLoading(true);
 
     try {
-      const noteNo = generateCreditNoteNo();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
 
-      await create({
-        note_no: noteNo,
-        customer_id: formData.customer_id,
-        reference_bill_no: formData.reference_bill_no || null,
-        amount: parseFloat(formData.amount),
-        reason: formData.reason,
-        note_date: formData.note_date,
-        created_by: 'mobile_user',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
+      const noteNo = await generateCreditNoteNo();
+
+      const { error: noteError } = await supabase
+        .from('credit_notes')
+        .insert({
+          note_no: noteNo,
+          customer_id: formData.customer_id,
+          item_id: formData.item_id || null,
+          reference_bill_no: formData.reference_bill_no || null,
+          amount: parseFloat(formData.amount),
+          gst_percentage: parseFloat(formData.gst_percentage),
+          reason: formData.reason,
+          note_date: formData.note_date,
+          created_by: user.id,
+        });
+
+      if (noteError) throw noteError;
 
       toast({
         title: language === 'english' ? 'Success' : 'வெற்றி',
@@ -131,6 +147,27 @@ export const MobileCreditNoteForm = () => {
               </div>
 
               <div>
+                <Label htmlFor="item_id">
+                  {language === 'english' ? 'Item (Optional)' : 'பொருள் (விருப்பம்)'}
+                </Label>
+                <Select
+                  value={formData.item_id}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, item_id: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={language === 'english' ? 'Select Item' : 'பொருளைத் தேர்ந்தெடுக்கவும்'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {items.map((item: any) => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {getDisplayName(item)} ({item.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
                 <Label htmlFor="amount">
                   {language === 'english' ? 'Amount *' : 'தொகை *'}
                 </Label>
@@ -142,6 +179,19 @@ export const MobileCreditNoteForm = () => {
                   onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
                   placeholder={language === 'english' ? 'Enter amount' : 'தொகையை உள்ளிடவும்'}
                   required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="gst_percentage">
+                  {language === 'english' ? 'GST %' : 'GST %'}
+                </Label>
+                <Input
+                  id="gst_percentage"
+                  type="number"
+                  step="0.01"
+                  value={formData.gst_percentage}
+                  onChange={(e) => setFormData(prev => ({ ...prev, gst_percentage: e.target.value }))}
                 />
               </div>
 

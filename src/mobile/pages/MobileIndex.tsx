@@ -92,6 +92,30 @@ const MobileIndex: React.FC = () => {
       href: '/sales'
     },
     {
+      title: 'Direct Sales',
+      description: 'Create direct sales without transit',
+      icon: FileText,
+      color: 'text-pink-600',
+      bgColor: 'bg-pink-50',
+      href: '/direct-sales'
+    },
+    {
+      title: 'Credit Note',
+      description: 'Create credit notes',
+      icon: FileText,
+      color: 'text-yellow-600',
+      bgColor: 'bg-yellow-50',
+      href: '/credit-note'
+    },
+    {
+      title: 'Debit Note',
+      description: 'Create debit notes',
+      icon: FileText,
+      color: 'text-amber-600',
+      bgColor: 'bg-amber-50',
+      href: '/debit-note'
+    },
+    {
       title: 'Sales Ledger',
       description: 'View sales reports (Offline)',
       icon: FileText,
@@ -136,7 +160,7 @@ const MobileIndex: React.FC = () => {
   // Filter menu items based on user type
   const getFilteredMenuItems = () => {
     if (isAdmin) {
-      // Admin users can see ALL functions including normal user functions
+      // Admin users can see ALL functions
       return menuItems;
     } else {
       // Non-admin users can only see: Transit Logbook, Customers, Items, Settings

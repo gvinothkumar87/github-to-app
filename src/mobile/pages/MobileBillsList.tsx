@@ -8,14 +8,31 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { FileText, Edit, Search, Plus } from 'lucide-react';
+import { FileText, Edit, Search, Plus, Trash2, Printer } from 'lucide-react';
+import { useAdminCheck } from '@/hooks/useAdminCheck';
+import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { supabase } from '@/integrations/supabase/client';
 
 export const MobileBillsList = () => {
+  const isAdmin = useAdminCheck();
   const navigate = useNavigate();
   const { language, getDisplayName } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedSaleForDelete, setSelectedSaleForDelete] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const { data: sales, loading: salesLoading } = useEnhancedOfflineData('sales');
+  const { data: sales, loading: salesLoading, refresh } = useEnhancedOfflineData('sales');
   const { data: customers } = useEnhancedOfflineData('customers');
   const { data: items } = useEnhancedOfflineData('items');
   const { data: outwardEntries } = useEnhancedOfflineData('outward_entries');
@@ -41,11 +58,47 @@ export const MobileBillsList = () => {
   );
 
   const handleEditSale = (sale: any) => {
-    navigate(`/edit-sale/${sale.id}`);
+    navigate(`/sales/${sale.id}/edit`);
   };
 
   const handlePrintSale = (sale: any) => {
-    navigate(`/print-bill/${sale.id}`);
+    navigate(`/bills/${sale.id}/invoice`);
+  };
+
+  const confirmDelete = (sale: any) => {
+    setSelectedSaleForDelete(sale);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteSale = async () => {
+    if (!selectedSaleForDelete) return;
+
+    setIsDeleting(true);
+    try {
+      // Delete customer ledger entry
+      await supabase
+        .from('customer_ledger')
+        .delete()
+        .eq('reference_id', selectedSaleForDelete.id)
+        .eq('transaction_type', 'sale');
+
+      // Delete sale
+      const { error } = await supabase
+        .from('sales')
+        .delete()
+        .eq('id', selectedSaleForDelete.id);
+
+      if (error) throw error;
+
+      toast.success(language === 'english' ? 'Bill deleted successfully' : 'பில் வெற்றிகரமாக நீக்கப்பட்டது');
+      refresh();
+      setDeleteDialogOpen(false);
+    } catch (error: any) {
+      console.error('Error deleting sale:', error);
+      toast.error(error.message || 'Failed to delete bill');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   if (salesLoading) {
@@ -165,24 +218,37 @@ export const MobileBillsList = () => {
                       <span className="text-lg font-bold text-primary">
                         ₹{sale.total_amount.toFixed(2)}
                       </span>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEditSale(sale)}
-                          className="gap-1"
-                        >
-                          <Edit className="h-3 w-3" />
-                          {language === 'english' ? 'Edit' : 'திருத்து'}
-                        </Button>
+                      <div className="flex gap-1 flex-wrap">
                         <Button
                           size="sm"
                           onClick={() => handlePrintSale(sale)}
                           className="gap-1"
                         >
-                          <FileText className="h-3 w-3" />
+                          <Printer className="h-3 w-3" />
                           {language === 'english' ? 'Print' : 'அச்சிடு'}
                         </Button>
+                        {isAdmin && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditSale(sale)}
+                              className="gap-1"
+                            >
+                              <Edit className="h-3 w-3" />
+                              {language === 'english' ? 'Edit' : 'திருத்து'}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => confirmDelete(sale)}
+                              className="gap-1"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                              {language === 'english' ? 'Delete' : 'நீக்கு'}
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -192,6 +258,34 @@ export const MobileBillsList = () => {
           </div>
         )}
       </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {language === 'english' ? 'Delete Bill' : 'பில் நீக்கு'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {language === 'english' 
+                ? `Are you sure you want to delete bill ${selectedSaleForDelete?.bill_serial_no}? This action cannot be undone.`
+                : `பில் ${selectedSaleForDelete?.bill_serial_no} ஐ நீக்க விரும்புகிறீர்களா? இந்த செயலை மீட்க முடியாது.`
+              }
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              {language === 'english' ? 'Cancel' : 'ரத்து'}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteSale}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (language === 'english' ? 'Deleting...' : 'நீக்குகிறது...') : (language === 'english' ? 'Delete' : 'நீக்கு')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MobileLayout>
   );
 };

@@ -14,88 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
-      attendance_profiles: {
+      attendance: {
         Row: {
-          created_at: string
+          absent_duration: string | null
+          attendance_status: string | null
+          clock_in_time: string | null
+          clock_out_time: string | null
+          created_at: string | null
+          daily_salary: number | null
+          date: string
           department: string | null
-          employee_id: string | null
-          face_embeddings: Json | null
-          id: string
-          is_active: boolean | null
-          name: string
-          updated_at: string
-          user_id: string
+          employee_id: string
+          full_name: string | null
+          id: number
+          late_duration: string | null
+          overtime_duration: string | null
+          worked_hours: string | null
         }
         Insert: {
-          created_at?: string
+          absent_duration?: string | null
+          attendance_status?: string | null
+          clock_in_time?: string | null
+          clock_out_time?: string | null
+          created_at?: string | null
+          daily_salary?: number | null
+          date: string
           department?: string | null
-          employee_id?: string | null
-          face_embeddings?: Json | null
-          id?: string
-          is_active?: boolean | null
-          name: string
-          updated_at?: string
-          user_id: string
+          employee_id: string
+          full_name?: string | null
+          id?: never
+          late_duration?: string | null
+          overtime_duration?: string | null
+          worked_hours?: string | null
         }
         Update: {
-          created_at?: string
+          absent_duration?: string | null
+          attendance_status?: string | null
+          clock_in_time?: string | null
+          clock_out_time?: string | null
+          created_at?: string | null
+          daily_salary?: number | null
+          date?: string
           department?: string | null
-          employee_id?: string | null
-          face_embeddings?: Json | null
-          id?: string
-          is_active?: boolean | null
-          name?: string
-          updated_at?: string
-          user_id?: string
+          employee_id?: string
+          full_name?: string | null
+          id?: never
+          late_duration?: string | null
+          overtime_duration?: string | null
+          worked_hours?: string | null
         }
         Relationships: []
-      }
-      attendance_records: {
-        Row: {
-          check_in_time: string | null
-          check_out_time: string | null
-          confidence_score: number | null
-          created_at: string
-          date: string
-          id: string
-          profile_id: string
-          status: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          check_in_time?: string | null
-          check_out_time?: string | null
-          confidence_score?: number | null
-          created_at?: string
-          date?: string
-          id?: string
-          profile_id: string
-          status?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          check_in_time?: string | null
-          check_out_time?: string | null
-          confidence_score?: number | null
-          created_at?: string
-          date?: string
-          id?: string
-          profile_id?: string
-          status?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "attendance_records_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "attendance_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       business_contacts: {
         Row: {
@@ -468,6 +436,134 @@ export type Database = {
           },
         ]
       }
+      employee_salary_ledgers: {
+        Row: {
+          created_at: string | null
+          department: string | null
+          employee_id: string
+          employee_name: string
+          id: string
+          ledger_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          department?: string | null
+          employee_id: string
+          employee_name: string
+          id?: string
+          ledger_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          department?: string | null
+          employee_id?: string
+          employee_name?: string
+          id?: string
+          ledger_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_salary_ledgers_ledger_id_fkey"
+            columns: ["ledger_id"]
+            isOneToOne: false
+            referencedRelation: "ledgers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          address: string | null
+          base_salary: number
+          created_at: string | null
+          department: string | null
+          email: string
+          employee_id: string
+          id: string
+          is_active: boolean | null
+          joining_date: string
+          name: string
+          phone: string | null
+          position: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          address?: string | null
+          base_salary?: number
+          created_at?: string | null
+          department?: string | null
+          email: string
+          employee_id: string
+          id?: string
+          is_active?: boolean | null
+          joining_date?: string
+          name: string
+          phone?: string | null
+          position?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          address?: string | null
+          base_salary?: number
+          created_at?: string | null
+          department?: string | null
+          email?: string
+          employee_id?: string
+          id?: string
+          is_active?: boolean | null
+          joining_date?: string
+          name?: string
+          phone?: string | null
+          position?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      google_sheets_configs: {
+        Row: {
+          column_letter: string
+          config_key: string
+          created_at: string
+          created_by: string
+          display_name: string
+          id: string
+          is_active: boolean
+          sheet_ids: Json
+          sheet_name: string
+          updated_at: string
+        }
+        Insert: {
+          column_letter: string
+          config_key: string
+          created_at?: string
+          created_by: string
+          display_name: string
+          id?: string
+          is_active?: boolean
+          sheet_ids?: Json
+          sheet_name: string
+          updated_at?: string
+        }
+        Update: {
+          column_letter?: string
+          config_key?: string
+          created_at?: string
+          created_by?: string
+          display_name?: string
+          id?: string
+          is_active?: boolean
+          sheet_ids?: Json
+          sheet_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       items: {
         Row: {
           code: string
@@ -557,6 +653,7 @@ export type Database = {
           name: string
           name_tamil: string | null
           opening_balance: number | null
+          updated_at: string | null
         }
         Insert: {
           created_at?: string
@@ -568,6 +665,7 @@ export type Database = {
           name: string
           name_tamil?: string | null
           opening_balance?: number | null
+          updated_at?: string | null
         }
         Update: {
           created_at?: string
@@ -579,6 +677,7 @@ export type Database = {
           name?: string
           name_tamil?: string | null
           opening_balance?: number | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -697,6 +796,68 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      payroll: {
+        Row: {
+          bonuses: number | null
+          created_at: string | null
+          days_worked: number | null
+          deductions: number | null
+          employee_id: string
+          gross_salary: number | null
+          id: string
+          month: number
+          net_salary: number | null
+          processed_at: string | null
+          processed_by: string | null
+          status: string | null
+          total_hours: number | null
+          updated_at: string | null
+          year: number
+        }
+        Insert: {
+          bonuses?: number | null
+          created_at?: string | null
+          days_worked?: number | null
+          deductions?: number | null
+          employee_id: string
+          gross_salary?: number | null
+          id?: string
+          month: number
+          net_salary?: number | null
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string | null
+          total_hours?: number | null
+          updated_at?: string | null
+          year: number
+        }
+        Update: {
+          bonuses?: number | null
+          created_at?: string | null
+          days_worked?: number | null
+          deductions?: number | null
+          employee_id?: string
+          gross_salary?: number | null
+          id?: string
+          month?: number
+          net_salary?: number | null
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string | null
+          total_hours?: number | null
+          updated_at?: string | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       performance_metrics: {
         Row: {
@@ -2252,6 +2413,14 @@ export type Database = {
         Args: { p_date: string; p_user_id: string }
         Returns: undefined
       }
+      ensure_employee_salary_ledger: {
+        Args: {
+          p_department?: string
+          p_employee_id: string
+          p_employee_name: string
+        }
+        Returns: string
+      }
       fix_running_balances: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -2297,6 +2466,14 @@ export type Database = {
       get_closing_balance_for_date: {
         Args: { p_date: string; p_user_id: string }
         Returns: number
+      }
+      get_employee_salary_details: {
+        Args: { p_date_from: string; p_date_to: string; p_employee_id: string }
+        Returns: {
+          daily_records: Json
+          total_days: number
+          total_salary: number
+        }[]
       }
       get_opening_balance_for_date: {
         Args: { p_date: string; p_user_id: string }

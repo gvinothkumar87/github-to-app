@@ -256,10 +256,13 @@ export const TransitLogbook = () => {
 
       setUploadingMap(prev => ({ ...prev, [entry.id]: true }));
 
-      // Upload photo via OAuth edge function
-      const { GoogleDriveOAuth } = await import('@/lib/googleDriveOAuth');
+      // Upload photo via refresh token edge function
       const fileName = `load-weight-${entry.serial_no}-${Date.now()}.jpg`;
-      const viewUrl = await GoogleDriveOAuth.uploadFile(photoData[entry.id], fileName);
+      const { data: uploadData, error: uploadError } = await supabase.functions.invoke('upload-to-google-drive', {
+        body: { dataUrl: photoData[entry.id], fileName },
+      });
+      if (uploadError) throw uploadError;
+      const viewUrl = uploadData.viewUrl;
 
       const netWeight = loadWeight - entry.empty_weight;
 

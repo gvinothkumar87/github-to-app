@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { OutwardEntry, Customer, Item, Sale } from '@/types';
 import { Trash2, AlertTriangle, Package, Truck, Receipt, Eye, Loader2, Edit, ExternalLink } from 'lucide-react';
 import { EditSaleForm } from './EditSaleForm';
+import { EditOutwardEntryForm } from './EditOutwardEntryForm';
 import { format } from 'date-fns';
 
 interface AdminDeleteFormProps {
@@ -194,20 +195,37 @@ export const AdminDeleteForm: React.FC<AdminDeleteFormProps> = ({ onSuccess, onC
   }
 
   // Show edit form if editing
-  if (editingEntry && editingEntry.sales && editingEntry.sales.length > 0) {
-    return (
-      <EditSaleForm
-        sale={editingEntry.sales[0]}
-        outwardEntry={editingEntry}
-        customer={editingEntry.customers}
-        item={editingEntry.items}
-        onSuccess={() => {
-          setEditingEntry(null);
-          fetchEntries();
-        }}
-        onCancel={() => setEditingEntry(null)}
-      />
-    );
+  if (editingEntry) {
+    // If entry has sales, show EditSaleForm
+    if (editingEntry.sales && editingEntry.sales.length > 0) {
+      return (
+        <EditSaleForm
+          sale={editingEntry.sales[0]}
+          outwardEntry={editingEntry}
+          customer={editingEntry.customers}
+          item={editingEntry.items}
+          onSuccess={() => {
+            setEditingEntry(null);
+            fetchEntries();
+          }}
+          onCancel={() => setEditingEntry(null)}
+        />
+      );
+    } else {
+      // If no sales, show EditOutwardEntryForm
+      return (
+        <EditOutwardEntryForm
+          outwardEntry={editingEntry}
+          customer={editingEntry.customers}
+          item={editingEntry.items}
+          onSuccess={() => {
+            setEditingEntry(null);
+            fetchEntries();
+          }}
+          onCancel={() => setEditingEntry(null)}
+        />
+      );
+    }
   }
 
   return (
@@ -328,15 +346,14 @@ export const AdminDeleteForm: React.FC<AdminDeleteFormProps> = ({ onSuccess, onC
                 )}
 
                 <div className="flex justify-end gap-2 pt-2">
-                  {entry.sales && entry.sales.length > 0 && (
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setEditingEntry(entry)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  )}
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setEditingEntry(entry)}
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    {language === 'english' ? 'Edit' : 'திருத்து'}
+                  </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button 
@@ -457,15 +474,14 @@ export const AdminDeleteForm: React.FC<AdminDeleteFormProps> = ({ onSuccess, onC
                       </TableCell>
                       <TableCell>
                         <div className="flex justify-center gap-2">
-                          {entry.sales && entry.sales.length > 0 && (
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => setEditingEntry(entry)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          )}
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => setEditingEntry(entry)}
+                            title={language === 'english' ? 'Edit entry' : 'பதிவை திருத்து'}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
                           <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button 

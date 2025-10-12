@@ -151,10 +151,18 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
       onSuccess();
       onClose();
     } catch (error: any) {
+      const msg = error?.message || '';
+      if (msg === 'GOOGLE_AUTH_REDIRECT' || msg.includes('Google authentication')) {
+        toast({
+          title: 'Connecting Google Drive',
+          description: 'Redirecting to Google to complete authorization...',
+        });
+        return; // wait for redirect
+      }
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to update load weight",
+        variant: 'destructive',
+        title: 'Error',
+        description: msg || 'Failed to update load weight',
       });
     } finally {
       setLoading(false);

@@ -105,15 +105,14 @@ export class GoogleDriveOAuth {
     const accessToken = await this.getAccessToken();
 
     if (!accessToken) {
-      // Need to authenticate - redirect in same window to avoid popup blockers
+      // Store the current page URL first, then redirect for OAuth
+      try {
+        sessionStorage.setItem('gdrive_return_url', window.location.pathname);
+      } catch {}
       const authUrl = await this.getAuthUrl();
       window.location.href = authUrl;
-      throw new Error('Redirecting to Google authentication...');
-    }
-
-    // Store the current page URL to return after authentication
-    if (!accessToken) {
-      sessionStorage.setItem('gdrive_return_url', window.location.pathname);
+      // Signal caller that a redirect is happening (avoid scary error toast)
+      throw new Error('GOOGLE_AUTH_REDIRECT');
     }
 
     const { data, error } = await supabase.functions.invoke('google-drive-oauth', {

@@ -173,7 +173,16 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
     } catch (error: any) {
       const msg = error?.message || '';
       
-      // Don't show error for cancelled auth
+      // Web/mobile-web: redirecting to Google auth (not an error)
+      if (msg === 'GOOGLE_AUTH_REDIRECT' || msg.includes('Google authentication')) {
+        toast({
+          title: 'Connecting Google Drive',
+          description: 'Redirecting to Google to authorize your account...',
+        });
+        return; // let the redirect happen
+      }
+
+      // Native mobile: user cancelled
       if (msg.includes('cancelled')) {
         toast({
           title: 'Upload cancelled',

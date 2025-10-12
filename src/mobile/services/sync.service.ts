@@ -576,165 +576,22 @@ export class SyncService {
     }
   }
 
-  // Download latest data from server when online
+  // Download latest data from server when online (no-op in online-only mode)
   async downloadLatestData(): Promise<void> {
-    if (!networkService.isOnline()) {
-      throw new Error('Cannot download data while offline');
-    }
-
-    // If ONLINE_ONLY is enabled, nothing to download to local DB
-    try {
-      // No-op in online-only mode
-      console.log('downloadLatestData called in online-only mode (no local storage).');
-    } catch (e) {
-      console.warn('downloadLatestData noop failed?', e);
-    }
+    console.log('downloadLatestData: no-op in online-only mode');
   }
 
-    try {
-      // Download customers (all active)
-      const { data: customers, error: customersError } = await supabase
-        .from('customers')
-        .select('*')
-        .eq('is_active', true);
-
-      if (customersError) throw customersError;
-
-      // Download items (all active)
-      const { data: items, error: itemsError } = await supabase
-        .from('items')
-        .select('*')
-        .eq('is_active', true);
-
-      if (itemsError) throw itemsError;
-
-      // Download outward entries (last 90 days for better coverage)
-      const ninetyDaysAgo = new Date();
-      ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-      
-      const { data: outwardEntries, error: outwardError } = await supabase
-        .from('outward_entries')
-        .select('*')
-        .gte('entry_date', ninetyDaysAgo.toISOString().split('T')[0])
-        .order('entry_date', { ascending: false });
-
-      if (outwardError) throw outwardError;
-
-      // Download sales (last 90 days)
-      const { data: sales, error: salesError } = await supabase
-        .from('sales')
-        .select('*')
-        .gte('sale_date', ninetyDaysAgo.toISOString().split('T')[0])
-        .order('sale_date', { ascending: false });
-
-      if (salesError) throw salesError;
-
-      // Download receipts (last 90 days)
-      const { data: receipts, error: receiptsError } = await supabase
-        .from('receipts')
-        .select('*')
-        .gte('receipt_date', ninetyDaysAgo.toISOString().split('T')[0])
-        .order('receipt_date', { ascending: false });
-
-      if (receiptsError) throw receiptsError;
-
-      // Download customer ledger (last 180 days)
-      const oneEightyDaysAgo = new Date();
-      oneEightyDaysAgo.setDate(oneEightyDaysAgo.getDate() - 180);
-      
-      const { data: customerLedger, error: ledgerError } = await supabase
-        .from('customer_ledger')
-        .select('*')
-        .gte('transaction_date', oneEightyDaysAgo.toISOString().split('T')[0])
-        .order('transaction_date', { ascending: false });
-
-      if (ledgerError) throw ledgerError;
-
-      // Download credit notes (last 90 days)
-      const { data: creditNotes, error: creditNotesError } = await supabase
-        .from('credit_notes')
-        .select('*')
-        .gte('note_date', ninetyDaysAgo.toISOString().split('T')[0])
-        .order('note_date', { ascending: false });
-
-      if (creditNotesError) throw creditNotesError;
-
-      // Download debit notes (last 90 days)
-      const { data: debitNotes, error: debitNotesError } = await supabase
-        .from('debit_notes')
-        .select('*')
-        .gte('note_date', ninetyDaysAgo.toISOString().split('T')[0])
-        .order('note_date', { ascending: false });
-
-      if (debitNotesError) throw debitNotesError;
-
-      // Download company settings (active only)
-      const { data: companySettings, error: companyError } = await supabase
-        .from('company_settings')
-        .select('*')
-        .eq('is_active', true);
-
-      if (companyError) throw companyError;
-
-      // Store all data in local database with progress updates
-      const dataToStore = [
-        { table: 'customers', data: customers },
-        { table: 'items', data: items },
-        { table: 'outward_entries', data: outwardEntries },
-        { table: 'sales', data: sales },
-        { table: 'receipts', data: receipts },
-        { table: 'customer_ledger', data: customerLedger },
-        { table: 'credit_notes', data: creditNotes },
-        { table: 'debit_notes', data: debitNotes },
-        { table: 'company_settings', data: companySettings }
-      ];
-
-      const totalCounts: any = {};
-      for (const { table, data } of dataToStore) {
-        if (data && data.length > 0) {
-          await this.storeDownloadedData(table, data);
-          totalCounts[table] = data.length;
-          console.log(`Stored ${data.length} ${table} records`);
-          
-          // Dispatch event after each table is stored
-          window.dispatchEvent(new CustomEvent('offline-data-updated', { 
-            detail: { 
-              source: 'download-progress', 
-              table, 
-              count: data.length 
-            } 
-          }));
-        } else {
-          totalCounts[table] = 0;
-        }
-      }
-
-      // Final notification with all counts
-      window.dispatchEvent(new CustomEvent('offline-data-updated', { 
-        detail: { 
-          source: 'download-complete',
-          counts: totalCounts
-        } 
-      }));
-
-      console.log('Complete data download and storage completed successfully');
-    } catch (error) {
-      console.error('Failed to download latest data:', error);
-      throw error;
-    }
-  }
-
-  // Force re-download without uploading local changes
+  // Force re-download without uploading local changes (no-op in online-only mode)
   async forceRedownload(): Promise<void> {
-    console.log('Force re-download requested. In online-only mode this is a no-op.');
+    console.log('forceRedownload: no-op in online-only mode');
   }
 
   private async clearAllLocalData(): Promise<void> {
-    console.log('clearAllLocalData called. In online-only mode there is no local DB to clear.');
+    console.log('clearAllLocalData: no-op in online-only mode');
   }
 
   private async storeDownloadedData(table: string, data: any[]): Promise<void> {
-    console.log(`storeDownloadedData(${table}) called in online-only mode; skipping local write.`);
+    console.log(`storeDownloadedData(${table}): no-op in online-only mode`);
   }
 
   onSyncProgress(callback: (progress: SyncProgress) => void): () => void {

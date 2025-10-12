@@ -37,12 +37,12 @@ export function useEnhancedOfflineData<T>(
         setLoading(true);
         setError(null);
         const normalizedTable = normalizeTableName(table);
-        const { data: rows, error: fetchError } = await supabase
+        const result = await supabase
           .from(normalizedTable)
           .select('*')
           .order('created_at', { ascending: false });
-        if (fetchError) throw fetchError;
-        setData((rows as any) || []);
+        if (result.error) throw result.error;
+        setData((result.data || []) as T[]);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error';
         setError(errorMessage);
@@ -84,16 +84,16 @@ export function useEnhancedOfflineData<T>(
   const create = async (item: Omit<T, 'id' | 'created_at' | 'updated_at'>) => {
     if (ONLINE_ONLY) {
       const normalizedTable = normalizeTableName(table);
-      const { error: insertError } = await supabase
+      const result = await supabase
         .from(normalizedTable)
         .insert(validateAndConvertData(item) as any);
-      if (insertError) {
-        const errorMessage = insertError.message || 'Create failed';
+      if (result.error) {
+        const errorMessage = result.error.message || 'Create failed';
         setError(errorMessage);
-        throw insertError;
+        throw result.error;
       }
       await loadData();
-      return '' as any;
+      return '' as string;
     }
 
     if (!isReady) {
@@ -131,14 +131,14 @@ export function useEnhancedOfflineData<T>(
   const update = async (id: string, item: Partial<T>) => {
     if (ONLINE_ONLY) {
       const normalizedTable = normalizeTableName(table);
-      const { error: updError } = await supabase
+      const result = await supabase
         .from(normalizedTable)
         .update(validateAndConvertData(item) as any)
         .eq('id', id);
-      if (updError) {
-        const errorMessage = updError.message || 'Update failed';
+      if (result.error) {
+        const errorMessage = result.error.message || 'Update failed';
         setError(errorMessage);
-        throw updError;
+        throw result.error;
       }
       await loadData();
       return;
@@ -177,14 +177,14 @@ export function useEnhancedOfflineData<T>(
   const remove = async (id: string) => {
     if (ONLINE_ONLY) {
       const normalizedTable = normalizeTableName(table);
-      const { error: delError } = await supabase
+      const result = await supabase
         .from(normalizedTable)
         .delete()
         .eq('id', id);
-      if (delError) {
-        const errorMessage = delError.message || 'Delete failed';
+      if (result.error) {
+        const errorMessage = result.error.message || 'Delete failed';
         setError(errorMessage);
-        throw delError;
+        throw result.error;
       }
       await loadData();
       return;
@@ -216,13 +216,13 @@ export function useEnhancedOfflineData<T>(
     if (ONLINE_ONLY) {
       try {
         const normalizedTable = normalizeTableName(table);
-        const { data: row, error: fetchError } = await supabase
+        const result = await supabase
           .from(normalizedTable)
           .select('*')
           .eq('id', id)
           .maybeSingle();
-        if (fetchError) throw fetchError;
-        return (row as any) || null;
+        if (result.error) throw result.error;
+        return (result.data as T) || null;
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Find failed';
         setError(errorMessage);
@@ -237,7 +237,7 @@ export function useEnhancedOfflineData<T>(
 
     try {
       const normalizedTable = normalizeTableName(table);
-      return await databaseService.findById(normalizedTable, id);
+      return await databaseService.findById(normalizedTable, id) as T | null;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Find failed';
       setError(errorMessage);

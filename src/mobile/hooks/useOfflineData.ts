@@ -24,12 +24,12 @@ export function useOfflineData<T>(
       const normalizedTable = normalizeTableName(table);
 
       if (ONLINE_ONLY) {
-        const { data: rows, error: fetchError } = await supabase
+        const result = await supabase
           .from(normalizedTable)
           .select('*')
           .order('created_at', { ascending: false });
-        if (fetchError) throw fetchError;
-        setData((rows as any) || []);
+        if (result.error) throw result.error;
+        setData((result.data || []) as T[]);
       } else {
         const results = await databaseService.findAll(normalizedTable);
         setData(results);
@@ -50,14 +50,14 @@ export function useOfflineData<T>(
     try {
       const normalizedTable = normalizeTableName(table);
       if (ONLINE_ONLY) {
-        const { data: inserted, error: insertError } = await supabase
+        const result = await supabase
           .from(normalizedTable)
           .insert(item as any)
           .select()
           .single();
-        if (insertError) throw insertError;
+        if (result.error) throw result.error;
         await loadData();
-        return (inserted as any)?.id as string;
+        return ((result.data as any)?.id as string) || '';
       } else {
         const id = await databaseService.insert(normalizedTable, {
           ...item,
@@ -76,13 +76,13 @@ export function useOfflineData<T>(
     try {
       const normalizedTable = normalizeTableName(table);
       if (ONLINE_ONLY) {
-        const { error: updateError } = await supabase
+        const result = await supabase
           .from(normalizedTable)
           .update(item as any)
           .eq('id', id);
-        if (updateError) throw updateError;
+        if (result.error) throw result.error;
         await loadData();
-      } else {
+      } else{
         await databaseService.update(normalizedTable, id, {
           ...item,
           sync_status: 'pending'
@@ -99,11 +99,11 @@ export function useOfflineData<T>(
     try {
       const normalizedTable = normalizeTableName(table);
       if (ONLINE_ONLY) {
-        const { error: deleteError } = await supabase
+        const result = await supabase
           .from(normalizedTable)
           .delete()
           .eq('id', id);
-        if (deleteError) throw deleteError;
+        if (result.error) throw result.error;
         await loadData();
       } else {
         await databaseService.delete(normalizedTable, id);
@@ -119,13 +119,13 @@ export function useOfflineData<T>(
     try {
       const normalizedTable = normalizeTableName(table);
       if (ONLINE_ONLY) {
-        const { data: row, error: fetchError } = await supabase
+        const result = await supabase
           .from(normalizedTable)
           .select('*')
           .eq('id', id)
           .maybeSingle();
-        if (fetchError) throw fetchError;
-        return (row as any) || null;
+        if (result.error) throw result.error;
+        return (result.data as T) || null;
       } else {
         return await databaseService.findById(normalizedTable, id);
       }

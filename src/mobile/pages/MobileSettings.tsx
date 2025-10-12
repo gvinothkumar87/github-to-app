@@ -11,6 +11,7 @@ import { databaseService } from '../services/database.service';
 import { syncService } from '../services/sync.service';
 import { networkService } from '../services/network.service';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { ONLINE_ONLY } from '../config';
 import { 
   Wifi, 
   WifiOff,

@@ -38,7 +38,7 @@ export function useEnhancedOfflineData<T>(
         setError(null);
         const normalizedTable = normalizeTableName(table);
         const result = await supabase
-          .from(normalizedTable)
+          .from(normalizedTable as any)
           .select('*')
           .order('created_at', { ascending: false });
         if (result.error) throw result.error;
@@ -85,7 +85,7 @@ export function useEnhancedOfflineData<T>(
     if (ONLINE_ONLY) {
       const normalizedTable = normalizeTableName(table);
       const result = await supabase
-        .from(normalizedTable)
+        .from(normalizedTable as any)
         .insert(validateAndConvertData(item) as any);
       if (result.error) {
         const errorMessage = result.error.message || 'Create failed';
@@ -132,7 +132,7 @@ export function useEnhancedOfflineData<T>(
     if (ONLINE_ONLY) {
       const normalizedTable = normalizeTableName(table);
       const result = await supabase
-        .from(normalizedTable)
+        .from(normalizedTable as any)
         .update(validateAndConvertData(item) as any)
         .eq('id', id);
       if (result.error) {
@@ -178,7 +178,7 @@ export function useEnhancedOfflineData<T>(
     if (ONLINE_ONLY) {
       const normalizedTable = normalizeTableName(table);
       const result = await supabase
-        .from(normalizedTable)
+        .from(normalizedTable as any)
         .delete()
         .eq('id', id);
       if (result.error) {
@@ -217,7 +217,7 @@ export function useEnhancedOfflineData<T>(
       try {
         const normalizedTable = normalizeTableName(table);
         const result = await supabase
-          .from(normalizedTable)
+          .from(normalizedTable as any)
           .select('*')
           .eq('id', id)
           .maybeSingle();

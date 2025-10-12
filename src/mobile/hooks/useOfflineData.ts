@@ -25,7 +25,7 @@ export function useOfflineData<T>(
 
       if (ONLINE_ONLY) {
         const result = await supabase
-          .from(normalizedTable)
+          .from(normalizedTable as any)
           .select('*')
           .order('created_at', { ascending: false });
         if (result.error) throw result.error;
@@ -51,7 +51,7 @@ export function useOfflineData<T>(
       const normalizedTable = normalizeTableName(table);
       if (ONLINE_ONLY) {
         const result = await supabase
-          .from(normalizedTable)
+          .from(normalizedTable as any)
           .insert(item as any)
           .select()
           .single();
@@ -77,7 +77,7 @@ export function useOfflineData<T>(
       const normalizedTable = normalizeTableName(table);
       if (ONLINE_ONLY) {
         const result = await supabase
-          .from(normalizedTable)
+          .from(normalizedTable as any)
           .update(item as any)
           .eq('id', id);
         if (result.error) throw result.error;
@@ -100,7 +100,7 @@ export function useOfflineData<T>(
       const normalizedTable = normalizeTableName(table);
       if (ONLINE_ONLY) {
         const result = await supabase
-          .from(normalizedTable)
+          .from(normalizedTable as any)
           .delete()
           .eq('id', id);
         if (result.error) throw result.error;
@@ -120,7 +120,7 @@ export function useOfflineData<T>(
       const normalizedTable = normalizeTableName(table);
       if (ONLINE_ONLY) {
         const result = await supabase
-          .from(normalizedTable)
+          .from(normalizedTable as any)
           .select('*')
           .eq('id', id)
           .maybeSingle();

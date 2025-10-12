@@ -120,8 +120,9 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
       let query = supabase.from('sales').select('bill_serial_no');
       
       if (location === 'PULIVANTHI') {
-        // For PULIVANTHI, get numeric serials like 001, 002, 003
-        query = query.like('bill_serial_no', '[0-9][0-9][0-9]');
+        // For PULIVANTHI, get P prefixed serials like P001, P002, P003
+        prefix = 'P';
+        query = query.like('bill_serial_no', 'P%');
       } else if (location === 'MATTAPARAI') {
         // For MATTAPARAI, get GRM prefixed serials like GRM050, GRM051, GRM052
         prefix = 'GRM';
@@ -138,7 +139,7 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
         existingBills.forEach(bill => {
           const serial = bill.bill_serial_no;
           if (location === 'PULIVANTHI') {
-            const num = parseInt(serial || '0');
+            const num = parseInt((serial || 'P0').replace('P', ''));
             maxNumber = Math.max(maxNumber, num);
           } else if (location === 'MATTAPARAI') {
             const num = parseInt((serial || 'GRM0').replace('GRM', ''));
@@ -158,10 +159,10 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
       }
       
       const serialNumber = nextNumber.toString().padStart(3, '0');
-      return location === 'PULIVANTHI' ? serialNumber : `${prefix}${serialNumber}`;
+      return `${prefix}${serialNumber}`;
     } catch (error) {
       console.error('Error generating bill serial:', error);
-      return location === 'PULIVANTHI' ? '001' : 'GRM050';
+      return location === 'PULIVANTHI' ? 'P001' : 'GRM050';
     }
   };
 

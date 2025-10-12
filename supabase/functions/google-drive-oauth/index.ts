@@ -27,9 +27,16 @@ serve(async (req) => {
 
     // Get auth URL
     if (action === 'getAuthUrl') {
+      if (!REDIRECT_URI) {
+        return new Response(
+          JSON.stringify({ error: 'GOOGLE_OAUTH_REDIRECT_URI not configured' }), 
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
         `client_id=${CLIENT_ID}` +
-        `&redirect_uri=${encodeURIComponent(REDIRECT_URI || `${new URL(req.url).origin}/auth/callback`)}` +
+        `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
         `&response_type=code` +
         `&scope=${encodeURIComponent('https://www.googleapis.com/auth/drive.file')}` +
         `&access_type=offline` +
@@ -43,6 +50,13 @@ serve(async (req) => {
 
     // Exchange code for tokens
     if (action === 'exchangeCode' && code) {
+      if (!REDIRECT_URI) {
+        return new Response(
+          JSON.stringify({ error: 'GOOGLE_OAUTH_REDIRECT_URI not configured' }), 
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -50,7 +64,7 @@ serve(async (req) => {
           code,
           client_id: CLIENT_ID,
           client_secret: CLIENT_SECRET,
-          redirect_uri: REDIRECT_URI || `${new URL(req.url).origin}/auth/callback`,
+          redirect_uri: REDIRECT_URI,
           grant_type: 'authorization_code',
         }),
       });

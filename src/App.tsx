@@ -9,6 +9,7 @@ import DebitNote from "./pages/DebitNote";
 import CreditNote from "./pages/CreditNote";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
+import GoogleDriveCallback from "./pages/GoogleDriveCallback";
 import { AuthProvider } from "./contexts/AuthContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -25,6 +26,7 @@ const App = () => (
           <LanguageProvider>
             <Routes>
               <Route path="/auth" element={<Auth />} />
+              <Route path="/auth/google-callback" element={<GoogleDriveCallback />} />
               <Route path="/bills" element={
                 <ProtectedRoute>
                   <Bills />

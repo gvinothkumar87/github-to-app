@@ -700,6 +700,7 @@ export type Database = {
           is_completed: boolean
           item_id: string
           load_weight: number | null
+          load_weight_photo_url: string | null
           load_weight_updated_at: string | null
           load_weight_updated_by: string | null
           loading_place: string
@@ -720,6 +721,7 @@ export type Database = {
           is_completed?: boolean
           item_id: string
           load_weight?: number | null
+          load_weight_photo_url?: string | null
           load_weight_updated_at?: string | null
           load_weight_updated_by?: string | null
           loading_place?: string
@@ -740,6 +742,7 @@ export type Database = {
           is_completed?: boolean
           item_id?: string
           load_weight?: number | null
+          load_weight_photo_url?: string | null
           load_weight_updated_at?: string | null
           load_weight_updated_by?: string | null
           loading_place?: string

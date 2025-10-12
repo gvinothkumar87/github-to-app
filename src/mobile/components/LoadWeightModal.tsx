@@ -140,7 +140,7 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
         remarks: remarks || null,
         is_completed: true,
         sync_status: 'pending',
-        weighment_photo_url: photoUrl
+        load_weight_photo_url: photoUrl
       });
 
       toast({

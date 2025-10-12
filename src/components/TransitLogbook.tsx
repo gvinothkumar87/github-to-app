@@ -770,7 +770,7 @@ export const TransitLogbook = () => {
                          </div>
                        </div>
                       
-                      <div className="flex gap-2 items-center">
+                      <div className="space-y-2">
                         <Input
                           type="number"
                           step="0.01"
@@ -780,27 +780,61 @@ export const TransitLogbook = () => {
                             ...prev,
                             [entry.id]: e.target.value
                           }))}
-                          className="flex-1"
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               const value = parseFloat(loadWeights[entry.id] || '0');
                               if (value > 0) {
-                                updateLoadWeight(entry.id, value);
+                                updateLoadWeight(entry, value);
                               }
                             }
                           }}
                         />
+                        
+                        <div className="space-y-2">
+                          <input
+                            id={`photo-upload-${entry.id}`}
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handlePhotoFileChange(entry.id, file);
+                            }}
+                            className="hidden"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => document.getElementById(`photo-upload-${entry.id}`)?.click()}
+                            className="w-full"
+                          >
+                            {photoData[entry.id] 
+                              ? (language === 'english' ? '✓ Photo Selected' : '✓ புகைப்படம் தேர்ந்தெடுக்கப்பட்டது')
+                              : (language === 'english' ? 'Upload Photo *' : 'புகைப்படம் பதிவேற்றவும் *')}
+                          </Button>
+                          {photoData[entry.id] && (
+                            <img 
+                              src={photoData[entry.id]} 
+                              alt="Preview" 
+                              className="w-full h-32 object-cover rounded border"
+                            />
+                          )}
+                        </div>
+
                         <Button
                           size="sm"
                           onClick={() => {
                             const value = parseFloat(loadWeights[entry.id] || '0');
                             if (value > 0) {
-                              updateLoadWeight(entry.id, value);
+                              updateLoadWeight(entry, value);
                             }
                           }}
-                          className="shrink-0"
+                          disabled={uploadingMap[entry.id]}
+                          className="w-full"
                         >
-                          {language === 'english' ? 'Update' : 'புதுப்பி'}
+                          {uploadingMap[entry.id]
+                            ? (language === 'english' ? 'Uploading...' : 'பதிவேற்றுகிறது...')
+                            : (language === 'english' ? 'Update' : 'புதுப்பி')}
                         </Button>
                       </div>
                     </Card>

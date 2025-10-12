@@ -3,6 +3,8 @@ import { databaseService } from '../services/database.service';
 import { networkService } from '../services/network.service';
 import { syncService } from '../services/sync.service';
 import { useMobileServices } from '../providers/MobileServiceProvider';
+import { ONLINE_ONLY } from '../config';
+import { supabase } from '@/integrations/supabase/client';
 
 interface OfflineDataOptions {
   autoSync?: boolean;
@@ -29,6 +31,27 @@ export function useEnhancedOfflineData<T>(
   };
 
   const loadData = async () => {
+    // In online-only mode we always fetch from Supabase
+    if (ONLINE_ONLY) {
+      try {
+        setLoading(true);
+        setError(null);
+        const normalizedTable = normalizeTableName(table);
+        const { data: rows, error: fetchError } = await supabase
+          .from(normalizedTable)
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (fetchError) throw fetchError;
+        setData((rows as any) || []);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        setError(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     // Don't load if services aren't ready
     if (!isReady) {
       console.log(`Services not ready, skipping ${table} data load`);
@@ -59,6 +82,20 @@ export function useEnhancedOfflineData<T>(
   };
 
   const create = async (item: Omit<T, 'id' | 'created_at' | 'updated_at'>) => {
+    if (ONLINE_ONLY) {
+      const normalizedTable = normalizeTableName(table);
+      const { error: insertError } = await supabase
+        .from(normalizedTable)
+        .insert(validateAndConvertData(item) as any);
+      if (insertError) {
+        const errorMessage = insertError.message || 'Create failed';
+        setError(errorMessage);
+        throw insertError;
+      }
+      await loadData();
+      return '' as any;
+    }
+
     if (!isReady) {
       throw new Error('Services not ready');
     }
@@ -92,6 +129,21 @@ export function useEnhancedOfflineData<T>(
   };
 
   const update = async (id: string, item: Partial<T>) => {
+    if (ONLINE_ONLY) {
+      const normalizedTable = normalizeTableName(table);
+      const { error: updError } = await supabase
+        .from(normalizedTable)
+        .update(validateAndConvertData(item) as any)
+        .eq('id', id);
+      if (updError) {
+        const errorMessage = updError.message || 'Update failed';
+        setError(errorMessage);
+        throw updError;
+      }
+      await loadData();
+      return;
+    }
+
     if (!isReady) {
       throw new Error('Services not ready');
     }
@@ -123,6 +175,21 @@ export function useEnhancedOfflineData<T>(
   };
 
   const remove = async (id: string) => {
+    if (ONLINE_ONLY) {
+      const normalizedTable = normalizeTableName(table);
+      const { error: delError } = await supabase
+        .from(normalizedTable)
+        .delete()
+        .eq('id', id);
+      if (delError) {
+        const errorMessage = delError.message || 'Delete failed';
+        setError(errorMessage);
+        throw delError;
+      }
+      await loadData();
+      return;
+    }
+
     if (!isReady) {
       throw new Error('Services not ready');
     }
@@ -146,6 +213,23 @@ export function useEnhancedOfflineData<T>(
   };
 
   const findById = async (id: string): Promise<T | null> => {
+    if (ONLINE_ONLY) {
+      try {
+        const normalizedTable = normalizeTableName(table);
+        const { data: row, error: fetchError } = await supabase
+          .from(normalizedTable)
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
+        if (fetchError) throw fetchError;
+        return (row as any) || null;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Find failed';
+        setError(errorMessage);
+        return null;
+      }
+    }
+
     if (!isReady) {
       console.warn('Services not ready, cannot find by ID');
       return null;

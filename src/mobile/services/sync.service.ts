@@ -582,16 +582,14 @@ export class SyncService {
       throw new Error('Cannot download data while offline');
     }
 
-    // Check authentication first
-    const { data: { session }, error: authError } = await supabase.auth.getSession();
-    if (authError || !session) {
-      throw new Error('Not authenticated. Please login first.');
+    // If ONLINE_ONLY is enabled, nothing to download to local DB
+    try {
+      // No-op in online-only mode
+      console.log('downloadLatestData called in online-only mode (no local storage).');
+    } catch (e) {
+      console.warn('downloadLatestData noop failed?', e);
     }
-
-    console.log('Starting fresh download of all data from Supabase...');
-    
-    // Clear existing data first for clean sync
-    await this.clearAllLocalData();
+  }
 
     try {
       // Download customers (all active)
@@ -728,55 +726,15 @@ export class SyncService {
 
   // Force re-download without uploading local changes
   async forceRedownload(): Promise<void> {
-    console.log('Force re-downloading all data...');
-    await this.downloadLatestData();
+    console.log('Force re-download requested. In online-only mode this is a no-op.');
   }
 
   private async clearAllLocalData(): Promise<void> {
-    console.log('Clearing local database for fresh sync...');
-    const tables = [
-      'customers',
-      'items', 
-      'outward_entries',
-      'sales',
-      'receipts',
-      'customer_ledger',
-      'credit_notes',
-      'debit_notes',
-      'company_settings'
-    ];
-
-    for (const table of tables) {
-      try {
-        await databaseService.clearTable(table);
-        console.log(`Cleared table: ${table}`);
-      } catch (error) {
-        console.warn(`Failed to clear table ${table}:`, error);
-      }
-    }
+    console.log('clearAllLocalData called. In online-only mode there is no local DB to clear.');
   }
 
   private async storeDownloadedData(table: string, data: any[]): Promise<void> {
-    console.log(`Storing ${data.length} ${table} records...`);
-    
-    try {
-      for (const item of data) {
-        try {
-          // Insert new record using local method (no sync queue)
-          await databaseService.insertLocal(table, {
-            ...item,
-            sync_status: 'synced'
-          });
-        } catch (itemError) {
-          console.warn(`Failed to insert ${table} item ${item.id}:`, itemError);
-        }
-      }
-      
-      console.log(`Stored ${data.length} ${table} records in local database`);
-    } catch (error) {
-      console.error(`Failed to store ${table} data:`, error);
-      throw error;
-    }
+    console.log(`storeDownloadedData(${table}) called in online-only mode; skipping local write.`);
   }
 
   onSyncProgress(callback: (progress: SyncProgress) => void): () => void {

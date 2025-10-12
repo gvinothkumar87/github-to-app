@@ -3,6 +3,7 @@ import { databaseService } from '../services/database.service';
 import { networkService } from '../services/network.service';
 import { syncService } from '../services/sync.service';
 import { useToast } from '@/hooks/use-toast';
+import { ONLINE_ONLY } from '../config';
 
 interface ServiceStatus {
   database: 'initializing' | 'ready' | 'error';
@@ -50,17 +51,28 @@ export const MobileServiceProvider: React.FC<MobileServiceProviderProps> = ({ ch
     });
 
     try {
-      // Phase 1: Initialize Database
-      console.log('Initializing database service...');
-      await databaseService.initialize();
-      setStatus(prev => ({ ...prev, database: 'ready' }));
-      console.log('Database service ready');
-
-      // Phase 2: Initialize Network
+      // Phase 1: Initialize Network first (required for online-only mode)
       console.log('Initializing network service...');
       await networkService.initialize();
       setStatus(prev => ({ ...prev, network: 'ready' }));
       console.log('Network service ready');
+
+      if (ONLINE_ONLY) {
+        console.log('ONLINE_ONLY is enabled. Skipping local DB and sync initialization.');
+        setStatus({ database: 'ready', network: 'ready', sync: 'ready' });
+        setIsReady(true);
+        toast({
+          title: 'App Ready (Online Only)',
+          description: 'Using Supabase directly. Offline storage and sync are disabled.'
+        });
+        return;
+      }
+
+      // Phase 2: Initialize Database (offline mode)
+      console.log('Initializing database service...');
+      await databaseService.initialize();
+      setStatus(prev => ({ ...prev, database: 'ready' }));
+      console.log('Database service ready');
 
       // Phase 3: Initialize Sync
       console.log('Initializing sync service...');
@@ -74,22 +86,21 @@ export const MobileServiceProvider: React.FC<MobileServiceProviderProps> = ({ ch
         try {
           await syncService.downloadLatestData();
           console.log('Initial data download completed');
-          
           toast({
-            title: "App Ready",
-            description: "Mobile app initialized and synced with server",
+            title: 'App Ready',
+            description: 'Mobile app initialized and synced with server',
           });
         } catch (downloadError) {
           console.warn('Initial data download failed, continuing with offline mode:', downloadError);
           toast({
-            title: "App Ready (Offline)",
-            description: "Mobile app ready, sync will happen when online",
+            title: 'App Ready (Offline)',
+            description: 'Mobile app ready, sync will happen when online',
           });
         }
       } else {
         toast({
-          title: "App Ready (Offline)",
-          description: "Mobile app initialized in offline mode",
+          title: 'App Ready (Offline)',
+          description: 'Mobile app initialized in offline mode',
         });
       }
 

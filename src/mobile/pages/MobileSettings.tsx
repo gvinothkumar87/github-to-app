@@ -291,64 +291,66 @@ const MobileSettings: React.FC = () => {
           </Card>
         )}
 
-        {/* Sync Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Cloud className="h-5 w-5" />
-              {language === 'english' ? 'Data Synchronization' : 'தரவு ஒத்திசைவு'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Button 
-              onClick={handleSync}
-              disabled={!isOnline || syncing || forceDownloading || resetting}
-              className="w-full"
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
-              {syncing 
-                ? (language === 'english' ? 'Syncing...' : 'ஒத்திசைக்கிறது...')
-                : (language === 'english' ? 'Full Sync (Upload + Download)' : 'முழு ஒத்திசைவு (பதிவேற்று + பதிவிறக்கு)')
-              }
-            </Button>
+        {/* Sync Actions - hidden in online-only mode */}
+        {!ONLINE_ONLY && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Cloud className="h-5 w-5" />
+                {language === 'english' ? 'Data Synchronization' : 'தரவு ஒத்திசைவு'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button 
+                onClick={handleSync}
+                disabled={!isOnline || syncing || forceDownloading || resetting}
+                className="w-full"
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+                {syncing 
+                  ? (language === 'english' ? 'Syncing...' : 'ஒத்திசைக்கிறது...')
+                  : (language === 'english' ? 'Full Sync (Upload + Download)' : 'முழு ஒத்திசைவு (பதிவேற்று + பதிவிறக்கு)')
+                }
+              </Button>
 
-            <Button 
-              onClick={handleForceRedownload}
-              disabled={!isOnline || syncing || forceDownloading || resetting}
-              variant="secondary"
-              className="w-full"
-            >
-              <Cloud className={`h-4 w-4 mr-2 ${forceDownloading ? 'animate-pulse' : ''}`} />
-              {forceDownloading 
-                ? (language === 'english' ? 'Downloading...' : 'பதிவிறக்குகிறது...')
-                : (language === 'english' ? 'Force Re-download' : 'வலுக்கட்டாயமாக மீண்டும் பதிவிறக்கு')
-              }
-            </Button>
-            
-            <Button 
-              onClick={handleClearData}
-              variant="outline"
-              disabled={syncing || forceDownloading || resetting}
-              className="w-full"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              {language === 'english' ? 'Clear Synced Upload Queue' : 'ஒத்திசைக்கப்பட்ட பதிவேற்ற வரிசையை அழிக்கவும்'}
-            </Button>
+              <Button 
+                onClick={handleForceRedownload}
+                disabled={!isOnline || syncing || forceDownloading || resetting}
+                variant="secondary"
+                className="w-full"
+              >
+                <Cloud className={`h-4 w-4 mr-2 ${forceDownloading ? 'animate-pulse' : ''}`} />
+                {forceDownloading 
+                  ? (language === 'english' ? 'Downloading...' : 'பதிவிறக்குகிறது...')
+                  : (language === 'english' ? 'Force Re-download' : 'வலுக்கட்டாயமாக மீண்டும் பதிவிறக்கு')
+                }
+              </Button>
+              
+              <Button 
+                onClick={handleClearData}
+                variant="outline"
+                disabled={syncing || forceDownloading || resetting}
+                className="w-full"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                {language === 'english' ? 'Clear Synced Upload Queue' : 'ஒத்திசைக்கப்பட்ட பதிவேற்ற வரிசையை அழிக்கவும்'}
+              </Button>
 
-            <Button 
-              onClick={handleResetDatabase}
-              variant="destructive"
-              disabled={syncing || forceDownloading || resetting}
-              className="w-full"
-            >
-              <HardDrive className={`h-4 w-4 mr-2 ${resetting ? 'animate-pulse' : ''}`} />
-              {resetting 
-                ? (language === 'english' ? 'Resetting...' : 'மீட்டமைக்கிறது...')
-                : (language === 'english' ? 'Reset Offline Database' : 'ஆஃப்லைன் தரவுத்தளத்தை மீட்டமைக்கவும்')
-              }
-            </Button>
-          </CardContent>
-        </Card>
+              <Button 
+                onClick={handleResetDatabase}
+                variant="destructive"
+                disabled={syncing || forceDownloading || resetting}
+                className="w-full"
+              >
+                <HardDrive className={`h-4 w-4 mr-2 ${resetting ? 'animate-pulse' : ''}`} />
+                {resetting 
+                  ? (language === 'english' ? 'Resetting...' : 'மீட்டமைக்கிறது...')
+                  : (language === 'english' ? 'Reset Offline Database' : 'ஆஃப்லைன் தரவுத்தளத்தை மீட்டமைக்கவும்')
+                }
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* App Settings */}
         <Card>

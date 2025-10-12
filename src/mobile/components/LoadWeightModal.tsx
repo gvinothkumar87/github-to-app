@@ -87,8 +87,12 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
   const uploadToGoogleDrive = async (dataUrl: string): Promise<string> => {
     const fileName = `${Date.now()}_${outwardEntry.serial_no}.jpg`;
     
+    // Compress before upload to avoid edge memory limits
+    const { compressDataUrl } = await import('@/lib/image');
+    const compressed = await compressDataUrl(dataUrl, { maxSize: 1600, quality: 0.7 });
+
     const { data, error } = await supabase.functions.invoke('upload-to-google-drive', {
-      body: { dataUrl, fileName },
+      body: { dataUrl: compressed, fileName },
     });
 
     if (error) throw error;

@@ -256,10 +256,13 @@ export const TransitLogbook = () => {
 
       setUploadingMap(prev => ({ ...prev, [entry.id]: true }));
 
-      // Upload photo via refresh token edge function
+      // Compress then upload via edge function
+      const { compressDataUrl } = await import('@/lib/image');
+      const compressed = await compressDataUrl(photoData[entry.id], { maxSize: 1600, quality: 0.7 });
+
       const fileName = `load-weight-${entry.serial_no}-${Date.now()}.jpg`;
       const { data: uploadData, error: uploadError } = await supabase.functions.invoke('upload-to-google-drive', {
-        body: { dataUrl: photoData[entry.id], fileName },
+        body: { dataUrl: compressed, fileName },
       });
       if (uploadError) throw uploadError;
       const viewUrl = uploadData.viewUrl;

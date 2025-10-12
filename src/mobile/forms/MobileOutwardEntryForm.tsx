@@ -75,9 +75,11 @@ const MobileOutwardEntryForm: React.FC = () => {
   };
 
   const uploadToGoogleDrive = async (dataUrl: string): Promise<string> => {
+    const { compressDataUrl } = await import('@/lib/image');
+    const compressed = await compressDataUrl(dataUrl, { maxSize: 1600, quality: 0.7 });
     const fileName = `weighment_${Date.now()}.jpg`;
     const { data, error } = await supabase.functions.invoke('upload-to-google-drive', {
-      body: { dataUrl, fileName },
+      body: { dataUrl: compressed, fileName },
     });
     if (error) throw error;
     if (!data?.viewUrl) throw new Error('No URL returned from upload');

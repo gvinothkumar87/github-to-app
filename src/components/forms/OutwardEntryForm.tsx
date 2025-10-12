@@ -98,9 +98,13 @@ export const OutwardEntryForm: React.FC<OutwardEntryFormProps> = ({ onSuccess, o
       const reader = new FileReader();
       reader.onloadend = async () => {
         try {
+          const raw = reader.result as string;
+          const { compressDataUrl } = await import('@/lib/image');
+          const compressed = await compressDataUrl(raw, { maxSize: 1600, quality: 0.7 });
+
           const fileName = `weighment_${Date.now()}_${file.name}`;
           const { data, error } = await supabase.functions.invoke('upload-to-google-drive', {
-            body: { dataUrl: reader.result as string, fileName },
+            body: { dataUrl: compressed, fileName },
           });
           if (error) throw error;
           if (!data?.viewUrl) throw new Error('No URL returned from upload');

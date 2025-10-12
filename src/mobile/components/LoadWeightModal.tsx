@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Camera, Upload, X, Loader2 } from 'lucide-react';
 import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
 import { useEnhancedOfflineData } from '../hooks/useEnhancedOfflineData';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -84,10 +85,29 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
   };
 
   const uploadToGoogleDrive = async (dataUrl: string): Promise<string> => {
-    const { GoogleDriveOAuth } = await import('@/lib/googleDriveOAuth');
-    const fileName = `load-weight-${Date.now()}.jpg`;
-    return await GoogleDriveOAuth.uploadFile(dataUrl, fileName);
+    const isMobile = Capacitor.isNativePlatform();
+    
+    if (isMobile) {
+      const { GoogleDriveOAuthMobile } = await import('@/lib/googleDriveOAuthMobile');
+      const fileName = `load-weight-${Date.now()}.jpg`;
+      return await GoogleDriveOAuthMobile.uploadFile(dataUrl, fileName);
+    } else {
+      const { GoogleDriveOAuth } = await import('@/lib/googleDriveOAuth');
+      const fileName = `load-weight-${Date.now()}.jpg`;
+      return await GoogleDriveOAuth.uploadFile(dataUrl, fileName);
+    }
   };
+
+  // Initialize mobile OAuth on mount
+  useEffect(() => {
+    const initMobileOAuth = async () => {
+      if (Capacitor.isNativePlatform()) {
+        const { GoogleDriveOAuthMobile } = await import('@/lib/googleDriveOAuthMobile');
+        await GoogleDriveOAuthMobile.initialize();
+      }
+    };
+    initMobileOAuth();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,13 +172,16 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
       onClose();
     } catch (error: any) {
       const msg = error?.message || '';
-      if (msg === 'GOOGLE_AUTH_REDIRECT' || msg.includes('Google authentication')) {
+      
+      // Don't show error for cancelled auth
+      if (msg.includes('cancelled')) {
         toast({
-          title: 'Connecting Google Drive',
-          description: 'Redirecting to Google to complete authorization...',
+          title: 'Upload cancelled',
+          description: 'You cancelled the Google Drive authorization',
         });
-        return; // wait for redirect
+        return;
       }
+      
       toast({
         variant: 'destructive',
         title: 'Error',

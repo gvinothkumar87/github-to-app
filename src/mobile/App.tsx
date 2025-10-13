@@ -118,6 +118,11 @@ const MobileApp: React.FC = () => {
                   <MobileEditSaleForm />
                 </MobileProtectedRoute>
               } />
+              <Route path="/sales/:id/view" element={
+                <MobileProtectedRoute>
+                  <MobileInvoiceGenerator />
+                </MobileProtectedRoute>
+              } />
               <Route path="/sales-ledger" element={
                 <MobileProtectedRoute>
                   <MobileSalesLedgerOffline />

@@ -16,7 +16,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export const MobileInvoiceGenerator: React.FC = () => {
-  const { billId } = useParams();
+  const { billId, id } = useParams();
+  const saleId = billId || id; // Support both /bills/:billId/invoice and /sales/:id/view
   const navigate = useNavigate();
   const { language, getDisplayName } = useLanguage();
   const { toast } = useToast();
@@ -33,14 +34,14 @@ export const MobileInvoiceGenerator: React.FC = () => {
   const { data: companySettingsData } = useEnhancedOfflineData('company_settings');
 
   useEffect(() => {
-    if (billId && sales.length > 0) {
-      const foundSale = sales.find((s: any) => s.id === billId);
+    if (saleId && sales.length > 0) {
+      const foundSale = sales.find((s: any) => s.id === saleId);
       if (foundSale) {
         setSale(foundSale);
         setIrnValue((foundSale as any).irn || '');
       }
     }
-  }, [billId, sales]);
+  }, [saleId, sales]);
 
   useEffect(() => {
     if (companySettingsData.length > 0 && sale) {
@@ -84,7 +85,7 @@ export const MobileInvoiceGenerator: React.FC = () => {
       const { error } = await supabase
         .from('sales')
         .update({ irn: irnValue.trim() })
-        .eq('id', billId);
+        .eq('id', saleId);
 
       if (error) throw error;
 

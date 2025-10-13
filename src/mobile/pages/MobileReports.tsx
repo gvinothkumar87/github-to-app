@@ -17,11 +17,9 @@ const MobileReports: React.FC = () => {
   const [customerId, setCustomerId] = useState<string>('');
   const [itemId, setItemId] = useState<string>('');
 
-  const { data: sales, loading: salesLoading, isServicesReady, error } = useEnhancedOfflineData('sales');
+  const { data: sales, loading: salesLoading, isServicesReady } = useEnhancedOfflineData('sales');
   const { data: customers } = useEnhancedOfflineData('customers');
   const { data: items } = useEnhancedOfflineData('items');
-  const { data: receipts } = useEnhancedOfflineData('receipts');
-  const { data: outwardEntries } = useEnhancedOfflineData('outward_entries');
 
   const [reportData, setReportData] = useState<any>(null);
 
@@ -39,7 +37,7 @@ const MobileReports: React.FC = () => {
       return;
     }
 
-    const filteredSales = sales?.filter((sale: any) => {
+    const filteredSales = (sales || []).filter((sale: any) => {
       const saleDate = new Date(sale.sale_date);
       const start = new Date(startDate);
       const end = new Date(endDate);
@@ -69,7 +67,7 @@ const MobileReports: React.FC = () => {
 
       case 'customer-summary':
         const customerSales = filteredSales.reduce((acc: any, sale: any) => {
-          const customer = customers?.find((c: any) => c.id === sale.customer_id);
+          const customer = (customers || []).find((c: any) => c.id === sale.customer_id);
           const customerName = (customer as any)?.name_english || 'Unknown';
           
           if (!acc[sale.customer_id]) {
@@ -101,7 +99,7 @@ const MobileReports: React.FC = () => {
 
       case 'item-summary':
         const itemSales = filteredSales.reduce((acc: any, sale: any) => {
-          const item = items?.find((i: any) => i.id === sale.item_id);
+          const item = (items || []).find((i: any) => i.id === sale.item_id);
           const itemName = (item as any)?.name_english || 'Unknown';
           
           if (!acc[sale.item_id]) {
@@ -225,7 +223,7 @@ const MobileReports: React.FC = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">All customers</SelectItem>
-                  {customers?.map((customer: any) => (
+                  {(customers || []).map((customer: any) => (
                     <SelectItem key={customer.id} value={customer.id}>
                       {customer.name_english}
                     </SelectItem>
@@ -242,7 +240,7 @@ const MobileReports: React.FC = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">All items</SelectItem>
-                  {items?.map((item: any) => (
+                  {(items || []).map((item: any) => (
                     <SelectItem key={item.id} value={item.id}>
                       {item.name_english}
                     </SelectItem>

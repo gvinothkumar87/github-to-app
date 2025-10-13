@@ -44,7 +44,7 @@ const MobileCustomerLedgerOffline: React.FC = () => {
   }, [selectedCustomerId, dateFrom, dateTo, isServicesReady]);
 
   const fetchLedgerEntries = async () => {
-    if (!selectedCustomerId) return;
+    if (!selectedCustomerId || !isServicesReady) return;
 
     setLoading(true);
     try {

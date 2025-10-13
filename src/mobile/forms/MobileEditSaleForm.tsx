@@ -110,7 +110,7 @@ export const MobileEditSaleForm = () => {
 
   const currentRate = parseFloat(rate) || 0;
 
-  if (!sale || !customer || !item || !outwardEntry) {
+  if (!sale) {
     return (
       <MobileLayout 
         title={language === 'english' ? 'Edit Sale' : 'விற்பனையை திருத்து'}
@@ -118,6 +118,20 @@ export const MobileEditSaleForm = () => {
         <Card>
           <CardContent className="p-6 text-center">
             {language === 'english' ? 'Loading sale details...' : 'விற்பனை விவரங்களை ஏற்றுகிறது...'}
+          </CardContent>
+        </Card>
+      </MobileLayout>
+    );
+  }
+
+  if (!customer || !item || !outwardEntry) {
+    return (
+      <MobileLayout 
+        title={language === 'english' ? 'Edit Sale' : 'விற்பனையை திருத்து'}
+      >
+        <Card>
+          <CardContent className="p-6 text-center">
+            {language === 'english' ? 'Loading related data...' : 'தொடர்புடைய தரவை ஏற்றுகிறது...'}
           </CardContent>
         </Card>
       </MobileLayout>

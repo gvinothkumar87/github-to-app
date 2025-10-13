@@ -54,17 +54,23 @@ const MobileSalesLedgerOffline: React.FC = () => {
   }, [isServicesReady, selectedCustomerId, selectedItemId, fromDate, toDate]);
 
   const fetchSalesData = async () => {
-    if (!isServicesReady) return;
-    
     setLoading(true);
     try {
-      // Get all sales data from offline database
-      const allSales = await databaseService.findAll('sales');
+      // Get all sales data
+      const allSales = isServicesReady 
+        ? await databaseService.findAll('sales')
+        : [];
       
       // Get customers and items data for joining
-      const allCustomers = await databaseService.findAll('customers');
-      const allItems = await databaseService.findAll('items');
-      const allOutwardEntries = await databaseService.findAll('outward_entries');
+      const allCustomers = isServicesReady
+        ? await databaseService.findAll('customers')
+        : customers;
+      const allItems = isServicesReady
+        ? await databaseService.findAll('items')
+        : items;
+      const allOutwardEntries = isServicesReady
+        ? await databaseService.findAll('outward_entries')
+        : [];
 
       // Create lookup maps for efficient joining
       const customerMap = new Map(allCustomers.map(c => [c.id, c]));

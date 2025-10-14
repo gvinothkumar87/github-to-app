@@ -461,6 +461,12 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
                   <div style="border-top: 1px solid #000; padding-top: 5px;">Authorised Signatory</div>
                 </div>
               </div>
+              
+              ${currentSale.irn ? `
+              <div class="irn-section" style="margin-top: 10px; padding: 5px; border-top: 1px solid #ddd; font-size: 9px; text-align: center;">
+                <strong>IRN:</strong> ${currentSale.irn}
+              </div>
+              ` : ''}
             </div>
           </div>
         </body>

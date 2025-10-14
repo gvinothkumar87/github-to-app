@@ -62,13 +62,18 @@ const MobileCustomerLedgerOffline: React.FC = () => {
       // Sort by transaction date
       filteredEntries.sort((a: any, b: any) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime());
       
-      setLedgerEntries(filteredEntries);
+      // Calculate running balance for each entry
+      let runningBalance = 0;
+      const entriesWithBalance = filteredEntries.map((entry: any) => {
+        runningBalance = runningBalance + entry.debit_amount - entry.credit_amount;
+        return {
+          ...entry,
+          balance: runningBalance
+        };
+      });
       
-      // Calculate current balance
-      const balance = filteredEntries.reduce((acc, entry) => {
-        return acc + entry.debit_amount - entry.credit_amount;
-      }, 0);
-      setCustomerBalance(balance);
+      setLedgerEntries(entriesWithBalance);
+      setCustomerBalance(runningBalance);
       
     } catch (error) {
       console.error('Error fetching ledger entries:', error);

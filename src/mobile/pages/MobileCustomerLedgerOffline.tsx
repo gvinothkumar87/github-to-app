@@ -65,7 +65,9 @@ const MobileCustomerLedgerOffline: React.FC = () => {
       // Calculate running balance for each entry
       let runningBalance = 0;
       const entriesWithBalance = filteredEntries.map((entry: any) => {
-        runningBalance = runningBalance + entry.debit_amount - entry.credit_amount;
+        const debit = Number(entry.debit_amount) || 0;
+        const credit = Number(entry.credit_amount) || 0;
+        runningBalance = runningBalance + debit - credit;
         return {
           ...entry,
           balance: runningBalance

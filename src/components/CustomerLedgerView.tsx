@@ -83,13 +83,21 @@ export const CustomerLedgerView = () => {
       return;
     }
 
-    setLedgerEntries((data || []) as CustomerLedger[]);
-    
-    // Calculate current balance
-    const balance = (data || []).reduce((acc, entry) => {
-      return acc + entry.debit_amount - entry.credit_amount;
-    }, 0);
-    setCustomerBalance(balance);
+    // Recompute running balance on the client to ensure correctness
+    const sorted = (data || []).sort(
+      (a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime()
+    );
+
+    let running = 0;
+    const entriesWithBalance = sorted.map((e) => {
+      const debit = Number(e.debit_amount) || 0;
+      const credit = Number(e.credit_amount) || 0;
+      running = running + debit - credit;
+      return { ...e, debit_amount: debit, credit_amount: credit, balance: running } as CustomerLedger;
+    });
+
+    setLedgerEntries(entriesWithBalance);
+    setCustomerBalance(running);
     
     setLoading(false);
   };

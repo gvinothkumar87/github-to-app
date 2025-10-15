@@ -146,25 +146,27 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
         Gstin: companySettings.gstin,
         LglNm: companySettings.company_name,
         Addr1: companySettings.address_line1,
-        Addr2: companySettings.address_line2 || "",
+        ...(companySettings.address_line2 && { Addr2: companySettings.address_line2 }),
         Loc: companySettings.locality,
         Pin: companySettings.pin_code,
         Stcd: companySettings.state_code,
-        Ph: companySettings.phone || null,
-        Em: companySettings.email || null
+        ...(companySettings.phone && { Ph: companySettings.phone }),
+        ...(companySettings.email && { Em: companySettings.email })
       },
       BuyerDtls: {
         Gstin: customer.gstin || "URP",
         LglNm: customer.name_english || getDisplayName(customer),
         TrdNm: customer.name_english || getDisplayName(customer),
         Addr1: buyerAddr1 || customer.address_english || customer.address_tamil || "",
-        Addr2: buyerAddr2 || "",
-        Loc: buyerLoc || customer.address_english?.split(',').pop()?.trim() || "",
+        ...(buyerAddr2 && { Addr2: buyerAddr2 }),
+        ...(buyerLoc || customer.address_english?.split(',').pop()?.trim()) && { 
+          Loc: buyerLoc || customer.address_english?.split(',').pop()?.trim() || "" 
+        },
         Pin: parseInt(customer.pin_code || "605201"),
         Pos: customer.place_of_supply || customer.state_code || "33",
         Stcd: customer.state_code || "33",
-        Ph: customer.phone || "",
-        Em: customer.email || ""
+        ...(customer.phone && { Ph: customer.phone }),
+        ...(customer.email && { Em: customer.email })
       },
       ValDtls: {
         AssVal: roundedBaseAmount,

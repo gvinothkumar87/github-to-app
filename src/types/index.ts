@@ -69,6 +69,7 @@ export interface Sale {
   irn?: string;
   sale_date: string;
   loading_place?: string; // For direct sales to determine invoice company address
+  lorry_no?: string; // For direct sales to store lorry number on invoice
   created_by?: string;
   created_at: string;
   updated_at: string;

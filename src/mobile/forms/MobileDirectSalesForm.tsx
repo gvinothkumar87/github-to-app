@@ -217,6 +217,7 @@ const MobileDirectSalesForm: React.FC = () => {
           bill_serial_no: billSerialNo,
           sale_date: saleDate,
           loading_place: loadingPlace, // Store loading place for invoice generation
+          lorry_no: lorryNo, // Store lorry number for invoice display
           created_by: user.id
         })
         .select()

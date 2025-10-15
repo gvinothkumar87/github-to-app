@@ -334,7 +334,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
                 </div>
                 <div style="padding: 8px;">
                   <div style="font-weight: bold; font-size: 8px;">Motor Vehicle No.</div>
-                  <div style="font-size: 9px; margin-top: 2px;">${outwardEntry?.lorry_no || 'N/A'}</div>
+                  <div style="font-size: 9px; margin-top: 2px;">${currentSale.lorry_no || outwardEntry?.lorry_no || 'N/A'}</div>
                 </div>
               </div>
             </div>

@@ -1594,6 +1594,7 @@ export type Database = {
           irn: string | null
           item_id: string
           loading_place: string | null
+          lorry_no: string | null
           outward_entry_id: string | null
           quantity: number
           rate: number
@@ -1610,6 +1611,7 @@ export type Database = {
           irn?: string | null
           item_id: string
           loading_place?: string | null
+          lorry_no?: string | null
           outward_entry_id?: string | null
           quantity: number
           rate: number
@@ -1626,6 +1628,7 @@ export type Database = {
           irn?: string | null
           item_id?: string
           loading_place?: string | null
+          lorry_no?: string | null
           outward_entry_id?: string | null
           quantity?: number
           rate?: number

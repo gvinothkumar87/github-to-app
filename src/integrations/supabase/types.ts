@@ -968,6 +968,7 @@ export type Database = {
           created_by: string | null
           id: string
           item_id: string
+          mill: string
           purchase_date: string
           quantity: number
           rate: number
@@ -981,6 +982,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           item_id: string
+          mill?: string
           purchase_date?: string
           quantity: number
           rate: number
@@ -994,6 +996,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           item_id?: string
+          mill?: string
           purchase_date?: string
           quantity?: number
           rate?: number
@@ -1657,6 +1660,7 @@ export type Database = {
           description: string | null
           id: string
           item_id: string
+          mill: string
           quantity_in: number
           quantity_out: number
           reference_id: string | null
@@ -1670,6 +1674,7 @@ export type Database = {
           description?: string | null
           id?: string
           item_id: string
+          mill?: string
           quantity_in?: number
           quantity_out?: number
           reference_id?: string | null
@@ -1683,6 +1688,7 @@ export type Database = {
           description?: string | null
           id?: string
           item_id?: string
+          mill?: string
           quantity_in?: number
           quantity_out?: number
           reference_id?: string | null

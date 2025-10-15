@@ -22,6 +22,7 @@ export function PurchaseForm({ onSuccess }: PurchaseFormProps) {
     quantity: "",
     rate: "",
     bill_serial_no: "",
+    mill: "MATTAPARAI",
     purchase_date: new Date().toISOString().split('T')[0],
   });
 
@@ -88,6 +89,7 @@ export function PurchaseForm({ onSuccess }: PurchaseFormProps) {
         rate: rate,
         total_amount: quantity * rate,
         bill_serial_no: formData.bill_serial_no || null,
+        mill: formData.mill,
         purchase_date: formData.purchase_date,
         created_by: user?.id,
       };
@@ -109,6 +111,7 @@ export function PurchaseForm({ onSuccess }: PurchaseFormProps) {
         quantity: "",
         rate: "",
         bill_serial_no: "",
+        mill: "MATTAPARAI",
         purchase_date: new Date().toISOString().split('T')[0],
       });
 
@@ -189,6 +192,23 @@ export function PurchaseForm({ onSuccess }: PurchaseFormProps) {
             onChange={(e) => setFormData({ ...formData, rate: e.target.value })}
             required
           />
+        </div>
+
+        <div>
+          <Label htmlFor="mill">Mill *</Label>
+          <Select
+            value={formData.mill}
+            onValueChange={(value) => setFormData({ ...formData, mill: value })}
+            required
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select mill" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="MATTAPARAI">MATTAPARAI</SelectItem>
+              <SelectItem value="PULIVANTHI">PULIVANTHI</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div>

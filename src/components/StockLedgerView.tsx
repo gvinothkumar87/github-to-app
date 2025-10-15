@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
@@ -11,6 +12,7 @@ export function StockLedgerView() {
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<any[]>([]);
   const [selectedItem, setSelectedItem] = useState("");
+  const [selectedMill, setSelectedMill] = useState("MATTAPARAI");
   const [ledgerEntries, setLedgerEntries] = useState<any[]>([]);
   const [currentStock, setCurrentStock] = useState(0);
   const [openingStock, setOpeningStock] = useState(0);
@@ -24,7 +26,7 @@ export function StockLedgerView() {
     if (selectedItem) {
       fetchStockLedger();
     }
-  }, [selectedItem]);
+  }, [selectedItem, selectedMill]);
 
   const fetchItems = async () => {
     const { data } = await supabase
@@ -49,11 +51,12 @@ export function StockLedgerView() {
     
     setOpeningStock(itemData?.opening_stock || 0);
     
-    // Get stock ledger entries
+    // Get stock ledger entries for selected mill
     const { data } = await supabase
       .from("stock_ledger")
       .select("*")
       .eq("item_id", selectedItem)
+      .eq("mill", selectedMill)
       .order("transaction_date", { ascending: false })
       .order("created_at", { ascending: false });
 
@@ -83,19 +86,35 @@ export function StockLedgerView() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div>
-              <Select value={selectedItem} onValueChange={setSelectedItem}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select an item" />
-                </SelectTrigger>
-                <SelectContent>
-                  {items.map((item) => (
-                    <SelectItem key={item.id} value={item.id}>
-                      {getDisplayName(item)} - {item.code}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Select Item</Label>
+                <Select value={selectedItem} onValueChange={setSelectedItem}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select an item" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {items.map((item) => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {getDisplayName(item)} - {item.code}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label>Select Mill</Label>
+                <Select value={selectedMill} onValueChange={setSelectedMill}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select mill" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="MATTAPARAI">MATTAPARAI</SelectItem>
+                    <SelectItem value="PULIVANTHI">PULIVANTHI</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {selectedItem && (
@@ -121,6 +140,7 @@ export function StockLedgerView() {
                   <TableHead>Date</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Description</TableHead>
+                  <TableHead>Mill</TableHead>
                   <TableHead className="text-right">In</TableHead>
                   <TableHead className="text-right">Out</TableHead>
                   <TableHead className="text-right">Balance</TableHead>
@@ -129,13 +149,13 @@ export function StockLedgerView() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center">
+                    <TableCell colSpan={7} className="text-center">
                       <Loader2 className="h-6 w-6 animate-spin inline" />
                     </TableCell>
                   </TableRow>
                 ) : ledgerEntries.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center">
+                    <TableCell colSpan={7} className="text-center">
                       No stock movements found
                     </TableCell>
                   </TableRow>
@@ -145,6 +165,7 @@ export function StockLedgerView() {
                       <TableCell>{format(new Date(entry.transaction_date), "dd/MM/yyyy")}</TableCell>
                       <TableCell className="capitalize">{entry.transaction_type}</TableCell>
                       <TableCell>{entry.description}</TableCell>
+                      <TableCell>{entry.mill}</TableCell>
                       <TableCell className="text-right text-green-600">
                         {entry.quantity_in > 0 ? entry.quantity_in.toFixed(2) : "-"}
                       </TableCell>

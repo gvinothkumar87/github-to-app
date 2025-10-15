@@ -137,7 +137,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
       DocDtls: {
         Typ: "INV",
         No: currentSale.bill_serial_no,
-        Dt: new Date().toISOString().split('T')[0].split('-').reverse().join('/')
+        Dt: new Date(currentSale.sale_date).toISOString().split('T')[0].split('-').reverse().join('/')
       },
       SellerDtls: {
         Gstin: companySettings.gstin,
@@ -326,7 +326,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
                 </div>
                 <div style="padding: 8px; border-bottom: 1px solid #000;">
                   <div style="font-weight: bold; font-size: 8px;">Dated</div>
-                  <div style="font-size: 9px; margin-top: 2px;">${new Date().toLocaleDateString('en-IN')}</div>
+                  <div style="font-size: 9px; margin-top: 2px;">${new Date(currentSale.sale_date).toLocaleDateString('en-IN')}</div>
                 </div>
                 <div style="padding: 8px;">
                   <div style="font-weight: bold; font-size: 8px;">Motor Vehicle No.</div>

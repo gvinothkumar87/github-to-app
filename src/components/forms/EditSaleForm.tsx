@@ -10,7 +10,7 @@ import { Sale, OutwardEntry, Customer, Item } from '@/types';
 
 interface EditSaleFormProps {
   sale: Sale;
-  outwardEntry: OutwardEntry;
+  outwardEntry: OutwardEntry | null;
   customer: Customer;
   item: Item;
   onSuccess: () => void;
@@ -22,8 +22,8 @@ export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, on
   const [irn, setIrn] = useState(sale.irn || '');
   const [saleDate, setSaleDate] = useState(sale.sale_date || new Date().toISOString().split('T')[0]);
   const [billSerialNo, setBillSerialNo] = useState(sale.bill_serial_no || '');
-  const [loadWeight, setLoadWeight] = useState(outwardEntry.load_weight?.toString() || '');
-  const [emptyWeight, setEmptyWeight] = useState(outwardEntry.empty_weight?.toString() || '');
+  const [loadWeight, setLoadWeight] = useState(outwardEntry?.load_weight?.toString() || '');
+  const [emptyWeight, setEmptyWeight] = useState(outwardEntry?.empty_weight?.toString() || '');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { language, getDisplayName } = useLanguage();
@@ -87,17 +87,19 @@ export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, on
 
       if (saleError) throw saleError;
 
-      // Update outward entry record
-      const { error: outwardError } = await supabase
-        .from('outward_entries')
-        .update({
-          load_weight: newLoadWeight,
-          empty_weight: newEmptyWeight,
-          net_weight: newNetWeight,
-        })
-        .eq('id', outwardEntry.id);
+      // Update outward entry record if it exists
+      if (outwardEntry) {
+        const { error: outwardError } = await supabase
+          .from('outward_entries')
+          .update({
+            load_weight: newLoadWeight,
+            empty_weight: newEmptyWeight,
+            net_weight: newNetWeight,
+          })
+          .eq('id', outwardEntry.id);
 
-      if (outwardError) throw outwardError;
+        if (outwardError) throw outwardError;
+      }
 
       // Update customer ledger entry
       const { error: ledgerError } = await supabase
@@ -159,10 +161,12 @@ export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, on
                 <Label className="text-xs font-medium">{language === 'english' ? 'Quantity' : 'அளவு'}:</Label>
                 <p>{sale.quantity} {item.unit}</p>
               </div>
-              <div>
-                <Label className="text-xs font-medium">{language === 'english' ? 'Lorry No' : 'லாரி எண்'}:</Label>
-                <p>{outwardEntry.lorry_no}</p>
-              </div>
+              {outwardEntry && (
+                <div>
+                  <Label className="text-xs font-medium">{language === 'english' ? 'Lorry No' : 'லாரி எண்'}:</Label>
+                  <p>{outwardEntry.lorry_no}</p>
+                </div>
+              )}
               <div>
                 <Label className="text-xs font-medium">{language === 'english' ? 'GST %' : 'ஜிஎஸ்டி %'}:</Label>
                 <p>{item.gst_percentage || 0}%</p>

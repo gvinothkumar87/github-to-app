@@ -31,6 +31,7 @@ export const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel })
     unit_weight: item?.unit_weight || 1,
     hsn_no: item?.hsn_no || '',
     gst_percentage: item?.gst_percentage || 0,
+    opening_stock: item?.opening_stock || 0,
     description_english: item?.description_english || '',
     description_tamil: item?.description_tamil || '',
   });
@@ -217,6 +218,21 @@ export const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel })
                   value={formData.gst_percentage}
                   onChange={(e) => setFormData({ ...formData, gst_percentage: parseFloat(e.target.value) || 0 })}
                   placeholder={language === 'english' ? 'e.g., 18.00' : 'உதா: 18.00'}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="opening_stock">
+                  {language === 'english' ? 'Opening Stock' : 'தொடக்க இருப்பு'}
+                </Label>
+                <Input
+                  id="opening_stock"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.opening_stock}
+                  onChange={(e) => setFormData({ ...formData, opening_stock: parseFloat(e.target.value) || 0 })}
+                  placeholder={language === 'english' ? 'e.g., 100' : 'உதா: 100'}
                 />
               </div>
            </div>

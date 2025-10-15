@@ -26,6 +26,7 @@ export interface Item {
   unit_weight: number;
   hsn_no?: string;
   gst_percentage: number;
+  opening_stock?: number;
   description_english?: string;
   description_tamil?: string;
   is_active: boolean;

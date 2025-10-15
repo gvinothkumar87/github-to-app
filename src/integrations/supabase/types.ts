@@ -576,6 +576,7 @@ export type Database = {
           is_active: boolean
           name_english: string
           name_tamil: string | null
+          opening_stock: number | null
           unit: string
           unit_weight: number
           updated_at: string
@@ -591,6 +592,7 @@ export type Database = {
           is_active?: boolean
           name_english: string
           name_tamil?: string | null
+          opening_stock?: number | null
           unit?: string
           unit_weight?: number
           updated_at?: string
@@ -606,6 +608,7 @@ export type Database = {
           is_active?: boolean
           name_english?: string
           name_tamil?: string | null
+          opening_stock?: number | null
           unit?: string
           unit_weight?: number
           updated_at?: string

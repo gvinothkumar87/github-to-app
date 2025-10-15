@@ -38,6 +38,11 @@ export function StockLedgerView() {
 
   const fetchStockLedger = async () => {
     setLoading(true);
+    
+    // Get item details for opening stock
+    const selectedItemData = items.find(i => i.id === selectedItem);
+    const openingStock = selectedItemData?.opening_stock || 0;
+    
     const { data } = await supabase
       .from("stock_ledger")
       .select("*")
@@ -47,10 +52,11 @@ export function StockLedgerView() {
 
     if (data && data.length > 0) {
       setLedgerEntries(data);
-      setCurrentStock(data[0].running_stock || 0);
+      setCurrentStock(data[0].running_stock || openingStock);
     } else {
+      // If no transactions, show opening stock
       setLedgerEntries([]);
-      setCurrentStock(0);
+      setCurrentStock(openingStock);
     }
     setLoading(false);
   };
@@ -87,8 +93,13 @@ export function StockLedgerView() {
             </div>
 
             {selectedItem && (
-              <div className="text-xl font-semibold">
-                Current Stock: {currentStock.toFixed(2)} {items.find(i => i.id === selectedItem)?.unit}
+              <div className="space-y-2">
+                <div className="text-sm text-muted-foreground">
+                  Opening Stock: {(items.find(i => i.id === selectedItem)?.opening_stock || 0).toFixed(2)} {items.find(i => i.id === selectedItem)?.unit}
+                </div>
+                <div className="text-xl font-semibold">
+                  Current Stock: {currentStock.toFixed(2)} {items.find(i => i.id === selectedItem)?.unit}
+                </div>
               </div>
             )}
           </div>

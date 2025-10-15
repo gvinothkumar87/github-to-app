@@ -57,12 +57,12 @@ export function StockLedgerView() {
       .select("*")
       .eq("item_id", selectedItem)
       .eq("mill", selectedMill)
-      .order("transaction_date", { ascending: false })
-      .order("created_at", { ascending: false });
+      .order("transaction_date", { ascending: true })
+      .order("created_at", { ascending: true });
 
     if (data && data.length > 0) {
       setLedgerEntries(data);
-      setCurrentStock(data[0].running_stock || 0);
+      setCurrentStock(data[data.length - 1].running_stock || 0);
     } else {
       setLedgerEntries([]);
       setCurrentStock(itemData?.opening_stock || 0);

@@ -12,7 +12,7 @@ import { Plus, Package, Percent, Tag, Wifi, WifiOff } from 'lucide-react';
 const MobileItemList: React.FC = () => {
   const { language, getDisplayName } = useLanguage();
   const navigate = useNavigate();
-  const { data: items, loading, isOnline, isServicesReady, error } = useEnhancedOfflineData('items');
+  const { data: items, loading, isOnline, isServicesReady, error } = useEnhancedOfflineData('offline_items');
 
   return (
     <MobileLayout title="Items">

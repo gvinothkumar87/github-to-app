@@ -43,7 +43,7 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
-  const { update: updateOutwardEntry } = useEnhancedOfflineData('outward_entries', [], { autoSync: true });
+  const { update: updateOutwardEntry } = useEnhancedOfflineData('offline_outward_entries', [], { autoSync: true });
 
   const takePhoto = async () => {
     try {

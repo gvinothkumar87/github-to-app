@@ -27,11 +27,11 @@ export const MobileInvoiceGenerator: React.FC = () => {
   const [irnValue, setIrnValue] = useState('');
   const [irnLoading, setIrnLoading] = useState(false);
 
-  const { data: sales } = useEnhancedOfflineData('sales');
-  const { data: customers } = useEnhancedOfflineData('customers');
-  const { data: items } = useEnhancedOfflineData('items');
-  const { data: outwardEntries } = useEnhancedOfflineData('outward_entries');
-  const { data: companySettingsData } = useEnhancedOfflineData('company_settings');
+  const { data: sales } = useEnhancedOfflineData('offline_sales');
+  const { data: customers } = useEnhancedOfflineData('offline_customers');
+  const { data: items } = useEnhancedOfflineData('offline_items');
+  const { data: outwardEntries } = useEnhancedOfflineData('offline_outward_entries');
+  const { data: companySettingsData } = useEnhancedOfflineData('offline_company_settings');
 
   useEffect(() => {
     if (saleId && sales.length > 0) {

@@ -17,8 +17,8 @@ export const MobileReceiptList = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
 
-  const { data: receipts, loading: receiptsLoading, remove } = useEnhancedOfflineData('receipts');
-  const { data: customers } = useEnhancedOfflineData('customers');
+  const { data: receipts, loading: receiptsLoading, remove } = useEnhancedOfflineData('offline_receipts');
+  const { data: customers } = useEnhancedOfflineData('offline_customers');
 
   const getCustomerName = (customerId: string) => {
     const customer = customers.find((c: any) => c.id === customerId);

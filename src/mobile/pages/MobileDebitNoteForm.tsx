@@ -27,8 +27,8 @@ export const MobileDebitNoteForm = () => {
     note_date: new Date().toISOString().split('T')[0],
   });
 
-  const { data: customers } = useEnhancedOfflineData('customers');
-  const { data: items } = useEnhancedOfflineData('items');
+  const { data: customers } = useEnhancedOfflineData('offline_customers');
+  const { data: items } = useEnhancedOfflineData('offline_items');
 
   const selectedCustomer = customers.find((c: any) => c.id === formData.customer_id);
   const selectedItem = items.find((i: any) => i.id === formData.item_id);

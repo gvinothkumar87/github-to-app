@@ -12,7 +12,7 @@ import { Plus, User, Phone, MapPin, Wifi, WifiOff } from 'lucide-react';
 const MobileCustomerList: React.FC = () => {
   const { language, getDisplayName } = useLanguage();
   const navigate = useNavigate();
-  const { data: customers, loading, isOnline, refresh, isServicesReady } = useEnhancedOfflineData('customers');
+  const { data: customers, loading, isOnline, refresh, isServicesReady } = useEnhancedOfflineData('offline_customers');
 
   const handleRefresh = async () => {
     await refresh();

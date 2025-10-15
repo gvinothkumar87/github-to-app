@@ -21,7 +21,7 @@ const MobileItemForm: React.FC<MobileItemFormProps> = ({ itemId }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const { create, update, findById, isServicesReady } = useEnhancedOfflineData('items', [], { autoSync: true });
+  const { create, update, findById, isServicesReady } = useEnhancedOfflineData('offline_items', [], { autoSync: true });
 
   const [formData, setFormData] = useState({
     name_english: '',

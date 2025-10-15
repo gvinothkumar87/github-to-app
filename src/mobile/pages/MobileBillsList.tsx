@@ -32,10 +32,10 @@ export const MobileBillsList = () => {
   const [selectedSaleForDelete, setSelectedSaleForDelete] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const { data: sales, loading: salesLoading, refresh } = useEnhancedOfflineData('sales');
-  const { data: customers } = useEnhancedOfflineData('customers');
-  const { data: items } = useEnhancedOfflineData('items');
-  const { data: outwardEntries } = useEnhancedOfflineData('outward_entries');
+  const { data: sales, loading: salesLoading, refresh } = useEnhancedOfflineData('offline_sales');
+  const { data: customers } = useEnhancedOfflineData('offline_customers');
+  const { data: items } = useEnhancedOfflineData('offline_items');
+  const { data: outwardEntries } = useEnhancedOfflineData('offline_outward_entries');
 
   const getCustomerName = (customerId: string) => {
     const customer = customers.find((c: any) => c.id === customerId);

@@ -35,7 +35,7 @@ const MobileCustomerLedgerOffline: React.FC = () => {
   const [customerBalance, setCustomerBalance] = useState<number>(0);
   const [showFilters, setShowFilters] = useState(false);
 
-  const { data: customers, isOnline, isServicesReady, error } = useEnhancedOfflineData('customers');
+  const { data: customers, isOnline, isServicesReady, error } = useEnhancedOfflineData('offline_customers');
 
   useEffect(() => {
     if (selectedCustomerId && isServicesReady) {

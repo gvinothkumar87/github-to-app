@@ -21,11 +21,11 @@ export const MobileEditSaleForm = () => {
   const [loading, setLoading] = useState(false);
   const [sale, setSale] = useState<any>(null);
 
-  const { data: sales } = useEnhancedOfflineData('sales');
-  const { data: customers } = useEnhancedOfflineData('customers');
-  const { data: items } = useEnhancedOfflineData('items');
-  const { data: outwardEntries } = useEnhancedOfflineData('outward_entries');
-  const { update } = useEnhancedOfflineData('sales');
+  const { data: sales } = useEnhancedOfflineData('offline_sales');
+  const { data: customers } = useEnhancedOfflineData('offline_customers');
+  const { data: items } = useEnhancedOfflineData('offline_items');
+  const { data: outwardEntries } = useEnhancedOfflineData('offline_outward_entries');
+  const { update } = useEnhancedOfflineData('offline_sales');
 
   useEffect(() => {
     if (saleId && sales.length > 0) {

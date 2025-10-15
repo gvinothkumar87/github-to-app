@@ -20,7 +20,7 @@ const MobileCustomerForm: React.FC<MobileCustomerFormProps> = ({ customerId }) =
   const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const { create, update, findById, isServicesReady } = useEnhancedOfflineData('customers', [], { autoSync: true });
+  const { create, update, findById, isServicesReady } = useEnhancedOfflineData('offline_customers', [], { autoSync: true });
 
   const [formData, setFormData] = useState({
     name_english: '',

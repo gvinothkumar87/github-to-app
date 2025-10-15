@@ -17,9 +17,9 @@ const MobileReports: React.FC = () => {
   const [customerId, setCustomerId] = useState<string>('');
   const [itemId, setItemId] = useState<string>('');
 
-  const { data: sales, loading: salesLoading, isServicesReady } = useEnhancedOfflineData('sales');
-  const { data: customers } = useEnhancedOfflineData('customers');
-  const { data: items } = useEnhancedOfflineData('items');
+  const { data: sales, loading: salesLoading, isServicesReady } = useEnhancedOfflineData('offline_sales');
+  const { data: customers } = useEnhancedOfflineData('offline_customers');
+  const { data: items } = useEnhancedOfflineData('offline_items');
 
   const [reportData, setReportData] = useState<any>(null);
 

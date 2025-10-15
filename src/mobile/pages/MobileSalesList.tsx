@@ -12,10 +12,10 @@ import { Plus, FileText, User, Package, Truck, IndianRupee, Wifi, WifiOff } from
 const MobileSalesList: React.FC = () => {
   const { language, getDisplayName } = useLanguage();
   const navigate = useNavigate();
-  const { data: sales, loading, isOnline, isServicesReady, error } = useEnhancedOfflineData('sales');
-  const { data: customers } = useEnhancedOfflineData('customers');
-  const { data: items } = useEnhancedOfflineData('items');
-  const { data: outwardEntries } = useEnhancedOfflineData('outward_entries');
+  const { data: sales, loading, isOnline, isServicesReady, error } = useEnhancedOfflineData('offline_sales');
+  const { data: customers } = useEnhancedOfflineData('offline_customers');
+  const { data: items } = useEnhancedOfflineData('offline_items');
+  const { data: outwardEntries } = useEnhancedOfflineData('offline_outward_entries');
 
   const getCustomerName = (customerId: string) => {
     const customer = customers.find((c: any) => c.id === customerId) as any;

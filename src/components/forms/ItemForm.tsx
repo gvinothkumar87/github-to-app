@@ -232,7 +232,7 @@ export const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel })
                   min="0"
                   value={formData.opening_stock}
                   onChange={(e) => setFormData({ ...formData, opening_stock: parseFloat(e.target.value) || 0 })}
-                  placeholder={language === 'english' ? 'e.g., 100' : 'உதா: 100'}
+                  placeholder={language === 'english' ? 'e.g., 100.00' : 'உதா: 100.00'}
                 />
               </div>
            </div>

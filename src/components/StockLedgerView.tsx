@@ -13,6 +13,7 @@ export function StockLedgerView() {
   const [selectedItem, setSelectedItem] = useState("");
   const [ledgerEntries, setLedgerEntries] = useState<any[]>([]);
   const [currentStock, setCurrentStock] = useState(0);
+  const [openingStock, setOpeningStock] = useState(0);
   const { getDisplayName } = useLanguage();
 
   useEffect(() => {
@@ -39,10 +40,16 @@ export function StockLedgerView() {
   const fetchStockLedger = async () => {
     setLoading(true);
     
-    // Get item details for opening stock
-    const selectedItemData = items.find(i => i.id === selectedItem);
-    const openingStock = selectedItemData?.opening_stock || 0;
+    // Get item opening stock
+    const { data: itemData } = await supabase
+      .from("items")
+      .select("opening_stock")
+      .eq("id", selectedItem)
+      .single();
     
+    setOpeningStock(itemData?.opening_stock || 0);
+    
+    // Get stock ledger entries
     const { data } = await supabase
       .from("stock_ledger")
       .select("*")
@@ -52,11 +59,10 @@ export function StockLedgerView() {
 
     if (data && data.length > 0) {
       setLedgerEntries(data);
-      setCurrentStock(data[0].running_stock || openingStock);
+      setCurrentStock(data[0].running_stock || 0);
     } else {
-      // If no transactions, show opening stock
       setLedgerEntries([]);
-      setCurrentStock(openingStock);
+      setCurrentStock(itemData?.opening_stock || 0);
     }
     setLoading(false);
   };
@@ -94,8 +100,8 @@ export function StockLedgerView() {
 
             {selectedItem && (
               <div className="space-y-2">
-                <div className="text-sm text-muted-foreground">
-                  Opening Stock: {(items.find(i => i.id === selectedItem)?.opening_stock || 0).toFixed(2)} {items.find(i => i.id === selectedItem)?.unit}
+                <div className="text-lg">
+                  <span className="font-medium">Opening Stock:</span> {openingStock.toFixed(2)} {items.find(i => i.id === selectedItem)?.unit}
                 </div>
                 <div className="text-xl font-semibold">
                   Current Stock: {currentStock.toFixed(2)} {items.find(i => i.id === selectedItem)?.unit}

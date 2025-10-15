@@ -58,17 +58,35 @@ export function PurchaseForm({ onSuccess }: PurchaseFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!formData.quantity || !formData.rate) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
+      const quantity = parseFloat(formData.quantity);
+      const rate = parseFloat(formData.rate);
+      
+      if (isNaN(quantity) || isNaN(rate) || quantity <= 0 || rate <= 0) {
+        throw new Error("Please enter valid quantity and rate values");
+      }
+      
       const purchaseData = {
         supplier_id: formData.supplier_id,
         item_id: formData.item_id,
-        quantity: parseFloat(formData.quantity),
-        rate: parseFloat(formData.rate),
-        total_amount: parseFloat(calculateTotal()),
+        quantity: quantity,
+        rate: rate,
+        total_amount: quantity * rate,
         bill_serial_no: formData.bill_serial_no || null,
         purchase_date: formData.purchase_date,
         created_by: user?.id,

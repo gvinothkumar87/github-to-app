@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, LogOut, Home, FileText, Plus, Minus, Users, ShoppingCart, Book, Package } from 'lucide-react';
+import { Menu, LogOut, Home, FileText, Plus, Minus, Users, ShoppingCart, Book, Package, Truck, Scale, ClipboardList, Receipt, Trash2, BarChart3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,13 +28,16 @@ const NavigationSidebar = () => {
   const navigate = useNavigate();
   const isAdmin = useAdminCheck();
 
-  const salesMenuItems = [
+  const mainAppTabs = [
     { 
       id: 'home', 
       label: language === 'english' ? 'Home' : 'முகப்பு', 
       path: '/', 
       icon: Home 
     },
+  ];
+
+  const salesMenuItems = [
     { 
       id: 'bills', 
       label: language === 'english' ? 'Bills Management' : 'பில் மேலாண்மை', 
@@ -100,8 +103,24 @@ const NavigationSidebar = () => {
     <Sidebar className="border-r">
       <SidebarContent>
         <SidebarMenu className="pt-4">
+          {/* Main App Section */}
+          {mainAppTabs.map((item) => {
+            const Icon = item.icon;
+            return (
+              <SidebarMenuItem key={item.id}>
+                <SidebarMenuButton 
+                  onClick={() => handleNavigation(item.path)}
+                  className="w-full justify-start"
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{item.label}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
+
           {/* Sales & Bills Section */}
-          {salesMenuItems.filter(item => !item.adminOnly || isAdmin).map((item) => {
+          {salesMenuItems.map((item) => {
             const Icon = item.icon;
             return (
               <SidebarMenuItem key={item.id}>
@@ -117,7 +136,7 @@ const NavigationSidebar = () => {
           })}
 
           {/* Purchase Management Section */}
-          {purchaseMenuItems.filter(item => !item.adminOnly || isAdmin).map((item) => {
+          {purchaseMenuItems.map((item) => {
             const Icon = item.icon;
             return (
               <SidebarMenuItem key={item.id}>

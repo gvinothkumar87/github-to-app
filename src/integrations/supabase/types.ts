@@ -1593,6 +1593,7 @@ export type Database = {
           id: string
           irn: string | null
           item_id: string
+          loading_place: string | null
           outward_entry_id: string | null
           quantity: number
           rate: number
@@ -1608,6 +1609,7 @@ export type Database = {
           id?: string
           irn?: string | null
           item_id: string
+          loading_place?: string | null
           outward_entry_id?: string | null
           quantity: number
           rate: number
@@ -1623,6 +1625,7 @@ export type Database = {
           id?: string
           irn?: string | null
           item_id?: string
+          loading_place?: string | null
           outward_entry_id?: string | null
           quantity?: number
           rate?: number
@@ -1750,6 +1753,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "supplier_ledger_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          payment_date: string
+          payment_method: string
+          payment_no: string
+          remarks: string | null
+          supplier_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          payment_date?: string
+          payment_method: string
+          payment_no: string
+          remarks?: string | null
+          supplier_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          payment_date?: string
+          payment_method?: string
+          payment_no?: string
+          remarks?: string | null
+          supplier_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_payments_supplier_id_fkey"
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "suppliers"
@@ -2814,6 +2864,10 @@ export type Database = {
       }
       update_overdue_status: {
         Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      update_supplier_balance: {
+        Args: { p_supplier_id: string }
         Returns: undefined
       }
       user_has_page_access: {

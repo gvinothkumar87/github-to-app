@@ -68,6 +68,7 @@ export interface Sale {
   bill_serial_no?: string;
   irn?: string;
   sale_date: string;
+  loading_place?: string; // For direct sales to determine invoice company address
   created_by?: string;
   created_at: string;
   updated_at: string;

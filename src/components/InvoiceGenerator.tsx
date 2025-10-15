@@ -31,8 +31,8 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
   useEffect(() => {
     const fetchCompanySettings = async () => {
       try {
-        // For direct sales without outward entry, default to PULIVANTHI
-        const loadingPlace = outwardEntry?.loading_place || 'PULIVANTHI';
+        // Determine loading place: prioritize sale.loading_place (for direct sales), then outward entry, then default
+        const loadingPlace = sale.loading_place || outwardEntry?.loading_place || 'PULIVANTHI';
         
         const { data, error } = await supabase
           .from('company_settings')

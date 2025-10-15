@@ -28,13 +28,26 @@ const NavigationSidebar = () => {
   const navigate = useNavigate();
   const isAdmin = useAdminCheck();
 
+  // Since we're on navigation pages, we need to communicate with Index page for tab changes
+  // For now, we'll just navigate to home with the intention of showing that tab
+  const navigateToHomeTab = (tabId: string) => {
+    navigate('/', { state: { activeTab: tabId } });
+    setOpenMobile(false);
+    setOpen(false);
+  };
+
   const mainAppTabs = [
-    { 
-      id: 'home', 
-      label: language === 'english' ? 'Home' : 'முகப்பு', 
-      path: '/', 
-      icon: Home 
-    },
+    { id: 'entries', label: language === 'english' ? 'Outward Entries' : 'வெளியீட்டு பதிவுகள்', icon: Truck },
+    { id: 'load-weight', label: language === 'english' ? 'Load Weight' : 'மொத்த எடை', icon: Scale },
+    { id: 'direct-sales', label: language === 'english' ? 'Direct Sales' : 'நேரடி விற்பனை', icon: ShoppingCart, adminOnly: true },
+    { id: 'outward-sales', label: language === 'english' ? 'Sales from Transit' : 'போக்குவரத்து விற்பனை', icon: Truck, adminOnly: true },
+    { id: 'sales-ledger', label: language === 'english' ? 'Sales Ledger' : 'விற்பனை லெட்ஜர்', icon: ClipboardList, adminOnly: true },
+    { id: 'amount-received', label: language === 'english' ? 'Amount Received' : 'பெற்ற தொகை', icon: Receipt, adminOnly: true },
+    { id: 'customer-ledger', label: language === 'english' ? 'Customer Ledger' : 'வாடிக்கையாளர் லெட்ஜர்', icon: Book, adminOnly: true },
+    { id: 'admin-delete', label: language === 'english' ? 'Delete Entry' : 'என்ட்ரி நீக்கு', icon: Trash2, adminOnly: true },
+    { id: 'customers', label: language === 'english' ? 'Customers' : 'வாடிக்கையாளர்கள்', icon: Users },
+    { id: 'items', label: language === 'english' ? 'Items' : 'பொருட்கள்', icon: Package },
+    { id: 'reports', label: language === 'english' ? 'Reports' : 'அறிக்கைகள்', icon: BarChart3 },
   ];
 
   const salesMenuItems = [
@@ -103,24 +116,24 @@ const NavigationSidebar = () => {
     <Sidebar className="border-r">
       <SidebarContent>
         <SidebarMenu className="pt-4">
-          {/* Main App Section */}
-          {mainAppTabs.map((item) => {
-            const Icon = item.icon;
+          {/* Main App Tabs - Navigate to home page */}
+          {mainAppTabs.filter(tab => !tab.adminOnly || isAdmin).map((tab) => {
+            const Icon = tab.icon;
             return (
-              <SidebarMenuItem key={item.id}>
+              <SidebarMenuItem key={tab.id}>
                 <SidebarMenuButton 
-                  onClick={() => handleNavigation(item.path)}
+                  onClick={() => navigateToHomeTab(tab.id)}
                   className="w-full justify-start"
                 >
                   <Icon className="h-4 w-4" />
-                  <span>{item.label}</span>
+                  <span>{tab.label}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             );
           })}
 
           {/* Sales & Bills Section */}
-          {salesMenuItems.map((item) => {
+          {salesMenuItems.filter(item => !item.adminOnly || isAdmin).map((item) => {
             const Icon = item.icon;
             return (
               <SidebarMenuItem key={item.id}>
@@ -136,7 +149,7 @@ const NavigationSidebar = () => {
           })}
 
           {/* Purchase Management Section */}
-          {purchaseMenuItems.map((item) => {
+          {purchaseMenuItems.filter(item => !item.adminOnly || isAdmin).map((item) => {
             const Icon = item.icon;
             return (
               <SidebarMenuItem key={item.id}>

@@ -104,7 +104,6 @@ const MobileOutwardEntryForm: React.FC = () => {
       await createEntry({
         ...formData,
         empty_weight: parseFloat(formData.empty_weight),
-        serial_no: Date.now(),
         weighment_photo_url: photoUrl,
       });
       

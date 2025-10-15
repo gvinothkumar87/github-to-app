@@ -100,9 +100,9 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
     });
 
     if (error) throw error;
-    if (!data?.viewUrl) throw new Error('No URL returned from upload');
+    if (!data?.directUrl) throw new Error('No URL returned from upload');
 
-    return data.viewUrl;
+    return data.directUrl;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -10,7 +10,7 @@ import QRCode from 'qrcode';
 
 interface InvoiceGeneratorProps {
   sale: Sale;
-  outwardEntry: OutwardEntry;
+  outwardEntry?: OutwardEntry | null;
   customer: Customer;
   item: Item;
   onClose: () => void;
@@ -31,28 +31,31 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
   useEffect(() => {
     const fetchCompanySettings = async () => {
       try {
+        // For direct sales without outward entry, default to PULIVANTHI
+        const loadingPlace = outwardEntry?.loading_place || 'PULIVANTHI';
+        
         const { data, error } = await supabase
           .from('company_settings')
           .select('*')
-          .eq('location_code', outwardEntry.loading_place)
+          .eq('location_code', loadingPlace)
           .eq('is_active', true)
           .single();
 
         if (error) {
           console.error('Error fetching company settings:', error);
           // Fallback to hardcoded values
-          setCompanySettings(getDefaultCompanyDetails(outwardEntry.loading_place));
+          setCompanySettings(getDefaultCompanyDetails(loadingPlace));
         } else {
           setCompanySettings(data);
         }
       } catch (error) {
         console.error('Error:', error);
-        setCompanySettings(getDefaultCompanyDetails(outwardEntry.loading_place));
+        setCompanySettings(getDefaultCompanyDetails(outwardEntry?.loading_place || 'PULIVANTHI'));
       }
     };
 
     fetchCompanySettings();
-  }, [outwardEntry.loading_place]);
+  }, [outwardEntry?.loading_place]);
 
   const getDefaultCompanyDetails = (loadingPlace: string) => {
     if (loadingPlace === 'PULIVANTHI') {
@@ -331,7 +334,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
                 </div>
                 <div style="padding: 8px;">
                   <div style="font-weight: bold; font-size: 8px;">Motor Vehicle No.</div>
-                  <div style="font-size: 9px; margin-top: 2px;">${outwardEntry.lorry_no}</div>
+                  <div style="font-size: 9px; margin-top: 2px;">${outwardEntry?.lorry_no || 'N/A'}</div>
                 </div>
               </div>
             </div>

@@ -153,30 +153,52 @@ export function StockLedgerView() {
                       <Loader2 className="h-6 w-6 animate-spin inline" />
                     </TableCell>
                   </TableRow>
-                ) : ledgerEntries.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center">
-                      No stock movements found
-                    </TableCell>
-                  </TableRow>
                 ) : (
-                  ledgerEntries.map((entry) => (
-                    <TableRow key={entry.id}>
-                      <TableCell>{format(new Date(entry.transaction_date), "dd/MM/yyyy")}</TableCell>
-                      <TableCell className="capitalize">{entry.transaction_type}</TableCell>
-                      <TableCell>{entry.description}</TableCell>
-                      <TableCell>{entry.mill}</TableCell>
-                      <TableCell className="text-right text-green-600">
-                        {entry.quantity_in > 0 ? entry.quantity_in.toFixed(2) : "-"}
-                      </TableCell>
-                      <TableCell className="text-right text-red-600">
-                        {entry.quantity_out > 0 ? entry.quantity_out.toFixed(2) : "-"}
-                      </TableCell>
-                      <TableCell className="text-right font-semibold">
-                        {entry.running_stock.toFixed(2)}
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  <>
+                    {/* Opening Stock Entry */}
+                    {selectedItem && openingStock > 0 && (
+                      <TableRow className="bg-muted/30">
+                        <TableCell>-</TableCell>
+                        <TableCell className="font-semibold">Opening Stock</TableCell>
+                        <TableCell>Initial stock balance</TableCell>
+                        <TableCell>{selectedMill}</TableCell>
+                        <TableCell className="text-right text-green-600 font-semibold">
+                          {openingStock.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-right">-</TableCell>
+                        <TableCell className="text-right font-semibold">
+                          {openingStock.toFixed(2)}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    
+                    {/* Ledger Entries */}
+                    {ledgerEntries.length === 0 && openingStock === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center">
+                          No stock movements found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      ledgerEntries.map((entry) => (
+                        <TableRow key={entry.id}>
+                          <TableCell>{format(new Date(entry.transaction_date), "dd/MM/yyyy")}</TableCell>
+                          <TableCell className="capitalize">{entry.transaction_type}</TableCell>
+                          <TableCell>{entry.description}</TableCell>
+                          <TableCell>{entry.mill}</TableCell>
+                          <TableCell className="text-right text-green-600">
+                            {entry.quantity_in > 0 ? entry.quantity_in.toFixed(2) : "-"}
+                          </TableCell>
+                          <TableCell className="text-right text-red-600">
+                            {entry.quantity_out > 0 ? entry.quantity_out.toFixed(2) : "-"}
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">
+                            {entry.running_stock.toFixed(2)}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </>
                 )}
               </TableBody>
             </Table>

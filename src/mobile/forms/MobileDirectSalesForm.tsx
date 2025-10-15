@@ -209,7 +209,6 @@ const MobileDirectSalesForm: React.FC = () => {
       const { data: saleData, error: saleError } = await supabase
         .from('sales')
         .insert({
-          outward_entry_id: tempOutwardEntry.id,
           customer_id: selectedCustomer,
           item_id: selectedItem,
           quantity: parseFloat(quantity),

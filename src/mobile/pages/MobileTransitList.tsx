@@ -18,9 +18,9 @@ const MobileTransitList: React.FC = () => {
   const navigate = useNavigate();
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
   const [showLoadWeightModal, setShowLoadWeightModal] = useState(false);
-  const { data: outwardEntries, loading, isOnline, refresh, isServicesReady, error, remove } = useEnhancedOfflineData('outward_entries', [], { autoSync: true });
-  const { data: customers } = useEnhancedOfflineData('customers', [], { autoSync: true });
-  const { data: items } = useEnhancedOfflineData('items', [], { autoSync: true });
+  const { data: outwardEntries, loading, isOnline, refresh, isServicesReady, error, remove } = useEnhancedOfflineData('offline_outward_entries', [], { autoSync: true });
+  const { data: customers } = useEnhancedOfflineData('offline_customers', [], { autoSync: true });
+  const { data: items } = useEnhancedOfflineData('offline_items', [], { autoSync: true });
   
   const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending');
 

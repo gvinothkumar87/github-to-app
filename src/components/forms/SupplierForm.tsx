@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +27,40 @@ export function SupplierForm({ onSuccess }: SupplierFormProps) {
     state_code: "33",
     place_of_supply: "33",
   });
+
+  useEffect(() => {
+    generateSupplierCode();
+  }, []);
+
+  const generateSupplierCode = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("suppliers")
+        .select("code")
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+
+      let nextNumber = 1;
+      if (data && data.length > 0) {
+        const lastCode = data[0].code;
+        const match = lastCode.match(/^SUP(\d+)$/);
+        if (match) {
+          nextNumber = parseInt(match[1]) + 1;
+        }
+      }
+
+      const newCode = `SUP${String(nextNumber).padStart(3, '0')}`;
+      setFormData(prev => ({ ...prev, code: newCode }));
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to generate supplier code",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,8 +130,8 @@ export function SupplierForm({ onSuccess }: SupplierFormProps) {
           <Input
             id="code"
             value={formData.code}
-            onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-            required
+            readOnly
+            className="bg-muted"
           />
         </div>
         <div>

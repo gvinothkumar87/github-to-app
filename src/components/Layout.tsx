@@ -70,6 +70,41 @@ const AppSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabChange
     },
   ];
 
+  const purchaseMenuItems = [
+    { 
+      id: 'suppliers', 
+      label: language === 'english' ? 'Suppliers' : 'சப்ளையர்கள்', 
+      icon: Users, 
+      adminOnly: true,
+      isNavigation: true,
+      onClick: () => navigate('/suppliers')
+    },
+    { 
+      id: 'purchases', 
+      label: language === 'english' ? 'Purchases' : 'கொள்முதல்', 
+      icon: ShoppingCart, 
+      adminOnly: true,
+      isNavigation: true,
+      onClick: () => navigate('/purchases')
+    },
+    { 
+      id: 'supplier-ledger', 
+      label: language === 'english' ? 'Supplier Ledger' : 'சப்ளையர் லெட்ஜர்', 
+      icon: Book, 
+      adminOnly: true,
+      isNavigation: true,
+      onClick: () => navigate('/supplier-ledger')
+    },
+    { 
+      id: 'stock-ledger', 
+      label: language === 'english' ? 'Stock Ledger' : 'ஸ்டாக் லெட்ஜர்', 
+      icon: Package, 
+      adminOnly: true,
+      isNavigation: true,
+      onClick: () => navigate('/stock-ledger')
+    },
+  ];
+
   // Filter tabs based on admin status
   const tabs = allTabs.filter(tab => !tab.adminOnly || isAdmin);
 
@@ -101,6 +136,26 @@ const AppSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabChange
           
           {/* Navigation items */}
           {navigationItems.filter(item => !item.adminOnly || isAdmin).map((item) => {
+            const Icon = item.icon;
+            return (
+              <SidebarMenuItem key={item.id}>
+                <SidebarMenuButton 
+                  onClick={() => {
+                    item.onClick();
+                    setOpenMobile(false);
+                    setOpen(false);
+                  }}
+                  className="w-full justify-start"
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{item.label}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
+
+          {/* Purchase Management items */}
+          {purchaseMenuItems.filter(item => !item.adminOnly || isAdmin).map((item) => {
             const Icon = item.icon;
             return (
               <SidebarMenuItem key={item.id}>

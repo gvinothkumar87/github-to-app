@@ -958,6 +958,63 @@ export type Database = {
         }
         Relationships: []
       }
+      purchases: {
+        Row: {
+          bill_serial_no: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          item_id: string
+          purchase_date: string
+          quantity: number
+          rate: number
+          supplier_id: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          bill_serial_no?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          item_id: string
+          purchase_date?: string
+          quantity: number
+          rate: number
+          supplier_id: string
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          bill_serial_no?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          item_id?: string
+          purchase_date?: string
+          quantity?: number
+          rate?: number
+          supplier_id?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchases_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       receipts: {
         Row: {
           amount: number
@@ -1590,6 +1647,163 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      stock_ledger: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          item_id: string
+          quantity_in: number
+          quantity_out: number
+          reference_id: string | null
+          running_stock: number
+          transaction_date: string
+          transaction_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          item_id: string
+          quantity_in?: number
+          quantity_out?: number
+          reference_id?: string | null
+          running_stock?: number
+          transaction_date?: string
+          transaction_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          item_id?: string
+          quantity_in?: number
+          quantity_out?: number
+          reference_id?: string | null
+          running_stock?: number
+          transaction_date?: string
+          transaction_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_ledger_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_ledger: {
+        Row: {
+          balance: number
+          created_at: string
+          credit_amount: number
+          debit_amount: number
+          description: string | null
+          id: string
+          reference_id: string
+          supplier_id: string
+          transaction_date: string
+          transaction_type: string
+          updated_at: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          credit_amount?: number
+          debit_amount?: number
+          description?: string | null
+          id?: string
+          reference_id: string
+          supplier_id: string
+          transaction_date?: string
+          transaction_type: string
+          updated_at?: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          credit_amount?: number
+          debit_amount?: number
+          description?: string | null
+          id?: string
+          reference_id?: string
+          supplier_id?: string
+          transaction_date?: string
+          transaction_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_ledger_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suppliers: {
+        Row: {
+          address_english: string | null
+          address_tamil: string | null
+          code: string
+          contact_person: string | null
+          created_at: string
+          email: string | null
+          gstin: string | null
+          id: string
+          is_active: boolean
+          name_english: string
+          name_tamil: string | null
+          phone: string | null
+          pin_code: string | null
+          place_of_supply: string | null
+          state_code: string | null
+          updated_at: string
+        }
+        Insert: {
+          address_english?: string | null
+          address_tamil?: string | null
+          code: string
+          contact_person?: string | null
+          created_at?: string
+          email?: string | null
+          gstin?: string | null
+          id?: string
+          is_active?: boolean
+          name_english: string
+          name_tamil?: string | null
+          phone?: string | null
+          pin_code?: string | null
+          place_of_supply?: string | null
+          state_code?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address_english?: string | null
+          address_tamil?: string | null
+          code?: string
+          contact_person?: string | null
+          created_at?: string
+          email?: string | null
+          gstin?: string | null
+          id?: string
+          is_active?: boolean
+          name_english?: string
+          name_tamil?: string | null
+          phone?: string | null
+          pin_code?: string | null
+          place_of_supply?: string | null
+          state_code?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       thotti_audit_log: {
         Row: {
@@ -2470,6 +2684,10 @@ export type Database = {
         Args: { p_date: string; p_user_id: string }
         Returns: number
       }
+      get_email_from_username: {
+        Args: { p_username: string }
+        Returns: string
+      }
       get_employee_salary_details: {
         Args: { p_date_from: string; p_date_to: string; p_employee_id: string }
         Returns: {
@@ -2487,6 +2705,15 @@ export type Database = {
           | { p_grade: string; p_mill: string; p_unloading_point: string }
           | { p_mill: string; p_unloading_point: string }
         Returns: Json
+      }
+      get_user_accessible_pages: {
+        Args: { _user_id: string }
+        Returns: {
+          description: string
+          page_id: string
+          page_name: string
+          page_route: string
+        }[]
       }
       get_user_role: {
         Args: { _user_id: string }

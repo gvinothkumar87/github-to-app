@@ -1,3 +1,4 @@
+import { PageLayout } from "@/components/PageLayout";
 import { SupplierForm } from "@/components/forms/SupplierForm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,7 +29,8 @@ export default function Suppliers() {
   }, []);
 
   return (
-    <div className="container mx-auto p-6">
+    <PageLayout title="Suppliers Management">
+      <div className="container mx-auto p-6">
         <h1 className="text-3xl font-bold mb-6">Suppliers Management</h1>
         
         <Tabs defaultValue="list" className="w-full">
@@ -93,5 +95,6 @@ export default function Suppliers() {
           </TabsContent>
         </Tabs>
       </div>
+    </PageLayout>
   );
 }

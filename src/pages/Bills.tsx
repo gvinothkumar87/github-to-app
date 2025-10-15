@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { PageLayout } from '@/components/PageLayout';
 import { UnifiedBillsList } from '@/components/UnifiedBillsList';
 import { EditSaleForm } from '@/components/forms/EditSaleForm';
 import { EditDebitNoteForm } from '@/components/forms/EditDebitNoteForm';
@@ -404,29 +405,7 @@ const Bills = () => {
 
   // Main Bills List View
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-gradient-primary text-primary-foreground shadow-elevated">
-        <div className="px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/')}
-                className="bg-white/10 hover:bg-white/20 text-white border-white/20"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <FileText className="h-8 w-8" />
-              <h1 className="text-xl md:text-2xl font-bold">
-                {language === 'english' ? 'Bills Management' : 'பில் மேலாண்மை'}
-              </h1>
-            </div>
-            <LanguageToggle />
-          </div>
-        </div>
-      </header>
-      
+    <PageLayout title={language === 'english' ? 'Bills Management' : 'பில் மேலாண்மை'}>
       <div className="container mx-auto p-6">
         <UnifiedBillsList
           key={refreshKey}
@@ -438,7 +417,7 @@ const Bills = () => {
           onPrintCreditNote={handlePrintCreditNote}
         />
       </div>
-    </div>
+    </PageLayout>
   );
 };
 

@@ -1,14 +1,13 @@
-import { Layout } from "@/components/Layout";
+import { PageLayout } from "@/components/PageLayout";
 import DebitNoteForm from "@/components/forms/DebitNoteForm";
 
 const DebitNote = () => {
   return (
-    <Layout activeTab="" onTabChange={() => {}}>
+    <PageLayout title="Debit Note">
       <div className="container mx-auto p-6">
-        <h1 className="text-3xl font-bold mb-6">Debit Note</h1>
         <DebitNoteForm />
       </div>
-    </Layout>
+    </PageLayout>
   );
 };
 

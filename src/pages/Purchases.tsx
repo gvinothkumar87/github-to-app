@@ -1,3 +1,4 @@
+import { PageLayout } from "@/components/PageLayout";
 import { PurchaseForm } from "@/components/forms/PurchaseForm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -31,7 +32,8 @@ export default function Purchases() {
   }, []);
 
   return (
-    <div className="container mx-auto p-6">
+    <PageLayout title="Purchase Management">
+      <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">Purchase Management</h1>
       
       <Tabs defaultValue="list" className="w-full">
@@ -94,7 +96,8 @@ export default function Purchases() {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
-    </div>
+        </Tabs>
+      </div>
+    </PageLayout>
   );
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
+import { LogOut, Home } from 'lucide-react';
 import { OfflineIndicator } from './OfflineIndicator';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -34,6 +34,9 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 {action}
+                <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
+                  <Home className="h-4 w-4" />
+                </Button>
                 <Button variant="ghost" size="sm" onClick={handleSignOut}>
                   <LogOut className="h-4 w-4" />
                 </Button>

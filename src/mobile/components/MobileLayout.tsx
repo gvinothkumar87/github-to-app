@@ -24,10 +24,10 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
   };
   return (
     <div className="min-h-screen bg-background">
-      {/* Header with offline indicator */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pt-safe">
         {title && (
-          <div className="border-b px-4 py-3">
+          <div className="border-b px-4 py-3 pt-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <h1 className="text-lg font-semibold">{title}</h1>
@@ -42,7 +42,6 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
                 </Button>
               </div>
             </div>
-            <OfflineIndicator />
           </div>
         )}
       </header>

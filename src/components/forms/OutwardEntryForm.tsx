@@ -107,8 +107,8 @@ export const OutwardEntryForm: React.FC<OutwardEntryFormProps> = ({ onSuccess, o
             body: { dataUrl: compressed, fileName },
           });
           if (error) throw error;
-          if (!data?.directUrl) throw new Error('No URL returned from upload');
-          resolve(data.directUrl);
+          if (!data?.viewUrl) throw new Error('No URL returned from upload');
+          resolve(data.viewUrl);
         } catch (error) {
           reject(error as any);
         }

@@ -82,8 +82,8 @@ const MobileOutwardEntryForm: React.FC = () => {
       body: { dataUrl: compressed, fileName },
     });
     if (error) throw error;
-    if (!data?.directUrl) throw new Error('No URL returned from upload');
-    return data.directUrl;
+    if (!data?.viewUrl) throw new Error('No URL returned from upload');
+    return data.viewUrl;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

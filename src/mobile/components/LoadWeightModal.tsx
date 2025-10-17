@@ -288,7 +288,7 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
                 <img 
                   src={photoDataUrl} 
                   alt="Weighment preview" 
-                  className="w-full h-48 object-cover rounded-md border"
+                  className="w-full max-h-96 object-contain rounded-md border"
                 />
                 <Button
                   type="button"

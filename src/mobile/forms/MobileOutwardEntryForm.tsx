@@ -293,7 +293,7 @@ const MobileOutwardEntryForm: React.FC = () => {
                 </div>
                 {photoDataUrl && (
                   <div className="mt-2 relative">
-                    <img src={photoDataUrl} alt="Preview" className="max-h-40 rounded border w-full object-cover" />
+                    <img src={photoDataUrl} alt="Preview" className="w-full max-h-96 object-contain rounded border" />
                     <Button
                       type="button"
                       variant="destructive"

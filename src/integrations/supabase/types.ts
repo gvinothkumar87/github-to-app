@@ -525,6 +525,48 @@ export type Database = {
         }
         Relationships: []
       }
+      failed_transactions: {
+        Row: {
+          attempted_data: Json
+          created_at: string | null
+          error_code: string | null
+          error_message: string
+          id: string
+          last_retry_at: string | null
+          retry_count: number | null
+          status: string | null
+          transaction_type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          attempted_data: Json
+          created_at?: string | null
+          error_code?: string | null
+          error_message: string
+          id?: string
+          last_retry_at?: string | null
+          retry_count?: number | null
+          status?: string | null
+          transaction_type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          attempted_data?: Json
+          created_at?: string | null
+          error_code?: string | null
+          error_message?: string
+          id?: string
+          last_retry_at?: string | null
+          retry_count?: number | null
+          status?: string | null
+          transaction_type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       financial_audit_log: {
         Row: {
           id: string
@@ -2873,6 +2915,16 @@ export type Database = {
           total_salary: number
         }[]
       }
+      get_failed_transactions_summary: {
+        Args: { p_user_id?: string }
+        Returns: {
+          permanently_failed_count: number
+          resolved_count: number
+          retrying_count: number
+          total_count: number
+          transaction_type: string
+        }[]
+      }
       get_opening_balance_for_date: {
         Args: { p_date: string; p_user_id: string }
         Returns: number
@@ -2924,6 +2976,16 @@ export type Database = {
       is_container_empty_now: {
         Args: { p_location: string; p_location_type: string; p_mill?: string }
         Returns: boolean
+      }
+      log_failed_transaction: {
+        Args: {
+          p_attempted_data: Json
+          p_error_code?: string
+          p_error_message: string
+          p_transaction_type: string
+          p_user_id: string
+        }
+        Returns: string
       }
       populate_missing_daily_balances: {
         Args: Record<PropertyKey, never>
@@ -2982,6 +3044,10 @@ export type Database = {
       }
       update_overdue_status: {
         Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      update_retry_attempt: {
+        Args: { p_success?: boolean; p_transaction_id: string }
         Returns: undefined
       }
       update_supplier_balance: {

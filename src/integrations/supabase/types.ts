@@ -525,6 +525,57 @@ export type Database = {
         }
         Relationships: []
       }
+      godown_expense_references: {
+        Row: {
+          bill_no: string
+          created_at: string
+          created_by: string
+          expense_amount: number
+          id: string
+          lorry_no: string
+          rice_loading_entry_id: string | null
+          transaction_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          bill_no: string
+          created_at?: string
+          created_by: string
+          expense_amount: number
+          id?: string
+          lorry_no: string
+          rice_loading_entry_id?: string | null
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bill_no?: string
+          created_at?: string
+          created_by?: string
+          expense_amount?: number
+          id?: string
+          lorry_no?: string
+          rice_loading_entry_id?: string | null
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "godown_expense_references_rice_loading_entry_id_fkey"
+            columns: ["rice_loading_entry_id"]
+            isOneToOne: false
+            referencedRelation: "rice_loading_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "godown_expense_references_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       google_sheets_configs: {
         Row: {
           column_letter: string
@@ -1131,6 +1182,7 @@ export type Database = {
           lorry_no: string
           mill: string
           rice_storage: string
+          status: string
           updated_at: string
           weight: number
         }
@@ -1148,6 +1200,7 @@ export type Database = {
           lorry_no: string
           mill: string
           rice_storage: string
+          status?: string
           updated_at?: string
           weight: number
         }
@@ -1165,6 +1218,7 @@ export type Database = {
           lorry_no?: string
           mill?: string
           rice_storage?: string
+          status?: string
           updated_at?: string
           weight?: number
         }

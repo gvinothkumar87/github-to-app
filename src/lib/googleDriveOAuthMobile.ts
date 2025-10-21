@@ -150,34 +150,14 @@ export class GoogleDriveOAuthMobile {
   }
 
   static async uploadFile(dataUrl: string, fileName: string): Promise<string> {
-    let accessToken = await this.getAccessToken();
-
-    // If no token, authenticate
-    if (!accessToken) {
-      const success = await this.authenticate();
-      if (!success) {
-        throw new Error('Authentication failed or cancelled');
-      }
-      accessToken = await this.getAccessToken();
-      
-      if (!accessToken) {
-        throw new Error('Failed to get access token after authentication');
-      }
-    }
-
-    const { data, error } = await supabase.functions.invoke('google-drive-oauth', {
+    const { data, error } = await supabase.functions.invoke('upload-to-google-drive', {
       body: {
-        action: 'upload',
-        file: dataUrl,
+        dataUrl,
         fileName,
-        accessToken,
       },
     });
 
     if (error) {
-      if (error.message?.includes('auth') || error.message?.includes('token')) {
-        this.clearTokens();
-      }
       throw error;
     }
 

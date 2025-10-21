@@ -102,33 +102,14 @@ export class GoogleDriveOAuth {
   }
 
   static async uploadFile(dataUrl: string, fileName: string): Promise<string> {
-    const accessToken = await this.getAccessToken();
-
-    if (!accessToken) {
-      // Store the current page URL first, then redirect for OAuth
-      try {
-        sessionStorage.setItem('gdrive_return_url', window.location.pathname);
-      } catch {}
-      const authUrl = await this.getAuthUrl();
-      window.location.href = authUrl;
-      // Signal caller that a redirect is happening (avoid scary error toast)
-      throw new Error('GOOGLE_AUTH_REDIRECT');
-    }
-
-    const { data, error } = await supabase.functions.invoke('google-drive-oauth', {
+    const { data, error } = await supabase.functions.invoke('upload-to-google-drive', {
       body: {
-        action: 'upload',
-        file: dataUrl,
+        dataUrl,
         fileName,
-        accessToken,
       },
     });
 
     if (error) {
-      // If upload fails due to auth, clear tokens
-      if (error.message?.includes('auth') || error.message?.includes('token')) {
-        this.clearTokens();
-      }
       throw error;
     }
 

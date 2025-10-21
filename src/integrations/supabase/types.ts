@@ -525,6 +525,39 @@ export type Database = {
         }
         Relationships: []
       }
+      financial_audit_log: {
+        Row: {
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          operation: string
+          record_id: string
+          table_name: string
+          timestamp: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          operation: string
+          record_id: string
+          table_name: string
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          operation?: string
+          record_id?: string
+          table_name?: string
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       godown_expense_references: {
         Row: {
           bill_no: string
@@ -2705,6 +2738,18 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      check_ledger_integrity: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          credit_amount: number
+          debit_amount: number
+          issue: string
+          ledger_id: string
+          reference_id: string
+          transaction_date: string
+          transaction_type: string
+        }[]
+      }
       cleanup_duplicate_container_contents: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -2733,6 +2778,22 @@ export type Database = {
           contact_username?: string
         }
         Returns: string
+      }
+      create_credit_note_with_ledger: {
+        Args: { p_ledger_data: Json; p_note_data: Json }
+        Returns: Json
+      }
+      create_debit_note_with_ledger: {
+        Args: { p_ledger_data: Json; p_note_data: Json }
+        Returns: Json
+      }
+      create_receipt_with_ledger: {
+        Args: { p_ledger_data: Json; p_receipt_data: Json }
+        Returns: Json
+      }
+      create_sale_with_ledger: {
+        Args: { p_ledger_data: Json; p_sale_data: Json }
+        Returns: Json
       }
       delete_multi_entry_transaction: {
         Args: { transaction_id: string }

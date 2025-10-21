@@ -137,44 +137,51 @@ export const AmountReceivedForm = ({ onSuccess, onCancel }: AmountReceivedFormPr
     setLoading(true);
 
     try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id || '';
+
       // Generate receipt number
       const receiptNo = await generateReceiptNo();
 
-      // Create receipt record
-      const receiptData = {
+      // Prepare receipt data
+      const receiptDataPayload = {
         receipt_no: receiptNo,
         customer_id: selectedCustomerId,
         amount: parseFloat(amount),
         receipt_date: receiptDate,
         payment_method: paymentMethod,
         remarks: remarks || null,
+        created_by: userId,
       };
 
-      const { data: receipt, error: receiptError } = await supabase
-        .from('receipts')
-        .insert(receiptData)
-        .select()
-        .single();
-
-      if (receiptError) throw receiptError;
-
-      // Create customer ledger entry
-      const customer = customers.find(c => c.id === selectedCustomerId);
-      const ledgerData = {
+      // Prepare ledger data
+      const ledgerDataPayload = {
         customer_id: selectedCustomerId,
-        transaction_type: 'receipt' as const,
-        reference_id: receipt.id,
-        debit_amount: 0,
-        credit_amount: parseFloat(amount),
         transaction_date: receiptDate,
+        credit_amount: parseFloat(amount),
         description: `Receipt ${receiptNo} - ${paymentMethod}${remarks ? ` (${remarks})` : ''}`,
       };
 
-      const { error: ledgerError } = await supabase
-        .from('customer_ledger')
-        .insert(ledgerData);
+      // Use transactional RPC function
+      const { data: result, error: rpcError } = await supabase.rpc('create_receipt_with_ledger', {
+        p_receipt_data: receiptDataPayload,
+        p_ledger_data: ledgerDataPayload,
+      });
 
-      if (ledgerError) throw ledgerError;
+      if (rpcError) throw rpcError;
+      
+      const resultData = result as { receipt_id: string; ledger_id: string; success: boolean };
+      if (!resultData || !resultData.success) throw new Error('Failed to create receipt');
+
+      // Fetch the created receipt
+      const { data: receipt, error: fetchError } = await supabase
+        .from('receipts')
+        .select()
+        .eq('id', resultData.receipt_id)
+        .single();
+
+      if (fetchError) throw fetchError;
 
       // Create transaction in main ledger system using process_transaction function
       const selectedCustomerData = customers.find(c => c.id === selectedCustomerId);

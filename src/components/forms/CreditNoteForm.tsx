@@ -82,31 +82,58 @@ const CreditNoteForm = () => {
     setIsLoading(true);
 
     try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id || '';
+
       const noteNo = await generateCreditNoteNo();
       if (!noteNo) {
         toast.error('Error generating credit note number');
         return;
       }
 
-      const { data: noteData, error } = await supabase
+      const noteDate = format(formData.note_date, 'yyyy-MM-dd');
+
+      // Prepare credit note data
+      const noteDataPayload = {
+        note_no: noteNo,
+        customer_id: formData.customer_id,
+        item_id: formData.item_id,
+        reference_bill_no: formData.reference_bill_no || null,
+        amount: parseFloat(formData.amount),
+        gst_percentage: parseFloat(formData.gst_percentage),
+        reason: formData.reason,
+        note_date: noteDate,
+        created_by: userId,
+      };
+
+      // Prepare ledger data
+      const ledgerDataPayload = {
+        customer_id: formData.customer_id,
+        transaction_date: noteDate,
+        credit_amount: parseFloat(formData.amount),
+        description: `Credit Note ${noteNo} - ${formData.reason}`,
+      };
+
+      // Use transactional RPC function
+      const { data: result, error: rpcError } = await supabase.rpc('create_credit_note_with_ledger', {
+        p_note_data: noteDataPayload,
+        p_ledger_data: ledgerDataPayload,
+      });
+
+      if (rpcError) throw rpcError;
+      
+      const resultData = result as { note_id: string; ledger_id: string; success: boolean };
+      if (!resultData || !resultData.success) throw new Error('Failed to create credit note');
+
+      // Fetch the created note for invoice
+      const { data: noteData, error: fetchError } = await supabase
         .from('credit_notes')
-        .insert({
-          note_no: noteNo,
-          customer_id: formData.customer_id,
-          item_id: formData.item_id,
-          reference_bill_no: formData.reference_bill_no || null,
-          amount: parseFloat(formData.amount),
-          gst_percentage: parseFloat(formData.gst_percentage),
-          reason: formData.reason,
-          note_date: format(formData.note_date, 'yyyy-MM-dd'),
-        })
         .select()
+        .eq('id', resultData.note_id)
         .single();
 
-      if (error) {
-        toast.error('Error creating credit note');
-        return;
-      }
+      if (fetchError) throw fetchError;
 
       toast.success(`Credit Note ${noteNo} created successfully`);
       

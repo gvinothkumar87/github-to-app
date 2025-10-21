@@ -216,47 +216,60 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
     setLoading(true);
 
     try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id || '';
+
       // Use provided bill serial or generate if empty
       const finalBillSerial = billSerialNo || (useSpecialSerial 
         ? await generateSpecialSerial() 
         : await generateBillSerial(selectedEntry.loading_place));
       
-      // Create sale record
+      // Prepare sale data
+      const baseAmount = getBaseAmount();
+      const gstAmount = getGstAmount();
+      
       const saleData = {
         outward_entry_id: selectedEntry.id,
         customer_id: selectedEntry.customer_id,
         item_id: selectedEntry.item_id,
         quantity: calculateQuantity(),
         rate: parseFloat(rate),
+        base_amount: baseAmount,
+        gst_amount: gstAmount,
         total_amount: calculateTotalAmount(),
         bill_serial_no: finalBillSerial,
         sale_date: saleDate,
+        created_by: userId,
       };
 
-      const { data: sale, error: saleError } = await supabase
-        .from('sales')
-        .insert(saleData)
-        .select()
-        .single();
-
-      if (saleError) throw saleError;
-
-      // Create customer ledger entry
+      // Prepare ledger data
       const ledgerData = {
         customer_id: selectedEntry.customer_id,
-        transaction_type: 'sale' as const,
-        reference_id: sale.id,
-        debit_amount: calculateTotalAmount(),
-        credit_amount: 0,
         transaction_date: saleDate,
+        debit_amount: calculateTotalAmount(),
         description: `Sale - ${getDisplayName(selectedEntry.items!)} (${selectedEntry.lorry_no})`,
       };
 
-      const { error: ledgerError } = await supabase
-        .from('customer_ledger')
-        .insert(ledgerData);
+      // Use transactional RPC function
+      const { data: result, error: rpcError } = await supabase.rpc('create_sale_with_ledger', {
+        p_sale_data: saleData,
+        p_ledger_data: ledgerData,
+      });
 
-      if (ledgerError) throw ledgerError;
+      if (rpcError) throw rpcError;
+      
+      const resultData = result as { sale_id: string; ledger_id: string; success: boolean };
+      if (!resultData || !resultData.success) throw new Error('Failed to create sale');
+
+      // Fetch the created sale for invoice
+      const { data: sale, error: fetchError } = await supabase
+        .from('sales')
+        .select()
+        .eq('id', resultData.sale_id)
+        .single();
+
+      if (fetchError) throw fetchError;
 
       toast({
         title: language === 'english' ? 'Success' : 'வெற்றி',

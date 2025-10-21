@@ -83,18 +83,20 @@ export const CustomerLedgerView = () => {
       return;
     }
 
-    // Fetch related bill numbers for each entry
+    // Fetch related bill numbers and entry dates for each entry
     const entriesWithBillNo = await Promise.all((data || []).map(async (entry) => {
       let billNo = '';
+      let entryDate = '';
       
       try {
         if (entry.transaction_type === 'sale') {
           const { data: sale } = await supabase
             .from('sales')
-            .select('bill_serial_no')
+            .select('bill_serial_no, outward_entries!sales_outward_entry_id_fkey(entry_date)')
             .eq('id', entry.reference_id)
             .maybeSingle();
           billNo = sale?.bill_serial_no || '';
+          entryDate = (sale?.outward_entries as any)?.entry_date || '';
         } else if (entry.transaction_type === 'receipt') {
           const { data: receipt } = await supabase
             .from('receipts')
@@ -125,7 +127,7 @@ export const CustomerLedgerView = () => {
         ? (billNo ? `${entry.description} - Bill: ${billNo}` : entry.description)
         : (billNo ? `Bill: ${billNo}` : '');
 
-      return { ...entry, description };
+      return { ...entry, description, entry_date: entryDate };
     }));
 
     // Recompute running balance on the client to ensure correctness
@@ -138,7 +140,7 @@ export const CustomerLedgerView = () => {
       const debit = Number(e.debit_amount) || 0;
       const credit = Number(e.credit_amount) || 0;
       running = running + debit - credit;
-      return { ...e, debit_amount: debit, credit_amount: credit, balance: running } as CustomerLedger;
+      return { ...e, debit_amount: debit, credit_amount: credit, balance: running } as any;
     });
 
     setLedgerEntries(entriesWithBalance);
@@ -263,21 +265,25 @@ export const CustomerLedgerView = () => {
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{language === 'english' ? 'Date' : 'தேதி'}</TableHead>
-                    <TableHead>{language === 'english' ? 'Type' : 'வகை'}</TableHead>
-                    <TableHead>{language === 'english' ? 'Description' : 'விளக்கம்'}</TableHead>
-                    <TableHead className="text-right">{language === 'english' ? 'Debit (₹)' : 'கடன் (₹)'}</TableHead>
-                    <TableHead className="text-right">{language === 'english' ? 'Credit (₹)' : 'வரவு (₹)'}</TableHead>
-                    <TableHead className="text-right">{language === 'english' ? 'Balance (₹)' : 'மீதி (₹)'}</TableHead>
-                  </TableRow>
-                </TableHeader>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{language === 'english' ? 'Entry Date' : 'என்ட்ரி தேதி'}</TableHead>
+                  <TableHead>{language === 'english' ? 'Bill Date' : 'பில் தேதி'}</TableHead>
+                  <TableHead>{language === 'english' ? 'Type' : 'வகை'}</TableHead>
+                  <TableHead>{language === 'english' ? 'Description' : 'விளக்கம்'}</TableHead>
+                  <TableHead className="text-right">{language === 'english' ? 'Debit (₹)' : 'கடன் (₹)'}</TableHead>
+                  <TableHead className="text-right">{language === 'english' ? 'Credit (₹)' : 'வரவு (₹)'}</TableHead>
+                  <TableHead className="text-right">{language === 'english' ? 'Balance (₹)' : 'மீதி (₹)'}</TableHead>
+                </TableRow>
+              </TableHeader>
                 <TableBody>
-                  {ledgerEntries.map((entry) => (
-                    <TableRow key={entry.id}>
-                      <TableCell>{format(new Date(entry.transaction_date), 'dd/MM/yyyy')}</TableCell>
-                      <TableCell>
+                {ledgerEntries.map((entry: any) => (
+                  <TableRow key={entry.id}>
+                    <TableCell>
+                      {entry.entry_date ? format(new Date(entry.entry_date), 'dd/MM/yyyy') : (entry.transaction_type === 'sale' ? 'N/A' : '-')}
+                    </TableCell>
+                    <TableCell>{format(new Date(entry.transaction_date), 'dd/MM/yyyy')}</TableCell>
+                    <TableCell>
                         <span className={`px-2 py-1 rounded text-xs font-medium ${
                           entry.transaction_type === 'sale' 
                             ? 'bg-red-100 text-red-800' 

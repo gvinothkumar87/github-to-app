@@ -36,6 +36,7 @@ interface SalesLedgerEntry {
   };
   outward_entries?: {
     id: string;
+    entry_date: string;
     empty_weight: number;
     load_weight: number;
     net_weight: number;
@@ -59,6 +60,7 @@ interface ItemSelect {
 
 interface OutwardEntrySelect {
   id: string;
+  entry_date: string;
   empty_weight: number;
   load_weight: number;
   net_weight: number;
@@ -119,6 +121,7 @@ export const SalesLedgerView: React.FC = () => {
           ),
           outward_entries (
             id,
+            entry_date,
             empty_weight,
             load_weight,
             net_weight,
@@ -254,7 +257,8 @@ export const SalesLedgerView: React.FC = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{language === 'english' ? 'Date' : 'தேதி'}</TableHead>
+                  <TableHead>{language === 'english' ? 'Entry Date' : 'என்ட்ரி தேதி'}</TableHead>
+                  <TableHead>{language === 'english' ? 'Bill Date' : 'பில் தேதி'}</TableHead>
                   <TableHead>{language === 'english' ? 'Customer' : 'வாடிக்கையாளர்'}</TableHead>
                   <TableHead>{language === 'english' ? 'Item' : 'பொருள்'}</TableHead>
                   <TableHead>{language === 'english' ? 'Empty Weight' : 'வெற்று எடை'}</TableHead>
@@ -268,19 +272,22 @@ export const SalesLedgerView: React.FC = () => {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8">
+                    <TableCell colSpan={10} className="text-center py-8">
                       {language === 'english' ? 'Loading...' : 'ஏற்றுகிறது...'}
                     </TableCell>
                   </TableRow>
                 ) : salesData.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                       {language === 'english' ? 'No sales data found' : 'விற்பனை தரவு கிடைக்கவில்லை'}
                     </TableCell>
                   </TableRow>
                 ) : (
                   salesData.map((sale) => (
                     <TableRow key={sale.id}>
+                      <TableCell>
+                        {sale.outward_entries?.entry_date ? format(new Date(sale.outward_entries.entry_date), 'dd/MM/yyyy') : 'N/A'}
+                      </TableCell>
                       <TableCell>
                         {format(new Date(sale.sale_date), 'dd/MM/yyyy')}
                       </TableCell>

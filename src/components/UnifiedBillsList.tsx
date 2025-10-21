@@ -19,6 +19,7 @@ interface UnifiedBill {
   type: 'sale' | 'debit_note' | 'credit_note';
   bill_no: string;
   date: string;
+  entry_date?: string;
   customer_name: string;
   amount: number;
   data: Sale | DebitNote | CreditNote;
@@ -101,6 +102,7 @@ export const UnifiedBillsList = ({
           type: 'sale' as const,
           bill_no: sale.bill_serial_no || 'N/A',
           date: sale.sale_date,
+          entry_date: sale.outward_entries?.entry_date,
           customer_name: getDisplayName(sale.customers),
           amount: sale.total_amount,
           data: sale,
@@ -303,7 +305,8 @@ export const UnifiedBillsList = ({
                 <TableRow>
                   <TableHead>{language === 'english' ? 'Type' : 'வகை'}</TableHead>
                   <TableHead>{language === 'english' ? 'Bill No' : 'பில் எண்'}</TableHead>
-                  <TableHead>{language === 'english' ? 'Date' : 'தேதி'}</TableHead>
+                  <TableHead>{language === 'english' ? 'Entry Date' : 'என்ட்ரி தேதி'}</TableHead>
+                  <TableHead>{language === 'english' ? 'Bill Date' : 'பில் தேதி'}</TableHead>
                   <TableHead>{language === 'english' ? 'Customer' : 'வாடிக்கையாளர்'}</TableHead>
                   <TableHead>{language === 'english' ? 'Amount' : 'தொகை'}</TableHead>
                   <TableHead>{language === 'english' ? 'Actions' : 'செயல்கள்'}</TableHead>
@@ -318,6 +321,9 @@ export const UnifiedBillsList = ({
                       </Badge>
                     </TableCell>
                     <TableCell className="font-medium">{bill.bill_no}</TableCell>
+                    <TableCell>
+                      {bill.entry_date ? new Date(bill.entry_date).toLocaleDateString('en-IN') : (bill.type === 'sale' ? 'N/A' : '-')}
+                    </TableCell>
                     <TableCell>{new Date(bill.date).toLocaleDateString('en-IN')}</TableCell>
                     <TableCell>{bill.customer_name}</TableCell>
                     <TableCell className="font-semibold">₹{bill.amount.toFixed(2)}</TableCell>

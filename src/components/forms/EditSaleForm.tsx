@@ -67,51 +67,43 @@ export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, on
     setLoading(true);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
       const newRate = parseFloat(rate);
+      const newBaseAmount = getBaseAmount(newRate);
+      const newGstAmount = getGstAmount(newRate);
       const newTotalAmount = calculateTotalAmount(newRate);
-      const newLoadWeight = parseFloat(loadWeight) || null;
-      const newEmptyWeight = parseFloat(emptyWeight) || null;
-      const newNetWeight = newLoadWeight && newEmptyWeight ? newLoadWeight - newEmptyWeight : null;
 
-      // Update sale record
-      const { error: saleError } = await supabase
-        .from('sales')
-        .update({
-          rate: newRate,
-          total_amount: newTotalAmount,
-          irn: irn || null,
-          sale_date: saleDate,
-          bill_serial_no: billSerialNo,
-        })
-        .eq('id', sale.id);
+      // Prepare sale update data
+      const saleData = {
+        rate: newRate.toString(),
+        total_amount: newTotalAmount.toString(),
+        base_amount: newBaseAmount.toString(),
+        gst_amount: newGstAmount.toString(),
+        irn: irn || null,
+        bill_serial_no: billSerialNo,
+        sale_date: saleDate
+      };
 
-      if (saleError) throw saleError;
+      // Prepare outward entry update data if needed
+      const outwardEntryData = outwardEntry ? {
+        load_weight: loadWeight || null,
+        empty_weight: emptyWeight || null
+      } : null;
 
-      // Update outward entry record if it exists
-      if (outwardEntry) {
-        const { error: outwardError } = await supabase
-          .from('outward_entries')
-          .update({
-            load_weight: newLoadWeight,
-            empty_weight: newEmptyWeight,
-            net_weight: newNetWeight,
-          })
-          .eq('id', outwardEntry.id);
+      // Call the update RPC function
+      const { data, error } = await supabase.rpc('update_sale_with_ledger', {
+        p_sale_id: sale.id,
+        p_sale_data: saleData,
+        p_outward_entry_data: outwardEntryData,
+        p_user_id: user.id
+      });
 
-        if (outwardError) throw outwardError;
-      }
-
-      // Update customer ledger entry
-      const { error: ledgerError } = await supabase
-        .from('customer_ledger')
-        .update({
-          debit_amount: newTotalAmount,
-          transaction_date: saleDate,
-        })
-        .eq('reference_id', sale.id)
-        .eq('transaction_type', 'sale');
-
-      if (ledgerError) throw ledgerError;
+      if (error) throw error;
+      
+      const result = data as any;
+      if (result?.error) throw new Error(result.error);
 
       toast({
         title: language === 'english' ? 'Success' : 'வெற்றி',
@@ -121,6 +113,26 @@ export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, on
       onSuccess();
       
     } catch (error: any) {
+      console.error("Error updating sale:", error);
+      
+      // Log the failed transaction
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        await supabase.rpc('log_failed_transaction', {
+          p_user_id: user?.id,
+          p_transaction_type: 'update_sale',
+          p_attempted_data: {
+            sale_id: sale.id,
+            rate: parseFloat(rate),
+            total_amount: calculateTotalAmount(parseFloat(rate)),
+            bill_serial_no: billSerialNo
+          },
+          p_error_message: error.message
+        });
+      } catch (logError) {
+        console.error("Failed to log error:", logError);
+      }
+
       toast({
         title: language === 'english' ? 'Error' : 'பிழை',
         description: error.message || (language === 'english' ? 'Failed to update sale' : 'விற்பனை புதுப்பிப்பதில் தோல்வி'),

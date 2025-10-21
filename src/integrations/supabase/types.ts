@@ -1715,10 +1715,12 @@ export type Database = {
       }
       sales: {
         Row: {
+          base_amount: number | null
           bill_serial_no: string | null
           created_at: string
           created_by: string | null
           customer_id: string
+          gst_amount: number | null
           id: string
           irn: string | null
           item_id: string
@@ -1732,10 +1734,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          base_amount?: number | null
           bill_serial_no?: string | null
           created_at?: string
           created_by?: string | null
           customer_id: string
+          gst_amount?: number | null
           id?: string
           irn?: string | null
           item_id: string
@@ -1749,10 +1753,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          base_amount?: number | null
           bill_serial_no?: string | null
           created_at?: string
           created_by?: string | null
           customer_id?: string
+          gst_amount?: number | null
           id?: string
           irn?: string | null
           item_id?: string
@@ -3022,6 +3028,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      recalculate_customer_ledger_balances: {
+        Args: { p_customer_id: string; p_from_date: string }
+        Returns: undefined
+      }
       recalculate_daily_balances_from_date: {
         Args: { p_from_date: string; p_user_id: string }
         Returns: undefined
@@ -3049,6 +3059,15 @@ export type Database = {
       update_retry_attempt: {
         Args: { p_success?: boolean; p_transaction_id: string }
         Returns: undefined
+      }
+      update_sale_with_ledger: {
+        Args: {
+          p_outward_entry_data?: Json
+          p_sale_data: Json
+          p_sale_id: string
+          p_user_id?: string
+        }
+        Returns: Json
       }
       update_supplier_balance: {
         Args: { p_supplier_id: string }

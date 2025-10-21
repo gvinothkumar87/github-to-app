@@ -199,9 +199,64 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
       if (!user) throw new Error('No user found');
 
       const item = items.find(i => i.id === selectedItem);
-      const totalAmount = calculateTotalAmount();
+      
+      // Calculate amounts
+      const baseAmount = parseFloat(quantity) * parseFloat(rate);
+      const gstAmount = baseAmount * ((item?.gst_percentage || 0) / 100);
+      const totalAmount = baseAmount + gstAmount;
 
-      // Create a temporary outward entry for invoice generation
+      // Prepare sale data for RPC
+      const saleData = {
+        outward_entry_id: null,
+        customer_id: selectedCustomer,
+        item_id: selectedItem,
+        quantity: parseFloat(quantity),
+        rate: parseFloat(rate),
+        total_amount: totalAmount,
+        base_amount: baseAmount,
+        gst_amount: gstAmount,
+        sale_date: saleDate,
+        bill_serial_no: billSerialNo,
+        irn: null,
+        user_id: user.id,
+        created_by: user.id
+      };
+
+      // Prepare ledger data
+      const ledgerData = {
+        customer_id: selectedCustomer,
+        transaction_type: 'sale',
+        debit_amount: totalAmount,
+        credit_amount: 0,
+        transaction_date: saleDate,
+        description: `Direct Sale - Bill #${billSerialNo}`
+      };
+
+      // Call the RPC function
+      const { data, error } = await supabase.rpc('create_sale_with_ledger', {
+        p_sale_data: saleData,
+        p_ledger_data: ledgerData
+      });
+
+      if (error) throw error;
+      
+      const result = data as any;
+      if (result?.error) throw new Error(result.error);
+
+      // Fetch the created sale for invoice
+      const { data: createdSaleData, error: fetchError } = await supabase
+        .from("sales")
+        .select(`
+          *,
+          customer:customers(*),
+          item:items(*)
+        `)
+        .eq('id', result.sale_id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Create temp outward entry for invoice
       const tempOutwardEntry = {
         id: crypto.randomUUID(),
         serial_no: 0,
@@ -220,54 +275,38 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
         updated_at: new Date().toISOString()
       };
 
-      // Insert sale record (direct sales don't need outward_entry_id)
-      const { data: saleData, error: saleError } = await supabase
-        .from('sales')
-        .insert({
-          customer_id: selectedCustomer,
-          item_id: selectedItem,
-          quantity: parseFloat(quantity),
-          rate: parseFloat(rate),
-          total_amount: totalAmount,
-          bill_serial_no: billSerialNo,
-          sale_date: saleDate,
-          loading_place: loadingPlace, // Store loading place for invoice generation
-          lorry_no: lorryNo, // Store lorry number for invoice display
-          created_by: user.id
-        })
-        .select()
-        .single();
-
-      if (saleError) throw saleError;
-
-      // Create customer ledger entry
-      const { error: ledgerError } = await supabase
-        .from('customer_ledger')
-        .insert({
-          customer_id: selectedCustomer,
-          transaction_type: 'sale',
-          reference_id: saleData.id,
-          debit_amount: totalAmount,
-          credit_amount: 0,
-          transaction_date: saleDate,
-          description: `Sale - ${billSerialNo}`
-        });
-
-      if (ledgerError) throw ledgerError;
-
-      toast.success('Sale created successfully');
-      
-      // Prepare data for invoice
       const customer = customers.find(c => c.id === selectedCustomer);
       setCreatedSale({
-        sale: saleData,
+        sale: createdSaleData,
         outwardEntry: tempOutwardEntry,
         customer,
         item
       });
       setShowInvoice(true);
+      toast.success('Direct sale created successfully');
+
     } catch (error: any) {
-      console.error('Error creating sale:', error);
+      console.error('Error creating direct sale:', error);
+      
+      // Log the failed transaction
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        await supabase.rpc('log_failed_transaction', {
+          p_user_id: user?.id,
+          p_transaction_type: 'direct_sale',
+          p_attempted_data: {
+            customer_id: selectedCustomer,
+            item_id: selectedItem,
+            quantity: parseFloat(quantity),
+            rate: parseFloat(rate),
+            bill_serial_no: billSerialNo
+          },
+          p_error_message: error.message
+        });
+      } catch (logError) {
+        console.error("Failed to log error:", logError);
+      }
+
       toast.error(error.message || 'Failed to create sale');
     } finally {
       setLoading(false);

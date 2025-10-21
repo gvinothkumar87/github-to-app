@@ -45,8 +45,39 @@ export function SupplierLedgerView() {
       .order("transaction_date", { ascending: false });
 
     if (data && data.length > 0) {
-      setLedgerEntries(data);
-      setBalance(data[0].balance || 0);
+      // Fetch related bill numbers for each entry
+      const entriesWithBillNo = await Promise.all(data.map(async (entry) => {
+        let billNo = '';
+        
+        try {
+          if (entry.transaction_type === 'purchase') {
+            const { data: purchase } = await supabase
+              .from('purchases')
+              .select('bill_serial_no')
+              .eq('id', entry.reference_id)
+              .maybeSingle();
+            billNo = purchase?.bill_serial_no || '';
+          } else if (entry.transaction_type === 'payment') {
+            const { data: payment } = await supabase
+              .from('supplier_payments')
+              .select('payment_no')
+              .eq('id', entry.reference_id)
+              .maybeSingle();
+            billNo = payment?.payment_no || '';
+          }
+        } catch (err) {
+          console.error('Error fetching bill number:', err);
+        }
+
+        const description = entry.description 
+          ? (billNo ? `${entry.description} - Bill: ${billNo}` : entry.description)
+          : (billNo ? `Bill: ${billNo}` : '');
+
+        return { ...entry, description };
+      }));
+
+      setLedgerEntries(entriesWithBillNo);
+      setBalance(entriesWithBillNo[0].balance || 0);
     } else {
       setLedgerEntries([]);
       setBalance(0);

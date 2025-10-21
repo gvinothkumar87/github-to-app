@@ -74,17 +74,27 @@ serve(async (req) => {
       GOOGLE_REFRESH_TOKEN
     );
 
-    // Parse the request body
-    const { dataUrl, fileName } = await req.json();
+    // Parse the request body (support multiple payload shapes for backward compatibility)
+    const body = await req.json();
+    const fileName = body.fileName || body.name || body.filename;
+    const incoming = body.dataUrl || body.fileData || body.file; // support: dataUrl | fileData | file
     
-    console.log('📝 File details:', {
+    console.log('📝 File details (raw):', {
+      providedKeys: Object.keys(body || {}),
+      hasDataUrl: !!body?.dataUrl,
+      hasFileData: !!body?.fileData,
+      hasFile: !!body?.file,
       fileName,
-      mimeType: dataUrl?.split(';')[0]?.split(':')[1],
-      hasData: !!dataUrl,
     });
 
+    const dataUrl = incoming;
     if (!dataUrl || !fileName) {
-      throw new Error('Missing dataUrl or fileName');
+      const msg = `Missing required fields: ${(!!dataUrl) ? '' : 'dataUrl/fileData'} ${(!!fileName) ? '' : 'and fileName'}`.trim();
+      console.error('❌', msg);
+      return new Response(
+        JSON.stringify({ error: msg }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Convert base64 data URL to binary (avoid large Blob to reduce memory)

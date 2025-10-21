@@ -83,8 +83,53 @@ export const CustomerLedgerView = () => {
       return;
     }
 
+    // Fetch related bill numbers for each entry
+    const entriesWithBillNo = await Promise.all((data || []).map(async (entry) => {
+      let billNo = '';
+      
+      try {
+        if (entry.transaction_type === 'sale') {
+          const { data: sale } = await supabase
+            .from('sales')
+            .select('bill_serial_no')
+            .eq('id', entry.reference_id)
+            .maybeSingle();
+          billNo = sale?.bill_serial_no || '';
+        } else if (entry.transaction_type === 'receipt') {
+          const { data: receipt } = await supabase
+            .from('receipts')
+            .select('receipt_no')
+            .eq('id', entry.reference_id)
+            .maybeSingle();
+          billNo = receipt?.receipt_no || '';
+        } else if (entry.transaction_type === 'debit_note') {
+          const { data: note } = await supabase
+            .from('debit_notes')
+            .select('note_no')
+            .eq('id', entry.reference_id)
+            .maybeSingle();
+          billNo = note?.note_no || '';
+        } else if (entry.transaction_type === 'credit_note') {
+          const { data: note } = await supabase
+            .from('credit_notes')
+            .select('note_no')
+            .eq('id', entry.reference_id)
+            .maybeSingle();
+          billNo = note?.note_no || '';
+        }
+      } catch (err) {
+        console.error('Error fetching bill number:', err);
+      }
+
+      const description = entry.description 
+        ? (billNo ? `${entry.description} - Bill: ${billNo}` : entry.description)
+        : (billNo ? `Bill: ${billNo}` : '');
+
+      return { ...entry, description };
+    }));
+
     // Recompute running balance on the client to ensure correctness
-    const sorted = (data || []).sort(
+    const sorted = (entriesWithBillNo || []).sort(
       (a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime()
     );
 

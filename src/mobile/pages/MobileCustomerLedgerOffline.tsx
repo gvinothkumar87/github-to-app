@@ -62,9 +62,42 @@ const MobileCustomerLedgerOffline: React.FC = () => {
       // Sort by transaction date
       filteredEntries.sort((a: any, b: any) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime());
       
+      // Fetch bill numbers for each entry
+      const entriesWithBillNo = await Promise.all(filteredEntries.map(async (entry: any) => {
+        let billNo = '';
+        
+        try {
+          if (entry.transaction_type === 'sale') {
+            const sales = await databaseService.findAll('sales');
+            const sale = sales.find((s: any) => s.id === entry.reference_id);
+            billNo = sale?.bill_serial_no || '';
+          } else if (entry.transaction_type === 'receipt') {
+            const receipts = await databaseService.findAll('receipts');
+            const receipt = receipts.find((r: any) => r.id === entry.reference_id);
+            billNo = receipt?.receipt_no || '';
+          } else if (entry.transaction_type === 'debit_note') {
+            const debitNotes = await databaseService.findAll('debit_notes');
+            const note = debitNotes.find((n: any) => n.id === entry.reference_id);
+            billNo = note?.note_no || '';
+          } else if (entry.transaction_type === 'credit_note') {
+            const creditNotes = await databaseService.findAll('credit_notes');
+            const note = creditNotes.find((n: any) => n.id === entry.reference_id);
+            billNo = note?.note_no || '';
+          }
+        } catch (err) {
+          console.error('Error fetching bill number:', err);
+        }
+
+        const description = entry.description 
+          ? (billNo ? `${entry.description} - Bill: ${billNo}` : entry.description)
+          : (billNo ? `Bill: ${billNo}` : '');
+
+        return { ...entry, description };
+      }));
+      
       // Calculate running balance for each entry
       let runningBalance = 0;
-      const entriesWithBalance = filteredEntries.map((entry: any) => {
+      const entriesWithBalance = entriesWithBillNo.map((entry: any) => {
         const debit = Number(entry.debit_amount) || 0;
         const credit = Number(entry.credit_amount) || 0;
         runningBalance = runningBalance + debit - credit;

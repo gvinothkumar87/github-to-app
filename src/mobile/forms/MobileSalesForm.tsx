@@ -34,15 +34,22 @@ const MobileSalesForm: React.FC = () => {
     bill_serial_no: '',
     sale_date: new Date().toISOString().split('T')[0],
   });
+  const [useSpecialSerial, setUseSpecialSerial] = useState(false);
 
-  // Auto-generate bill serial number when selected entry changes
+  // Auto-generate bill serial number when selected entry changes or special serial checkbox changes
   useEffect(() => {
     if (selectedEntry && !formData.bill_serial_no) {
-      generateBillSerial(selectedEntry.loading_place).then(billSerial => {
-        setFormData(prev => ({ ...prev, bill_serial_no: billSerial }));
-      });
+      if (useSpecialSerial) {
+        generateSpecialSerial().then(billSerial => {
+          setFormData(prev => ({ ...prev, bill_serial_no: billSerial }));
+        });
+      } else {
+        generateBillSerial(selectedEntry.loading_place).then(billSerial => {
+          setFormData(prev => ({ ...prev, bill_serial_no: billSerial }));
+        });
+      }
     }
-  }, [selectedEntry, formData.bill_serial_no]);
+  }, [selectedEntry, useSpecialSerial, formData.bill_serial_no]);
 
   useEffect(() => {
     if (outwardEntryId) {
@@ -85,7 +92,33 @@ const MobileSalesForm: React.FC = () => {
   // Get sales data for bill generation
   const { data: salesData } = useEnhancedOfflineData('offline_sales');
 
-  // Generate bill serial number like desktop version
+  // Generate special serial (D-series)
+  const generateSpecialSerial = async (): Promise<string> => {
+    try {
+      const sales = salesData || [];
+      const existingBills = sales.filter((sale: any) => 
+        sale.bill_serial_no && sale.bill_serial_no.startsWith('D')
+      );
+      
+      let nextNumber = 1;
+      if (existingBills.length > 0) {
+        let maxNumber = 0;
+        existingBills.forEach((sale: any) => {
+          const num = parseInt((sale.bill_serial_no || 'D0').replace('D', ''));
+          maxNumber = Math.max(maxNumber, num);
+        });
+        nextNumber = maxNumber + 1;
+      }
+      
+      const serialNumber = nextNumber.toString().padStart(3, '0');
+      return `D${serialNumber}`;
+    } catch (error) {
+      console.error('Error generating special serial:', error);
+      return 'D001';
+    }
+  };
+
+  // Generate bill serial number based on loading place
   const generateBillSerial = async (loadingPlace: string): Promise<string> => {
     try {
       const sales = salesData || [];
@@ -93,9 +126,9 @@ const MobileSalesForm: React.FC = () => {
       let existingBills: any[] = [];
       
       if (loadingPlace === 'PULIVANTHI') {
-        // For PULIVANTHI, get numeric serials like 001, 002, 003
+        // For PULIVANTHI, get numeric serials without leading zeros
         existingBills = sales.filter((sale: any) => 
-          sale.bill_serial_no && /^[0-9]{3}$/.test(sale.bill_serial_no)
+          sale.bill_serial_no && /^[0-9]+$/.test(sale.bill_serial_no) && !sale.bill_serial_no.startsWith('D')
         );
       } else if (loadingPlace === 'MATTAPARAI') {
         // For MATTAPARAI, get GRM prefixed serials like GRM050, GRM051, GRM052
@@ -112,7 +145,9 @@ const MobileSalesForm: React.FC = () => {
         existingBills.forEach((sale: any) => {
           if (loadingPlace === 'PULIVANTHI') {
             const num = parseInt(sale.bill_serial_no || '0');
-            maxNumber = Math.max(maxNumber, num);
+            if (!isNaN(num)) {
+              maxNumber = Math.max(maxNumber, num);
+            }
           } else {
             const num = parseInt((sale.bill_serial_no || 'GRM0').replace('GRM', ''));
             maxNumber = Math.max(maxNumber, num);
@@ -130,11 +165,17 @@ const MobileSalesForm: React.FC = () => {
         }
       }
       
-      const serialNumber = nextNumber.toString().padStart(3, '0');
-      return loadingPlace === 'PULIVANTHI' ? serialNumber : `${prefix}${serialNumber}`;
+      // For PULIVANTHI: return number without leading zeros (e.g., 1, 2, 46)
+      // For MATTAPARAI: return with GRM prefix and padded (e.g., GRM050)
+      if (loadingPlace === 'PULIVANTHI') {
+        return nextNumber.toString();
+      } else {
+        const serialNumber = nextNumber.toString().padStart(3, '0');
+        return `${prefix}${serialNumber}`;
+      }
     } catch (error) {
       console.error('Error generating bill serial:', error);
-      return loadingPlace === 'PULIVANTHI' ? '001' : 'GRM050';
+      return loadingPlace === 'PULIVANTHI' ? '1' : 'GRM050';
     }
   };
 
@@ -153,7 +194,9 @@ const MobileSalesForm: React.FC = () => {
 
       // If bill_serial_no is empty, generate one
       if (!finalFormData.bill_serial_no && selectedEntry) {
-        finalFormData.bill_serial_no = await generateBillSerial(selectedEntry.loading_place);
+        finalFormData.bill_serial_no = useSpecialSerial 
+          ? await generateSpecialSerial()
+          : await generateBillSerial(selectedEntry.loading_place);
       }
 
       await createSale(finalFormData);
@@ -194,7 +237,7 @@ const MobileSalesForm: React.FC = () => {
                 <Select 
                   value={formData.outward_entry_id} 
                   onValueChange={(value) => {
-                    const entry = outwardEntries.find((e: any) => e.id === value) as any;
+                  const entry = outwardEntries.find((e: any) => e.id === value) as any;
                     setSelectedEntry(entry);
                     setFormData(prev => ({
                       ...prev,
@@ -202,7 +245,9 @@ const MobileSalesForm: React.FC = () => {
                       customer_id: entry?.customer_id || '',
                       item_id: entry?.item_id || '',
                       quantity: '', // Will be auto-calculated
+                      bill_serial_no: '', // Reset to trigger auto-generation
                     }));
+                    setUseSpecialSerial(false); // Reset special serial checkbox
                   }}
                 >
                   <SelectTrigger>
@@ -301,6 +346,21 @@ const MobileSalesForm: React.FC = () => {
               </div>
 
               <div>
+                <Label htmlFor="use-special-serial" className="flex items-center gap-2 cursor-pointer mb-2">
+                  <input
+                    id="use-special-serial"
+                    type="checkbox"
+                    checked={useSpecialSerial}
+                    onChange={(e) => {
+                      setUseSpecialSerial(e.target.checked);
+                      setFormData({ ...formData, bill_serial_no: '' }); // Reset to trigger auto-generation
+                    }}
+                    className="rounded border-gray-300"
+                  />
+                  <span className="text-sm">
+                    {language === 'english' ? 'Use Special Serial (D001)' : 'சிறப்பு எண் பயன்படுத்தவும் (D001)'}
+                  </span>
+                </Label>
                 <Label htmlFor="bill_serial_no">
                   {language === 'english' ? 'Bill Serial Number' : 'பில் எண்'}
                 </Label>
@@ -308,8 +368,14 @@ const MobileSalesForm: React.FC = () => {
                   id="bill_serial_no"
                   value={formData.bill_serial_no}
                   onChange={(e) => setFormData({ ...formData, bill_serial_no: e.target.value })}
-                  placeholder={language === 'english' ? 'Auto-generated' : 'தானாக உருவாக்கப்பட்டது'}
+                  placeholder={language === 'english' ? 'Auto-generated (editable)' : 'தானாக உருவாக்கப்பட்டது (திருத்தலாம்)'}
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {language === 'english' 
+                    ? `${useSpecialSerial ? 'D-series' : selectedEntry?.loading_place === 'PULIVANTHI' ? 'Numeric' : 'GRM-series'} - Auto-generated, can be edited`
+                    : `${useSpecialSerial ? 'D-தொடர்' : selectedEntry?.loading_place === 'PULIVANTHI' ? 'எண்கள்' : 'GRM-தொடர்'} - தானாக உருவாக்கப்பட்டது, திருத்தலாம்`
+                  }
+                </p>
               </div>
               
               <div className="flex gap-3 pt-4">

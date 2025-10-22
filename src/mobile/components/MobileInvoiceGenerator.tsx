@@ -271,11 +271,8 @@ export const MobileInvoiceGenerator: React.FC = () => {
       return;
     }
 
-    // This function is deprecated - use Print option instead
-    toast({
-      title: language === 'english' ? 'Info' : 'தகவல்',
-      description: language === 'english' ? 'Please use Print option instead' : 'அச்சிடு விருப்பத்தைப் பயன்படுத்தவும்',
-    });
+    // Use the print function which generates the same PDF layout as web app
+    await handlePrint();
   };
 
   const handlePrint = async () => {

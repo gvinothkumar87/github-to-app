@@ -837,7 +837,21 @@ export const MobileInvoiceGenerator: React.FC = () => {
     `);
     
     printWindow.document.close();
+    
+    // Wait for print dialog and close window after
+    printWindow.onafterprint = () => {
+      printWindow.close();
+    };
+    
+    // Trigger print
     printWindow.print();
+    
+    // Fallback: Close window if user cancels print (after a short delay)
+    setTimeout(() => {
+      if (!printWindow.closed) {
+        printWindow.close();
+      }
+    }, 100);
   };
 
   if (!sale || !customer || !item) {

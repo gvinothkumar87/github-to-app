@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import QRCode from 'qrcode';
 import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -271,10 +272,247 @@ export const MobileInvoiceGenerator: React.FC = () => {
       return;
     }
 
-    // Use the print function which generates the same PDF layout as web app
-    await handlePrint();
-  };
+    // Generate QR code if IRN exists
+    let qrCodeDataUrl = '';
+    if (sale.irn) {
+      try {
+        qrCodeDataUrl = await QRCode.toDataURL(sale.irn, {
+          width: 120,
+          margin: 1,
+          color: { dark: '#000000', light: '#FFFFFF' },
+        });
+      } catch (error) {
+        console.error('Error generating QR code:', error);
+      }
+    }
 
+    const { baseAmount, gstAmount } = calculateAmounts();
+
+    // Fallback company settings if not available
+    const cs = companySettings || {
+      company_name: 'GOVINDAN RICE MILL',
+      address_line1: '6/175 GINGEE MAIN ROAD',
+      address_line2: 'GINGEE TALUK, VILLUPURAM DISTRICT',
+      locality: 'GINGEE',
+      pin_code: 605601,
+      state_code: '33',
+      gstin: '33AALFG0221E1Z3',
+      phone: '9790404001',
+    };
+
+    const container = document.createElement('div');
+    container.style.position = 'fixed';
+    container.style.left = '-10000px';
+    container.style.top = '0';
+    container.style.background = '#ffffff';
+    container.style.width = '794px';
+
+    container.innerHTML = `
+      <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 10px; font-size: 9px; }
+        .invoice-container { max-width: 210mm; margin: 0 auto; border: 2px solid #000; }
+        .header { display: flex; border-bottom: 1px solid #000; }
+        .logo-section { width: 80px; padding: 10px; border-right: 1px solid #000; display: flex; align-items: center; justify-content: center; }
+        .logo { width: 75px; height: 75px; object-fit: contain; }
+        .company-section { flex: 1; padding: 10px; text-align: center; }
+        .company-name { font-size: 16px; font-weight: bold; margin-bottom: 3px; }
+        .company-address { font-size: 8px; margin-bottom: 2px; line-height: 1.2; }
+        .invoice-info-section { width: 200px; border-left: 1px solid #000; }
+        .invoice-details { display: flex; }
+        .invoice-left { flex: 1; padding: 8px; font-size: 8px; }
+        .invoice-right { width: 120px; padding: 8px; border-left: 1px solid #000; font-size: 8px; }
+        .consignee-section { display: flex; border-top: 1px solid #000; }
+        .consignee-left { flex: 1; padding: 10px; border-right: 1px solid #000; }
+        .consignee-right { flex: 1; padding: 10px; }
+        .section-title { font-weight: bold; font-size: 8px; margin-bottom: 8px; }
+        .customer-name { font-weight: bold; font-size: 10px; margin-bottom: 5px; }
+        .customer-details { font-size: 8px; line-height: 1.3; }
+        .items-table { width: 100%; border-collapse: collapse; border-top: 1px solid #000; }
+        .items-table th { background-color: #f5f5f5; font-weight: bold; font-size: 7px; padding: 5px; border: 1px solid #000; text-align: center; }
+        .items-table td { font-size: 8px; padding: 4px; border: 1px solid #000; text-align: center; }
+        .items-table .desc-col { text-align: left; }
+        .items-table .amount-col { text-align: right; }
+        .footer-section { border-top: 1px solid #000; }
+        .amount-words { padding: 8px; border-top: 1px solid #000; border-bottom: 1px solid #000; font-size: 8px; }
+        .amount-words-bold { font-weight: bold; }
+        .tax-details { display: flex; }
+        .hsn-table-section { flex: 1; padding: 8px; border-right: 1px solid #000; }
+        .hsn-table { width: 100%; border-collapse: collapse; font-size: 7px; }
+        .hsn-table th, .hsn-table td { border: 1px solid #000; padding: 3px; text-align: center; }
+        .hsn-table th { background-color: #f5f5f5; font-weight: bold; }
+        .total-section { flex: 1; padding: 8px; }
+        .total-row { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 8px; }
+        .total-final { border-top: 1px solid #000; margin-top: 5px; padding-top: 3px; font-weight: bold; }
+        .bank-signature { display: flex; border-top: 1px solid #000; }
+        .bank-details { flex: 1; padding: 10px; border-right: 1px solid #000; font-size: 9px; }
+        .signature-area { width: 150px; padding: 10px; text-align: center; font-size: 8px; }
+      </style>
+      <div class="invoice-container">
+        <div class="header">
+          <div class="logo-section">
+            ${sale.irn && qrCodeDataUrl ? `
+              <img src="${qrCodeDataUrl}" alt="IRN QR Code" class="logo" />
+            ` : `
+              <img src="${window.location.origin}/lovable-uploads/8ef45f84-cd7a-4909-9f31-86a578d28f2f.png" alt="GRM Logo" class="logo" onerror="this.style.display='none'" />
+            `}
+          </div>
+          <div class="company-section">
+            <div class="company-name">${cs.company_name}</div>
+            <div class="company-address">
+              ${cs.address_line1}<br>
+              ${cs.address_line2}, ${cs.locality} - ${cs.pin_code}<br>
+              Phone: ${cs.phone}<br>
+              GSTIN/UIN: ${cs.gstin} &nbsp;&nbsp;&nbsp; State Name: Tamil Nadu, Code: ${cs.state_code}
+            </div>
+          </div>
+          <div class="invoice-info-section">
+            <div style="padding: 8px; border-bottom: 1px solid #000;">
+              <div style="font-weight: bold; font-size: 8px;">Invoice No.</div>
+              <div style="font-size: 9px; margin-top: 2px;">${sale.bill_serial_no}</div>
+            </div>
+            <div style="padding: 8px; border-bottom: 1px solid #000;">
+              <div style="font-weight: bold; font-size: 8px;">Dated</div>
+              <div style="font-size: 9px; margin-top: 2px;">${new Date(sale.sale_date).toLocaleDateString('en-IN')}</div>
+            </div>
+            <div style="padding: 8px;">
+              <div style="font-weight: bold; font-size: 8px;">Motor Vehicle No.</div>
+              <div style="font-size: 9px; margin-top: 2px;">${sale.lorry_no || outwardEntry?.lorry_no || 'N/A'}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="consignee-section">
+          <div class="consignee-left">
+            <div class="section-title">Consignee (Ship to)</div>
+            <div class="customer-name">${getDisplayName(customer)}</div>
+            <div class="customer-details">
+              ${customer.address_english || customer.address_tamil || ''}<br>
+              ${customer.pin_code ? `PIN: ${customer.pin_code}<br>` : ''}
+              ${customer.phone ? `Phone: ${customer.phone}<br>` : ''}
+              ${customer.gstin ? `GSTIN/UIN: ${customer.gstin}<br>` : ''}
+              State Name: Tamil Nadu, Code: 33
+            </div>
+          </div>
+          <div class="consignee-right">
+            <div class="section-title">Buyer (Bill to)</div>
+            <div class="customer-name">${getDisplayName(customer)}</div>
+            <div class="customer-details">
+              ${customer.address_english || customer.address_tamil || ''}<br>
+              ${customer.pin_code ? `PIN: ${customer.pin_code}<br>` : ''}
+              ${customer.phone ? `Phone: ${customer.phone}<br>` : ''}
+              ${customer.gstin ? `GSTIN/UIN: ${customer.gstin}<br>` : ''}
+              State Name: Tamil Nadu, Code: 33
+            </div>
+          </div>
+        </div>
+
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th style="width: 4%;">Sl<br>No.</th>
+              <th style="width: 25%;">Description of Goods</th>
+              <th style="width: 8%;">HSN/SAC</th>
+              <th style="width: 6%;">GST<br>Rate</th>
+              <th style="width: 10%;">Quantity</th>
+              <th style="width: 8%;">Rate</th>
+              <th style="width: 6%;">per</th>
+              <th style="width: 10%;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td class="desc-col">${getDisplayName(item)}</td>
+              <td>${item.hsn_no}</td>
+              <td>${item.gst_percentage}%</td>
+              <td>${sale.quantity} ${item.unit}</td>
+              <td class="amount-col">₹${sale.rate.toFixed(2)}</td>
+              <td>${item.unit}</td>
+              <td class="amount-col">₹${baseAmount.toFixed(2)}</td>
+            </tr>
+            <tr style="background-color: #f9f9f9;">
+              <td colspan="4" style="text-align: right; font-weight: bold; padding-right: 10px;">Total</td>
+              <td style="font-weight: bold;">${sale.quantity} ${item.unit}</td>
+              <td></td>
+              <td></td>
+              <td class="amount-col" style="font-weight: bold;">₹ ${baseAmount.toFixed(2)}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="footer-section">
+          <div class="tax-details">
+            <div class="hsn-table-section">
+              <table class="hsn-table">
+                <thead>
+                  <tr>
+                    <th>HSN/SAC</th>
+                    <th>Taxable Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>${item.hsn_no}</td>
+                    <td>₹${baseAmount.toFixed(2)}</td>
+                  </tr>
+                  <tr style="font-weight: bold;">
+                    <td>Total</td>
+                    <td>₹${baseAmount.toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="total-section">
+              <div class="total-row"><span>Taxable Amount:</span><span>₹${baseAmount.toFixed(2)}</span></div>
+              <div class="total-row"><span>CGST (${(item.gst_percentage / 2)}%):</span><span>₹${(gstAmount / 2).toFixed(2)}</span></div>
+              <div class="total-row"><span>SGST (${(item.gst_percentage / 2)}%):</span><span>₹${(gstAmount / 2).toFixed(2)}</span></div>
+              <div class="total-row total-final"><span>Total Amount:</span><span>₹${(baseAmount + gstAmount).toFixed(2)}</span></div>
+            </div>
+          </div>
+
+          <div class="bank-signature">
+            <div class="bank-details">
+              <div style="font-weight: bold; margin-bottom: 5px;">Bank Details:</div>
+              <div>Bank: HDFC BANK</div>
+              <div>Branch: GINGEE</div>
+              <div>IFSC: HDFC0001491</div>
+              <div>Account No: 50200090733150</div>
+              <div>UPI ID: GRM2005@HDFCBANK</div>
+            </div>
+            <div class="signature-area">
+              <div style="margin-bottom: 40px;">for ${cs.company_name}</div>
+              <div>Authorised Signatory</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(container);
+    try {
+      const canvas = await html2canvas(container, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`invoice_${sale.bill_serial_no}.pdf`);
+
+      toast({
+        title: language === 'english' ? 'Success' : 'வெற்றி',
+        description: language === 'english' ? 'PDF downloaded' : 'PDF பதிவிறக்கப்பட்டது',
+      });
+    } catch (e) {
+      console.error('PDF generation failed', e);
+      toast({
+        title: language === 'english' ? 'Error' : 'பிழை',
+        description: language === 'english' ? 'Failed to generate PDF' : 'PDF உருவாக்கம் தோல்வியடைந்தது',
+        variant: 'destructive',
+      });
+    } finally {
+      document.body.removeChild(container);
+    }
+  };
   const handlePrint = async () => {
     // Use the exact same print logic from the web app
     if (!sale || !customer || !item) {

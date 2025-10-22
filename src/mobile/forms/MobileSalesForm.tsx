@@ -34,7 +34,7 @@ const MobileSalesForm: React.FC = () => {
     bill_serial_no: '',
     sale_date: new Date().toISOString().split('T')[0],
   });
-  const [useSpecialSerial, setUseSpecialSerial] = useState(false);
+  const [useSpecialSerial, setUseSpecialSerial] = useState(true);
 
   // Auto-generate bill serial number when selected entry changes or special serial checkbox changes
   useEffect(() => {

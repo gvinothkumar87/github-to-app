@@ -45,11 +45,10 @@ export const MobileInvoiceGenerator: React.FC = () => {
 
   useEffect(() => {
     if (companySettingsData.length > 0 && sale) {
-      const outwardEntry = outwardEntries.find((entry: any) => entry.id === sale.outward_entry_id);
-      if (outwardEntry) {
-        const settings = companySettingsData.find((cs: any) => cs.location_code === (outwardEntry as any).loading_place);
-        setCompanySettings(settings || companySettingsData[0]);
-      }
+      const outwardEntry = outwardEntries.find((entry: any) => entry.id === sale.outward_entry_id) as any;
+      const location = (outwardEntry as any)?.loading_place || (sale as any).loading_place || (companySettingsData as any[])[0]?.location_code;
+      const settings = (companySettingsData as any[]).find((cs: any) => cs.location_code === location) || (companySettingsData as any[])[0];
+      setCompanySettings(settings);
     }
   }, [companySettingsData, sale, outwardEntries]);
 
@@ -108,7 +107,7 @@ export const MobileInvoiceGenerator: React.FC = () => {
   };
 
   const generateEInvoiceJSON = () => {
-    if (!sale || !customer || !item || !companySettings) {
+    if (!sale || !customer || !item) {
       toast({
         title: language === 'english' ? 'Error' : 'பிழை',
         description: language === 'english' ? 'Missing required data for invoice' : 'பில்லுக்கு தேவையான தகவல் இல்லை',
@@ -139,15 +138,15 @@ export const MobileInvoiceGenerator: React.FC = () => {
         Dt: new Date(sale.sale_date).toISOString().split('T')[0].split('-').reverse().join('/')
       },
       SellerDtls: {
-        Gstin: companySettings.gstin,
-        LglNm: companySettings.company_name,
-        Addr1: companySettings.address_line1,
-        Addr2: companySettings.address_line2 || "",
-        Loc: companySettings.locality,
-        Pin: companySettings.pin_code,
-        Stcd: companySettings.state_code,
-        Ph: companySettings.phone || null,
-        Em: companySettings.email || null
+        Gstin: (companySettings?.gstin) || "33AALFG0221E1Z3",
+        LglNm: (companySettings?.company_name) || "GOVINDAN RICE MILL",
+        Addr1: (companySettings?.address_line1) || "6/175 GINGEE MAIN ROAD",
+        Addr2: (companySettings?.address_line2) || "GINGEE TALUK, VILLUPURAM DISTRICT",
+        Loc: (companySettings?.locality) || "GINGEE",
+        Pin: (companySettings?.pin_code) || 605601,
+        Stcd: (companySettings?.state_code) || "33",
+        Ph: companySettings?.phone || null,
+        Em: companySettings?.email || null
       },
       BuyerDtls: {
         Gstin: customer.gstin || "URP",
@@ -263,7 +262,7 @@ export const MobileInvoiceGenerator: React.FC = () => {
   };
 
   const downloadPDF = async () => {
-    if (!sale || !customer || !item || !companySettings) {
+    if (!sale || !customer || !item) {
       toast({
         title: language === 'english' ? 'Error' : 'பிழை',
         description: language === 'english' ? 'Missing required data for PDF' : 'PDF க்கு தேவையான தகவல் இல்லை',
@@ -272,7 +271,7 @@ export const MobileInvoiceGenerator: React.FC = () => {
       return;
     }
 
-    // This function is deprecated - use handlePrint instead which matches web app exactly
+    // This function is deprecated - use Print option instead
     toast({
       title: language === 'english' ? 'Info' : 'தகவல்',
       description: language === 'english' ? 'Please use Print option instead' : 'அச்சிடு விருப்பத்தைப் பயன்படுத்தவும்',
@@ -281,7 +280,7 @@ export const MobileInvoiceGenerator: React.FC = () => {
 
   const handlePrint = async () => {
     // Use the exact same print logic from the web app
-    if (!sale || !customer || !item || !companySettings) {
+    if (!sale || !customer || !item) {
       toast({
         title: language === 'english' ? 'Error' : 'பிழை',
         description: language === 'english' ? 'Missing required data for printing' : 'அச்சிடுவதற்கு தேவையான தகவல் இல்லை',

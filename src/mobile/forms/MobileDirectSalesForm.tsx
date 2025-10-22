@@ -204,6 +204,8 @@ const MobileDirectSalesForm: React.FC = () => {
         gst_amount: gstAmount,
         sale_date: saleDate,
         bill_serial_no: billSerialNo,
+        lorry_no: lorryNo,
+        loading_place: loadingPlace,
         irn: null,
         user_id: user.id,
         created_by: user.id

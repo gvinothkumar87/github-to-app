@@ -110,7 +110,7 @@ export const MobileInvoiceGenerator: React.FC = () => {
     }
   };
 
-  const generateEInvoiceJSON = () => {
+  const generateEInvoiceJSON = async () => {
     if (!sale || !customer || !item) {
       toast({
         title: language === 'english' ? 'Error' : 'பிழை',
@@ -193,20 +193,48 @@ export const MobileInvoiceGenerator: React.FC = () => {
     };
 
     const eInvoiceArray = [eInvoiceData];
-    const blob = new Blob([JSON.stringify(eInvoiceArray, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `einvoice_${sale.bill_serial_no}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    toast({
-      title: language === 'english' ? 'Success' : 'வெற்றி',
-      description: language === 'english' ? 'JSON file downloaded' : 'JSON கோப்பு பதிவிறக்கப்பட்டது',
-    });
+    const jsonString = JSON.stringify(eInvoiceArray, null, 2);
+    
+    // Check if running on native mobile platform
+    if (Capacitor.isNativePlatform()) {
+      // Native mobile - use share functionality
+      const fileName = `einvoice_${sale.bill_serial_no}.json`;
+      const base64Data = btoa(jsonString);
+      
+      const result = await Filesystem.writeFile({
+        path: fileName,
+        data: base64Data,
+        directory: Directory.Cache
+      });
+      
+      await Share.share({
+        title: language === 'english' ? 'E-Invoice JSON' : 'மின் பில் JSON',
+        text: `${language === 'english' ? 'E-Invoice' : 'மின் பில்'} ${sale.bill_serial_no}`,
+        url: result.uri,
+        dialogTitle: language === 'english' ? 'Share E-Invoice' : 'மின் பில் பகிர்'
+      });
+      
+      toast({
+        title: language === 'english' ? 'Success' : 'வெற்றி',
+        description: language === 'english' ? 'JSON ready to share' : 'JSON பகிர தயார்',
+      });
+    } else {
+      // Web browser - use standard download
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `einvoice_${sale.bill_serial_no}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: language === 'english' ? 'Success' : 'வெற்றி',
+        description: language === 'english' ? 'JSON file downloaded' : 'JSON கோப்பு பதிவிறக்கப்பட்டது',
+      });
+    }
   };
 
   const convertNumberToWords = (num: number): string => {

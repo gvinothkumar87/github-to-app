@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { LogOut, Home } from 'lucide-react';
+import { LogOut, Home, ArrowLeft } from 'lucide-react';
 import { OfflineIndicator } from './OfflineIndicator';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -9,18 +9,24 @@ interface MobileLayoutProps {
   children: React.ReactNode;
   title?: string;
   action?: React.ReactNode;
+  showBackButton?: boolean;
 }
 
 export const MobileLayout: React.FC<MobileLayoutProps> = ({ 
   children, 
   title, 
-  action 
+  action,
+  showBackButton = false
 }) => {
   const navigate = useNavigate();
   
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate('/auth');
+  };
+
+  const handleBack = () => {
+    navigate(-1);
   };
   return (
     <div className="min-h-screen bg-background">
@@ -30,6 +36,11 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
           <div className="border-b px-4 py-3 pt-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
+                {showBackButton && (
+                  <Button variant="ghost" size="sm" onClick={handleBack}>
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                )}
                 <h1 className="text-lg font-semibold">{title}</h1>
               </div>
               <div className="flex items-center gap-2">

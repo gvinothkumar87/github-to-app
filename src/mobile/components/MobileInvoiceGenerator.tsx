@@ -561,6 +561,7 @@ export const MobileInvoiceGenerator: React.FC = () => {
   return (
     <MobileLayout 
       title={`${language === 'english' ? 'Invoice' : 'பில்'} - ${sale.bill_serial_no}`}
+      showBackButton={true}
     >
       <div className="space-y-4">
         {/* Action Buttons */}

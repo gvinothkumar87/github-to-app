@@ -3062,10 +3062,10 @@ export type Database = {
       }
       update_sale_with_ledger: {
         Args: {
-          p_outward_entry_data?: Json
+          p_outward_entry_data: Json
           p_sale_data: Json
           p_sale_id: string
-          p_user_id?: string
+          p_user_id: string
         }
         Returns: Json
       }

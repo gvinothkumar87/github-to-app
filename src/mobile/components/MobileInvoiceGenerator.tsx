@@ -12,6 +12,9 @@ import { supabase } from '@/integrations/supabase/client';
 import QRCode from 'qrcode';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -496,12 +499,39 @@ export const MobileInvoiceGenerator: React.FC = () => {
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`invoice_${sale.bill_serial_no}.pdf`);
-
-      toast({
-        title: language === 'english' ? 'Success' : 'வெற்றி',
-        description: language === 'english' ? 'PDF downloaded' : 'PDF பதிவிறக்கப்பட்டது',
-      });
+      
+      // Check if running on native mobile platform
+      if (Capacitor.isNativePlatform()) {
+        // Native mobile - use share functionality
+        const pdfBase64 = pdf.output('datauristring').split(',')[1];
+        const fileName = `invoice_${sale.bill_serial_no}.pdf`;
+        
+        const result = await Filesystem.writeFile({
+          path: fileName,
+          data: pdfBase64,
+          directory: Directory.Cache
+        });
+        
+        await Share.share({
+          title: language === 'english' ? 'Invoice PDF' : 'பில் PDF',
+          text: `${language === 'english' ? 'Invoice' : 'பில்'} ${sale.bill_serial_no}`,
+          url: result.uri,
+          dialogTitle: language === 'english' ? 'Share Invoice' : 'பில் பகிர்'
+        });
+        
+        toast({
+          title: language === 'english' ? 'Success' : 'வெற்றி',
+          description: language === 'english' ? 'PDF ready to share' : 'PDF பகிர தயார்',
+        });
+      } else {
+        // Web browser - use standard download
+        pdf.save(`invoice_${sale.bill_serial_no}.pdf`);
+        
+        toast({
+          title: language === 'english' ? 'Success' : 'வெற்றி',
+          description: language === 'english' ? 'PDF downloaded' : 'PDF பதிவிறக்கப்பட்டது',
+        });
+      }
     } catch (e) {
       console.error('PDF generation failed', e);
       toast({

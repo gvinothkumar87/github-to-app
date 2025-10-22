@@ -206,6 +206,62 @@ export const MobileInvoiceGenerator: React.FC = () => {
     });
   };
 
+  const convertNumberToWords = (num: number): string => {
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+
+    const convertHundreds = (n: number): string => {
+      let result = '';
+      if (n >= 100) {
+        result += ones[Math.floor(n / 100)] + ' Hundred ';
+        n %= 100;
+      }
+      if (n >= 20) {
+        result += tens[Math.floor(n / 10)] + ' ';
+        n %= 10;
+      } else if (n >= 10) {
+        result += teens[n - 10] + ' ';
+        return result;
+      }
+      if (n > 0) {
+        result += ones[n] + ' ';
+      }
+      return result;
+    };
+
+    if (num === 0) return 'Zero';
+    
+    let integerPart = Math.floor(num);
+    const decimalPart = Math.round((num - integerPart) * 100);
+    
+    let result = '';
+    
+    if (integerPart >= 10000000) {
+      result += convertHundreds(Math.floor(integerPart / 10000000)) + 'Crore ';
+      integerPart %= 10000000;
+    }
+    if (integerPart >= 100000) {
+      result += convertHundreds(Math.floor(integerPart / 100000)) + 'Lakh ';
+      integerPart %= 100000;
+    }
+    if (integerPart >= 1000) {
+      result += convertHundreds(Math.floor(integerPart / 1000)) + 'Thousand ';
+      integerPart %= 1000;
+    }
+    if (integerPart > 0) {
+      result += convertHundreds(integerPart);
+    }
+    
+    result += 'Rupees';
+    
+    if (decimalPart > 0) {
+      result += ' and ' + convertHundreds(decimalPart) + 'Paise';
+    }
+    
+    return result.trim();
+  };
+
   const downloadPDF = async () => {
     if (!sale || !customer || !item || !companySettings) {
       toast({
@@ -216,99 +272,15 @@ export const MobileInvoiceGenerator: React.FC = () => {
       return;
     }
 
-    try {
-      const pdf = new jsPDF();
-      const { baseAmount, gstAmount, totalAmount } = calculateAmounts();
-
-      // Title
-      pdf.setFontSize(20);
-      pdf.text(companySettings.company_name, 105, 20, { align: 'center' });
-      
-      pdf.setFontSize(10);
-      pdf.text(companySettings.address_line1, 105, 28, { align: 'center' });
-      pdf.text(`${companySettings.locality} - ${companySettings.pin_code}`, 105, 34, { align: 'center' });
-      pdf.text(`GSTIN: ${companySettings.gstin}`, 105, 40, { align: 'center' });
-
-      // Invoice details
-      pdf.setFontSize(14);
-      pdf.text('TAX INVOICE', 105, 52, { align: 'center' });
-      
-      pdf.setFontSize(10);
-      pdf.text(`Invoice No: ${sale.bill_serial_no}`, 20, 62);
-      pdf.text(`Date: ${new Date(sale.sale_date).toLocaleDateString('en-IN')}`, 20, 68);
-      if (outwardEntry?.lorry_no) {
-        pdf.text(`Vehicle: ${outwardEntry.lorry_no}`, 20, 74);
-      }
-
-      // Customer details
-      pdf.text('Bill To:', 20, 86);
-      pdf.text(getDisplayName(customer), 20, 92);
-      if (customer.address_english || customer.address_tamil) {
-        pdf.text(customer.address_english || customer.address_tamil, 20, 98, { maxWidth: 180 });
-      }
-      if (customer.gstin) {
-        pdf.text(`GSTIN: ${customer.gstin}`, 20, 108);
-      }
-
-      // Items table
-      const tableY = 120;
-      pdf.line(20, tableY, 190, tableY);
-      pdf.text('Description', 22, tableY + 6);
-      pdf.text('HSN', 100, tableY + 6);
-      pdf.text('Qty', 125, tableY + 6);
-      pdf.text('Rate', 145, tableY + 6);
-      pdf.text('Amount', 170, tableY + 6);
-      pdf.line(20, tableY + 10, 190, tableY + 10);
-
-      pdf.text(getDisplayName(item), 22, tableY + 18);
-      pdf.text(item.hsn_no || '', 100, tableY + 18);
-      pdf.text(`${sale.quantity} ${item.unit}`, 125, tableY + 18);
-      pdf.text(`₹${sale.rate.toFixed(2)}`, 145, tableY + 18);
-      pdf.text(`₹${baseAmount.toFixed(2)}`, 170, tableY + 18);
-
-      pdf.line(20, tableY + 22, 190, tableY + 22);
-
-      // Totals
-      const totalsY = tableY + 32;
-      pdf.text('Taxable Amount:', 130, totalsY);
-      pdf.text(`₹${baseAmount.toFixed(2)}`, 170, totalsY);
-
-      if (gstAmount > 0) {
-        pdf.text(`CGST (${item.gst_percentage / 2}%):`, 130, totalsY + 6);
-        pdf.text(`₹${(gstAmount / 2).toFixed(2)}`, 170, totalsY + 6);
-        
-        pdf.text(`SGST (${item.gst_percentage / 2}%):`, 130, totalsY + 12);
-        pdf.text(`₹${(gstAmount / 2).toFixed(2)}`, 170, totalsY + 12);
-      }
-
-      pdf.setFontSize(12);
-      pdf.text('Total Amount:', 130, totalsY + 22);
-      pdf.text(`₹${totalAmount.toFixed(2)}`, 170, totalsY + 22);
-
-      // IRN if available
-      if (sale.irn) {
-        pdf.setFontSize(8);
-        pdf.text(`IRN: ${sale.irn}`, 20, 280);
-      }
-
-      pdf.save(`invoice_${sale.bill_serial_no}.pdf`);
-
-      toast({
-        title: language === 'english' ? 'Success' : 'வெற்றி',
-        description: language === 'english' ? 'PDF downloaded successfully' : 'PDF வெற்றிகரமாக பதிவிறக்கப்பட்டது',
-      });
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      toast({
-        title: language === 'english' ? 'Error' : 'பிழை',
-        description: language === 'english' ? 'Failed to generate PDF' : 'PDF உருவாக்குவதில் தோல்வி',
-        variant: 'destructive',
-      });
-    }
+    // This function is deprecated - use handlePrint instead which matches web app exactly
+    toast({
+      title: language === 'english' ? 'Info' : 'தகவல்',
+      description: language === 'english' ? 'Please use Print option instead' : 'அச்சிடு விருப்பத்தைப் பயன்படுத்தவும்',
+    });
   };
 
   const handlePrint = async () => {
-    // Use the same print logic from the web app
+    // Use the exact same print logic from the web app
     if (!sale || !customer || !item || !companySettings) {
       toast({
         title: language === 'english' ? 'Error' : 'பிழை',
@@ -318,6 +290,7 @@ export const MobileInvoiceGenerator: React.FC = () => {
       return;
     }
 
+    // Generate QR code if IRN exists
     let qrCodeDataUrl = '';
     if (sale.irn) {
       try {
@@ -342,102 +315,237 @@ export const MobileInvoiceGenerator: React.FC = () => {
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
-        <head>
-          <title>Invoice - ${sale.bill_serial_no || 'N/A'}</title>
-          <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: Arial, sans-serif; font-size: 12px; padding: 10px; }
-            .invoice-container { max-width: 100%; border: 2px solid #000; }
-            .header { display: flex; align-items: center; padding: 10px; border-bottom: 2px solid #000; }
-            .qr-section { width: 80px; margin-right: 15px; }
-            .company-info { flex: 1; text-align: center; }
-            .company-name { font-size: 16px; font-weight: bold; margin-bottom: 5px; }
-            .details { padding: 10px; }
-            table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-            th, td { border: 1px solid #000; padding: 8px; text-align: left; }
-            th { background-color: #f0f0f0; }
-            .totals { text-align: right; padding: 10px; }
-            .total-row { margin: 5px 0; }
-            @media print {
-              body { margin: 0; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="invoice-container">
-            <div class="header">
+      <head>
+        <title>Tax Invoice - ${sale.bill_serial_no}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 0; padding: 10px; font-size: 9px; }
+          .invoice-container { max-width: 210mm; margin: 0 auto; border: 2px solid #000; }
+          
+          .header { display: flex; border-bottom: 1px solid #000; }
+          .logo-section { width: 80px; padding: 10px; border-right: 1px solid #000; display: flex; align-items: center; justify-content: center; }
+          .logo { width: 75px; height: 75px; object-fit: contain; }
+          .company-section { flex: 1; padding: 10px; text-align: center; }
+          .company-name { font-size: 16px; font-weight: bold; margin-bottom: 3px; }
+          .company-address { font-size: 8px; margin-bottom: 2px; line-height: 1.2; }
+          .invoice-info-section { width: 200px; border-left: 1px solid #000; }
+          
+          .invoice-details { display: flex; }
+          .invoice-left { flex: 1; padding: 8px; font-size: 8px; }
+          .invoice-right { width: 120px; padding: 8px; border-left: 1px solid #000; font-size: 8px; }
+          
+          .consignee-section { display: flex; border-top: 1px solid #000; }
+          .consignee-left { flex: 1; padding: 10px; border-right: 1px solid #000; }
+          .consignee-right { flex: 1; padding: 10px; }
+          .section-title { font-weight: bold; font-size: 8px; margin-bottom: 8px; }
+          .customer-name { font-weight: bold; font-size: 10px; margin-bottom: 5px; }
+          .customer-details { font-size: 8px; line-height: 1.3; }
+          
+          .items-table { width: 100%; border-collapse: collapse; border-top: 1px solid #000; }
+          .items-table th { background-color: #f5f5f5; font-weight: bold; font-size: 7px; padding: 5px; border: 1px solid #000; text-align: center; }
+          .items-table td { font-size: 8px; padding: 4px; border: 1px solid #000; text-align: center; }
+          .items-table .desc-col { text-align: left; }
+          .items-table .amount-col { text-align: right; }
+          
+          .footer-section { border-top: 1px solid #000; }
+          .amount-words { padding: 8px; border-top: 1px solid #000; border-bottom: 1px solid #000; font-size: 8px; }
+          .amount-words-bold { font-weight: bold; }
+          
+          .tax-details { display: flex; }
+          .hsn-table-section { flex: 1; padding: 8px; border-right: 1px solid #000; }
+          .hsn-table { width: 100%; border-collapse: collapse; font-size: 7px; }
+          .hsn-table th, .hsn-table td { border: 1px solid #000; padding: 3px; text-align: center; }
+          .hsn-table th { background-color: #f5f5f5; font-weight: bold; }
+          
+          .total-section { flex: 1; padding: 8px; }
+          .total-row { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 8px; }
+          .total-final { border-top: 1px solid #000; margin-top: 5px; padding-top: 3px; font-weight: bold; }
+          
+          .bank-signature { display: flex; border-top: 1px solid #000; }
+          .bank-details { flex: 1; padding: 10px; border-right: 1px solid #000; font-size: 9px; }
+          .signature-area { width: 150px; padding: 10px; text-align: center; font-size: 8px; }
+          
+          @media print {
+            body { margin: 0; }
+            .invoice-container { max-width: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="invoice-container">
+          <!-- Header Section -->
+          <div class="header">
+            <div class="logo-section">
               ${sale.irn && qrCodeDataUrl ? `
-                <div class="qr-section">
-                  <img src="${qrCodeDataUrl}" style="width: 100%;" />
+                <img src="${qrCodeDataUrl}" alt="IRN QR Code" class="logo" />
+              ` : `
+                <img src="${window.location.origin}/lovable-uploads/8ef45f84-cd7a-4909-9f31-86a578d28f2f.png" alt="GRM Logo" class="logo" onerror="this.style.display='none'" />
+              `}
+            </div>
+            <div class="company-section">
+              <div class="company-name">${companySettings.company_name}</div>
+              <div class="company-address">
+                ${companySettings.address_line1}<br>
+                ${companySettings.address_line2}, ${companySettings.locality} - ${companySettings.pin_code}<br>
+                Phone: ${companySettings.phone}<br>
+                GSTIN/UIN: ${companySettings.gstin} &nbsp;&nbsp;&nbsp; State Name: Tamil Nadu, Code: ${companySettings.state_code}
+              </div>
+            </div>
+            <div class="invoice-info-section">
+              <div style="padding: 8px; border-bottom: 1px solid #000;">
+                <div style="font-weight: bold; font-size: 8px;">Invoice No.</div>
+                <div style="font-size: 9px; margin-top: 2px;">${sale.bill_serial_no}</div>
+              </div>
+              <div style="padding: 8px; border-bottom: 1px solid #000;">
+                <div style="font-weight: bold; font-size: 8px;">Dated</div>
+                <div style="font-size: 9px; margin-top: 2px;">${new Date(sale.sale_date).toLocaleDateString('en-IN')}</div>
+              </div>
+              <div style="padding: 8px;">
+                <div style="font-weight: bold; font-size: 8px;">Motor Vehicle No.</div>
+                <div style="font-size: 9px; margin-top: 2px;">${sale.lorry_no || outwardEntry?.lorry_no || 'N/A'}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Consignee Section -->
+          <div class="consignee-section">
+            <div class="consignee-left">
+              <div class="section-title">Consignee (Ship to)</div>
+              <div class="customer-name">${getDisplayName(customer)}</div>
+              <div class="customer-details">
+                ${customer.address_english || customer.address_tamil || ''}<br>
+                ${customer.pin_code ? `PIN: ${customer.pin_code}<br>` : ''}
+                ${customer.phone ? `Phone: ${customer.phone}<br>` : ''}
+                ${customer.gstin ? `GSTIN/UIN: ${customer.gstin}<br>` : ''}
+                State Name: Tamil Nadu, Code: 33
+              </div>
+            </div>
+            <div class="consignee-right">
+              <div class="section-title">Buyer (Bill to)</div>
+              <div class="customer-name">${getDisplayName(customer)}</div>
+              <div class="customer-details">
+                ${customer.address_english || customer.address_tamil || ''}<br>
+                ${customer.pin_code ? `PIN: ${customer.pin_code}<br>` : ''}
+                ${customer.phone ? `Phone: ${customer.phone}<br>` : ''}
+                ${customer.gstin ? `GSTIN/UIN: ${customer.gstin}<br>` : ''}
+                State Name: Tamil Nadu, Code: 33
+              </div>
+            </div>
+          </div>
+
+          <!-- Items Table -->
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th style="width: 4%;">Sl<br>No.</th>
+                <th style="width: 25%;">Description of Goods</th>
+                <th style="width: 8%;">HSN/SAC</th>
+                <th style="width: 6%;">GST<br>Rate</th>
+                <th style="width: 10%;">Quantity</th>
+                <th style="width: 8%;">Rate</th>
+                <th style="width: 6%;">per</th>
+                <th style="width: 10%;">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td class="desc-col">${getDisplayName(item)}</td>
+                <td>${item.hsn_no}</td>
+                <td>${item.gst_percentage}%</td>
+                <td>${sale.quantity} ${item.unit}</td>
+                <td class="amount-col">₹${sale.rate.toFixed(2)}</td>
+                <td>${item.unit}</td>
+                <td class="amount-col">₹${baseAmount.toFixed(2)}</td>
+              </tr>
+              <tr style="background-color: #f9f9f9;">
+                <td colspan="4" style="text-align: right; font-weight: bold; padding-right: 10px;">Total</td>
+                <td style="font-weight: bold;">${sale.quantity} ${item.unit}</td>
+                <td></td>
+                <td></td>
+                <td class="amount-col" style="font-weight: bold;">₹ ${baseAmount.toFixed(2)}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Footer Section -->
+          <div class="footer-section">
+            <div class="tax-details">
+              <div class="hsn-table-section">
+                <table class="hsn-table">
+                  <thead>
+                    <tr>
+                      <th>HSN/SAC</th>
+                      <th>Taxable Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>${item.hsn_no}</td>
+                      <td>₹${baseAmount.toFixed(2)}</td>
+                    </tr>
+                    <tr style="font-weight: bold;">
+                      <td>Total</td>
+                      <td>₹${baseAmount.toFixed(2)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              
+              <div class="total-section">
+                ${item.gst_percentage > 0 ? `
+                <div class="total-row">
+                  <span>CGST ${(item.gst_percentage / 2)}%:</span>
+                  <span>₹${(gstAmount / 2).toFixed(2)}</span>
                 </div>
-              ` : ''}
-              <div class="company-info">
-                <div class="company-name">${companySettings.company_name}</div>
-                <div>${companySettings.address_line1}</div>
-                <div>${companySettings.locality} - ${companySettings.pin_code}</div>
-                <div>GSTIN: ${companySettings.gstin}</div>
+                <div class="total-row">
+                  <span>SGST ${(item.gst_percentage / 2)}%:</span>
+                  <span>₹${(gstAmount / 2).toFixed(2)}</span>
+                </div>
+                ` : `
+                <div class="total-row">
+                  <span>Tax Amount:</span>
+                  <span>NIL</span>
+                </div>
+                `}
+                <div class="total-row total-final">
+                  <span>Total:</span>
+                  <span>₹${totalAmount.toFixed(2)}</span>
+                </div>
               </div>
             </div>
             
-            <div class="details">
-              <h3>Tax Invoice</h3>
-              <p><strong>Invoice No:</strong> ${sale.bill_serial_no}</p>
-              <p><strong>Date:</strong> ${new Date(sale.sale_date).toLocaleDateString('en-IN')}</p>
-              ${outwardEntry?.lorry_no ? `<p><strong>Vehicle:</strong> ${outwardEntry.lorry_no}</p>` : ''}
-              
-              <h4>Bill To:</h4>
-              <p><strong>${getDisplayName(customer)}</strong></p>
-              ${customer.address_english || customer.address_tamil ? `<p>${customer.address_english || customer.address_tamil}</p>` : ''}
-              ${customer.gstin ? `<p>GSTIN: ${customer.gstin}</p>` : ''}
+            <div class="amount-words">
+              <strong>Amount Chargeable (in words)</strong><br>
+              <span class="amount-words-bold">${convertNumberToWords(totalAmount)} Only</span>
             </div>
-
-            <table>
-              <thead>
-                <tr>
-                  <th>Description</th>
-                  <th>HSN</th>
-                  <th>Qty</th>
-                  <th>Rate</th>
-                  <th>Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>${getDisplayName(item)}</td>
-                  <td>${item.hsn_no || ''}</td>
-                  <td>${sale.quantity} ${item.unit}</td>
-                  <td>₹${sale.rate.toFixed(2)}</td>
-                  <td>₹${baseAmount.toFixed(2)}</td>
-                </tr>
-              </tbody>
-            </table>
-
-            <div class="totals">
-              <div class="total-row"><strong>Taxable Amount:</strong> ₹${baseAmount.toFixed(2)}</div>
-              ${gstAmount > 0 ? `
-                <div class="total-row">CGST (${item.gst_percentage / 2}%): ₹${(gstAmount / 2).toFixed(2)}</div>
-                <div class="total-row">SGST (${item.gst_percentage / 2}%): ₹${(gstAmount / 2).toFixed(2)}</div>
-              ` : ''}
-              <div class="total-row" style="font-size: 16px; margin-top: 10px;">
-                <strong>Total Amount: ₹${totalAmount.toFixed(2)}</strong>
+            
+            <div class="bank-signature">
+              <div class="bank-details">
+                <strong style="font-size: 10px;">Bank Details</strong><br>
+                <span style="font-size: 10px;">Bank Name: ICICI</span><br>
+                <span style="font-size: 10px;">A/c No.: 305105000641</span><br>
+                <span style="font-size: 10px;">Branch: ANANTHAPURAM</span><br>
+                <span style="font-size: 10px;">IFSC: ICIC0003051</span>
+              </div>
+              <div class="signature-area">
+                <div style="margin-bottom: 40px;">for ${companySettings.company_name}</div>
+                <div style="border-top: 1px solid #000; padding-top: 5px;">Authorised Signatory</div>
               </div>
             </div>
-
-            ${sale.irn ? `<div style="padding: 10px; font-size: 8px;">IRN: ${sale.irn}</div>` : ''}
+            
+            ${sale.irn ? `
+            <div class="irn-section" style="margin-top: 10px; padding: 5px; border-top: 1px solid #ddd; font-size: 9px; text-align: center;">
+              <strong>IRN:</strong> ${sale.irn}
+            </div>
+            ` : ''}
           </div>
-          <script>
-            window.onload = function() {
-              window.print();
-              window.onafterprint = function() {
-                window.close();
-              };
-            };
-          </script>
-        </body>
+        </div>
+      </body>
       </html>
     `);
     
     printWindow.document.close();
+    printWindow.print();
   };
 
   if (!sale || !customer || !item) {

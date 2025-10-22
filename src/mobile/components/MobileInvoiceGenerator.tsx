@@ -108,10 +108,10 @@ export const MobileInvoiceGenerator: React.FC = () => {
   };
 
   const generateEInvoiceJSON = () => {
-    if (!sale || !customer || !item || !outwardEntry || !companySettings) {
+    if (!sale || !customer || !item || !companySettings) {
       toast({
         title: language === 'english' ? 'Error' : 'பிழை',
-        description: language === 'english' ? 'Missing required data' : 'தேவையான தகவல் இல்லை',
+        description: language === 'english' ? 'Missing required data for invoice' : 'பில்லுக்கு தேவையான தகவல் இல்லை',
         variant: 'destructive',
       });
       return;
@@ -207,10 +207,10 @@ export const MobileInvoiceGenerator: React.FC = () => {
   };
 
   const downloadPDF = async () => {
-    if (!sale || !customer || !item || !outwardEntry || !companySettings) {
+    if (!sale || !customer || !item || !companySettings) {
       toast({
         title: language === 'english' ? 'Error' : 'பிழை',
-        description: language === 'english' ? 'Missing required data' : 'தேவையான தகவல் இல்லை',
+        description: language === 'english' ? 'Missing required data for PDF' : 'PDF க்கு தேவையான தகவல் இல்லை',
         variant: 'destructive',
       });
       return;
@@ -236,7 +236,9 @@ export const MobileInvoiceGenerator: React.FC = () => {
       pdf.setFontSize(10);
       pdf.text(`Invoice No: ${sale.bill_serial_no}`, 20, 62);
       pdf.text(`Date: ${new Date(sale.sale_date).toLocaleDateString('en-IN')}`, 20, 68);
-      pdf.text(`Vehicle: ${outwardEntry.lorry_no}`, 20, 74);
+      if (outwardEntry?.lorry_no) {
+        pdf.text(`Vehicle: ${outwardEntry.lorry_no}`, 20, 74);
+      }
 
       // Customer details
       pdf.text('Bill To:', 20, 86);
@@ -307,7 +309,14 @@ export const MobileInvoiceGenerator: React.FC = () => {
 
   const handlePrint = async () => {
     // Use the same print logic from the web app
-    if (!sale || !customer || !item || !outwardEntry || !companySettings) return;
+    if (!sale || !customer || !item || !companySettings) {
+      toast({
+        title: language === 'english' ? 'Error' : 'பிழை',
+        description: language === 'english' ? 'Missing required data for printing' : 'அச்சிடுவதற்கு தேவையான தகவல் இல்லை',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     let qrCodeDataUrl = '';
     if (sale.irn) {
@@ -374,7 +383,7 @@ export const MobileInvoiceGenerator: React.FC = () => {
               <h3>Tax Invoice</h3>
               <p><strong>Invoice No:</strong> ${sale.bill_serial_no}</p>
               <p><strong>Date:</strong> ${new Date(sale.sale_date).toLocaleDateString('en-IN')}</p>
-              <p><strong>Vehicle:</strong> ${outwardEntry.lorry_no}</p>
+              ${outwardEntry?.lorry_no ? `<p><strong>Vehicle:</strong> ${outwardEntry.lorry_no}</p>` : ''}
               
               <h4>Bill To:</h4>
               <p><strong>${getDisplayName(customer)}</strong></p>
@@ -495,10 +504,12 @@ export const MobileInvoiceGenerator: React.FC = () => {
                 <span className="text-muted-foreground">{language === 'english' ? 'Customer:' : 'வாடிக்கையாளர்:'}</span>
                 <p className="font-semibold">{getDisplayName(customer)}</p>
               </div>
-              <div>
-                <span className="text-muted-foreground">{language === 'english' ? 'Vehicle:' : 'வாகனம்:'}</span>
-                <p className="font-semibold">{outwardEntry?.lorry_no}</p>
-              </div>
+              {outwardEntry?.lorry_no && (
+                <div>
+                  <span className="text-muted-foreground">{language === 'english' ? 'Vehicle:' : 'வாகனம்:'}</span>
+                  <p className="font-semibold">{outwardEntry.lorry_no}</p>
+                </div>
+              )}
             </div>
 
             <div className="border-t pt-3">

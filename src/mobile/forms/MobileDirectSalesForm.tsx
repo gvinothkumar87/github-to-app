@@ -212,7 +212,6 @@ const MobileDirectSalesForm: React.FC = () => {
       // Prepare ledger data
       const ledgerData = {
         customer_id: selectedCustomer,
-        transaction_type: 'sale',
         debit_amount: totalAmount,
         credit_amount: 0,
         transaction_date: saleDate,

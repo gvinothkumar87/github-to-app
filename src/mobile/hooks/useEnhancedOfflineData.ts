@@ -82,8 +82,40 @@ export function useEnhancedOfflineData<T>(
   };
 
   const create = async (item: Omit<T, 'id' | 'created_at' | 'updated_at'>) => {
-    if (ONLINE_ONLY) {
+    if (ONLINE_ONLY || isOnline) {
       const normalizedTable = normalizeTableName(table);
+      
+      // Special handling for sales to maintain transactional integrity
+      if (normalizedTable === 'sales') {
+        const saleItem = item as any;
+        const saleData = { 
+          ...validateAndConvertData(saleItem), 
+          created_by: saleItem.created_by || saleItem.user_id 
+        };
+        const ledgerData = {
+          customer_id: saleItem.customer_id,
+          debit_amount: saleItem.total_amount,
+          credit_amount: 0,
+          transaction_date: saleItem.sale_date,
+          description: `Sale - Bill #${saleItem.bill_serial_no}`
+        };
+        
+        const result = await supabase.rpc('create_sale_with_ledger', {
+          p_sale_data: saleData as any,
+          p_ledger_data: ledgerData as any
+        });
+        
+        if (result.error) {
+          const errorMessage = result.error.message || 'Create sale failed';
+          setError(errorMessage);
+          throw result.error;
+        }
+        
+        await loadData();
+        return (result.data as any)?.sale_id || '';
+      }
+      
+      // Regular insert for non-sales tables
       const result = await supabase
         .from(normalizedTable as any)
         .insert(validateAndConvertData(item) as any);

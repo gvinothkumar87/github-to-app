@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Sale, OutwardEntry, Customer, Item, DebitNote, CreditNote } from '@/types';
-import { Edit, FileText, Search, Trash2 } from 'lucide-react';
+import { Edit, FileText, Search, Trash2, Image } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -68,7 +68,7 @@ export const UnifiedBillsList = ({
           customers (id, name_english, name_tamil, code, contact_person, phone, email, address_english, address_tamil, gstin, pin_code, state_code, place_of_supply),
           items (id, name_english, name_tamil, code, unit, gst_percentage, hsn_no),
           outward_entries!sales_outward_entry_id_fkey (
-            id, serial_no, lorry_no, driver_mobile, loading_place, empty_weight, load_weight, net_weight, entry_date, remarks
+            id, serial_no, lorry_no, driver_mobile, loading_place, empty_weight, load_weight, net_weight, entry_date, remarks, weighment_photo_url, load_weight_photo_url
           )
         `)
         .order('created_at', { ascending: false });
@@ -309,6 +309,7 @@ export const UnifiedBillsList = ({
                   <TableHead>{language === 'english' ? 'Bill Date' : 'பில் தேதி'}</TableHead>
                   <TableHead>{language === 'english' ? 'Customer' : 'வாடிக்கையாளர்'}</TableHead>
                   <TableHead>{language === 'english' ? 'Amount' : 'தொகை'}</TableHead>
+                  <TableHead>{language === 'english' ? 'Images' : 'படங்கள்'}</TableHead>
                   <TableHead>{language === 'english' ? 'Actions' : 'செயல்கள்'}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -327,6 +328,36 @@ export const UnifiedBillsList = ({
                     <TableCell>{new Date(bill.date).toLocaleDateString('en-IN')}</TableCell>
                     <TableCell>{bill.customer_name}</TableCell>
                     <TableCell className="font-semibold">₹{bill.amount.toFixed(2)}</TableCell>
+                    <TableCell>
+                      {bill.type === 'sale' && bill.outward_entry && (
+                        <div className="flex gap-2">
+                          {bill.outward_entry.weighment_photo_url && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => window.open(bill.outward_entry!.weighment_photo_url, '_blank')}
+                              className="flex items-center gap-1"
+                            >
+                              <Image className="h-3 w-3" />
+                              {language === 'english' ? 'Entry' : 'என்ட்ரி'}
+                            </Button>
+                          )}
+                          {bill.outward_entry.load_weight_photo_url && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => window.open(bill.outward_entry!.load_weight_photo_url, '_blank')}
+                              className="flex items-center gap-1"
+                            >
+                              <Image className="h-3 w-3" />
+                              {language === 'english' ? 'Load' : 'லோட்'}
+                            </Button>
+                          )}
+                          {!bill.outward_entry.weighment_photo_url && !bill.outward_entry.load_weight_photo_url && '-'}
+                        </div>
+                      )}
+                      {bill.type !== 'sale' && '-'}
+                    </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         <Button

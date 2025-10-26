@@ -12,17 +12,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
-type BillType = 'all' | 'sales' | 'debit_notes' | 'credit_notes';
+type BillType = 'all' | 'sales' | 'debit_notes' | 'credit_notes' | 'outward_entries';
 
 interface UnifiedBill {
   id: string;
-  type: 'sale' | 'debit_note' | 'credit_note';
+  type: 'sale' | 'debit_note' | 'credit_note' | 'outward_entry';
   bill_no: string;
   date: string;
   entry_date?: string;
   customer_name: string;
+  item_name?: string;
   amount: number;
-  data: Sale | DebitNote | CreditNote;
+  data: Sale | DebitNote | CreditNote | OutwardEntry;
   customer: Customer;
   item?: Item;
   outward_entry?: OutwardEntry;
@@ -91,9 +92,25 @@ export const UnifiedBillsList = ({
         `)
         .order('created_at', { ascending: false });
 
+      // Fetch all outward entries (including those without sales)
+      const { data: outwardEntriesData, error: outwardEntriesError } = await supabase
+        .from('outward_entries')
+        .select(`
+          *,
+          customers (id, name_english, name_tamil, code, contact_person, phone, email, address_english, address_tamil, gstin, pin_code, state_code, place_of_supply),
+          items (id, name_english, name_tamil, code, unit, gst_percentage, hsn_no)
+        `)
+        .order('created_at', { ascending: false });
+
       if (salesError) throw salesError;
       if (debitNotesError) throw debitNotesError;
       if (creditNotesError) throw creditNotesError;
+      if (outwardEntriesError) throw outwardEntriesError;
+
+      // Get IDs of outward entries that have sales bills
+      const salesOutwardEntryIds = new Set(
+        (salesData || []).map((sale: any) => sale.outward_entry_id).filter(Boolean)
+      );
 
       // Transform data into unified format
       const unifiedBills: UnifiedBill[] = [
@@ -104,6 +121,7 @@ export const UnifiedBillsList = ({
           date: sale.sale_date,
           entry_date: sale.outward_entries?.entry_date,
           customer_name: getDisplayName(sale.customers),
+          item_name: getDisplayName(sale.items),
           amount: sale.total_amount,
           data: sale,
           customer: sale.customers,
@@ -129,6 +147,20 @@ export const UnifiedBillsList = ({
           amount: creditNote.amount,
           data: creditNote,
           customer: creditNote.customers
+        })),
+        ...(outwardEntriesData || []).map((entry: any) => ({
+          id: entry.id,
+          type: 'outward_entry' as const,
+          bill_no: `Entry #${entry.serial_no}`,
+          date: entry.entry_date,
+          entry_date: entry.entry_date,
+          customer_name: getDisplayName(entry.customers),
+          item_name: getDisplayName(entry.items),
+          amount: entry.net_weight || 0,
+          data: entry,
+          customer: entry.customers,
+          item: entry.items,
+          outward_entry: entry
         }))
       ];
 
@@ -170,13 +202,19 @@ export const UnifiedBillsList = ({
           .delete()
           .eq('id', bill.id);
         error = deleteError;
+      } else if (bill.type === 'outward_entry') {
+        const { error: deleteError } = await supabase
+          .from('outward_entries')
+          .delete()
+          .eq('id', bill.id);
+        error = deleteError;
       }
 
       if (error) throw error;
 
       toast({
         title: language === 'english' ? 'Success' : 'வெற்றி',
-        description: language === 'english' ? 'Bill deleted successfully' : 'பில் வெற்றிகரமாக நீக்கப்பட்டது',
+        description: language === 'english' ? 'Entry deleted successfully' : 'என்ட்ரி வெற்றிகரமாக நீக்கப்பட்டது',
       });
 
       // Refresh the list
@@ -184,21 +222,23 @@ export const UnifiedBillsList = ({
     } catch (error: any) {
       toast({
         title: language === 'english' ? 'Error' : 'பிழை',
-        description: language === 'english' ? 'Failed to delete bill' : 'பில் நீக்குவதில் தோல்வி',
+        description: language === 'english' ? 'Failed to delete entry' : 'என்ட்ரி நீக்குவதில் தோல்வி',
         variant: 'destructive',
       });
-      console.error('Error deleting bill:', error);
+      console.error('Error deleting entry:', error);
     }
   };
 
   const filteredBills = bills.filter(bill => {
     const matchesSearch = bill.bill_no.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         bill.customer_name.toLowerCase().includes(searchTerm.toLowerCase());
+                         bill.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (bill.item_name && bill.item_name.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesType = billTypeFilter === 'all' || 
                        (billTypeFilter === 'sales' && bill.type === 'sale') ||
                        (billTypeFilter === 'debit_notes' && bill.type === 'debit_note') ||
-                       (billTypeFilter === 'credit_notes' && bill.type === 'credit_note');
+                       (billTypeFilter === 'credit_notes' && bill.type === 'credit_note') ||
+                       (billTypeFilter === 'outward_entries' && bill.type === 'outward_entry');
     
     return matchesSearch && matchesType;
   });
@@ -228,6 +268,7 @@ export const UnifiedBillsList = ({
       case 'sale': return language === 'english' ? 'Sales Bill' : 'விற்பனை பில்';
       case 'debit_note': return language === 'english' ? 'Debit Note' : 'டெபிட் நோட்';
       case 'credit_note': return language === 'english' ? 'Credit Note' : 'கிரெடிட் நோட்';
+      case 'outward_entry': return language === 'english' ? 'Outward Entry' : 'அவுட்வர்ட் என்ட்ரி';
       default: return type;
     }
   };
@@ -237,6 +278,7 @@ export const UnifiedBillsList = ({
       case 'sale': return 'default';
       case 'debit_note': return 'destructive';
       case 'credit_note': return 'secondary';
+      case 'outward_entry': return 'outline';
       default: return 'default';
     }
   };
@@ -283,10 +325,11 @@ export const UnifiedBillsList = ({
               <SelectValue placeholder="Filter by type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">{language === 'english' ? 'All Bills' : 'அனைத்து பில்கள்'}</SelectItem>
+              <SelectItem value="all">{language === 'english' ? 'All Entries' : 'அனைத்து என்ட்ரிகள்'}</SelectItem>
               <SelectItem value="sales">{language === 'english' ? 'Sales Bills' : 'விற்பனை பில்கள்'}</SelectItem>
               <SelectItem value="debit_notes">{language === 'english' ? 'Debit Notes' : 'டெபிட் நோட்கள்'}</SelectItem>
               <SelectItem value="credit_notes">{language === 'english' ? 'Credit Notes' : 'கிரெடிட் நோட்கள்'}</SelectItem>
+              <SelectItem value="outward_entries">{language === 'english' ? 'Outward Entries' : 'அவுட்வர்ட் என்ட்ரிகள்'}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -304,11 +347,12 @@ export const UnifiedBillsList = ({
               <TableHeader>
                 <TableRow>
                   <TableHead>{language === 'english' ? 'Type' : 'வகை'}</TableHead>
-                  <TableHead>{language === 'english' ? 'Bill No' : 'பில் எண்'}</TableHead>
+                  <TableHead>{language === 'english' ? 'Entry/Bill No' : 'என்ட்ரி/பில் எண்'}</TableHead>
                   <TableHead>{language === 'english' ? 'Entry Date' : 'என்ட்ரி தேதி'}</TableHead>
                   <TableHead>{language === 'english' ? 'Bill Date' : 'பில் தேதி'}</TableHead>
                   <TableHead>{language === 'english' ? 'Customer' : 'வாடிக்கையாளர்'}</TableHead>
-                  <TableHead>{language === 'english' ? 'Amount' : 'தொகை'}</TableHead>
+                  <TableHead>{language === 'english' ? 'Item' : 'பொருள்'}</TableHead>
+                  <TableHead>{language === 'english' ? 'Amount/Weight' : 'தொகை/எடை'}</TableHead>
                   <TableHead>{language === 'english' ? 'Images' : 'படங்கள்'}</TableHead>
                   <TableHead>{language === 'english' ? 'Actions' : 'செயல்கள்'}</TableHead>
                 </TableRow>
@@ -323,13 +367,21 @@ export const UnifiedBillsList = ({
                     </TableCell>
                     <TableCell className="font-medium">{bill.bill_no}</TableCell>
                     <TableCell>
-                      {bill.entry_date ? new Date(bill.entry_date).toLocaleDateString('en-IN') : (bill.type === 'sale' ? 'N/A' : '-')}
+                      {bill.entry_date ? new Date(bill.entry_date).toLocaleDateString('en-IN') : '-'}
                     </TableCell>
-                    <TableCell>{new Date(bill.date).toLocaleDateString('en-IN')}</TableCell>
-                    <TableCell>{bill.customer_name}</TableCell>
-                    <TableCell className="font-semibold">₹{bill.amount.toFixed(2)}</TableCell>
                     <TableCell>
-                      {bill.type === 'sale' && bill.outward_entry && (
+                      {bill.type === 'outward_entry' ? '-' : new Date(bill.date).toLocaleDateString('en-IN')}
+                    </TableCell>
+                    <TableCell>{bill.customer_name}</TableCell>
+                    <TableCell>{bill.item_name || '-'}</TableCell>
+                    <TableCell className="font-semibold">
+                      {bill.type === 'outward_entry' 
+                        ? `${bill.amount.toFixed(2)} KG` 
+                        : `₹${bill.amount.toFixed(2)}`
+                      }
+                    </TableCell>
+                    <TableCell>
+                      {(bill.type === 'sale' || bill.type === 'outward_entry') && bill.outward_entry && (
                         <div className="flex gap-2">
                           {bill.outward_entry.weighment_photo_url && (
                             <Button
@@ -356,27 +408,31 @@ export const UnifiedBillsList = ({
                           {!bill.outward_entry.weighment_photo_url && !bill.outward_entry.load_weight_photo_url && '-'}
                         </div>
                       )}
-                      {bill.type !== 'sale' && '-'}
+                      {bill.type !== 'sale' && bill.type !== 'outward_entry' && '-'}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEdit(bill)}
-                          className="flex items-center gap-1"
-                        >
-                          <Edit className="h-3 w-3" />
-                          {language === 'english' ? 'Edit' : 'திருத்து'}
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => handlePrint(bill)}
-                          className="flex items-center gap-1"
-                        >
-                          <FileText className="h-3 w-3" />
-                          {language === 'english' ? 'Print' : 'அச்சிடு'}
-                        </Button>
+                        {bill.type !== 'outward_entry' && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEdit(bill)}
+                              className="flex items-center gap-1"
+                            >
+                              <Edit className="h-3 w-3" />
+                              {language === 'english' ? 'Edit' : 'திருத்து'}
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handlePrint(bill)}
+                              className="flex items-center gap-1"
+                            >
+                              <FileText className="h-3 w-3" />
+                              {language === 'english' ? 'Print' : 'அச்சிடு'}
+                            </Button>
+                          </>
+                        )}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button

@@ -53,6 +53,28 @@ export const UnifiedBillsList = ({
   const { toast } = useToast();
   const { language, getDisplayName } = useLanguage();
 
+  // Helper function to extract Google Drive file ID and create direct view URL
+  const getGoogleDriveViewUrl = (url: string | null | undefined): string | null => {
+    if (!url) return null;
+    
+    // Extract file ID from various Google Drive URL formats
+    const patterns = [
+      /\/file\/d\/([^\/]+)/,
+      /id=([^&]+)/,
+      /\/d\/([^\/]+)/
+    ];
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match && match[1]) {
+        // Use direct view URL format that bypasses Google Drive's security headers
+        return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+      }
+    }
+    
+    return url; // Fallback to original URL if no pattern matches
+  };
+
   useEffect(() => {
     fetchAllBills();
   }, []);
@@ -380,14 +402,17 @@ export const UnifiedBillsList = ({
                         : `₹${bill.amount.toFixed(2)}`
                       }
                     </TableCell>
-                    <TableCell>
+                     <TableCell>
                       {(bill.type === 'sale' || bill.type === 'outward_entry') && bill.outward_entry && (
                         <div className="flex gap-2">
                           {bill.outward_entry.weighment_photo_url && (
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => window.open(bill.outward_entry!.weighment_photo_url, '_blank')}
+                              onClick={() => {
+                                const viewUrl = getGoogleDriveViewUrl(bill.outward_entry!.weighment_photo_url);
+                                if (viewUrl) window.open(viewUrl, '_blank');
+                              }}
                               className="flex items-center gap-1"
                             >
                               <Image className="h-3 w-3" />
@@ -398,7 +423,10 @@ export const UnifiedBillsList = ({
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => window.open(bill.outward_entry!.load_weight_photo_url, '_blank')}
+                              onClick={() => {
+                                const viewUrl = getGoogleDriveViewUrl(bill.outward_entry!.load_weight_photo_url);
+                                if (viewUrl) window.open(viewUrl, '_blank');
+                              }}
                               className="flex items-center gap-1"
                             >
                               <Image className="h-3 w-3" />

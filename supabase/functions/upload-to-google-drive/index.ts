@@ -77,17 +77,13 @@ serve(async (req) => {
     // Parse the request body (support multiple payload shapes for backward compatibility)
     const body = await req.json();
     const fileName = body.fileName || body.name || body.filename;
-    const incoming = body.dataUrl || body.fileData || body.file; // support: dataUrl | fileData | file
+    const dataUrl = body.dataUrl || body.fileData || body.file; // support: dataUrl | fileData | file
     
-    console.log('📝 File details (raw):', {
-      providedKeys: Object.keys(body || {}),
-      hasDataUrl: !!body?.dataUrl,
-      hasFileData: !!body?.fileData,
-      hasFile: !!body?.file,
+    console.log('📝 File details:', {
       fileName,
+      hasDataUrl: !!dataUrl,
+      dataUrlLength: dataUrl?.length || 0,
     });
-
-    const dataUrl = incoming;
     if (!dataUrl || !fileName) {
       const msg = `Missing required fields: ${(!!dataUrl) ? '' : 'dataUrl/fileData'} ${(!!fileName) ? '' : 'and fileName'}`.trim();
       console.error('❌', msg);

@@ -26,6 +26,7 @@ export function SupplierForm({ onSuccess }: SupplierFormProps) {
     pin_code: "",
     state_code: "33",
     place_of_supply: "33",
+    opening_balance: 0,
   });
 
   useEffect(() => {
@@ -91,6 +92,7 @@ export function SupplierForm({ onSuccess }: SupplierFormProps) {
         pin_code: "",
         state_code: "33",
         place_of_supply: "33",
+        opening_balance: 0,
       });
 
       onSuccess?.();
@@ -189,6 +191,16 @@ export function SupplierForm({ onSuccess }: SupplierFormProps) {
             id="place_of_supply"
             value={formData.place_of_supply}
             onChange={(e) => setFormData({ ...formData, place_of_supply: e.target.value })}
+          />
+        </div>
+        <div>
+          <Label htmlFor="opening_balance">Opening Balance</Label>
+          <Input
+            id="opening_balance"
+            type="number"
+            step="0.01"
+            value={formData.opening_balance}
+            onChange={(e) => setFormData({ ...formData, opening_balance: parseFloat(e.target.value) || 0 })}
           />
         </div>
         <div className="md:col-span-2">

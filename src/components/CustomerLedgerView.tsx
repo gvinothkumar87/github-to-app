@@ -55,6 +55,18 @@ export const CustomerLedgerView = () => {
     if (!selectedCustomerId) return;
 
     setLoading(true);
+    
+    // Fetch customer to get opening balance
+    const { data: customerData, error: customerError } = await supabase
+      .from('customers')
+      .select('opening_balance')
+      .eq('id', selectedCustomerId)
+      .single();
+
+    if (customerError) {
+      console.error('Error fetching customer:', customerError);
+    }
+
     let query = supabase
       .from('customer_ledger')
       .select(`
@@ -130,12 +142,13 @@ export const CustomerLedgerView = () => {
       return { ...entry, description, entry_date: entryDate };
     }));
 
-    // Recompute running balance on the client to ensure correctness
+    // Recompute running balance on the client to ensure correctness, starting with opening balance
     const sorted = (entriesWithBillNo || []).sort(
       (a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime()
     );
 
-    let running = 0;
+    const openingBalance = customerData?.opening_balance || 0;
+    let running = openingBalance;
     const entriesWithBalance = sorted.map((e) => {
       const debit = Number(e.debit_amount) || 0;
       const credit = Number(e.credit_amount) || 0;

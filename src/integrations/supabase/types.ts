@@ -14,6 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_users: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          location_permission: boolean | null
+          name: string
+          phone: string | null
+          role: Database["public"]["Enums"]["user_role_type"]
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id: string
+          location_permission?: boolean | null
+          name: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role_type"]
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          location_permission?: boolean | null
+          name?: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role_type"]
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      attachments: {
+        Row: {
+          drive_file_id: string | null
+          file_type: string
+          file_url: string | null
+          id: string
+          task_id: string | null
+          uploaded_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          drive_file_id?: string | null
+          file_type: string
+          file_url?: string | null
+          id?: string
+          task_id?: string | null
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          drive_file_id?: string | null
+          file_type?: string
+          file_url?: string | null
+          id?: string
+          task_id?: string | null
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attachments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attachments_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance: {
         Row: {
           absent_duration: string | null
@@ -332,6 +413,7 @@ export type Database = {
           is_active: boolean
           name_english: string
           name_tamil: string | null
+          opening_balance: number | null
           phone: string | null
           pin_code: string | null
           place_of_supply: string | null
@@ -350,6 +432,7 @@ export type Database = {
           is_active?: boolean
           name_english: string
           name_tamil?: string | null
+          opening_balance?: number | null
           phone?: string | null
           pin_code?: string | null
           place_of_supply?: string | null
@@ -368,6 +451,7 @@ export type Database = {
           is_active?: boolean
           name_english?: string
           name_tamil?: string | null
+          opening_balance?: number | null
           phone?: string | null
           pin_code?: string | null
           place_of_supply?: string | null
@@ -773,36 +857,48 @@ export type Database = {
       }
       ledgers: {
         Row: {
+          archive_reason: string | null
+          archived_at: string | null
+          archived_by: string | null
           created_at: string
           created_by: string
           description: string | null
           description_tamil: string | null
           group_id: string | null
           id: string
+          is_archived: boolean
           name: string
           name_tamil: string | null
           opening_balance: number | null
           updated_at: string | null
         }
         Insert: {
+          archive_reason?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
           created_at?: string
           created_by: string
           description?: string | null
           description_tamil?: string | null
           group_id?: string | null
           id?: string
+          is_archived?: boolean
           name: string
           name_tamil?: string | null
           opening_balance?: number | null
           updated_at?: string | null
         }
         Update: {
+          archive_reason?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
           created_at?: string
           created_by?: string
           description?: string | null
           description_tamil?: string | null
           group_id?: string | null
           id?: string
+          is_archived?: boolean
           name?: string
           name_tamil?: string | null
           opening_balance?: number | null
@@ -814,6 +910,97 @@ export type Database = {
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "ledger_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      location_verifications: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          distance_meters: number | null
+          expected_lat: number | null
+          expected_lng: number | null
+          id: string
+          task_id: string
+          user_id: string
+          verified_lat: number | null
+          verified_lng: number | null
+          within_radius: boolean | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          distance_meters?: number | null
+          expected_lat?: number | null
+          expected_lng?: number | null
+          id?: string
+          task_id: string
+          user_id: string
+          verified_lat?: number | null
+          verified_lng?: number | null
+          within_radius?: boolean | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          distance_meters?: number | null
+          expected_lat?: number | null
+          expected_lng?: number | null
+          id?: string
+          task_id?: string
+          user_id?: string
+          verified_lat?: number | null
+          verified_lng?: number | null
+          within_radius?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "location_verifications_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          related_job_id: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          related_job_id?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          related_job_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1245,10 +1432,12 @@ export type Database = {
       rice_loading_entries: {
         Row: {
           allotment_month: string
+          bag_grade: string
           bags: number
           bill_no: string
           bill_photo_url: string | null
           created_at: string
+          created_by: string | null
           driver: string
           entry_date: string
           godown: string
@@ -1263,10 +1452,12 @@ export type Database = {
         }
         Insert: {
           allotment_month: string
+          bag_grade?: string
           bags: number
           bill_no: string
           bill_photo_url?: string | null
           created_at?: string
+          created_by?: string | null
           driver: string
           entry_date?: string
           godown: string
@@ -1281,10 +1472,12 @@ export type Database = {
         }
         Update: {
           allotment_month?: string
+          bag_grade?: string
           bags?: number
           bill_no?: string
           bill_photo_url?: string | null
           created_at?: string
+          created_by?: string | null
           driver?: string
           entry_date?: string
           godown?: string
@@ -1303,6 +1496,7 @@ export type Database = {
         Row: {
           batch_no: string
           created_at: string
+          created_by: string | null
           current_location: string
           current_location_type: string
           current_weight: number
@@ -1317,6 +1511,7 @@ export type Database = {
         Insert: {
           batch_no: string
           created_at?: string
+          created_by?: string | null
           current_location: string
           current_location_type: string
           current_weight: number
@@ -1331,6 +1526,7 @@ export type Database = {
         Update: {
           batch_no?: string
           created_at?: string
+          created_by?: string | null
           current_location?: string
           current_location_type?: string
           current_weight?: number
@@ -1356,6 +1552,7 @@ export type Database = {
         Row: {
           batch_id: string
           created_at: string
+          created_by: string | null
           expected_completion_time: string | null
           grade: string
           id: string
@@ -1369,6 +1566,7 @@ export type Database = {
         Insert: {
           batch_id: string
           created_at?: string
+          created_by?: string | null
           expected_completion_time?: string | null
           grade: string
           id?: string
@@ -1382,6 +1580,7 @@ export type Database = {
         Update: {
           batch_id?: string
           created_at?: string
+          created_by?: string | null
           expected_completion_time?: string | null
           grade?: string
           id?: string
@@ -1459,6 +1658,7 @@ export type Database = {
         Row: {
           category: string
           created_at: string
+          created_by: string | null
           display_text: string
           distance: number | null
           http_link_1: string | null
@@ -1473,6 +1673,7 @@ export type Database = {
         Insert: {
           category: string
           created_at?: string
+          created_by?: string | null
           display_text: string
           distance?: number | null
           http_link_1?: string | null
@@ -1487,6 +1688,7 @@ export type Database = {
         Update: {
           category?: string
           created_at?: string
+          created_by?: string | null
           display_text?: string
           distance?: number | null
           http_link_1?: string | null
@@ -1505,6 +1707,7 @@ export type Database = {
           bags: number
           challan_photo_url: string | null
           created_at: string
+          created_by: string | null
           driver: string
           entry_date: string
           grade: string
@@ -1522,6 +1725,7 @@ export type Database = {
           bags: number
           challan_photo_url?: string | null
           created_at?: string
+          created_by?: string | null
           driver: string
           entry_date?: string
           grade: string
@@ -1539,6 +1743,7 @@ export type Database = {
           bags?: number
           challan_photo_url?: string | null
           created_at?: string
+          created_by?: string | null
           driver?: string
           entry_date?: string
           grade?: string
@@ -1565,6 +1770,7 @@ export type Database = {
       rice_mill_tokens: {
         Row: {
           created_at: string
+          created_by: string | null
           id: string
           is_used: boolean
           loading_point: string
@@ -1575,6 +1781,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          created_by?: string | null
           id?: string
           is_used?: boolean
           loading_point: string
@@ -1585,6 +1792,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          created_by?: string | null
           id?: string
           is_used?: boolean
           loading_point?: string
@@ -1674,6 +1882,7 @@ export type Database = {
           bags: number
           batch_no: string | null
           created_at: string
+          created_by: string | null
           id: string
           inward_entry_id: string | null
           is_batch_completed: boolean | null
@@ -1685,6 +1894,7 @@ export type Database = {
           bags: number
           batch_no?: string | null
           created_at?: string
+          created_by?: string | null
           id?: string
           inward_entry_id?: string | null
           is_batch_completed?: boolean | null
@@ -1696,6 +1906,7 @@ export type Database = {
           bags?: number
           batch_no?: string | null
           created_at?: string
+          created_by?: string | null
           id?: string
           inward_entry_id?: string | null
           is_batch_completed?: boolean | null
@@ -1958,6 +2169,7 @@ export type Database = {
           is_active: boolean
           name_english: string
           name_tamil: string | null
+          opening_balance: number | null
           phone: string | null
           pin_code: string | null
           place_of_supply: string | null
@@ -1976,6 +2188,7 @@ export type Database = {
           is_active?: boolean
           name_english: string
           name_tamil?: string | null
+          opening_balance?: number | null
           phone?: string | null
           pin_code?: string | null
           place_of_supply?: string | null
@@ -1994,6 +2207,7 @@ export type Database = {
           is_active?: boolean
           name_english?: string
           name_tamil?: string | null
+          opening_balance?: number | null
           phone?: string | null
           pin_code?: string | null
           place_of_supply?: string | null
@@ -2001,6 +2215,272 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      task_alerts: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          seen: boolean | null
+          task_id: string | null
+          type: Database["public"]["Enums"]["alert_type"]
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          seen?: boolean | null
+          task_id?: string | null
+          type: Database["public"]["Enums"]["alert_type"]
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          seen?: boolean | null
+          task_id?: string | null
+          type?: Database["public"]["Enums"]["alert_type"]
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_alerts_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_alerts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_comments: {
+        Row: {
+          attachment_id: string | null
+          created_at: string | null
+          id: string
+          message: string
+          task_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          attachment_id?: string | null
+          created_at?: string | null
+          id?: string
+          message: string
+          task_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          attachment_id?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string
+          task_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_comments_attachment_id_fkey"
+            columns: ["attachment_id"]
+            isOneToOne: false
+            referencedRelation: "attachments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_comments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_logs: {
+        Row: {
+          event: string
+          id: string
+          remarks: string | null
+          task_id: string | null
+          timestamp: string | null
+          user_id: string | null
+        }
+        Insert: {
+          event: string
+          id?: string
+          remarks?: string | null
+          task_id?: string | null
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          event?: string
+          id?: string
+          remarks?: string | null
+          task_id?: string | null
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_logs_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_transfers: {
+        Row: {
+          from_user: string | null
+          id: string
+          reason: string | null
+          task_id: string | null
+          to_user: string | null
+          transferred_at: string | null
+        }
+        Insert: {
+          from_user?: string | null
+          id?: string
+          reason?: string | null
+          task_id?: string | null
+          to_user?: string | null
+          transferred_at?: string | null
+        }
+        Update: {
+          from_user?: string | null
+          id?: string
+          reason?: string | null
+          task_id?: string | null
+          to_user?: string | null
+          transferred_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_transfers_from_user_fkey"
+            columns: ["from_user"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_transfers_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_transfers_to_user_fkey"
+            columns: ["to_user"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          arrival_at: string | null
+          assigned_by: string | null
+          assigned_to: string | null
+          completed_at: string | null
+          completion_audio_url: string | null
+          completion_image_urls: string[] | null
+          completion_notes: string | null
+          created_at: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          leave_at: string | null
+          location_lat: number | null
+          location_lng: number | null
+          location_radius: number | null
+          priority: Database["public"]["Enums"]["task_priority_type"] | null
+          status: Database["public"]["Enums"]["task_status_type"] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          arrival_at?: string | null
+          assigned_by?: string | null
+          assigned_to?: string | null
+          completed_at?: string | null
+          completion_audio_url?: string | null
+          completion_image_urls?: string[] | null
+          completion_notes?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          leave_at?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          location_radius?: number | null
+          priority?: Database["public"]["Enums"]["task_priority_type"] | null
+          status?: Database["public"]["Enums"]["task_status_type"] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          arrival_at?: string | null
+          assigned_by?: string | null
+          assigned_to?: string | null
+          completed_at?: string | null
+          completion_audio_url?: string | null
+          completion_image_urls?: string[] | null
+          completion_notes?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          leave_at?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          location_radius?: number | null
+          priority?: Database["public"]["Enums"]["task_priority_type"] | null
+          status?: Database["public"]["Enums"]["task_status_type"] | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       thotti_audit_log: {
         Row: {
@@ -2756,6 +3236,42 @@ export type Database = {
           },
         ]
       }
+      user_preferences: {
+        Row: {
+          created_at: string | null
+          dark_mode: boolean | null
+          email_notifications: boolean | null
+          id: string
+          job_transfer_alerts: boolean | null
+          location_alerts: boolean | null
+          push_notifications: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          dark_mode?: boolean | null
+          email_notifications?: boolean | null
+          id?: string
+          job_transfer_alerts?: boolean | null
+          location_alerts?: boolean | null
+          push_notifications?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          dark_mode?: boolean | null
+          email_notifications?: boolean | null
+          id?: string
+          job_transfer_alerts?: boolean | null
+          location_alerts?: boolean | null
+          push_notifications?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -2782,12 +3298,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      check_and_fix_receipt_ledger_integrity: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
+      admin_cleanup_salary_data: {
+        Args: never
+        Returns: {
+          attendance_deleted: number
+          ledgers_deleted: number
+          salary_ledgers_deleted: number
+          transactions_deleted: number
+        }[]
       }
+      check_and_fix_receipt_ledger_integrity: { Args: never; Returns: Json }
       check_ledger_integrity: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           credit_amount: number
           debit_amount: number
@@ -2798,14 +3320,8 @@ export type Database = {
           transaction_type: string
         }[]
       }
-      cleanup_duplicate_container_contents: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_old_offline_data: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      cleanup_duplicate_container_contents: { Args: never; Returns: undefined }
+      cleanup_old_offline_data: { Args: never; Returns: Json }
       clear_source_container: {
         Args: {
           p_batch_id: string
@@ -2863,34 +3379,13 @@ export type Database = {
         }
         Returns: string
       }
-      fix_running_balances: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      generate_and_reserve_thotti_no: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_batch_no: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_credit_note_no: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_debit_note_no: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_receipt_no: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_thotti_no: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      fix_running_balances: { Args: never; Returns: undefined }
+      generate_and_reserve_thotti_no: { Args: never; Returns: string }
+      generate_batch_no: { Args: never; Returns: string }
+      generate_credit_note_no: { Args: never; Returns: string }
+      generate_debit_note_no: { Args: never; Returns: string }
+      generate_receipt_no: { Args: never; Returns: string }
+      generate_thotti_no: { Args: never; Returns: string }
       get_available_source_containers: {
         Args: { p_mill?: string }
         Returns: {
@@ -2909,10 +3404,7 @@ export type Database = {
         Args: { p_date: string; p_user_id: string }
         Returns: number
       }
-      get_email_from_username: {
-        Args: { p_username: string }
-        Returns: string
-      }
+      get_email_from_username: { Args: { p_username: string }; Returns: string }
       get_employee_salary_details: {
         Args: { p_date_from: string; p_date_to: string; p_employee_id: string }
         Returns: {
@@ -2935,12 +3427,12 @@ export type Database = {
         Args: { p_date: string; p_user_id: string }
         Returns: number
       }
-      get_or_create_batch_for_unloading_point: {
-        Args:
-          | { p_grade: string; p_mill: string; p_unloading_point: string }
-          | { p_mill: string; p_unloading_point: string }
-        Returns: Json
-      }
+      get_or_create_batch_for_unloading_point:
+        | {
+            Args: { p_grade: string; p_mill: string; p_unloading_point: string }
+            Returns: Json
+          }
+        | { Args: { p_mill: string; p_unloading_point: string }; Returns: Json }
       get_user_accessible_pages: {
         Args: { _user_id: string }
         Returns: {
@@ -2993,10 +3485,7 @@ export type Database = {
         }
         Returns: string
       }
-      populate_missing_daily_balances: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      populate_missing_daily_balances: { Args: never; Returns: undefined }
       process_bulk_transactions: {
         Args: { p_transactions: Json }
         Returns: Json
@@ -3020,14 +3509,8 @@ export type Database = {
         Args: { p_sync_session_id?: string }
         Returns: Json
       }
-      rebuild_all_daily_balances: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      recalculate_all_running_balances: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      rebuild_all_daily_balances: { Args: never; Returns: undefined }
+      recalculate_all_running_balances: { Args: never; Returns: undefined }
       recalculate_customer_ledger_balances: {
         Args: { p_customer_id: string; p_from_date: string }
         Returns: undefined
@@ -3048,14 +3531,8 @@ export type Database = {
         Args: { p_date: string; p_user_id: string }
         Returns: undefined
       }
-      undo_transfer: {
-        Args: { transfer_id: string }
-        Returns: Json
-      }
-      update_overdue_status: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      undo_transfer: { Args: { transfer_id: string }; Returns: Json }
+      update_overdue_status: { Args: never; Returns: undefined }
       update_retry_attempt: {
         Args: { p_success?: boolean; p_transaction_id: string }
         Returns: undefined
@@ -3094,17 +3571,26 @@ export type Database = {
         Args: { p_from_location_type: string; p_to_location_type: string }
         Returns: boolean
       }
-      validate_undo_operation: {
-        Args: { transfer_id: string }
-        Returns: Json
-      }
-      verify_daily_balance_chain: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      validate_undo_operation: { Args: { transfer_id: string }; Returns: Json }
+      verify_daily_balance_chain: { Args: never; Returns: Json }
     }
     Enums: {
+      alert_type:
+        | "task_assigned"
+        | "task_reminder"
+        | "task_completed"
+        | "arrived"
+        | "left_without_completion"
+        | "task_transferred"
       app_role: "admin" | "moderator" | "user"
+      task_priority_type: "low" | "medium" | "high" | "urgent"
+      task_status_type:
+        | "assigned"
+        | "in_progress"
+        | "completed"
+        | "transferred"
+        | "missed"
+      user_role_type: "manager" | "supervisor" | "operator"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3232,7 +3718,24 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      alert_type: [
+        "task_assigned",
+        "task_reminder",
+        "task_completed",
+        "arrived",
+        "left_without_completion",
+        "task_transferred",
+      ],
       app_role: ["admin", "moderator", "user"],
+      task_priority_type: ["low", "medium", "high", "urgent"],
+      task_status_type: [
+        "assigned",
+        "in_progress",
+        "completed",
+        "transferred",
+        "missed",
+      ],
+      user_role_type: ["manager", "supervisor", "operator"],
     },
   },
 } as const

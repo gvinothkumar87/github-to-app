@@ -12,6 +12,7 @@ export interface Customer {
   pin_code?: string;
   state_code?: string;
   place_of_supply?: string;
+  opening_balance?: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;

@@ -38,18 +38,41 @@ export function SupplierLedgerView() {
 
   const fetchLedger = async () => {
     setLoading(true);
+    
+    // Fetch supplier to get opening balance
+    const { data: supplierData, error: supplierError } = await supabase
+      .from("suppliers")
+      .select("opening_balance")
+      .eq("id", selectedSupplier)
+      .single();
+
+    if (supplierError) {
+      console.error('Error fetching supplier:', supplierError);
+    }
+
     const { data } = await supabase
       .from("supplier_ledger")
       .select("*")
       .eq("supplier_id", selectedSupplier)
-      .order("transaction_date", { ascending: false });
+      .order("transaction_date", { ascending: true });
+
+    const openingBalance = supplierData?.opening_balance || 0;
 
     if (data && data.length > 0) {
-      setLedgerEntries(data);
-      setBalance(data[0].balance || 0);
+      // Recalculate balance starting from opening balance
+      let runningBalance = openingBalance;
+      const entriesWithBalance = data.map((entry: any) => {
+        runningBalance += entry.debit_amount - entry.credit_amount;
+        return {
+          ...entry,
+          balance: runningBalance,
+        };
+      });
+      setLedgerEntries(entriesWithBalance.reverse()); // Reverse for descending order display
+      setBalance(runningBalance);
     } else {
       setLedgerEntries([]);
-      setBalance(0);
+      setBalance(openingBalance);
     }
     setLoading(false);
   };

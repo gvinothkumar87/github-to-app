@@ -33,6 +33,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ customer, onSuccess,
     pin_code: customer?.pin_code || '',
     state_code: customer?.state_code || '33',
     place_of_supply: customer?.place_of_supply || '33',
+    opening_balance: customer?.opening_balance || 0,
   });
 
   useEffect(() => {
@@ -250,6 +251,20 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ customer, onSuccess,
                 maxLength={2}
               />
             </div>
+          </div>
+          
+          <div>
+            <Label htmlFor="opening_balance">
+              {language === 'english' ? 'Opening Balance' : 'தொடக்க இருப்பு'}
+            </Label>
+            <Input
+              id="opening_balance"
+              type="number"
+              step="0.01"
+              value={formData.opening_balance}
+              onChange={(e) => setFormData({ ...formData, opening_balance: parseFloat(e.target.value) || 0 })}
+              placeholder={language === 'english' ? 'Enter opening balance' : 'தொடக்க இருப்பை உள்ளிடவும்'}
+            />
           </div>
           
           <div>

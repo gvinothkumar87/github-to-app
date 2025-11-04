@@ -17,6 +17,7 @@ export const MobileCreditNoteForm = () => {
   const { language, getDisplayName } = useLanguage();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [previewNoteNo, setPreviewNoteNo] = useState<string>('');
   const [formData, setFormData] = useState({
     customer_id: '',
     item_id: '',
@@ -33,6 +34,14 @@ export const MobileCreditNoteForm = () => {
 
   const selectedCustomer = customers.find((c: any) => c.id === formData.customer_id);
   const selectedItem = items.find((i: any) => i.id === formData.item_id);
+
+  React.useEffect(() => {
+    const fetchPreviewNoteNo = async () => {
+      const noteNo = await generateCreditNoteNo(formData.mill);
+      setPreviewNoteNo(noteNo);
+    };
+    fetchPreviewNoteNo();
+  }, [formData.mill]);
 
   const generateCreditNoteNo = async (mill: string) => {
     try {
@@ -131,6 +140,18 @@ export const MobileCreditNoteForm = () => {
                     <SelectItem value="MATTAPARAI">Mattaparai</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="preview_note_no">
+                  {language === 'english' ? 'Credit Note No. (Preview)' : 'கிரெடிட் நோட் எண் (முன்னோட்டம்)'}
+                </Label>
+                <Input
+                  id="preview_note_no"
+                  value={previewNoteNo}
+                  readOnly
+                  className="bg-muted font-semibold"
+                />
               </div>
 
               <div>

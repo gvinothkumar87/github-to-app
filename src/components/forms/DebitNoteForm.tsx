@@ -33,11 +33,22 @@ const DebitNoteForm = () => {
   const [createdNote, setCreatedNote] = useState<any>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+  const [previewNoteNo, setPreviewNoteNo] = useState<string>('');
 
   useEffect(() => {
     fetchCustomers();
     fetchItems();
   }, []);
+
+  useEffect(() => {
+    const fetchPreviewNoteNo = async () => {
+      const noteNo = await generateDebitNoteNo(formData.mill);
+      if (noteNo) {
+        setPreviewNoteNo(noteNo);
+      }
+    };
+    fetchPreviewNoteNo();
+  }, [formData.mill]);
 
   const fetchCustomers = async () => {
     const { data, error } = await supabase
@@ -187,21 +198,34 @@ const DebitNoteForm = () => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="mill">Mill/Location *</Label>
-            <Select
-              value={formData.mill}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, mill: value }))}
-              required
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Mill" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="PULIVANTHI">Pulivanthi</SelectItem>
-                <SelectItem value="MATTAPARAI">Mattaparai</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="mill">Mill/Location *</Label>
+              <Select
+                value={formData.mill}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, mill: value }))}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Mill" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PULIVANTHI">Pulivanthi</SelectItem>
+                  <SelectItem value="MATTAPARAI">Mattaparai</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="preview_note_no">Debit Note No. (Preview)</Label>
+              <Input
+                id="preview_note_no"
+                value={previewNoteNo}
+                readOnly
+                className="bg-muted font-semibold"
+                placeholder="Select mill to generate"
+              />
+            </div>
           </div>
 
           <div>

@@ -242,13 +242,31 @@ export const UnifiedBillsList = ({
         
         // If it's a grouped multi-product bill, delete all sales with same bill_serial_no
         if (saleData._isGrouped && saleData._allSales?.length > 1) {
+          // First, delete associated ledger entries for all sales
+          const saleIds = saleData._allSales.map((s: any) => s.id);
+          const { error: ledgerError } = await supabase
+            .from('customer_ledger')
+            .delete()
+            .in('reference_id', saleIds);
+          
+          if (ledgerError) throw ledgerError;
+          
+          // Then delete all sales with same bill_serial_no
           const { error: deleteError } = await supabase
             .from('sales')
             .delete()
             .eq('bill_serial_no', saleData.bill_serial_no);
           error = deleteError;
         } else {
-          // Single product bill - delete by ID
+          // Single product bill - first delete ledger entry
+          const { error: ledgerError } = await supabase
+            .from('customer_ledger')
+            .delete()
+            .eq('reference_id', bill.id);
+          
+          if (ledgerError) throw ledgerError;
+          
+          // Then delete the sale by ID
           const { error: deleteError } = await supabase
             .from('sales')
             .delete()

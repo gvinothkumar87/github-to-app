@@ -134,16 +134,47 @@ export const UnifiedBillsList = ({
         (salesData || []).map((sale: any) => sale.outward_entry_id).filter(Boolean)
       );
 
+      // Group sales by bill_serial_no for multi-product bills
+      const groupedSales: any[] = [];
+      const billMap = new Map();
+
+      (salesData || []).forEach((sale: any) => {
+        if (!sale.bill_serial_no) {
+          groupedSales.push(sale);
+          return;
+        }
+
+        if (!billMap.has(sale.bill_serial_no)) {
+          // First sale with this bill_serial_no
+          billMap.set(sale.bill_serial_no, {
+            ...sale,
+            _allSales: [sale], // Store all sales with same bill number
+            _isGrouped: true
+          });
+        } else {
+          // Additional sale with same bill_serial_no - add to group
+          const existingBill = billMap.get(sale.bill_serial_no);
+          existingBill._allSales.push(sale);
+          // Update totals
+          existingBill.total_amount += sale.total_amount;
+        }
+      });
+
+      // Add grouped bills to the list
+      billMap.forEach(bill => groupedSales.push(bill));
+
       // Transform data into unified format
       const unifiedBills: UnifiedBill[] = [
-        ...(salesData || []).map((sale: any) => ({
+        ...groupedSales.map((sale: any) => ({
           id: sale.id,
           type: 'sale' as const,
           bill_no: sale.bill_serial_no || 'N/A',
           date: sale.sale_date,
           entry_date: sale.outward_entries?.entry_date,
           customer_name: getDisplayName(sale.customers),
-          item_name: getDisplayName(sale.items),
+          item_name: sale._isGrouped && sale._allSales?.length > 1 
+            ? `${sale._allSales.length} ${language === 'english' ? 'items' : 'பொருட்கள்'}`
+            : getDisplayName(sale.items),
           amount: sale.total_amount,
           data: sale,
           customer: sale.customers,

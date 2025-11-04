@@ -119,6 +119,7 @@ export interface DebitNote {
   gst_percentage?: number;
   reason: string;
   note_date: string;
+  mill: string;
   created_by?: string;
   created_at: string;
   updated_at: string;
@@ -136,6 +137,7 @@ export interface CreditNote {
   gst_percentage?: number;
   reason: string;
   note_date: string;
+  mill: string;
   created_by?: string;
   created_at: string;
   updated_at: string;

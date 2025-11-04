@@ -25,6 +25,7 @@ export const MobileDebitNoteForm = () => {
     gst_percentage: '18.00',
     reason: '',
     note_date: new Date().toISOString().split('T')[0],
+    mill: 'PULIVANTHI',
   });
 
   const { data: customers } = useEnhancedOfflineData('offline_customers');
@@ -33,9 +34,9 @@ export const MobileDebitNoteForm = () => {
   const selectedCustomer = customers.find((c: any) => c.id === formData.customer_id);
   const selectedItem = items.find((i: any) => i.id === formData.item_id);
 
-  const generateDebitNoteNo = async () => {
+  const generateDebitNoteNo = async (mill: string) => {
     try {
-      const { data, error } = await supabase.rpc('generate_debit_note_no');
+      const { data, error } = await supabase.rpc('generate_debit_note_no', { p_mill: mill });
       if (error) throw error;
       return data;
     } catch (error) {
@@ -62,7 +63,7 @@ export const MobileDebitNoteForm = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No user found');
 
-      const noteNo = await generateDebitNoteNo();
+      const noteNo = await generateDebitNoteNo(formData.mill);
 
       const { error: noteError } = await supabase
         .from('debit_notes')
@@ -75,6 +76,7 @@ export const MobileDebitNoteForm = () => {
           gst_percentage: parseFloat(formData.gst_percentage),
           reason: formData.reason,
           note_date: formData.note_date,
+          mill: formData.mill,
           created_by: user.id,
         });
 
@@ -112,6 +114,25 @@ export const MobileDebitNoteForm = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="mill">
+                  {language === 'english' ? 'Mill/Location *' : 'மில் / இடம் *'}
+                </Label>
+                <Select
+                  value={formData.mill}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, mill: value }))}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={language === 'english' ? 'Select Mill' : 'மில்லைத் தேர்ந்தெடுக்கவும்'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PULIVANTHI">Pulivanthi</SelectItem>
+                    <SelectItem value="MATTAPARAI">Mattaparai</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div>
                 <Label htmlFor="customer_id">
                   {language === 'english' ? 'Customer *' : 'வாடிக்கையாளர் *'}

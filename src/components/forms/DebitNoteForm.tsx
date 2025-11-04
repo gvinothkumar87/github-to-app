@@ -26,6 +26,7 @@ const DebitNoteForm = () => {
     gst_percentage: '18.00',
     reason: '',
     note_date: new Date(),
+    mill: 'PULIVANTHI',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
@@ -68,8 +69,8 @@ const DebitNoteForm = () => {
     setItems(data || []);
   };
 
-  const generateDebitNoteNo = async () => {
-    const { data, error } = await supabase.rpc('generate_debit_note_no');
+  const generateDebitNoteNo = async (mill: string) => {
+    const { data, error } = await supabase.rpc('generate_debit_note_no', { p_mill: mill });
     if (error) {
       console.error('Error generating debit note number:', error);
       return null;
@@ -86,7 +87,7 @@ const DebitNoteForm = () => {
       const { data: { user } } = await supabase.auth.getUser();
       const userId = user?.id || '';
 
-      const noteNo = await generateDebitNoteNo();
+      const noteNo = await generateDebitNoteNo(formData.mill);
       if (!noteNo) {
         toast.error('Error generating debit note number');
         return;
@@ -104,6 +105,7 @@ const DebitNoteForm = () => {
         gst_percentage: parseFloat(formData.gst_percentage),
         reason: formData.reason,
         note_date: noteDate,
+        mill: formData.mill,
         created_by: userId,
       };
 
@@ -168,6 +170,7 @@ const DebitNoteForm = () => {
             gst_percentage: '18.00',
             reason: '',
             note_date: new Date(),
+            mill: 'PULIVANTHI',
           });
         }}
       />
@@ -184,6 +187,23 @@ const DebitNoteForm = () => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="mill">Mill/Location *</Label>
+            <Select
+              value={formData.mill}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, mill: value }))}
+              required
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Mill" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="PULIVANTHI">Pulivanthi</SelectItem>
+                <SelectItem value="MATTAPARAI">Mattaparai</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <div>
             <Label htmlFor="customer_id">Customer *</Label>
             <Select

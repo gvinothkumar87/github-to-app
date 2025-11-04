@@ -26,6 +26,7 @@ const CreditNoteForm = () => {
     gst_percentage: '18.00',
     reason: '',
     note_date: new Date(),
+    mill: 'PULIVANTHI',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
@@ -68,8 +69,8 @@ const CreditNoteForm = () => {
     setItems(data || []);
   };
 
-  const generateCreditNoteNo = async () => {
-    const { data, error } = await supabase.rpc('generate_credit_note_no');
+  const generateCreditNoteNo = async (mill: string) => {
+    const { data, error } = await supabase.rpc('generate_credit_note_no', { p_mill: mill });
     if (error) {
       console.error('Error generating credit note number:', error);
       return null;
@@ -86,7 +87,7 @@ const CreditNoteForm = () => {
       const { data: { user } } = await supabase.auth.getUser();
       const userId = user?.id || '';
 
-      const noteNo = await generateCreditNoteNo();
+      const noteNo = await generateCreditNoteNo(formData.mill);
       if (!noteNo) {
         toast.error('Error generating credit note number');
         return;
@@ -104,6 +105,7 @@ const CreditNoteForm = () => {
         gst_percentage: parseFloat(formData.gst_percentage),
         reason: formData.reason,
         note_date: noteDate,
+        mill: formData.mill,
         created_by: userId,
       };
 
@@ -168,6 +170,7 @@ const CreditNoteForm = () => {
             gst_percentage: '18.00',
             reason: '',
             note_date: new Date(),
+            mill: 'PULIVANTHI',
           });
         }}
       />
@@ -184,6 +187,23 @@ const CreditNoteForm = () => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="mill">Mill/Location *</Label>
+            <Select
+              value={formData.mill}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, mill: value }))}
+              required
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Mill" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="PULIVANTHI">Pulivanthi</SelectItem>
+                <SelectItem value="MATTAPARAI">Mattaparai</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <div>
             <Label htmlFor="customer_id">Customer *</Label>
             <Select

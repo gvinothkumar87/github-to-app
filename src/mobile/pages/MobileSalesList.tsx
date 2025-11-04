@@ -119,7 +119,7 @@ const MobileSalesList: React.FC = () => {
                         {outwardEntry && (
                           <div className="flex items-center gap-2 text-sm">
                             <Truck className="h-4 w-4 text-muted-foreground" />
-                            <span className="font-mono">#{outwardEntry.serial_no} - {outwardEntry.lorry_no}</span>
+                            <span className="font-mono">{sale.bill_serial_no} - {outwardEntry.lorry_no}</span>
                           </div>
                         )}
                         

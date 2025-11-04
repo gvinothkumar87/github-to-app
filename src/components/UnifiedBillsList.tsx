@@ -238,11 +238,23 @@ export const UnifiedBillsList = ({
       let error;
       
       if (bill.type === 'sale') {
-        const { error: deleteError } = await supabase
-          .from('sales')
-          .delete()
-          .eq('id', bill.id);
-        error = deleteError;
+        const saleData = bill.data as any;
+        
+        // If it's a grouped multi-product bill, delete all sales with same bill_serial_no
+        if (saleData._isGrouped && saleData._allSales?.length > 1) {
+          const { error: deleteError } = await supabase
+            .from('sales')
+            .delete()
+            .eq('bill_serial_no', saleData.bill_serial_no);
+          error = deleteError;
+        } else {
+          // Single product bill - delete by ID
+          const { error: deleteError } = await supabase
+            .from('sales')
+            .delete()
+            .eq('id', bill.id);
+          error = deleteError;
+        }
       } else if (bill.type === 'debit_note') {
         const { error: deleteError } = await supabase
           .from('debit_notes')

@@ -261,7 +261,6 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
           sale_date: saleDate,
           bill_serial_no: billSerialNo,
           irn: null,
-          user_id: user.id,
           created_by: user.id,
           loading_place: loadingPlace,
           lorry_no: lorryNo

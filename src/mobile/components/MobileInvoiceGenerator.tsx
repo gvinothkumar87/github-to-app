@@ -26,6 +26,8 @@ export const MobileInvoiceGenerator: React.FC = () => {
   const { language, getDisplayName } = useLanguage();
   const { toast } = useToast();
   const [sale, setSale] = useState<any>(null);
+  const [allSales, setAllSales] = useState<any[]>([]);
+  const [allSalesItems, setAllSalesItems] = useState<any[]>([]);
   const [companySettings, setCompanySettings] = useState<any>(null);
   const [showIrnDialog, setShowIrnDialog] = useState(false);
   const [irnValue, setIrnValue] = useState('');
@@ -43,9 +45,21 @@ export const MobileInvoiceGenerator: React.FC = () => {
       if (foundSale) {
         setSale(foundSale);
         setIrnValue((foundSale as any).irn || '');
+        
+        // Fetch all sales with same bill_serial_no for multi-product bills
+        if ((foundSale as any).bill_serial_no) {
+          const sameBillSales = sales.filter((s: any) => (s as any).bill_serial_no === (foundSale as any).bill_serial_no);
+          setAllSales(sameBillSales);
+          
+          // Get items for all sales
+          const saleItems = sameBillSales.map((s: any) => 
+            items.find((i: any) => (i as any).id === (s as any).item_id)
+          ).filter(Boolean);
+          setAllSalesItems(saleItems);
+        }
       }
     }
-  }, [saleId, sales]);
+  }, [saleId, sales, items]);
 
   useEffect(() => {
     if (companySettingsData.length > 0 && sale) {
@@ -61,16 +75,30 @@ export const MobileInvoiceGenerator: React.FC = () => {
   const outwardEntry: any = sale ? outwardEntries.find((e: any) => e.id === sale.outward_entry_id) : null;
 
   const calculateAmounts = () => {
-    if (!sale || !item) return { baseAmount: 0, gstAmount: 0, totalAmount: 0 };
+    if (!allSales.length || !allSalesItems.length) {
+      // Fallback to single sale
+      if (!sale || !item) return { baseAmount: 0, gstAmount: 0, totalAmount: 0, totalQuantity: 0 };
+      const quantity = sale.quantity;
+      const rate = sale.rate;
+      const baseAmount = quantity * rate;
+      const gstPercent = item.gst_percentage || 0;
+      const gstAmount = baseAmount * (gstPercent / 100);
+      const totalAmount = baseAmount + gstAmount;
+      return { baseAmount, gstAmount, totalAmount, totalQuantity: quantity };
+    }
     
-    const quantity = sale.quantity;
-    const rate = sale.rate;
-    const baseAmount = quantity * rate;
-    const gstPercent = item.gst_percentage || 0;
-    const gstAmount = baseAmount * (gstPercent / 100);
-    const totalAmount = baseAmount + gstAmount;
-    
-    return { baseAmount, gstAmount, totalAmount };
+    // Calculate for multiple products
+    return allSales.reduce((acc, s, index) => {
+      const currentItem = allSalesItems[index] || item;
+      const base = s.quantity * s.rate;
+      const gst = base * ((currentItem?.gst_percentage || 0) / 100);
+      return {
+        baseAmount: acc.baseAmount + base,
+        gstAmount: acc.gstAmount + gst,
+        totalAmount: acc.totalAmount + base + gst,
+        totalQuantity: acc.totalQuantity + s.quantity
+      };
+    }, { baseAmount: 0, gstAmount: 0, totalAmount: 0, totalQuantity: 0 });
   };
 
   const handleUpdateIrn = async () => {
@@ -164,7 +192,39 @@ export const MobileInvoiceGenerator: React.FC = () => {
         Ph: customer.phone || null,
         Em: customer.email || null
       },
-      ItemList: [
+      ItemList: allSales.length > 0 ? allSales.map((s, index) => {
+        const currentItem = allSalesItems[index] || item;
+        const baseAmt = s.quantity * s.rate;
+        const gstAmt = baseAmt * ((currentItem?.gst_percentage || 0) / 100);
+        const cgstAmt = Math.round((gstAmt / 2) * 100) / 100;
+        const sgstAmt = Math.round((gstAmt / 2) * 100) / 100;
+        const itemTotal = Math.round((baseAmt + cgstAmt + sgstAmt) * 100) / 100;
+        
+        return {
+          SlNo: (index + 1).toString(),
+          PrdDesc: getDisplayName(currentItem),
+          IsServc: "N",
+          HsnCd: currentItem?.hsn_no,
+          Qty: s.quantity,
+          Unit: currentItem?.unit,
+          UnitPrice: s.rate,
+          TotAmt: Math.round(baseAmt * 100) / 100,
+          Discount: 0,
+          AssAmt: Math.round(baseAmt * 100) / 100,
+          GstRt: currentItem?.gst_percentage || 0,
+          CgstAmt: cgstAmt,
+          SgstAmt: sgstAmt,
+          IgstAmt: 0,
+          CesRt: 0,
+          CesAmt: 0,
+          CesNonAdvlAmt: 0,
+          StateCesRt: 0,
+          StateCesAmt: 0,
+          StateCesNonAdvlAmt: 0,
+          OthChrg: 0,
+          TotItemVal: itemTotal
+        };
+      }) : [
         {
           SlNo: "1",
           PrdDesc: getDisplayName(item),
@@ -318,6 +378,8 @@ export const MobileInvoiceGenerator: React.FC = () => {
     }
 
     const { baseAmount, gstAmount } = calculateAmounts();
+    const amounts = calculateAmounts();
+    const totalQuantity = amounts.totalQuantity;
 
     // Fallback company settings if not available
     const cs = companySettings || {
@@ -451,19 +513,36 @@ export const MobileInvoiceGenerator: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>1</td>
-              <td class="desc-col">${getDisplayName(item)}</td>
-              <td>${item.hsn_no}</td>
-              <td>${item.gst_percentage}%</td>
-              <td>${sale.quantity} ${item.unit}</td>
-              <td class="amount-col">₹${sale.rate.toFixed(2)}</td>
-              <td>${item.unit}</td>
-              <td class="amount-col">₹${baseAmount.toFixed(2)}</td>
-            </tr>
+            ${allSales.length > 0 ? allSales.map((s: any, index) => {
+              const currentItem = allSalesItems[index] || item;
+              const baseAmt = s.quantity * s.rate;
+              return `
+                <tr>
+                  <td>${index + 1}</td>
+                  <td class="desc-col">${getDisplayName(currentItem)}</td>
+                  <td>${currentItem.hsn_no}</td>
+                  <td>${currentItem.gst_percentage}%</td>
+                  <td>${s.quantity} ${currentItem.unit}</td>
+                  <td class="amount-col">₹${s.rate.toFixed(2)}</td>
+                  <td>${currentItem.unit}</td>
+                  <td class="amount-col">₹${baseAmt.toFixed(2)}</td>
+                </tr>
+              `;
+            }).join('') : `
+              <tr>
+                <td>1</td>
+                <td class="desc-col">${getDisplayName(item)}</td>
+                <td>${item.hsn_no}</td>
+                <td>${item.gst_percentage}%</td>
+                <td>${sale.quantity} ${item.unit}</td>
+                <td class="amount-col">₹${sale.rate.toFixed(2)}</td>
+                <td>${item.unit}</td>
+                <td class="amount-col">₹${baseAmount.toFixed(2)}</td>
+              </tr>
+            `}
             <tr style="background-color: #f9f9f9;">
               <td colspan="4" style="text-align: right; font-weight: bold; padding-right: 10px;">Total</td>
-              <td style="font-weight: bold;">${sale.quantity} ${item.unit}</td>
+              <td style="font-weight: bold;">${totalQuantity || sale.quantity} ${item.unit}</td>
               <td></td>
               <td></td>
               <td class="amount-col" style="font-weight: bold;">₹ ${baseAmount.toFixed(2)}</td>
@@ -600,6 +679,8 @@ export const MobileInvoiceGenerator: React.FC = () => {
     }
 
     const { baseAmount, gstAmount, totalAmount } = calculateAmounts();
+    const amounts = calculateAmounts();
+    const totalQuantity = amounts.totalQuantity;
     const printWindow = window.open('', '_blank');
     
     if (!printWindow) return;
@@ -739,19 +820,36 @@ export const MobileInvoiceGenerator: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>1</td>
-                <td class="desc-col">${getDisplayName(item)}</td>
-                <td>${item.hsn_no}</td>
-                <td>${item.gst_percentage}%</td>
-                <td>${sale.quantity} ${item.unit}</td>
-                <td class="amount-col">₹${sale.rate.toFixed(2)}</td>
-                <td>${item.unit}</td>
-                <td class="amount-col">₹${baseAmount.toFixed(2)}</td>
-              </tr>
+              ${allSales.length > 0 ? allSales.map((s: any, index) => {
+                const currentItem = allSalesItems[index] || item;
+                const baseAmt = s.quantity * s.rate;
+                return `
+                  <tr>
+                    <td>${index + 1}</td>
+                    <td class="desc-col">${getDisplayName(currentItem)}</td>
+                    <td>${currentItem.hsn_no}</td>
+                    <td>${currentItem.gst_percentage}%</td>
+                    <td>${s.quantity} ${currentItem.unit}</td>
+                    <td class="amount-col">₹${s.rate.toFixed(2)}</td>
+                    <td>${currentItem.unit}</td>
+                    <td class="amount-col">₹${baseAmt.toFixed(2)}</td>
+                  </tr>
+                `;
+              }).join('') : `
+                <tr>
+                  <td>1</td>
+                  <td class="desc-col">${getDisplayName(item)}</td>
+                  <td>${item.hsn_no}</td>
+                  <td>${item.gst_percentage}%</td>
+                  <td>${sale.quantity} ${item.unit}</td>
+                  <td class="amount-col">₹${sale.rate.toFixed(2)}</td>
+                  <td>${item.unit}</td>
+                  <td class="amount-col">₹${baseAmount.toFixed(2)}</td>
+                </tr>
+              `}
               <tr style="background-color: #f9f9f9;">
                 <td colspan="4" style="text-align: right; font-weight: bold; padding-right: 10px;">Total</td>
-                <td style="font-weight: bold;">${sale.quantity} ${item.unit}</td>
+                <td style="font-weight: bold;">${totalQuantity || sale.quantity} ${item.unit}</td>
                 <td></td>
                 <td></td>
                 <td class="amount-col" style="font-weight: bold;">₹ ${baseAmount.toFixed(2)}</td>
@@ -928,15 +1026,45 @@ export const MobileInvoiceGenerator: React.FC = () => {
             </div>
 
             <div className="border-t pt-3">
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>{getDisplayName(item)}</span>
-                  <span>{sale.quantity} {item.unit}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">{language === 'english' ? 'Rate:' : 'விலை:'}</span>
-                  <span>₹{sale.rate.toFixed(2)}</span>
-                </div>
+              {allSales.length > 0 ? (
+                <>
+                  {allSales.map((s: any, index) => {
+                    const currentItem = allSalesItems[index] || item;
+                    const itemBase = s.quantity * s.rate;
+                    return (
+                      <div key={s.id} className="space-y-2 pb-2 border-b last:border-b-0">
+                        <div className="flex justify-between text-sm">
+                          <span className="font-medium">{getDisplayName(currentItem)}</span>
+                          <span>{s.quantity} {currentItem.unit}</span>
+                        </div>
+                        <div className="flex justify-between text-sm text-muted-foreground">
+                          <span>{language === 'english' ? 'Rate:' : 'விலை:'}</span>
+                          <span>₹{s.rate.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-sm text-muted-foreground">
+                          <span>{language === 'english' ? 'Amount:' : 'தொகை:'}</span>
+                          <span>₹{itemBase.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>{getDisplayName(item)}</span>
+                      <span>{sale.quantity} {item.unit}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">{language === 'english' ? 'Rate:' : 'விலை:'}</span>
+                      <span>₹{sale.rate.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </>
+              )}
+              
+              <div className="border-t pt-2 mt-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">{language === 'english' ? 'Taxable Amount:' : 'வரி விதிக்கக்கூடிய தொகை:'}</span>
                   <span>₹{baseAmount.toFixed(2)}</span>

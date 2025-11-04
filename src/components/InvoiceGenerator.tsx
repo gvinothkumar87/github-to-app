@@ -27,6 +27,36 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
   const [companySettings, setCompanySettings] = useState<any>(null);
   const [showIrnDialog, setShowIrnDialog] = useState(false);
   const [currentSale, setCurrentSale] = useState(sale);
+  const [allSales, setAllSales] = useState<Sale[]>([sale]);
+  const [allItems, setAllItems] = useState<Item[]>([item]);
+
+  useEffect(() => {
+    const fetchAllSalesForBill = async () => {
+      if (sale.bill_serial_no) {
+        try {
+          const { data, error } = await supabase
+            .from('sales')
+            .select(`
+              *,
+              items(*)
+            `)
+            .eq('bill_serial_no', sale.bill_serial_no)
+            .order('created_at');
+
+          if (error) throw error;
+          
+          if (data && data.length > 1) {
+            setAllSales(data);
+            setAllItems(data.map((s: any) => s.items).filter(Boolean));
+          }
+        } catch (error) {
+          console.error('Error fetching all sales:', error);
+        }
+      }
+    };
+
+    fetchAllSalesForBill();
+  }, [sale.bill_serial_no]);
 
   useEffect(() => {
     const fetchCompanySettings = async () => {
@@ -101,9 +131,22 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
     printInvoice();
   };
 
-  const baseAmount = currentSale.quantity * currentSale.rate;
-  const gstAmount = baseAmount * (item.gst_percentage / 100);
-  const totalAmount = baseAmount + gstAmount;
+  // Calculate totals for all products
+  const calculateTotals = () => {
+    return allSales.reduce((acc, s, index) => {
+      const currentItem = allItems[index] || item;
+      const base = s.quantity * s.rate;
+      const gst = base * (currentItem.gst_percentage / 100);
+      return {
+        baseAmount: acc.baseAmount + base,
+        gstAmount: acc.gstAmount + gst,
+        totalAmount: acc.totalAmount + base + gst,
+        totalQuantity: acc.totalQuantity + s.quantity
+      };
+    }, { baseAmount: 0, gstAmount: 0, totalAmount: 0, totalQuantity: 0 });
+  };
+
+  const { baseAmount, gstAmount, totalAmount, totalQuantity } = calculateTotals();
 
   const generateEInvoiceJSON = () => {
     if (!companySettings) {
@@ -181,24 +224,31 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
       RefDtls: {
         InvRm: "NICGEPP2.0"
       },
-      ItemList: [
-        {
-          SlNo: "1",
-          PrdDesc: getDisplayName(item),
+      ItemList: allSales.map((s, index) => {
+        const currentItem = allItems[index] || item;
+        const baseAmt = s.quantity * s.rate;
+        const gstAmt = baseAmt * (currentItem.gst_percentage / 100);
+        const cgstAmt = Math.round((gstAmt / 2) * 100) / 100;
+        const sgstAmt = Math.round((gstAmt / 2) * 100) / 100;
+        const itemTotal = Math.round((baseAmt + cgstAmt + sgstAmt) * 100) / 100;
+        
+        return {
+          SlNo: (index + 1).toString(),
+          PrdDesc: getDisplayName(currentItem),
           IsServc: "N",
-          HsnCd: item.hsn_no,
-          Qty: sale.quantity,
+          HsnCd: currentItem.hsn_no,
+          Qty: s.quantity,
           FreeQty: 0,
-          Unit: item.unit,
-          UnitPrice: Math.round(sale.rate * 100) / 100,
-          TotAmt: roundedBaseAmount,
+          Unit: currentItem.unit,
+          UnitPrice: Math.round(s.rate * 100) / 100,
+          TotAmt: Math.round(baseAmt * 100) / 100,
           Discount: 0,
           PreTaxVal: 0,
-          AssAmt: roundedBaseAmount,
-          GstRt: item.gst_percentage,
+          AssAmt: Math.round(baseAmt * 100) / 100,
+          GstRt: currentItem.gst_percentage,
           IgstAmt: 0,
-          CgstAmt: roundedCgstAmount,
-          SgstAmt: roundedSgstAmount,
+          CgstAmt: cgstAmt,
+          SgstAmt: sgstAmt,
           CesRt: 0,
           CesAmt: 0,
           CesNonAdvlAmt: 0,
@@ -206,9 +256,9 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
           StateCesAmt: 0,
           StateCesNonAdvlAmt: 0,
           OthChrg: 0,
-          TotItemVal: roundedTotalAmount
-        }
-      ]
+          TotItemVal: itemTotal
+        };
+      })
     };
 
     // Wrap the invoice in an array as required by NIC API
@@ -380,19 +430,25 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>1</td>
-                  <td class="desc-col">${getDisplayName(item)}</td>
-                  <td>${item.hsn_no}</td>
-                  <td>${item.gst_percentage}%</td>
-                  <td>${sale.quantity} ${item.unit}</td>
-                  <td class="amount-col">₹${sale.rate.toFixed(2)}</td>
-                  <td>${item.unit}</td>
-                  <td class="amount-col">₹${baseAmount.toFixed(2)}</td>
-                </tr>
+                ${allSales.map((s, index) => {
+                  const currentItem = allItems[index] || item;
+                  const baseAmt = s.quantity * s.rate;
+                  return `
+                    <tr>
+                      <td>${index + 1}</td>
+                      <td class="desc-col">${getDisplayName(currentItem)}</td>
+                      <td>${currentItem.hsn_no}</td>
+                      <td>${currentItem.gst_percentage}%</td>
+                      <td>${s.quantity} ${currentItem.unit}</td>
+                      <td class="amount-col">₹${s.rate.toFixed(2)}</td>
+                      <td>${currentItem.unit}</td>
+                      <td class="amount-col">₹${baseAmt.toFixed(2)}</td>
+                    </tr>
+                  `;
+                }).join('')}
                 <tr style="background-color: #f9f9f9;">
                   <td colspan="4" style="text-align: right; font-weight: bold; padding-right: 10px;">Total</td>
-                  <td style="font-weight: bold;">${sale.quantity} ${item.unit}</td>
+                  <td style="font-weight: bold;">${totalQuantity} ${item.unit}</td>
                   <td></td>
                   <td></td>
                   <td class="amount-col" style="font-weight: bold;">₹ ${baseAmount.toFixed(2)}</td>

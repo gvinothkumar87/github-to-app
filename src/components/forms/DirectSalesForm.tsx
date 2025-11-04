@@ -17,15 +17,25 @@ interface DirectSalesFormProps {
   onCancel: () => void;
 }
 
+interface LineItem {
+  id: string;
+  item_id: string;
+  quantity: string;
+  rate: string;
+}
+
 export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) => {
   const { language, getDisplayName } = useLanguage();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
-  const [selectedItem, setSelectedItem] = useState<string>('');
-  const [quantity, setQuantity] = useState<string>('');
+  const [lineItems, setLineItems] = useState<LineItem[]>([{
+    id: crypto.randomUUID(),
+    item_id: '',
+    quantity: '',
+    rate: ''
+  }]);
   const [loadingPlace, setLoadingPlace] = useState<string>('PULIVANTHI');
-  const [rate, setRate] = useState<string>('');
   const [billSerialNo, setBillSerialNo] = useState<string>('');
   const [lorryNo, setLorryNo] = useState<string>('');
   const [remarks, setRemarks] = useState<string>('');
@@ -174,22 +184,49 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
     }
   };
 
-  const calculateTotalAmount = () => {
-    if (!quantity || !rate || !selectedItem) return 0;
+  const addLineItem = () => {
+    setLineItems([...lineItems, {
+      id: crypto.randomUUID(),
+      item_id: '',
+      quantity: '',
+      rate: ''
+    }]);
+  };
+
+  const removeLineItem = (id: string) => {
+    if (lineItems.length > 1) {
+      setLineItems(lineItems.filter(item => item.id !== id));
+    }
+  };
+
+  const updateLineItem = (id: string, field: keyof LineItem, value: string) => {
+    setLineItems(lineItems.map(item => 
+      item.id === id ? { ...item, [field]: value } : item
+    ));
+  };
+
+  const calculateLineItemTotal = (lineItem: LineItem) => {
+    if (!lineItem.quantity || !lineItem.rate || !lineItem.item_id) return 0;
     
-    const item = items.find(i => i.id === selectedItem);
+    const item = items.find(i => i.id === lineItem.item_id);
     if (!item) return 0;
 
-    const baseAmount = parseFloat(quantity) * parseFloat(rate);
+    const baseAmount = parseFloat(lineItem.quantity) * parseFloat(lineItem.rate);
     const gstAmount = baseAmount * (item.gst_percentage / 100);
     return baseAmount + gstAmount;
+  };
+
+  const calculateGrandTotal = () => {
+    return lineItems.reduce((total, lineItem) => total + calculateLineItemTotal(lineItem), 0);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedCustomer || !selectedItem || !quantity || !rate || !billSerialNo || !lorryNo) {
-      toast.error('Please fill in all required fields');
+    // Validate all line items
+    const hasEmptyFields = lineItems.some(item => !item.item_id || !item.quantity || !item.rate);
+    if (!selectedCustomer || hasEmptyFields || !billSerialNo || !lorryNo) {
+      toast.error('Please fill in all required fields for all products');
       return;
     }
 
@@ -198,62 +235,86 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No user found');
 
-      const item = items.find(i => i.id === selectedItem);
-      
-      // Calculate amounts
-      const baseAmount = parseFloat(quantity) * parseFloat(rate);
-      const gstAmount = baseAmount * ((item?.gst_percentage || 0) / 100);
-      const totalAmount = baseAmount + gstAmount;
+      const grandTotal = calculateGrandTotal();
+      const createdSales = [];
 
-      // Prepare sale data for RPC
-      const saleData = {
-        outward_entry_id: null,
-        customer_id: selectedCustomer,
-        item_id: selectedItem,
-        quantity: parseFloat(quantity),
-        rate: parseFloat(rate),
-        total_amount: totalAmount,
-        base_amount: baseAmount,
-        gst_amount: gstAmount,
-        sale_date: saleDate,
-        bill_serial_no: billSerialNo,
-        irn: null,
-        user_id: user.id,
-        created_by: user.id
-      };
+      // Create a sale record for each line item
+      for (const lineItem of lineItems) {
+        const item = items.find(i => i.id === lineItem.item_id);
+        if (!item) continue;
+        
+        // Calculate amounts for this line item
+        const baseAmount = parseFloat(lineItem.quantity) * parseFloat(lineItem.rate);
+        const gstAmount = baseAmount * ((item?.gst_percentage || 0) / 100);
+        const totalAmount = baseAmount + gstAmount;
 
-      // Prepare ledger data
-      const ledgerData = {
-        customer_id: selectedCustomer,
-        debit_amount: totalAmount,
-        credit_amount: 0,
-        transaction_date: saleDate,
-        description: `Direct Sale - Bill #${billSerialNo}`
-      };
+        // Prepare sale data for RPC
+        const saleData = {
+          outward_entry_id: null,
+          customer_id: selectedCustomer,
+          item_id: lineItem.item_id,
+          quantity: parseFloat(lineItem.quantity),
+          rate: parseFloat(lineItem.rate),
+          total_amount: totalAmount,
+          base_amount: baseAmount,
+          gst_amount: gstAmount,
+          sale_date: saleDate,
+          bill_serial_no: billSerialNo,
+          irn: null,
+          user_id: user.id,
+          created_by: user.id,
+          loading_place: loadingPlace,
+          lorry_no: lorryNo
+        };
 
-      // Call the RPC function
-      const { data, error } = await supabase.rpc('create_sale_with_ledger', {
-        p_sale_data: saleData,
-        p_ledger_data: ledgerData
-      });
+        // For the first item, create with ledger entry
+        // For subsequent items, create without ledger to avoid duplicate ledger entries
+        if (createdSales.length === 0) {
+          // First item - create with ledger entry for the grand total
+          const ledgerData = {
+            customer_id: selectedCustomer,
+            debit_amount: grandTotal,
+            credit_amount: 0,
+            transaction_date: saleDate,
+            description: `Direct Sale - Bill #${billSerialNo} (${lineItems.length} items)`
+          };
 
-      if (error) throw error;
-      
-      const result = data as any;
-      if (result?.error) throw new Error(result.error);
+          const { data, error } = await supabase.rpc('create_sale_with_ledger', {
+            p_sale_data: saleData,
+            p_ledger_data: ledgerData
+          });
 
-      // Fetch the created sale for invoice
-      const { data: createdSaleData, error: fetchError } = await supabase
+          if (error) throw error;
+          const result = data as any;
+          if (result?.error) throw new Error(result.error);
+          createdSales.push(result.sale_id);
+        } else {
+          // Subsequent items - create without ledger
+          const { data: saleRecord, error } = await supabase
+            .from('sales')
+            .insert(saleData)
+            .select()
+            .single();
+
+          if (error) throw error;
+          createdSales.push(saleRecord.id);
+        }
+      }
+
+      // Fetch all created sales for invoice
+      const { data: salesData, error: fetchError } = await supabase
         .from("sales")
         .select(`
           *,
-          customer:customers(*),
-          item:items(*)
+          customers(*),
+          items(*)
         `)
-        .eq('id', result.sale_id)
-        .single();
+        .in('id', createdSales);
 
       if (fetchError) throw fetchError;
+
+      // Calculate total quantity across all items
+      const totalQuantity = lineItems.reduce((sum, item) => sum + parseFloat(item.quantity), 0);
 
       // Create temp outward entry for invoice
       const tempOutwardEntry = {
@@ -261,12 +322,12 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
         serial_no: 0,
         entry_date: saleDate,
         customer_id: selectedCustomer,
-        item_id: selectedItem,
+        item_id: lineItems[0].item_id,
         lorry_no: lorryNo,
         driver_mobile: '',
         empty_weight: 0,
-        load_weight: parseFloat(quantity),
-        net_weight: parseFloat(quantity),
+        load_weight: totalQuantity,
+        net_weight: totalQuantity,
         loading_place: loadingPlace,
         is_completed: true,
         remarks: remarks || null,
@@ -275,14 +336,17 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
       };
 
       const customer = customers.find(c => c.id === selectedCustomer);
+      const firstItem = items.find(i => i.id === lineItems[0].item_id);
+      
       setCreatedSale({
-        sale: createdSaleData,
+        sales: salesData, // Multiple sales
+        sale: salesData[0], // First sale for compatibility
         outwardEntry: tempOutwardEntry,
         customer,
-        item
+        item: firstItem
       });
       setShowInvoice(true);
-      toast.success('Direct sale created successfully');
+      toast.success(`Direct sale with ${lineItems.length} item(s) created successfully`);
 
     } catch (error: any) {
       console.error('Error creating direct sale:', error);
@@ -292,14 +356,16 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
         const { data: { user } } = await supabase.auth.getUser();
         await supabase.rpc('log_failed_transaction', {
           p_user_id: user?.id,
-          p_transaction_type: 'direct_sale',
+          p_transaction_type: 'direct_sale_multi',
           p_attempted_data: {
             customer_id: selectedCustomer,
-            item_id: selectedItem,
-            quantity: parseFloat(quantity),
-            rate: parseFloat(rate),
+            line_items: lineItems.map(item => ({
+              item_id: item.item_id,
+              quantity: item.quantity,
+              rate: item.rate
+            })),
             bill_serial_no: billSerialNo
-          },
+          } as any,
           p_error_message: error.message
         });
       } catch (logError) {
@@ -351,45 +417,83 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="item">Item *</Label>
-              <Select value={selectedItem} onValueChange={setSelectedItem}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select item" />
-                </SelectTrigger>
-                <SelectContent>
-                  {items.map((item) => (
-                    <SelectItem key={item.id} value={item.id}>
-                      {getDisplayName(item)} ({item.code})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          </div>
+
+          {/* Line Items Section */}
+          <div className="space-y-4 border-t pt-4">
+            <div className="flex justify-between items-center">
+              <Label className="text-lg font-semibold">Products *</Label>
+              <Button type="button" onClick={addLineItem} variant="outline" size="sm">
+                + Add Product
+              </Button>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="quantity">Quantity *</Label>
-              <Input
-                id="quantity"
-                type="number"
-                step="0.01"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                placeholder="Enter quantity"
-              />
-            </div>
+            {lineItems.map((lineItem, index) => (
+              <div key={lineItem.id} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-muted rounded-lg relative">
+                {lineItems.length > 1 && (
+                  <Button
+                    type="button"
+                    onClick={() => removeLineItem(lineItem.id)}
+                    variant="destructive"
+                    size="sm"
+                    className="absolute -top-2 -right-2"
+                  >
+                    ×
+                  </Button>
+                )}
+                
+                <div className="space-y-2">
+                  <Label>Item {index + 1} *</Label>
+                  <Select 
+                    value={lineItem.item_id} 
+                    onValueChange={(value) => updateLineItem(lineItem.id, 'item_id', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select item" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {items.map((item) => (
+                        <SelectItem key={item.id} value={item.id}>
+                          {getDisplayName(item)} ({item.code})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="rate">Rate *</Label>
-              <Input
-                id="rate"
-                type="number"
-                step="0.01"
-                value={rate}
-                onChange={(e) => setRate(e.target.value)}
-                placeholder="Enter rate"
-              />
-            </div>
+                <div className="space-y-2">
+                  <Label>Quantity *</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={lineItem.quantity}
+                    onChange={(e) => updateLineItem(lineItem.id, 'quantity', e.target.value)}
+                    placeholder="Enter quantity"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Rate *</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={lineItem.rate}
+                    onChange={(e) => updateLineItem(lineItem.id, 'rate', e.target.value)}
+                    placeholder="Enter rate"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Total</Label>
+                  <div className="p-2 bg-background rounded border text-center font-semibold">
+                    ₹{calculateLineItemTotal(lineItem).toFixed(2)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
 
             <div className="space-y-2">
               <Label htmlFor="loadingPlace">
@@ -466,30 +570,19 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
             />
           </div>
 
-          {quantity && rate && selectedItem && (
-            <div className="p-4 bg-muted rounded-lg space-y-2">
-              <div className="flex justify-between">
-                <span>Base Amount:</span>
-                <span className="font-semibold">
-                  ₹{(parseFloat(quantity) * parseFloat(rate)).toFixed(2)}
+          {lineItems.some(item => item.item_id && item.quantity && item.rate) && (
+            <div className="p-4 bg-primary/10 rounded-lg border-2 border-primary">
+              <div className="flex justify-between items-center">
+                <span className="text-lg font-bold">Grand Total:</span>
+                <span className="text-2xl font-bold text-primary">
+                  ₹{calculateGrandTotal().toFixed(2)}
                 </span>
               </div>
-              {items.find(i => i.id === selectedItem)?.gst_percentage > 0 && (
-                <>
-                  <div className="flex justify-between">
-                    <span>GST ({items.find(i => i.id === selectedItem)?.gst_percentage}%):</span>
-                    <span className="font-semibold">
-                      ₹{((parseFloat(quantity) * parseFloat(rate)) * (items.find(i => i.id === selectedItem)?.gst_percentage / 100)).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between pt-2 border-t">
-                    <span className="font-bold">Total Amount:</span>
-                    <span className="font-bold text-lg">
-                      ₹{calculateTotalAmount().toFixed(2)}
-                    </span>
-                  </div>
-                </>
-              )}
+              <div className="text-sm text-muted-foreground mt-1">
+                {lineItems.length} product(s) • Total Qty: {lineItems.reduce((sum, item) => 
+                  sum + (parseFloat(item.quantity) || 0), 0
+                ).toFixed(2)}
+              </div>
             </div>
           )}
 

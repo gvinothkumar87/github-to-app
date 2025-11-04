@@ -14,16 +14,26 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Loader2 } from 'lucide-react';
 import { Customer, Item } from '@/types';
 
+interface LineItem {
+  id: string;
+  item_id: string;
+  quantity: string;
+  rate: string;
+}
+
 const MobileDirectSalesForm: React.FC = () => {
   const navigate = useNavigate();
   const { language, getDisplayName } = useLanguage();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
-  const [selectedItem, setSelectedItem] = useState<string>('');
-  const [quantity, setQuantity] = useState<string>('');
+  const [lineItems, setLineItems] = useState<LineItem[]>([{
+    id: crypto.randomUUID(),
+    item_id: '',
+    quantity: '',
+    rate: ''
+  }]);
   const [loadingPlace, setLoadingPlace] = useState<string>('PULIVANTHI');
-  const [rate, setRate] = useState<string>('');
   const [billSerialNo, setBillSerialNo] = useState<string>('');
   const [lorryNo, setLorryNo] = useState<string>('');
   const [remarks, setRemarks] = useState<string>('');

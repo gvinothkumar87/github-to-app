@@ -9,7 +9,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Sale, OutwardEntry, Customer, Item } from '@/types';
 
 interface EditSaleFormProps {
-  sale: Sale;
+  sale: any; // Can be a single sale or grouped sale with _allSales
   outwardEntry: OutwardEntry | null;
   customer: Customer;
   item: Item;
@@ -17,8 +17,41 @@ interface EditSaleFormProps {
   onCancel: () => void;
 }
 
+interface LineItemEdit {
+  id: string;
+  sale_id: string;
+  item: Item;
+  quantity: number;
+  rate: string;
+  unit: string;
+}
+
 export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, onCancel }: EditSaleFormProps) => {
-  const [rate, setRate] = useState(sale.rate.toString());
+  const isMultiProduct = sale._isGrouped && sale._allSales && sale._allSales.length > 1;
+  
+  // Initialize line items for editing
+  const [lineItems, setLineItems] = useState<LineItemEdit[]>(() => {
+    if (isMultiProduct) {
+      return sale._allSales.map((s: any) => ({
+        id: crypto.randomUUID(),
+        sale_id: s.id,
+        item: s.items,
+        quantity: s.quantity,
+        rate: s.rate.toString(),
+        unit: s.items?.unit || 'KG'
+      }));
+    } else {
+      return [{
+        id: crypto.randomUUID(),
+        sale_id: sale.id,
+        item: item,
+        quantity: sale.quantity,
+        rate: sale.rate.toString(),
+        unit: item.unit
+      }];
+    }
+  });
+
   const [irn, setIrn] = useState(sale.irn || '');
   const [saleDate, setSaleDate] = useState(sale.sale_date || new Date().toISOString().split('T')[0]);
   const [billSerialNo, setBillSerialNo] = useState(sale.bill_serial_no || '');
@@ -28,22 +61,22 @@ export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, on
   const { toast } = useToast();
   const { language, getDisplayName } = useLanguage();
 
-  const calculateTotalAmount = (newRate: number) => {
-    const quantity = sale.quantity;
-    const baseAmount = quantity * newRate;
-    const gstPercent = item.gst_percentage || 0;
+  const updateLineItem = (id: string, field: 'rate', value: string) => {
+    setLineItems(lineItems.map(li => 
+      li.id === id ? { ...li, [field]: value } : li
+    ));
+  };
+
+  const calculateLineItemTotal = (lineItem: LineItemEdit) => {
+    const rate = parseFloat(lineItem.rate) || 0;
+    const baseAmount = lineItem.quantity * rate;
+    const gstPercent = lineItem.item.gst_percentage || 0;
     const gstAmount = baseAmount * (gstPercent / 100);
     return baseAmount + gstAmount;
   };
 
-  const getBaseAmount = (newRate: number) => {
-    return sale.quantity * newRate;
-  };
-
-  const getGstAmount = (newRate: number) => {
-    const baseAmount = getBaseAmount(newRate);
-    const gstPercent = item.gst_percentage || 0;
-    return baseAmount * (gstPercent / 100);
+  const calculateGrandTotal = () => {
+    return lineItems.reduce((total, li) => total + calculateLineItemTotal(li), 0);
   };
 
   const calculateNetWeight = () => {
@@ -55,10 +88,21 @@ export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, on
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!rate || !billSerialNo || !saleDate) {
+    if (!billSerialNo || !saleDate) {
       toast({
         title: language === 'english' ? 'Error' : 'பிழை',
         description: language === 'english' ? 'Please fill all required fields' : 'அனைத்து தேவையான புலங்களையும் நிரப்பவும்',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate all line items have rates
+    const hasEmptyRates = lineItems.some(li => !li.rate || parseFloat(li.rate) <= 0);
+    if (hasEmptyRates) {
+      toast({
+        title: language === 'english' ? 'Error' : 'பிழை',
+        description: language === 'english' ? 'Please enter valid rates for all items' : 'அனைத்து பொருட்களுக்கும் சரியான விலைகளை உள்ளிடவும்',
         variant: 'destructive',
       });
       return;
@@ -70,44 +114,48 @@ export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, on
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
-      const newRate = parseFloat(rate);
-      const newBaseAmount = getBaseAmount(newRate);
-      const newGstAmount = getGstAmount(newRate);
-      const newTotalAmount = calculateTotalAmount(newRate);
+      // Update each sale in the line items
+      for (const lineItem of lineItems) {
+        const newRate = parseFloat(lineItem.rate);
+        const baseAmount = lineItem.quantity * newRate;
+        const gstPercent = lineItem.item.gst_percentage || 0;
+        const gstAmount = baseAmount * (gstPercent / 100);
+        const totalAmount = baseAmount + gstAmount;
 
-      // Prepare sale update data
-      const saleData = {
-        rate: newRate.toString(),
-        total_amount: newTotalAmount.toString(),
-        base_amount: newBaseAmount.toString(),
-        gst_amount: newGstAmount.toString(),
-        irn: irn || null,
-        bill_serial_no: billSerialNo,
-        sale_date: saleDate
-      };
+        const saleData = {
+          rate: newRate.toString(),
+          total_amount: totalAmount.toString(),
+          base_amount: baseAmount.toString(),
+          gst_amount: gstAmount.toString(),
+          irn: irn || null,
+          bill_serial_no: billSerialNo,
+          sale_date: saleDate
+        };
 
-      // Prepare outward entry update data if needed
-      const outwardEntryData = outwardEntry ? {
-        load_weight: loadWeight || null,
-        empty_weight: emptyWeight || null
-      } : null;
+        // For first item, update outward entry if it exists
+        const outwardEntryData = (lineItem.id === lineItems[0].id && outwardEntry) ? {
+          load_weight: loadWeight || null,
+          empty_weight: emptyWeight || null
+        } : null;
 
-      // Call the update RPC function
-      const { data, error } = await supabase.rpc('update_sale_with_ledger', {
-        p_sale_id: sale.id,
-        p_sale_data: saleData,
-        p_outward_entry_data: outwardEntryData,
-        p_user_id: user.id
-      });
+        const { data, error } = await supabase.rpc('update_sale_with_ledger', {
+          p_sale_id: lineItem.sale_id,
+          p_sale_data: saleData,
+          p_outward_entry_data: outwardEntryData,
+          p_user_id: user.id
+        });
 
-      if (error) throw error;
-      
-      const result = data as any;
-      if (result?.error) throw new Error(result.error);
+        if (error) throw error;
+        
+        const result = data as any;
+        if (result?.error) throw new Error(result.error);
+      }
 
       toast({
         title: language === 'english' ? 'Success' : 'வெற்றி',
-        description: language === 'english' ? 'Sale updated successfully' : 'விற்பனை வெற்றிகரமாக புதுப்பிக்கப்பட்டது',
+        description: language === 'english' 
+          ? `${lineItems.length} item(s) updated successfully`
+          : `${lineItems.length} பொருட்கள் வெற்றிகரமாக புதுப்பிக்கப்பட்டன`,
       });
 
       onSuccess();
@@ -115,24 +163,6 @@ export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, on
     } catch (error: any) {
       console.error("Error updating sale:", error);
       
-      // Log the failed transaction
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        await supabase.rpc('log_failed_transaction', {
-          p_user_id: user?.id,
-          p_transaction_type: 'update_sale',
-          p_attempted_data: {
-            sale_id: sale.id,
-            rate: parseFloat(rate),
-            total_amount: calculateTotalAmount(parseFloat(rate)),
-            bill_serial_no: billSerialNo
-          },
-          p_error_message: error.message
-        });
-      } catch (logError) {
-        console.error("Failed to log error:", logError);
-      }
-
       toast({
         title: language === 'english' ? 'Error' : 'பிழை',
         description: error.message || (language === 'english' ? 'Failed to update sale' : 'விற்பனை புதுப்பிப்பதில் தோல்வி'),
@@ -143,16 +173,14 @@ export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, on
     }
   };
 
-  const currentRate = parseFloat(rate) || 0;
-
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
         <CardTitle>{language === 'english' ? 'Edit Sale' : 'விற்பனையை திருத்து'}</CardTitle>
         <CardDescription>
           {language === 'english' 
-            ? `Editing bill ${sale.bill_serial_no}`
-            : `பில் ${sale.bill_serial_no} ஐ திருத்துகிறது`
+            ? `Editing bill ${sale.bill_serial_no}${isMultiProduct ? ` (${lineItems.length} items)` : ''}`
+            : `பில் ${sale.bill_serial_no}${isMultiProduct ? ` (${lineItems.length} பொருட்கள்)` : ''} ஐ திருத்துகிறது`
           }
         </CardDescription>
       </CardHeader>
@@ -165,24 +193,12 @@ export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, on
                 <Label className="text-xs font-medium">{language === 'english' ? 'Customer' : 'வாடிக்கையாளர்'}:</Label>
                 <p>{getDisplayName(customer)}</p>
               </div>
-              <div>
-                <Label className="text-xs font-medium">{language === 'english' ? 'Item' : 'பொருள்'}:</Label>
-                <p>{getDisplayName(item)}</p>
-              </div>
-              <div>
-                <Label className="text-xs font-medium">{language === 'english' ? 'Quantity' : 'அளவு'}:</Label>
-                <p>{sale.quantity} {item.unit}</p>
-              </div>
               {outwardEntry && (
                 <div>
                   <Label className="text-xs font-medium">{language === 'english' ? 'Lorry No' : 'லாரி எண்'}:</Label>
                   <p>{outwardEntry.lorry_no}</p>
                 </div>
               )}
-              <div>
-                <Label className="text-xs font-medium">{language === 'english' ? 'GST %' : 'ஜிஎஸ்டி %'}:</Label>
-                <p>{item.gst_percentage || 0}%</p>
-              </div>
             </div>
           </div>
 
@@ -215,19 +231,46 @@ export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, on
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="rate">
-              {language === 'english' ? 'Rate per Unit' : 'யூனிட் ஒன்றுக்கான விலை'}
+          {/* Products Section */}
+          <div className="space-y-3 border-t pt-4">
+            <Label className="text-base font-semibold">
+              {language === 'english' ? 'Products' : 'தயாரிப்புகள்'}
             </Label>
-            <Input
-              id="rate"
-              type="number"
-              step="0.01"
-              value={rate}
-              onChange={(e) => setRate(e.target.value)}
-              placeholder={language === 'english' ? 'Enter rate...' : 'விலையை உள்ளிடவும்...'}
-              required
-            />
+
+            {lineItems.map((lineItem, index) => (
+              <div key={lineItem.id} className="p-4 bg-muted rounded-lg space-y-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-medium">{getDisplayName(lineItem.item)}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {lineItem.quantity} {lineItem.unit} @ GST {lineItem.item.gst_percentage}%
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor={`rate-${lineItem.id}`} className="text-sm">
+                      {language === 'english' ? 'Rate' : 'விலை'}
+                    </Label>
+                    <Input
+                      id={`rate-${lineItem.id}`}
+                      type="number"
+                      step="0.01"
+                      value={lineItem.rate}
+                      onChange={(e) => updateLineItem(lineItem.id, 'rate', e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm">{language === 'english' ? 'Total' : 'மொத்தம்'}</Label>
+                    <div className="p-2 bg-background rounded border text-center font-semibold">
+                      ₹{calculateLineItemTotal(lineItem).toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -282,32 +325,22 @@ export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, on
             />
           </div>
 
-          {currentRate > 0 && (
-            <div className="bg-primary/10 p-4 rounded-lg space-y-2">
-              <div className="flex justify-between items-center text-sm">
-                <span>{language === 'english' ? 'Base Amount:' : 'அடிப்படை தொகை:'}</span>
-                <span>₹{getBaseAmount(currentRate).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span>{language === 'english' ? 'GST Amount:' : 'ஜிஎஸ்டி தொகை:'}</span>
-                <span>₹{getGstAmount(currentRate).toFixed(2)}</span>
-              </div>
-              <div className="border-t pt-2 flex justify-between items-center">
-                <span className="font-medium">
-                  {language === 'english' ? 'Total Amount:' : 'மொத்த தொகை:'}
-                </span>
-                <span className="text-lg font-bold">
-                  ₹{calculateTotalAmount(currentRate).toFixed(2)}
-                </span>
-              </div>
+          <div className="bg-primary/10 p-4 rounded-lg">
+            <div className="flex justify-between items-center">
+              <span className="font-medium text-lg">
+                {language === 'english' ? 'Grand Total:' : 'மொத்த தொகை:'}
+              </span>
+              <span className="text-xl font-bold">
+                ₹{calculateGrandTotal().toFixed(2)}
+              </span>
             </div>
-          )}
+          </div>
 
           <div className="flex gap-2">
-            <Button type="submit" disabled={loading || !rate}>
+            <Button type="submit" disabled={loading}>
               {loading 
                 ? (language === 'english' ? 'Updating...' : 'புதுப்பிக்கிறது...') 
-                : (language === 'english' ? 'Update Sale' : 'விற்பனையை புதுப்பிக்கவум்')
+                : (language === 'english' ? 'Update Sale' : 'விற்பனையை புதுப்பிக்கவும்')
               }
             </Button>
             <Button type="button" variant="outline" onClick={onCancel}>

@@ -42,7 +42,37 @@ export const BillsList = ({ onEditSale, onPrintSale }: BillsListProps) => {
 
       if (error) throw error;
 
-      setSales(salesData || []);
+      // Group sales by bill_serial_no for multi-product bills
+      const groupedSales: any[] = [];
+      const billMap = new Map();
+
+      salesData?.forEach((sale: any) => {
+        if (!sale.bill_serial_no) {
+          groupedSales.push(sale);
+          return;
+        }
+
+        if (!billMap.has(sale.bill_serial_no)) {
+          // First sale with this bill_serial_no
+          billMap.set(sale.bill_serial_no, {
+            ...sale,
+            _allSales: [sale], // Store all sales with same bill number
+            _isGrouped: true
+          });
+        } else {
+          // Additional sale with same bill_serial_no - add to group
+          const existingBill = billMap.get(sale.bill_serial_no);
+          existingBill._allSales.push(sale);
+          // Update totals
+          existingBill.total_amount += sale.total_amount;
+          existingBill.quantity += sale.quantity;
+        }
+      });
+
+      // Add grouped bills to the list
+      billMap.forEach(bill => groupedSales.push(bill));
+
+      setSales(groupedSales || []);
     } catch (error: any) {
       toast({
         title: language === 'english' ? 'Error' : 'பிழை',
@@ -136,9 +166,24 @@ export const BillsList = ({ onEditSale, onPrintSale }: BillsListProps) => {
                     <TableCell className="font-medium">{sale.bill_serial_no}</TableCell>
                     <TableCell>{new Date(sale.sale_date).toLocaleDateString('en-IN')}</TableCell>
                     <TableCell>{getDisplayName(sale.customers)}</TableCell>
-                    <TableCell>{getDisplayName(sale.items)}</TableCell>
-                    <TableCell>{sale.quantity} {sale.items?.unit}</TableCell>
-                    <TableCell>₹{sale.rate.toFixed(2)}</TableCell>
+                    <TableCell>
+                      {sale._isGrouped && sale._allSales?.length > 1 
+                        ? `${sale._allSales.length} ${language === 'english' ? 'items' : 'பொருட்கள்'}`
+                        : getDisplayName(sale.items)
+                      }
+                    </TableCell>
+                    <TableCell>
+                      {sale._isGrouped && sale._allSales?.length > 1
+                        ? `${sale.quantity.toFixed(2)}`
+                        : `${sale.quantity} ${sale.items?.unit}`
+                      }
+                    </TableCell>
+                    <TableCell>
+                      {sale._isGrouped && sale._allSales?.length > 1
+                        ? language === 'english' ? 'Multiple' : 'பல'
+                        : `₹${sale.rate.toFixed(2)}`
+                      }
+                    </TableCell>
                     <TableCell className="font-semibold">₹{sale.total_amount.toFixed(2)}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">

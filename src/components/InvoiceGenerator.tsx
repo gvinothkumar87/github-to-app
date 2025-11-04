@@ -654,16 +654,24 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-t">
-                  <td className="p-3">{getDisplayName(item)}</td>
-                  <td className="p-3">{item.hsn_no}</td>
-                  <td className="p-3 text-right">{sale.quantity} {item.unit}</td>
-                  <td className="p-3 text-right">₹{sale.rate.toFixed(2)}</td>
-                  <td className="p-3 text-right">₹{baseAmount.toFixed(2)}</td>
-                  <td className="p-3 text-right">{item.gst_percentage}%</td>
-                  <td className="p-3 text-right">₹{gstAmount.toFixed(2)}</td>
-                  <td className="p-3 text-right font-semibold">₹{totalAmount.toFixed(2)}</td>
-                </tr>
+                {allSales.map((s, index) => {
+                  const currentItem = allItems[index] || item;
+                  const itemBase = s.quantity * s.rate;
+                  const itemGst = itemBase * (currentItem.gst_percentage / 100);
+                  const itemTotal = itemBase + itemGst;
+                  return (
+                    <tr key={s.id} className="border-t">
+                      <td className="p-3">{getDisplayName(currentItem)}</td>
+                      <td className="p-3">{currentItem.hsn_no}</td>
+                      <td className="p-3 text-right">{s.quantity} {currentItem.unit}</td>
+                      <td className="p-3 text-right">₹{s.rate.toFixed(2)}</td>
+                      <td className="p-3 text-right">₹{itemBase.toFixed(2)}</td>
+                      <td className="p-3 text-right">{currentItem.gst_percentage}%</td>
+                      <td className="p-3 text-right">₹{itemGst.toFixed(2)}</td>
+                      <td className="p-3 text-right font-semibold">₹{itemTotal.toFixed(2)}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

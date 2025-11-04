@@ -171,22 +171,49 @@ const MobileDirectSalesForm: React.FC = () => {
     }
   };
 
-  const calculateTotalAmount = () => {
-    if (!quantity || !rate || !selectedItem) return 0;
+  const addLineItem = () => {
+    setLineItems([...lineItems, {
+      id: crypto.randomUUID(),
+      item_id: '',
+      quantity: '',
+      rate: ''
+    }]);
+  };
+
+  const removeLineItem = (id: string) => {
+    if (lineItems.length > 1) {
+      setLineItems(lineItems.filter(item => item.id !== id));
+    }
+  };
+
+  const updateLineItem = (id: string, field: keyof LineItem, value: string) => {
+    setLineItems(lineItems.map(item => 
+      item.id === id ? { ...item, [field]: value } : item
+    ));
+  };
+
+  const calculateLineItemTotal = (lineItem: LineItem) => {
+    if (!lineItem.quantity || !lineItem.rate || !lineItem.item_id) return 0;
     
-    const item = items.find(i => i.id === selectedItem);
+    const item = items.find(i => i.id === lineItem.item_id);
     if (!item) return 0;
 
-    const baseAmount = parseFloat(quantity) * parseFloat(rate);
-    const gstAmount = baseAmount * ((item.gst_percentage || 0) / 100);
+    const baseAmount = parseFloat(lineItem.quantity) * parseFloat(lineItem.rate);
+    const gstAmount = baseAmount * (item.gst_percentage / 100);
     return baseAmount + gstAmount;
+  };
+
+  const calculateGrandTotal = () => {
+    return lineItems.reduce((total, lineItem) => total + calculateLineItemTotal(lineItem), 0);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedCustomer || !selectedItem || !quantity || !rate || !billSerialNo || !lorryNo) {
-      toast.error('Please fill in all required fields');
+    // Validate all line items
+    const hasEmptyFields = lineItems.some(item => !item.item_id || !item.quantity || !item.rate);
+    if (!selectedCustomer || hasEmptyFields || !billSerialNo || !lorryNo) {
+      toast.error(language === 'english' ? 'Please fill in all required fields for all products' : 'அனைத்து தயாரிப்புகளுக்கும் தேவையான புலங்களை நிரப்பவும்');
       return;
     }
 
@@ -195,54 +222,75 @@ const MobileDirectSalesForm: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No user found');
 
-      const item = items.find(i => i.id === selectedItem);
-      
-      // Calculate amounts
-      const baseAmount = parseFloat(quantity) * parseFloat(rate);
-      const gstAmount = baseAmount * ((item?.gst_percentage || 0) / 100);
-      const totalAmount = baseAmount + gstAmount;
+      const grandTotal = calculateGrandTotal();
+      const createdSales = [];
 
-      // Prepare sale data for RPC
-      const saleData = {
-        outward_entry_id: null,
-        customer_id: selectedCustomer,
-        item_id: selectedItem,
-        quantity: parseFloat(quantity),
-        rate: parseFloat(rate),
-        total_amount: totalAmount,
-        base_amount: baseAmount,
-        gst_amount: gstAmount,
-        sale_date: saleDate,
-        bill_serial_no: billSerialNo,
-        lorry_no: lorryNo,
-        loading_place: loadingPlace,
-        irn: null,
-        user_id: user.id,
-        created_by: user.id
-      };
+      // Create a sale record for each line item
+      for (const lineItem of lineItems) {
+        const item = items.find(i => i.id === lineItem.item_id);
+        if (!item) continue;
+        
+        // Calculate amounts for this line item
+        const baseAmount = parseFloat(lineItem.quantity) * parseFloat(lineItem.rate);
+        const gstAmount = baseAmount * ((item?.gst_percentage || 0) / 100);
+        const totalAmount = baseAmount + gstAmount;
 
-      // Prepare ledger data
-      const ledgerData = {
-        customer_id: selectedCustomer,
-        debit_amount: totalAmount,
-        credit_amount: 0,
-        transaction_date: saleDate,
-        description: `Direct Sale - Bill #${billSerialNo}`
-      };
+        // Prepare sale data
+        const saleData = {
+          outward_entry_id: null,
+          customer_id: selectedCustomer,
+          item_id: lineItem.item_id,
+          quantity: parseFloat(lineItem.quantity),
+          rate: parseFloat(lineItem.rate),
+          total_amount: totalAmount,
+          base_amount: baseAmount,
+          gst_amount: gstAmount,
+          sale_date: saleDate,
+          bill_serial_no: billSerialNo,
+          irn: null,
+          user_id: user.id,
+          created_by: user.id,
+          loading_place: loadingPlace,
+          lorry_no: lorryNo
+        };
 
-      // Call the RPC function
-      const { data, error } = await supabase.rpc('create_sale_with_ledger', {
-        p_sale_data: saleData,
-        p_ledger_data: ledgerData
-      });
+        // For the first item, create with ledger entry
+        if (createdSales.length === 0) {
+          const ledgerData = {
+            customer_id: selectedCustomer,
+            debit_amount: grandTotal,
+            credit_amount: 0,
+            transaction_date: saleDate,
+            description: `Direct Sale - Bill #${billSerialNo} (${lineItems.length} items)`
+          };
 
-      if (error) throw error;
-      
-      const result = data as any;
-      if (result?.error) throw new Error(result.error);
+          const { data, error } = await supabase.rpc('create_sale_with_ledger', {
+            p_sale_data: saleData,
+            p_ledger_data: ledgerData
+          });
 
-      toast.success('Direct sale created successfully');
-      navigate(`/bills/${result.sale_id}/invoice`);
+          if (error) throw error;
+          const result = data as any;
+          if (result?.error) throw new Error(result.error);
+          createdSales.push(result.sale_id);
+        } else {
+          // Subsequent items - create without ledger
+          const { data: saleRecord, error } = await supabase
+            .from('sales')
+            .insert(saleData)
+            .select()
+            .single();
+
+          if (error) throw error;
+          createdSales.push(saleRecord.id);
+        }
+      }
+
+      toast.success(language === 'english' 
+        ? `Direct sale with ${lineItems.length} item(s) created successfully`
+        : `${lineItems.length} பொருட்களுடன் நேரடி விற்பனை வெற்றிகரமாக உருவாக்கப்பட்டது`
+      );
+      navigate('/');
 
     } catch (error: any) {
       console.error('Error creating direct sale:', error);
@@ -252,27 +300,27 @@ const MobileDirectSalesForm: React.FC = () => {
         const { data: { user } } = await supabase.auth.getUser();
         await supabase.rpc('log_failed_transaction', {
           p_user_id: user?.id,
-          p_transaction_type: 'mobile_direct_sale',
+          p_transaction_type: 'mobile_direct_sale_multi',
           p_attempted_data: {
             customer_id: selectedCustomer,
-            item_id: selectedItem,
-            quantity: parseFloat(quantity),
-            rate: parseFloat(rate),
+            line_items: lineItems.map(item => ({
+              item_id: item.item_id,
+              quantity: item.quantity,
+              rate: item.rate
+            })),
             bill_serial_no: billSerialNo
-          },
+          } as any,
           p_error_message: error.message
         });
       } catch (logError) {
         console.error("Failed to log error:", logError);
       }
 
-      toast.error(error.message || 'Failed to create sale');
+      toast.error(error.message || (language === 'english' ? 'Failed to create sale' : 'விற்பனை உருவாக்குவதில் தோல்வி'));
     } finally {
       setLoading(false);
     }
   };
-
-  const selectedItemObj = items.find(i => i.id === selectedItem);
 
   return (
     <MobileLayout 
@@ -297,44 +345,86 @@ const MobileDirectSalesForm: React.FC = () => {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label>{language === 'english' ? 'Item *' : 'பொருள் *'}</Label>
-              <Select value={selectedItem} onValueChange={setSelectedItem}>
-                <SelectTrigger>
-                  <SelectValue placeholder={language === 'english' ? 'Select item' : 'பொருளைத் தேர்ந்தெடுக்கவும்'} />
-                </SelectTrigger>
-                <SelectContent>
-                  {items.map((item) => (
-                    <SelectItem key={item.id} value={item.id}>
-                      {getDisplayName(item)} ({item.code})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>{language === 'english' ? 'Quantity *' : 'அளவு *'}</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  placeholder="0.00"
-                />
+            {/* Line Items Section */}
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <Label className="text-base font-semibold">
+                  {language === 'english' ? 'Products *' : 'தயாரிப்புகள் *'}
+                </Label>
+                <Button type="button" onClick={addLineItem} variant="outline" size="sm">
+                  + {language === 'english' ? 'Add' : 'சேர்'}
+                </Button>
               </div>
 
-              <div className="space-y-2">
-                <Label>{language === 'english' ? 'Rate *' : 'விலை *'}</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={rate}
-                  onChange={(e) => setRate(e.target.value)}
-                  placeholder="0.00"
-                />
-              </div>
+              {lineItems.map((lineItem, index) => (
+                <div key={lineItem.id} className="p-3 bg-muted rounded-lg space-y-3 relative">
+                  {lineItems.length > 1 && (
+                    <Button
+                      type="button"
+                      onClick={() => removeLineItem(lineItem.id)}
+                      variant="destructive"
+                      size="sm"
+                      className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full"
+                    >
+                      ×
+                    </Button>
+                  )}
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm">
+                      {language === 'english' ? `Item ${index + 1}` : `பொருள் ${index + 1}`} *
+                    </Label>
+                    <Select 
+                      value={lineItem.item_id} 
+                      onValueChange={(value) => updateLineItem(lineItem.id, 'item_id', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={language === 'english' ? 'Select item' : 'பொருளைத் தேர்ந்தெடுக்கவும்'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {items.map((item) => (
+                          <SelectItem key={item.id} value={item.id}>
+                            {getDisplayName(item)} ({item.code})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="space-y-2">
+                      <Label className="text-sm">{language === 'english' ? 'Qty' : 'அளவு'} *</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={lineItem.quantity}
+                        onChange={(e) => updateLineItem(lineItem.id, 'quantity', e.target.value)}
+                        placeholder="0"
+                        className="text-sm"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm">{language === 'english' ? 'Rate' : 'விலை'} *</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={lineItem.rate}
+                        onChange={(e) => updateLineItem(lineItem.id, 'rate', e.target.value)}
+                        placeholder="0"
+                        className="text-sm"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm">{language === 'english' ? 'Total' : 'மொத்தம்'}</Label>
+                      <div className="p-2 bg-background rounded border text-center text-sm font-semibold">
+                        ₹{calculateLineItemTotal(lineItem).toFixed(0)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
 
             <div className="space-y-2">
@@ -403,30 +493,21 @@ const MobileDirectSalesForm: React.FC = () => {
               />
             </div>
 
-            {quantity && rate && selectedItem && (
-              <div className="p-3 bg-muted rounded-lg space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span>{language === 'english' ? 'Base Amount:' : 'அடிப்படை தொகை:'}</span>
-                  <span className="font-semibold">
-                    ₹{(parseFloat(quantity) * parseFloat(rate)).toFixed(2)}
+            {lineItems.some(item => item.item_id && item.quantity && item.rate) && (
+              <div className="p-4 bg-primary/10 rounded-lg border-2 border-primary">
+                <div className="flex justify-between items-center">
+                  <span className="text-base font-bold">
+                    {language === 'english' ? 'Grand Total:' : 'மொத்த தொகை:'}
+                  </span>
+                  <span className="text-xl font-bold text-primary">
+                    ₹{calculateGrandTotal().toFixed(2)}
                   </span>
                 </div>
-                {selectedItemObj && selectedItemObj.gst_percentage > 0 && (
-                  <>
-                    <div className="flex justify-between">
-                      <span>GST ({selectedItemObj.gst_percentage}%):</span>
-                      <span className="font-semibold">
-                        ₹{((parseFloat(quantity) * parseFloat(rate)) * (selectedItemObj.gst_percentage / 100)).toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between pt-2 border-t">
-                      <span className="font-bold">{language === 'english' ? 'Total:' : 'மொத்தம்:'}</span>
-                      <span className="font-bold text-lg text-primary">
-                        ₹{calculateTotalAmount().toFixed(2)}
-                      </span>
-                    </div>
-                  </>
-                )}
+                <div className="text-xs text-muted-foreground mt-1">
+                  {lineItems.length} {language === 'english' ? 'product(s)' : 'தயாரிப்பு(கள்)'} • 
+                  {language === 'english' ? ' Total Qty: ' : ' மொத்த அளவு: '}
+                  {lineItems.reduce((sum, item) => sum + (parseFloat(item.quantity) || 0), 0).toFixed(2)}
+                </div>
               </div>
             )}
           </CardContent>

@@ -257,6 +257,7 @@ export type Database = {
           gst_percentage: number | null
           id: string
           item_id: string | null
+          mill: string
           note_date: string
           note_no: string
           reason: string
@@ -271,6 +272,7 @@ export type Database = {
           gst_percentage?: number | null
           id?: string
           item_id?: string | null
+          mill?: string
           note_date?: string
           note_no: string
           reason: string
@@ -285,6 +287,7 @@ export type Database = {
           gst_percentage?: number | null
           id?: string
           item_id?: string | null
+          mill?: string
           note_date?: string
           note_no?: string
           reason?: string
@@ -469,6 +472,7 @@ export type Database = {
           gst_percentage: number | null
           id: string
           item_id: string | null
+          mill: string
           note_date: string
           note_no: string
           reason: string
@@ -483,6 +487,7 @@ export type Database = {
           gst_percentage?: number | null
           id?: string
           item_id?: string | null
+          mill?: string
           note_date?: string
           note_no: string
           reason: string
@@ -497,6 +502,7 @@ export type Database = {
           gst_percentage?: number | null
           id?: string
           item_id?: string | null
+          mill?: string
           note_date?: string
           note_no?: string
           reason?: string
@@ -3382,8 +3388,12 @@ export type Database = {
       fix_running_balances: { Args: never; Returns: undefined }
       generate_and_reserve_thotti_no: { Args: never; Returns: string }
       generate_batch_no: { Args: never; Returns: string }
-      generate_credit_note_no: { Args: never; Returns: string }
-      generate_debit_note_no: { Args: never; Returns: string }
+      generate_credit_note_no:
+        | { Args: { p_mill: string }; Returns: string }
+        | { Args: never; Returns: string }
+      generate_debit_note_no:
+        | { Args: { p_mill: string }; Returns: string }
+        | { Args: never; Returns: string }
       generate_receipt_no: { Args: never; Returns: string }
       generate_thotti_no: { Args: never; Returns: string }
       get_available_source_containers: {

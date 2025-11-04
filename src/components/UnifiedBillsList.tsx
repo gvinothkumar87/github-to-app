@@ -237,7 +237,20 @@ export const UnifiedBillsList = ({
     try {
       let error;
       
-      if (bill.type === 'sale') {
+      if (bill.type === 'credit_note') {
+        // First delete associated ledger entry/entries for this credit note
+        const { error: ledgerError } = await supabase
+          .from('customer_ledger')
+          .delete()
+          .eq('reference_id', bill.id);
+        if (ledgerError) throw ledgerError;
+        // Then delete the credit note itself
+        const { error: deleteError } = await supabase
+          .from('credit_notes')
+          .delete()
+          .eq('id', bill.id);
+        error = deleteError;
+      } else if (bill.type === 'sale') {
         const saleData = bill.data as any;
         
         // If it's a grouped multi-product bill, delete all sales with same bill_serial_no
@@ -276,12 +289,6 @@ export const UnifiedBillsList = ({
       } else if (bill.type === 'debit_note') {
         const { error: deleteError } = await supabase
           .from('debit_notes')
-          .delete()
-          .eq('id', bill.id);
-        error = deleteError;
-      } else if (bill.type === 'credit_note') {
-        const { error: deleteError } = await supabase
-          .from('credit_notes')
           .delete()
           .eq('id', bill.id);
         error = deleteError;

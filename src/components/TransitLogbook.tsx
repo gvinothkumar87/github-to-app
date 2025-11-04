@@ -19,7 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Customer, Item, OutwardEntry } from '@/types';
+import { Customer, Item, OutwardEntry, Sale } from '@/types';
 import { Plus, Edit, Truck, Scale, CalendarIcon, Download, FileText, FileSpreadsheet, Trash2 } from 'lucide-react';
 import { Input } from './ui/input';
 import { format } from 'date-fns';
@@ -51,7 +51,7 @@ export const TransitLogbook = () => {
   const [endDate, setEndDate] = useState<Date>();
   const [selectedCustomer, setSelectedCustomer] = useState<string>('all');
   const [selectedItem, setSelectedItem] = useState<string>('all');
-  const [reportEntries, setReportEntries] = useState<OutwardEntry[]>([]);
+  const [reportEntries, setReportEntries] = useState<Sale[]>([]);
 
   useEffect(() => {
     if (activeTab === 'entries') {
@@ -152,44 +152,56 @@ export const TransitLogbook = () => {
 
   const fetchReportData = async () => {
     setLoading(true);
-    let query = supabase
-      .from('outward_entries')
-      .select(`
-        *,
-        customers!inner(name_english, name_tamil, code),
-        items!inner(name_english, name_tamil, code, unit)
-      `)
-      .eq('is_completed', true);
+    try {
+      // Fetch sales with outward entries
+      let query = supabase
+        .from('sales')
+        .select(`
+          *,
+          customers!inner(name_english, name_tamil, code),
+          items!inner(name_english, name_tamil, code, unit, gst_percentage),
+          outward_entries!sales_outward_entry_id_fkey(
+            id, serial_no, entry_date, lorry_no, net_weight
+          )
+        `);
 
-    // Apply date filters
-    if (startDate) {
-      query = query.gte('entry_date', format(startDate, 'yyyy-MM-dd'));
-    }
-    if (endDate) {
-      query = query.lte('entry_date', format(endDate, 'yyyy-MM-dd'));
-    }
+      // Apply date filters
+      if (startDate) {
+        query = query.gte('sale_date', format(startDate, 'yyyy-MM-dd'));
+      }
+      if (endDate) {
+        query = query.lte('sale_date', format(endDate, 'yyyy-MM-dd'));
+      }
 
-    // Apply customer filter
-    if (selectedCustomer && selectedCustomer !== 'all') {
-      query = query.eq('customer_id', selectedCustomer);
-    }
+      // Apply customer filter
+      if (selectedCustomer && selectedCustomer !== 'all') {
+        query = query.eq('customer_id', selectedCustomer);
+      }
 
-    // Apply item filter
-    if (selectedItem && selectedItem !== 'all') {
-      query = query.eq('item_id', selectedItem);
-    }
+      // Apply item filter
+      if (selectedItem && selectedItem !== 'all') {
+        query = query.eq('item_id', selectedItem);
+      }
 
-    const { data, error } = await query.order('entry_date', { ascending: false });
+      const { data, error } = await query.order('sale_date', { ascending: false });
 
-    if (error) {
+      if (error) {
+        console.error('Error fetching report data:', error);
+        toast({
+          variant: 'destructive',
+          title: language === 'english' ? 'Error' : 'பிழை',
+          description: error.message,
+        });
+      } else {
+        setReportEntries(data as any || []);
+      }
+    } catch (error: any) {
       console.error('Error fetching report data:', error);
       toast({
         variant: 'destructive',
         title: language === 'english' ? 'Error' : 'பிழை',
         description: error.message,
       });
-    } else {
-      setReportEntries(data as any || []);
     }
     setLoading(false);
   };
@@ -310,26 +322,31 @@ export const TransitLogbook = () => {
 
   const downloadExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(
-      reportEntries.map(entry => ({
-        'Serial No': entry.serial_no,
-        'Date': format(new Date(entry.entry_date), 'dd/MM/yyyy'),
-        'Customer': entry.customers ? getDisplayName(entry.customers) : '-',
-        'Item': entry.items ? getDisplayName(entry.items) : '-',
-        'Loading Place': entry.loading_place === 'PULIVANTHI' ? 'PULIVANTHI' : 'MATTAPARAI',
-        'Lorry No': entry.lorry_no,
-        'Driver Mobile': entry.driver_mobile,
-        'Empty Weight': entry.empty_weight,
-        'Load Weight': entry.load_weight || 0,
-        'Net Weight': entry.load_weight ? (entry.load_weight - entry.empty_weight) : 0,
-        'Unit': entry.items?.unit || '',
-        'Remarks': entry.remarks || ''
-      }))
+      reportEntries.map(entry => {
+        const gstPercentage = entry.items?.gst_percentage || 0;
+        const taxableAmount = entry.total_amount / (1 + gstPercentage / 100);
+        const gstAmount = entry.total_amount - taxableAmount;
+        
+        return {
+          'Bill No': entry.bill_serial_no || '-',
+          'Date': format(new Date(entry.sale_date), 'dd/MM/yyyy'),
+          'Customer': entry.customers ? getDisplayName(entry.customers) : '-',
+          'Item': entry.items ? getDisplayName(entry.items) : '-',
+          'Lorry No': entry.outward_entries?.lorry_no || '-',
+          'Net Weight': entry.quantity,
+          'Bag': entry.items?.unit || 'BAG',
+          'Rate': entry.rate,
+          'Taxable Amount': taxableAmount.toFixed(2),
+          'GST': gstAmount.toFixed(2),
+          'Total Amount': entry.total_amount
+        };
+      })
     );
 
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Transit Report');
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sales Report');
     
-    const filename = `transit-report-${format(new Date(), 'yyyy-MM-dd')}.xlsx`;
+    const filename = `sales-report-${format(new Date(), 'yyyy-MM-dd')}.xlsx`;
     XLSX.writeFile(workbook, filename);
 
     toast({
@@ -340,11 +357,11 @@ export const TransitLogbook = () => {
 
   const downloadPDF = () => {
     try {
-      const doc = new jsPDF();
+      const doc = new jsPDF('landscape');
       
       // Title
       doc.setFontSize(16);
-      doc.text('Transit Logbook Report', 14, 20);
+      doc.text('Sales Report', 14, 20);
       
       // Date range
       if (startDate || endDate) {
@@ -354,30 +371,38 @@ export const TransitLogbook = () => {
       }
 
       // Prepare table data
-      const tableData = reportEntries.map(entry => [
-        entry.serial_no.toString(),
-        format(new Date(entry.entry_date), 'dd/MM/yyyy'),
-        entry.customers ? getDisplayName(entry.customers) : '-',
-        entry.items ? getDisplayName(entry.items) : '-',
-        entry.lorry_no,
-        entry.empty_weight.toString(),
-        (entry.load_weight || 0).toString(),
-        entry.load_weight ? Math.abs(entry.load_weight - entry.empty_weight).toString() : '0',
-        entry.items?.unit || ''
-      ]);
+      const tableData = reportEntries.map(entry => {
+        const gstPercentage = entry.items?.gst_percentage || 0;
+        const taxableAmount = entry.total_amount / (1 + gstPercentage / 100);
+        const gstAmount = entry.total_amount - taxableAmount;
+        
+        return [
+          entry.bill_serial_no || '-',
+          format(new Date(entry.sale_date), 'dd/MM/yyyy'),
+          entry.customers ? getDisplayName(entry.customers) : '-',
+          entry.items ? getDisplayName(entry.items) : '-',
+          entry.outward_entries?.lorry_no || '-',
+          entry.quantity.toString(),
+          entry.items?.unit || 'BAG',
+          entry.rate.toString(),
+          taxableAmount.toFixed(2),
+          gstAmount.toFixed(2),
+          entry.total_amount.toString()
+        ];
+      });
 
       // Add table using autoTable
       autoTable(doc, {
-        head: [['S.No', 'Date', 'Customer', 'Item', 'Lorry', 'Empty Wt', 'Load Wt', 'Net Wt', 'Unit']],
+        head: [['Bill No', 'Date', 'Customer', 'Item', 'Lorry', 'Net Wt', 'Bag', 'Rate', 'Taxable Amt', 'GST', 'Total Amt']],
         body: tableData,
         startY: startDate || endDate ? 40 : 30,
-        styles: { fontSize: 8 },
+        styles: { fontSize: 7 },
         headStyles: { fillColor: [66, 139, 202] },
         margin: { top: 40 },
         theme: 'grid'
       });
 
-      const filename = `transit-report-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      const filename = `sales-report-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
       doc.save(filename);
 
       toast({
@@ -1110,7 +1135,7 @@ export const TransitLogbook = () => {
                 <CardHeader>
                   <div className="flex justify-between items-center">
                     <CardTitle>
-                      {language === 'english' ? 'Transit Ledger Report' : 'போக்குவரத்து லெட்ஜர் அறிக்கை'}
+                      {language === 'english' ? 'Sales Report' : 'விற்பனை அறிக்கை'}
                     </CardTitle>
                     <div className="flex gap-2">
                       <Button onClick={downloadExcel} variant="outline" size="sm">
@@ -1127,77 +1152,88 @@ export const TransitLogbook = () => {
                 <CardContent>
                   {/* Mobile optimized view */}
                   <div className="block md:hidden space-y-4">
-                    {reportEntries.map((entry) => (
-                      <Card key={entry.id} className="p-4 space-y-3">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className="font-medium text-sm">#{entry.serial_no}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {format(new Date(entry.entry_date), 'dd/MM/yyyy')}
+                    {reportEntries.map((entry) => {
+                      const gstPercentage = entry.items?.gst_percentage || 0;
+                      const taxableAmount = entry.total_amount / (1 + gstPercentage / 100);
+                      const gstAmount = entry.total_amount - taxableAmount;
+                      
+                      return (
+                        <Card key={entry.id} className="p-4 space-y-3">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="font-medium text-sm">{entry.bill_serial_no || '-'}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {format(new Date(entry.sale_date), 'dd/MM/yyyy')}
+                              </div>
                             </div>
                           </div>
-                          <Badge variant="default" className="text-xs">
-                            {language === 'english' ? 'Completed' : 'முடிந்தது'}
-                          </Badge>
-                        </div>
-                        
-                         <div className="space-y-2 text-sm">
-                           <div>
-                             <span className="font-medium">
-                               {language === 'english' ? 'Customer: ' : 'வாடிக்கையாளர்: '}
-                             </span>
-                             {entry.customers ? getDisplayName(entry.customers) : '-'}
-                           </div>
-                           <div>
-                             <span className="font-medium">
-                               {language === 'english' ? 'Item: ' : 'பொருள்: '}
-                             </span>
-                             {entry.items ? getDisplayName(entry.items) : '-'}
-                           </div>
-                           <div>
-                             <span className="font-medium">
-                               {language === 'english' ? 'Loading Place: ' : 'ஏற்றும் இடம்: '}
-                             </span>
-                             {entry.loading_place === 'PULIVANTHI' 
-                               ? (language === 'english' ? 'PULIVANTHI' : 'புலியந்தி')
-                               : (language === 'english' ? 'MATTAPARAI' : 'மட்டப்பாறை')}
-                           </div>
-                           <div>
-                             <span className="font-medium">
-                               {language === 'english' ? 'Lorry: ' : 'லாரி: '}
-                             </span>
-                             {entry.lorry_no}
-                           </div>
                           
-                          <div className="grid grid-cols-3 gap-2 pt-2 border-t">
-                            <div className="text-center">
-                              <div className="text-xs text-muted-foreground">
-                                {language === 'english' ? 'Empty' : 'காலி'}
+                           <div className="space-y-2 text-sm">
+                             <div>
+                               <span className="font-medium">
+                                 {language === 'english' ? 'Customer: ' : 'வாடிக்கையாளர்: '}
+                               </span>
+                               {entry.customers ? getDisplayName(entry.customers) : '-'}
+                             </div>
+                             <div>
+                               <span className="font-medium">
+                                 {language === 'english' ? 'Item: ' : 'பொருள்: '}
+                               </span>
+                               {entry.items ? getDisplayName(entry.items) : '-'}
+                             </div>
+                             <div>
+                               <span className="font-medium">
+                                 {language === 'english' ? 'Lorry: ' : 'லாரி: '}
+                               </span>
+                               {entry.outward_entries?.lorry_no || '-'}
+                             </div>
+                            
+                            <div className="grid grid-cols-2 gap-2 pt-2 border-t">
+                              <div>
+                                <div className="text-xs text-muted-foreground">
+                                  {language === 'english' ? 'Net Weight' : 'நிகர எடை'}
+                                </div>
+                                <div className="font-medium">
+                                  {entry.quantity} KG
+                                </div>
                               </div>
-                              <div className="font-medium">
-                                {entry.empty_weight} KG
+                              <div>
+                                <div className="text-xs text-muted-foreground">
+                                  {language === 'english' ? 'Rate' : 'விலை'}
+                                </div>
+                                <div className="font-medium">
+                                  ₹{entry.rate}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-xs text-muted-foreground">
+                                  {language === 'english' ? 'Taxable' : 'வரி விதிக்கத்தக்க'}
+                                </div>
+                                <div className="font-medium">
+                                  ₹{taxableAmount.toFixed(2)}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-xs text-muted-foreground">
+                                  {language === 'english' ? 'GST' : 'GST'}
+                                </div>
+                                <div className="font-medium">
+                                  ₹{gstAmount.toFixed(2)}
+                                </div>
                               </div>
                             </div>
-                            <div className="text-center">
+                            <div className="pt-2 border-t">
                               <div className="text-xs text-muted-foreground">
-                                {language === 'english' ? 'Load' : 'மொத்த'}
+                                {language === 'english' ? 'Total Amount' : 'மொத்த தொகை'}
                               </div>
-                              <div className="font-medium">
-                                {entry.load_weight || 0} KG
-                              </div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-xs text-muted-foreground">
-                                {language === 'english' ? 'Net' : 'நிகர'}
-                              </div>
-                              <div className="font-medium text-primary">
-                                {entry.load_weight ? (entry.load_weight - entry.empty_weight) : 0} KG
+                              <div className="font-medium text-lg text-primary">
+                                ₹{entry.total_amount.toFixed(2)}
                               </div>
                             </div>
                           </div>
-                        </div>
-                      </Card>
-                    ))}
+                        </Card>
+                      );
+                    })}
                   </div>
 
                   {/* Desktop table view */}
@@ -1205,43 +1241,41 @@ export const TransitLogbook = () => {
                     <Table>
                        <TableHeader>
                          <TableRow>
-                           <TableHead>{language === 'english' ? 'Serial No' : 'வரிசை எண்'}</TableHead>
+                           <TableHead>{language === 'english' ? 'Bill No' : 'பில் எண்'}</TableHead>
                            <TableHead>{language === 'english' ? 'Date' : 'தேதி'}</TableHead>
                            <TableHead>{language === 'english' ? 'Customer' : 'வாடிக்கையாளர்'}</TableHead>
                            <TableHead>{language === 'english' ? 'Item' : 'பொருள்'}</TableHead>
-                           <TableHead>{language === 'english' ? 'Loading Place' : 'ஏற்றும் இடம்'}</TableHead>
                            <TableHead>{language === 'english' ? 'Lorry No' : 'லாரி எண்'}</TableHead>
-                           <TableHead>{language === 'english' ? 'Driver Mobile' : 'ஓட்டுனர் மொபைல்'}</TableHead>
-                           <TableHead>{language === 'english' ? 'Empty Weight' : 'காலி எடை'}</TableHead>
-                           <TableHead>{language === 'english' ? 'Load Weight' : 'மொத்த எடை'}</TableHead>
                            <TableHead>{language === 'english' ? 'Net Weight' : 'நிகர எடை'}</TableHead>
-                           <TableHead>{language === 'english' ? 'Unit' : 'அலகு'}</TableHead>
-                           <TableHead>{language === 'english' ? 'Remarks' : 'குறிப்புகள்'}</TableHead>
+                           <TableHead>{language === 'english' ? 'Bag' : 'பை'}</TableHead>
+                           <TableHead>{language === 'english' ? 'Rate' : 'விலை'}</TableHead>
+                           <TableHead>{language === 'english' ? 'Taxable Amount' : 'வரி விதிக்கத்தக்க தொகை'}</TableHead>
+                           <TableHead>{language === 'english' ? 'GST' : 'GST'}</TableHead>
+                           <TableHead>{language === 'english' ? 'Total Amount' : 'மொத்த தொகை'}</TableHead>
                          </TableRow>
                        </TableHeader>
                       <TableBody>
-                         {reportEntries.map((entry) => (
-                           <TableRow key={entry.id}>
-                             <TableCell className="font-medium">{entry.serial_no}</TableCell>
-                             <TableCell>{format(new Date(entry.entry_date), 'dd/MM/yyyy')}</TableCell>
-                             <TableCell>{entry.customers ? getDisplayName(entry.customers) : '-'}</TableCell>
-                             <TableCell>{entry.items ? getDisplayName(entry.items) : '-'}</TableCell>
-                             <TableCell>
-                               {entry.loading_place === 'PULIVANTHI' 
-                                 ? (language === 'english' ? 'PULIVANTHI' : 'புலியந்தி')
-                                 : (language === 'english' ? 'MATTAPARAI' : 'மட்டப்பாறை')}
-                             </TableCell>
-                             <TableCell className="font-mono">{entry.lorry_no}</TableCell>
-                             <TableCell className="font-mono">{entry.driver_mobile}</TableCell>
-                             <TableCell>{entry.empty_weight} KG</TableCell>
-                             <TableCell>{entry.load_weight || 0} KG</TableCell>
-                             <TableCell className="font-medium text-primary">
-                               {entry.load_weight ? (entry.load_weight - entry.empty_weight) : 0} KG
-                             </TableCell>
-                            <TableCell>{entry.items?.unit}</TableCell>
-                            <TableCell>{entry.remarks || '-'}</TableCell>
-                          </TableRow>
-                        ))}
+                         {reportEntries.map((entry) => {
+                           const gstPercentage = entry.items?.gst_percentage || 0;
+                           const taxableAmount = entry.total_amount / (1 + gstPercentage / 100);
+                           const gstAmount = entry.total_amount - taxableAmount;
+                           
+                           return (
+                             <TableRow key={entry.id}>
+                               <TableCell className="font-medium">{entry.bill_serial_no || '-'}</TableCell>
+                               <TableCell>{format(new Date(entry.sale_date), 'dd/MM/yyyy')}</TableCell>
+                               <TableCell>{entry.customers ? getDisplayName(entry.customers) : '-'}</TableCell>
+                               <TableCell>{entry.items ? getDisplayName(entry.items) : '-'}</TableCell>
+                               <TableCell className="font-mono">{entry.outward_entries?.lorry_no || '-'}</TableCell>
+                               <TableCell>{entry.quantity} KG</TableCell>
+                               <TableCell>{entry.items?.unit || 'BAG'}</TableCell>
+                               <TableCell>₹{entry.rate}</TableCell>
+                               <TableCell>₹{taxableAmount.toFixed(2)}</TableCell>
+                               <TableCell>₹{gstAmount.toFixed(2)}</TableCell>
+                               <TableCell className="font-medium text-primary">₹{entry.total_amount.toFixed(2)}</TableCell>
+                             </TableRow>
+                           );
+                         })}
                       </TableBody>
                     </Table>
                   </div>
@@ -1251,34 +1285,36 @@ export const TransitLogbook = () => {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                       <div>
                         <div className="text-sm text-muted-foreground">
-                          {language === 'english' ? 'Total Entries' : 'மொத்த பதிவுகள்'}
+                          {language === 'english' ? 'Total Sales' : 'மொத்த விற்பனை'}
                         </div>
                         <div className="text-2xl font-bold">{reportEntries.length}</div>
                       </div>
                       <div>
                         <div className="text-sm text-muted-foreground">
-                          {language === 'english' ? 'Total Empty Weight' : 'மொத்த காலி எடை'}
+                          {language === 'english' ? 'Total Quantity' : 'மொத்த அளவு'}
                         </div>
                         <div className="text-2xl font-bold">
-                          {reportEntries.reduce((sum, entry) => sum + entry.empty_weight, 0).toFixed(2)}
+                          {reportEntries.reduce((sum, entry) => sum + entry.quantity, 0).toFixed(2)} KG
                         </div>
                       </div>
                       <div>
                         <div className="text-sm text-muted-foreground">
-                          {language === 'english' ? 'Total Load Weight' : 'மொத்த சுமை எடை'}
+                          {language === 'english' ? 'Total GST' : 'மொத்த GST'}
                         </div>
                         <div className="text-2xl font-bold">
-                          {reportEntries.reduce((sum, entry) => sum + (entry.load_weight || 0), 0).toFixed(2)}
+                          ₹{reportEntries.reduce((sum, entry) => {
+                            const gstPercentage = entry.items?.gst_percentage || 0;
+                            const taxableAmount = entry.total_amount / (1 + gstPercentage / 100);
+                            return sum + (entry.total_amount - taxableAmount);
+                          }, 0).toFixed(2)}
                         </div>
                       </div>
                       <div>
                         <div className="text-sm text-muted-foreground">
-                          {language === 'english' ? 'Total Net Weight' : 'மொத்த நிகர எடை'}
+                          {language === 'english' ? 'Total Amount' : 'மொத்த தொகை'}
                         </div>
                         <div className="text-2xl font-bold text-primary">
-                          {reportEntries.reduce((sum, entry) => 
-                            sum + (entry.load_weight ? (entry.load_weight - entry.empty_weight) : 0), 0
-                          ).toFixed(2)}
+                          ₹{reportEntries.reduce((sum, entry) => sum + entry.total_amount, 0).toFixed(2)}
                         </div>
                       </div>
                     </div>
@@ -1292,8 +1328,8 @@ export const TransitLogbook = () => {
                 <CardContent className="text-center py-8">
                   <div className="text-muted-foreground">
                     {language === 'english' 
-                      ? 'No completed entries found for the selected filters.' 
-                      : 'தேர்ந்தெடுக்கப்பட்ட வடிகட்டிகளுக்கு முடிக்கப்பட்ட பதிவுகள் எதுவும் கிடைக்கவில்லை.'}
+                      ? 'No sales found for the selected filters.' 
+                      : 'தேர்ந்தெடுக்கப்பட்ட வடிகட்டிகளுக்கு விற்பனைகள் எதுவும் கிடைக்கவில்லை.'}
                   </div>
                 </CardContent>
               </Card>

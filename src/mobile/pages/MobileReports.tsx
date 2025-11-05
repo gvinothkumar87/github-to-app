@@ -9,7 +9,7 @@ import { FileText, Download, Calendar, Users, Package, TrendingUp, TrendingDown,
 import { useEnhancedOfflineData } from '../hooks/useEnhancedOfflineData';
 import { format } from 'date-fns';
 import { toast } from '@/components/ui/use-toast';
-import * as XLSX from 'xlsx';
+import { exportGSTExcel } from '@/lib/exports/gstExcel';
 
 const MobileReports: React.FC = () => {
   const [selectedReport, setSelectedReport] = useState<string>('');
@@ -157,95 +157,21 @@ const MobileReports: React.FC = () => {
     toast({ title: 'Report exported', description: 'Report exported successfully' });
   };
 
-  const exportGSTExcel = () => {
-    // Filter sales within date range and exclude D series bills
-    const filteredSales = (sales || []).filter((sale: any) => {
-      const saleDate = new Date(sale.sale_date);
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      
-      const matchesDate = saleDate >= start && saleDate <= end;
-      // Exclude D series bills (bill_serial_no starting with 'D')
-      const notDSeries = !sale.bill_serial_no || !sale.bill_serial_no.startsWith('D');
-      
-      return matchesDate && notDSeries;
-    }) || [];
-
-    if (filteredSales.length === 0) {
-      toast({ title: 'No Data', description: 'No sales data found for the selected period (excluding D series)', variant: 'destructive' });
-      return;
-    }
-
-    // Prepare Excel data
-    const excelData = filteredSales.map((sale: any, index: number) => {
-      const customer = (customers || []).find((c: any) => c.id === sale.customer_id);
-      const item = (items || []).find((i: any) => i.id === sale.item_id);
-      
-      const quantity = Number(sale.quantity) || 0;
-      const rate = Number(sale.rate) || 0;
-      const amount = quantity * rate;
-      const gstPercentage = Number(sale.gst_percentage) || 0;
-      const gstAmount = amount * (gstPercentage / 100);
-      const cgst = gstAmount / 2;
-      const sgst = gstAmount / 2;
-      const total = amount + gstAmount;
-
-      return {
-        '': index + 1,
-        'DATE': format(new Date(sale.sale_date), 'dd/MM/yyyy'),
-        'BILL NO': sale.bill_serial_no || '',
-        'PARTY': (customer as any)?.name_english || '',
-        'GSTIN': (customer as any)?.gstin || '',
-        'FEED': (item as any)?.name_english || '',
-        'HSN': (item as any)?.hsn_no || '',
-        'KG': quantity,
-        'BAGS': sale.bags || '',
-        'TOTAL WEIGHT': quantity,
-        'RATE': rate,
-        'AMOUNT': amount,
-        'GST%': gstPercentage,
-        'CGST': cgst.toFixed(2),
-        'SGST': sgst.toFixed(2),
-        'DISCOUNT': '',
-        'ADD AMOUNT': '',
-        'FINAL TOTAL': total.toFixed(2)
-      };
+  const handleExportGSTExcel = () => {
+    const result = exportGSTExcel({
+      sales: sales as any[] || [],
+      customers: customers as any[] || [],
+      items: items as any[] || [],
+      startDate,
+      endDate,
+      excludeDSeries: true
     });
 
-    // Create workbook and worksheet
-    const ws = XLSX.utils.json_to_sheet(excelData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'GST Report');
-
-    // Auto-size columns
-    const colWidths = [
-      { wch: 5 },  // S.No
-      { wch: 12 }, // DATE
-      { wch: 12 }, // BILL NO
-      { wch: 25 }, // PARTY
-      { wch: 18 }, // GSTIN
-      { wch: 15 }, // FEED
-      { wch: 10 }, // HSN
-      { wch: 10 }, // KG
-      { wch: 8 },  // BAGS
-      { wch: 12 }, // TOTAL WEIGHT
-      { wch: 10 }, // RATE
-      { wch: 12 }, // AMOUNT
-      { wch: 12 }, // TOTAL
-      { wch: 8 },  // GST%
-      { wch: 12 }, // CGST
-      { wch: 12 }, // SGST
-      { wch: 10 }, // DISCOUNT
-      { wch: 12 }, // ADD AMOUNT
-      { wch: 12 }  // TOTAL
-    ];
-    ws['!cols'] = colWidths;
-
-    // Generate file
-    const fileName = `GST-Report-${startDate}-to-${endDate}.xlsx`;
-    XLSX.writeFile(wb, fileName);
-
-    toast({ title: 'GST Report Exported', description: `Exported ${filteredSales.length} records (excluding D series)` });
+    if (result.success) {
+      toast({ title: 'GST Report Exported', description: result.message });
+    } else {
+      toast({ title: 'No Data', description: result.message, variant: 'destructive' });
+    }
   };
 
   if (salesLoading) {
@@ -352,7 +278,7 @@ const MobileReports: React.FC = () => {
                   Export
                 </Button>
               )}
-              <Button onClick={exportGSTExcel} variant="secondary">
+              <Button onClick={handleExportGSTExcel} variant="secondary">
                 <FileSpreadsheet className="h-4 w-4 mr-2" />
                 GST Excel
               </Button>

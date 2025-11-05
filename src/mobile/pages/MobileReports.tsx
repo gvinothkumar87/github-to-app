@@ -341,7 +341,7 @@ const MobileReports: React.FC = () => {
               </Select>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button onClick={generateReport} className="flex-1">
                 <FileText className="h-4 w-4 mr-2" />
                 Generate Report
@@ -352,12 +352,11 @@ const MobileReports: React.FC = () => {
                   Export
                 </Button>
               )}
+              <Button onClick={exportGSTExcel} variant="secondary">
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                GST Excel
+              </Button>
             </div>
-
-            <Button onClick={exportGSTExcel} variant="secondary" className="w-full">
-              <FileSpreadsheet className="h-4 w-4 mr-2" />
-              GST Excel
-            </Button>
           </CardContent>
         </Card>
 

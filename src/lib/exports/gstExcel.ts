@@ -9,6 +9,7 @@ interface Sale {
   item_id: string;
   quantity: number;
   rate: number;
+  total_amount: number;
   gst_percentage?: number;
   bags?: number;
 }
@@ -67,21 +68,19 @@ export const calculateGSTSummary = (options: GSTExcelOptions): GSTSummary => {
 
   filteredSales.forEach((sale) => {
     const item = items.find((i) => i.id === sale.item_id);
-    const unitWeight = Number(item?.unit_weight) || 0;
-    const bags = Number(sale.quantity) || 0;
-    const totalWeight = unitWeight * bags;
-    const rate = Number(sale.rate) || 0;
-    const amount = totalWeight * rate;
     const gstPercentage = Number(item?.gst_percentage) || 0;
-    const gstAmount = amount * (gstPercentage / 100);
+    const finalTotal = Number(sale.total_amount) || 0;
+    
+    // Reverse calculate amount before GST from final total
+    const amount = finalTotal / (1 + gstPercentage / 100);
+    const gstAmount = finalTotal - amount;
     const cgst = gstAmount / 2;
     const sgst = gstAmount / 2;
-    const total = amount + gstAmount;
 
     totalTaxableAmount += amount;
     totalCGST += cgst;
     totalSGST += sgst;
-    grandTotal += total;
+    grandTotal += finalTotal;
   });
 
   return {
@@ -126,12 +125,14 @@ export const exportGSTExcel = (options: GSTExcelOptions): { success: boolean; me
     const bags = Number(sale.quantity) || 0;
     const totalWeight = unitWeight * bags;
     const rate = Number(sale.rate) || 0;
-    const amount = totalWeight * rate;
     const gstPercentage = Number(item?.gst_percentage) || 0;
-    const gstAmount = amount * (gstPercentage / 100);
+    const finalTotal = Number(sale.total_amount) || 0;
+    
+    // Reverse calculate amount before GST from final total
+    const amount = finalTotal / (1 + gstPercentage / 100);
+    const gstAmount = finalTotal - amount;
     const cgst = gstAmount / 2;
     const sgst = gstAmount / 2;
-    const total = amount + gstAmount;
 
     return {
       '': index + 1,
@@ -151,7 +152,7 @@ export const exportGSTExcel = (options: GSTExcelOptions): { success: boolean; me
       'SGST': sgst.toFixed(2),
       'DISCOUNT': '',
       'ADD AMOUNT': '',
-      'FINAL TOTAL': total.toFixed(2)
+      'FINAL TOTAL': finalTotal.toFixed(2)
     };
   });
 

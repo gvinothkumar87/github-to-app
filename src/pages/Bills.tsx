@@ -407,14 +407,6 @@ const Bills = () => {
   return (
     <PageLayout title={language === 'english' ? 'Bills Management' : 'பில் மேலாண்மை'}>
       <div className="container mx-auto p-6 space-y-6">
-        {/* GST Export Link */}
-        <div className="flex justify-end">
-          <Button onClick={() => navigate('/gst-export')} variant="outline" className="gap-2">
-            <FileSpreadsheet className="h-4 w-4" />
-            {language === 'english' ? 'GST Excel Export' : 'ஜிஎஸ்டி எக்செல் ஏற்றுமதி'}
-          </Button>
-        </div>
-
         {/* Bills List */}
         <UnifiedBillsList
           key={refreshKey}

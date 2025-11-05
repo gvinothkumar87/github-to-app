@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, LogOut, Home, FileText, Plus, Minus, Users, ShoppingCart, Book, Package, Truck, Scale, ClipboardList, Receipt, Trash2, BarChart3 } from 'lucide-react';
+import { Menu, LogOut, Home, FileText, Plus, Minus, Users, ShoppingCart, Book, Package, Truck, Scale, ClipboardList, Receipt, Trash2, BarChart3, FileSpreadsheet } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -70,6 +70,13 @@ const NavigationSidebar = () => {
       label: language === 'english' ? 'Credit Note' : 'கிரெடிட் குறிப்பு', 
       path: '/credit-note',
       icon: Minus, 
+      adminOnly: true
+    },
+    { 
+      id: 'gst-export', 
+      label: language === 'english' ? 'GST Excel Export' : 'ஜிஎஸ்டி எக்செல் ஏற்றுமதி', 
+      path: '/gst-export',
+      icon: FileSpreadsheet, 
       adminOnly: true
     },
   ];

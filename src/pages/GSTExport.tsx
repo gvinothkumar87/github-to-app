@@ -1,17 +1,35 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/PageLayout';
-import { ArrowLeft, FileSpreadsheet, Calendar } from 'lucide-react';
+import { FileSpreadsheet, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { exportGSTExcel, calculateGSTSummary } from '@/lib/exports/gstExcel';
 import { format } from 'date-fns';
 
+interface SaleRecord {
+  id: string;
+  sale_date: string;
+  bill_serial_no?: string;
+  customer_name: string;
+  gstin?: string;
+  item_name: string;
+  hsn_no?: string;
+  unit_weight: number;
+  bags: number;
+  total_weight: number;
+  rate: number;
+  amount: number;
+  gst_percentage: number;
+  cgst: number;
+  sgst: number;
+  final_total: number;
+}
+
 const GSTExport = () => {
-  const navigate = useNavigate();
   
   // GST Export state
   const [gstStartDate, setGstStartDate] = useState(() => {
@@ -28,13 +46,14 @@ const GSTExport = () => {
     recordCount: number;
   } | null>(null);
   const [loadingGST, setLoadingGST] = useState(false);
+  const [salesData, setSalesData] = useState<SaleRecord[]>([]);
 
-  // Fetch GST summary when dates change
+  // Fetch GST data when dates change
   useEffect(() => {
-    fetchGSTSummary();
+    fetchGSTData();
   }, [gstStartDate, gstEndDate]);
 
-  const fetchGSTSummary = async () => {
+  const fetchGSTData = async () => {
     setLoadingGST(true);
     try {
       // Fetch all required data
@@ -48,6 +67,59 @@ const GSTExport = () => {
       if (customersRes.error) throw customersRes.error;
       if (itemsRes.error) throw itemsRes.error;
 
+      // Filter sales by date range and exclude D-series
+      const filteredSales = (salesRes.data || []).filter((sale) => {
+        const saleDate = new Date(sale.sale_date);
+        const start = new Date(gstStartDate);
+        const end = new Date(gstEndDate);
+        
+        const matchesDate = saleDate >= start && saleDate <= end;
+        const notDSeries = !sale.bill_serial_no || !sale.bill_serial_no.startsWith('D');
+        
+        return matchesDate && notDSeries;
+      });
+
+      // Map sales to display records
+      const records: SaleRecord[] = filteredSales.map((sale) => {
+        const customer = customersRes.data?.find((c) => c.id === sale.customer_id);
+        const item = itemsRes.data?.find((i) => i.id === sale.item_id);
+        
+        const unitWeight = Number(item?.unit_weight) || 0;
+        const bags = Number(sale.quantity) || 0;
+        const totalWeight = unitWeight * bags;
+        const rate = Number(sale.rate) || 0;
+        const gstPercentage = Number(item?.gst_percentage) || 0;
+        const finalTotal = Number(sale.total_amount) || 0;
+        
+        // Reverse calculate amount before GST from final total
+        const amount = finalTotal / (1 + gstPercentage / 100);
+        const gstAmount = finalTotal - amount;
+        const cgst = gstAmount / 2;
+        const sgst = gstAmount / 2;
+
+        return {
+          id: sale.id,
+          sale_date: sale.sale_date,
+          bill_serial_no: sale.bill_serial_no,
+          customer_name: customer?.name_english || '',
+          gstin: customer?.gstin,
+          item_name: item?.name_english || '',
+          hsn_no: item?.hsn_no,
+          unit_weight: unitWeight,
+          bags,
+          total_weight: totalWeight,
+          rate,
+          amount,
+          gst_percentage: gstPercentage,
+          cgst,
+          sgst,
+          final_total: finalTotal
+        };
+      });
+
+      setSalesData(records);
+
+      // Calculate summary
       const summary = calculateGSTSummary({
         sales: salesRes.data || [],
         customers: customersRes.data || [],
@@ -59,8 +131,8 @@ const GSTExport = () => {
 
       setGstSummary(summary);
     } catch (error) {
-      console.error('Error fetching GST summary:', error);
-      toast.error('Failed to calculate GST summary');
+      console.error('Error fetching GST data:', error);
+      toast.error('Failed to fetch GST data');
     } finally {
       setLoadingGST(false);
     }
@@ -192,6 +264,74 @@ const GSTExport = () => {
             {loadingGST ? 'Exporting...' : 'Export GST Excel'}
           </Button>
         </div>
+        {/* Data Table */}
+        {salesData.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>GST Records</CardTitle>
+              <CardDescription>
+                {salesData.length} records found (excluding D series)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">S.No</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Bill No</TableHead>
+                      <TableHead>Party</TableHead>
+                      <TableHead>GSTIN</TableHead>
+                      <TableHead>Feed</TableHead>
+                      <TableHead>HSN</TableHead>
+                      <TableHead className="text-right">KG</TableHead>
+                      <TableHead className="text-right">Bags</TableHead>
+                      <TableHead className="text-right">Total Weight</TableHead>
+                      <TableHead className="text-right">Rate</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                      <TableHead className="text-right">GST%</TableHead>
+                      <TableHead className="text-right">CGST</TableHead>
+                      <TableHead className="text-right">SGST</TableHead>
+                      <TableHead className="text-right">Final Total</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {salesData.map((record, index) => (
+                      <TableRow key={record.id}>
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell>{format(new Date(record.sale_date), 'dd/MM/yyyy')}</TableCell>
+                        <TableCell>{record.bill_serial_no || '-'}</TableCell>
+                        <TableCell>{record.customer_name}</TableCell>
+                        <TableCell>{record.gstin || '-'}</TableCell>
+                        <TableCell>{record.item_name}</TableCell>
+                        <TableCell>{record.hsn_no || '-'}</TableCell>
+                        <TableCell className="text-right">{record.unit_weight}</TableCell>
+                        <TableCell className="text-right">{record.bags}</TableCell>
+                        <TableCell className="text-right">{record.total_weight}</TableCell>
+                        <TableCell className="text-right">₹{record.rate.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">₹{record.amount.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">{record.gst_percentage}%</TableCell>
+                        <TableCell className="text-right">₹{record.cgst.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">₹{record.sgst.toFixed(2)}</TableCell>
+                        <TableCell className="text-right font-semibold">₹{record.final_total.toFixed(2)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* No Data Message */}
+        {!loadingGST && salesData.length === 0 && (
+          <Card>
+            <CardContent className="py-10 text-center text-muted-foreground">
+              No sales data found for the selected period (excluding D series)
+            </CardContent>
+          </Card>
+        )}
       </div>
     </PageLayout>
   );

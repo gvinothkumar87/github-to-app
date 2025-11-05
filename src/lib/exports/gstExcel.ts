@@ -23,6 +23,8 @@ interface Item {
   id: string;
   name_english: string;
   hsn_no?: string;
+  unit_weight: number;
+  gst_percentage: number;
 }
 
 export interface GSTExcelOptions {
@@ -64,10 +66,13 @@ export const calculateGSTSummary = (options: GSTExcelOptions): GSTSummary => {
   let grandTotal = 0;
 
   filteredSales.forEach((sale) => {
-    const quantity = Number(sale.quantity) || 0;
+    const item = items.find((i) => i.id === sale.item_id);
+    const unitWeight = Number(item?.unit_weight) || 0;
+    const bags = Number(sale.quantity) || 0;
+    const totalWeight = unitWeight * bags;
     const rate = Number(sale.rate) || 0;
-    const amount = quantity * rate;
-    const gstPercentage = Number(sale.gst_percentage) || 0;
+    const amount = totalWeight * rate;
+    const gstPercentage = Number(item?.gst_percentage) || 0;
     const gstAmount = amount * (gstPercentage / 100);
     const cgst = gstAmount / 2;
     const sgst = gstAmount / 2;
@@ -117,10 +122,12 @@ export const exportGSTExcel = (options: GSTExcelOptions): { success: boolean; me
     const customer = customers.find((c) => c.id === sale.customer_id);
     const item = items.find((i) => i.id === sale.item_id);
     
-    const quantity = Number(sale.quantity) || 0;
+    const unitWeight = Number(item?.unit_weight) || 0;
+    const bags = Number(sale.quantity) || 0;
+    const totalWeight = unitWeight * bags;
     const rate = Number(sale.rate) || 0;
-    const amount = quantity * rate;
-    const gstPercentage = Number(sale.gst_percentage) || 0;
+    const amount = totalWeight * rate;
+    const gstPercentage = Number(item?.gst_percentage) || 0;
     const gstAmount = amount * (gstPercentage / 100);
     const cgst = gstAmount / 2;
     const sgst = gstAmount / 2;
@@ -134,11 +141,11 @@ export const exportGSTExcel = (options: GSTExcelOptions): { success: boolean; me
       'GSTIN': customer?.gstin || '',
       'FEED': item?.name_english || '',
       'HSN': item?.hsn_no || '',
-      'KG': quantity,
-      'BAGS': sale.bags || '',
-      'TOTAL WEIGHT': quantity,
+      'KG': unitWeight,
+      'BAGS': bags,
+      'TOTAL WEIGHT': totalWeight,
       'RATE': rate,
-      'AMOUNT': amount,
+      'AMOUNT': amount.toFixed(2),
       'GST%': gstPercentage,
       'CGST': cgst.toFixed(2),
       'SGST': sgst.toFixed(2),

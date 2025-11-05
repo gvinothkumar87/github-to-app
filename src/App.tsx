@@ -11,6 +11,7 @@ import Suppliers from "./pages/Suppliers";
 import Purchases from "./pages/Purchases";
 import SupplierLedger from "./pages/SupplierLedger";
 import StockLedger from "./pages/StockLedger";
+import GSTExport from "./pages/GSTExport";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import GoogleDriveCallback from "./pages/GoogleDriveCallback";
@@ -64,6 +65,11 @@ const App = () => (
               <Route path="/stock-ledger" element={
                 <ProtectedRoute>
                   <StockLedger />
+                </ProtectedRoute>
+              } />
+              <Route path="/gst-export" element={
+                <ProtectedRoute>
+                  <GSTExport />
                 </ProtectedRoute>
               } />
               <Route path="/" element={

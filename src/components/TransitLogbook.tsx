@@ -421,57 +421,60 @@ export const TransitLogbook = () => {
 
   const renderContent = () => {
     if (showForm) {
-      if (activeTab === 'customers') {
-        return (
-          <CustomerForm
-            customer={editingItem}
-            onSuccess={handleFormSuccess}
-            onCancel={() => { setShowForm(false); setEditingItem(null); }}
-          />
-        );
-      } else if (activeTab === 'items') {
-        return (
-          <ItemForm
-            item={editingItem}
-            onSuccess={handleFormSuccess}
-            onCancel={() => { setShowForm(false); setEditingItem(null); }}
-          />
-        );
-      } else if (activeTab === 'entries') {
-        return (
-          <OutwardEntryForm
-            onSuccess={handleFormSuccess}
-            onCancel={() => setShowForm(false)}
-          />
-        );
-      } else if (activeTab === 'direct-sales') {
-        return (
-          <DirectSalesForm
-            onSuccess={handleFormSuccess}
-            onCancel={() => setShowForm(false)}
-          />
-        );
-      } else if (activeTab === 'outward-sales') {
-        return (
-          <SalesForm
-            onSuccess={handleFormSuccess}
-            onCancel={() => setShowForm(false)}
-          />
-        );
-      } else if (activeTab === 'amount-received') {
-        return (
-          <AmountReceivedForm
-            onSuccess={handleFormSuccess}
-            onCancel={() => setShowForm(false)}
-          />
-        );
-      } else if (activeTab === 'admin-delete') {
-        return (
-          <AdminDeleteForm
-            onSuccess={handleFormSuccess}
-            onCancel={() => setShowForm(false)}
-          />
-        );
+      switch (activeTab) {
+        case 'customers':
+          return (
+            <CustomerForm
+              customer={editingItem}
+              onSuccess={handleFormSuccess}
+              onCancel={() => { setShowForm(false); setEditingItem(null); }}
+            />
+          );
+        case 'items':
+          return (
+            <ItemForm
+              item={editingItem}
+              onSuccess={handleFormSuccess}
+              onCancel={() => { setShowForm(false); setEditingItem(null); }}
+            />
+          );
+        case 'entries':
+          return (
+            <OutwardEntryForm
+              onSuccess={handleFormSuccess}
+              onCancel={() => setShowForm(false)}
+            />
+          );
+        case 'direct-sales':
+          return (
+            <DirectSalesForm
+              onSuccess={handleFormSuccess}
+              onCancel={() => setShowForm(false)}
+            />
+          );
+        case 'outward-sales':
+          return (
+            <SalesForm
+              onSuccess={handleFormSuccess}
+              onCancel={() => setShowForm(false)}
+            />
+          );
+        case 'amount-received':
+          return (
+            <AmountReceivedForm
+              onSuccess={handleFormSuccess}
+              onCancel={() => setShowForm(false)}
+            />
+          );
+        case 'admin-delete':
+          return (
+            <AdminDeleteForm
+              onSuccess={handleFormSuccess}
+              onCancel={() => setShowForm(false)}
+            />
+          );
+        default:
+          return null;
       }
     }
 

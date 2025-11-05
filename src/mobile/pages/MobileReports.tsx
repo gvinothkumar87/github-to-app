@@ -356,7 +356,7 @@ const MobileReports: React.FC = () => {
 
             <Button onClick={exportGSTExcel} variant="secondary" className="w-full">
               <FileSpreadsheet className="h-4 w-4 mr-2" />
-              Export GST Excel (Excluding D Series)
+              GST Excel
             </Button>
           </CardContent>
         </Card>

@@ -64,6 +64,8 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
         // Determine loading place: prioritize sale.loading_place (for direct sales), then outward entry, then default
         const loadingPlace = sale.loading_place || outwardEntry?.loading_place || 'PULIVANTHI';
         
+        console.log('Loading company settings for mill:', loadingPlace);
+        
         const { data, error } = await supabase
           .from('company_settings')
           .select('*')
@@ -80,12 +82,14 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
         }
       } catch (error) {
         console.error('Error:', error);
-        setCompanySettings(getDefaultCompanyDetails(outwardEntry?.loading_place || 'PULIVANTHI'));
+        // Use the correct loading place for fallback
+        const loadingPlace = sale.loading_place || outwardEntry?.loading_place || 'PULIVANTHI';
+        setCompanySettings(getDefaultCompanyDetails(loadingPlace));
       }
     };
 
     fetchCompanySettings();
-  }, [outwardEntry?.loading_place]);
+  }, [sale.loading_place, outwardEntry?.loading_place]);
 
   const getDefaultCompanyDetails = (loadingPlace: string) => {
     if (loadingPlace === 'PULIVANTHI') {
@@ -153,6 +157,9 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
       console.error('Company settings not loaded');
       return;
     }
+
+    console.log('Generating JSON with customer:', customer);
+    console.log('Company settings:', companySettings);
 
     // Use customer details directly from database
     const customerAddress = customer.address_english || customer.address_tamil || "";

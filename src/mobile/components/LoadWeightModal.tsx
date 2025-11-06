@@ -109,12 +109,23 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
         throw new Error(error.message || 'Failed to upload photo');
       }
       
-      if (!data?.viewUrl) {
+      // The data might be wrapped or direct, handle both cases
+      const responseData = data?.success ? data : data;
+      console.log('Response data:', responseData);
+      
+      if (!responseData) {
+        throw new Error('No response data from upload');
+      }
+      
+      const viewUrl = responseData.viewUrl || responseData.fileUrl;
+      
+      if (!viewUrl) {
+        console.error('Missing viewUrl in response:', responseData);
         throw new Error('No URL returned from upload');
       }
 
-      console.log('Upload successful:', data.viewUrl);
-      return data.viewUrl;
+      console.log('Upload successful:', viewUrl);
+      return viewUrl;
     } catch (error: any) {
       console.error('Upload to Google Drive failed:', error);
       throw new Error(error.message || 'Failed to upload photo to Google Drive');

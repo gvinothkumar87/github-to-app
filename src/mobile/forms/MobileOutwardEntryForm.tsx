@@ -75,15 +75,34 @@ const MobileOutwardEntryForm: React.FC = () => {
   };
 
   const uploadToGoogleDrive = async (dataUrl: string): Promise<string> => {
-    const { compressDataUrl } = await import('@/lib/image');
-    const compressed = await compressDataUrl(dataUrl, { maxSize: 1600, quality: 0.7 });
-    const fileName = `weighment_${Date.now()}.jpg`;
-    const { data, error } = await supabase.functions.invoke('upload-to-google-drive', {
-      body: { dataUrl: compressed, fileName },
-    });
-    if (error) throw error;
-    if (!data?.viewUrl) throw new Error('No URL returned from upload');
-    return data.viewUrl;
+    try {
+      const { compressDataUrl } = await import('@/lib/image');
+      const compressed = await compressDataUrl(dataUrl, { maxSize: 1600, quality: 0.7 });
+      const fileName = `weighment_${Date.now()}.jpg`;
+      
+      console.log('Uploading to Google Drive...', fileName);
+      
+      const { data, error } = await supabase.functions.invoke('upload-to-google-drive', {
+        body: { dataUrl: compressed, fileName },
+      });
+      
+      console.log('Upload response:', { data, error });
+      
+      if (error) {
+        console.error('Upload error:', error);
+        throw new Error(error.message || 'Failed to upload photo');
+      }
+      
+      if (!data?.viewUrl) {
+        throw new Error('No URL returned from upload');
+      }
+      
+      console.log('Upload successful:', data.viewUrl);
+      return data.viewUrl;
+    } catch (error: any) {
+      console.error('Upload to Google Drive failed:', error);
+      throw new Error(error.message || 'Failed to upload photo to Google Drive');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

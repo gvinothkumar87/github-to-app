@@ -89,20 +89,36 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
   };
 
   const uploadToGoogleDrive = async (dataUrl: string): Promise<string> => {
-    const fileName = `${Date.now()}_${outwardEntry.serial_no}.jpg`;
-    
-    // Compress before upload to avoid edge memory limits
-    const { compressDataUrl } = await import('@/lib/image');
-    const compressed = await compressDataUrl(dataUrl, { maxSize: 1600, quality: 0.7 });
+    try {
+      const fileName = `loadweight_${Date.now()}_${outwardEntry.serial_no}.jpg`;
+      
+      console.log('Compressing image...');
+      // Compress before upload to avoid edge memory limits
+      const { compressDataUrl } = await import('@/lib/image');
+      const compressed = await compressDataUrl(dataUrl, { maxSize: 1600, quality: 0.7 });
 
-    const { data, error } = await supabase.functions.invoke('upload-to-google-drive', {
-      body: { dataUrl: compressed, fileName },
-    });
+      console.log('Uploading to Google Drive...', fileName);
+      const { data, error } = await supabase.functions.invoke('upload-to-google-drive', {
+        body: { dataUrl: compressed, fileName },
+      });
 
-    if (error) throw error;
-    if (!data?.viewUrl) throw new Error('No URL returned from upload');
+      console.log('Upload response:', { data, error });
 
-    return data.viewUrl;
+      if (error) {
+        console.error('Upload error:', error);
+        throw new Error(error.message || 'Failed to upload photo');
+      }
+      
+      if (!data?.viewUrl) {
+        throw new Error('No URL returned from upload');
+      }
+
+      console.log('Upload successful:', data.viewUrl);
+      return data.viewUrl;
+    } catch (error: any) {
+      console.error('Upload to Google Drive failed:', error);
+      throw new Error(error.message || 'Failed to upload photo to Google Drive');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

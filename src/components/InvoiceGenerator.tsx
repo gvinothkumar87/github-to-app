@@ -627,7 +627,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
                 {language === 'english' ? 'Invoice Details' : 'இன்வாய்ஸ் விவரங்கள்'}
               </h4>
               <p><strong>{language === 'english' ? 'Invoice No:' : 'இன்வாய்ஸ் எண்:'}</strong> {sale.bill_serial_no}</p>
-              <p><strong>{language === 'english' ? 'Date:' : 'தேதி:'}</strong> {new Date().toLocaleDateString()}</p>
+              <p><strong>{language === 'english' ? 'Date:' : 'தேதி:'}</strong> {new Date(sale.sale_date).toLocaleDateString('en-IN')}</p>
             </div>
             <div>
               <h4 className="font-semibold mb-2">

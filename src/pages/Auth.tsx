@@ -69,27 +69,18 @@ const Auth = () => {
         // Continue even if this fails
       }
 
-      // Lookup username to get email using the profiles table
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('username', username)
-        .single();
+      // Use edge function to lookup email by username and authenticate
+      const { data: authData, error: authError } = await supabase.functions.invoke('username-login', {
+        body: { username, password }
+      });
 
-      if (profileError || !profileData) {
-        throw new Error('Username not found');
+      if (authError || !authData?.email) {
+        throw new Error('Invalid username or password');
       }
 
-      // Get the user's email from auth.users via their ID
-      const { data: { user: authUser }, error: getUserError } = await supabase.auth.admin.getUserById(profileData.id);
-
-      if (getUserError || !authUser?.email) {
-        throw new Error('User account configuration error');
-      }
-
-      // Now sign in with the email and password
+      // Now sign in with the returned email and password
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: authUser.email,
+        email: authData.email,
         password,
       });
 

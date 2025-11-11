@@ -1,25 +1,45 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useAdminCheck = () => {
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    console.log('useAdminCheck: Current user:', user);
-    console.log('useAdminCheck: User email:', user?.email);
-    console.log('useAdminCheck: Admin email:', 'gvinothkumar87@gmail.com');
-    
-    if (user) {
-      const isAdminUser = user.email === 'gvinothkumar87@gmail.com';
-      console.log('useAdminCheck: Is admin?', isAdminUser);
-      setIsAdmin(isAdminUser);
-    } else {
-      console.log('useAdminCheck: No user, setting isAdmin to false');
-      setIsAdmin(false);
-    }
+    const checkAdminRole = async () => {
+      if (!user) {
+        setIsAdmin(false);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Query the user_roles table to check if user has admin role
+        const { data, error } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .eq('role', 'admin')
+          .maybeSingle();
+
+        if (error) {
+          console.error('useAdminCheck: Error checking admin role:', error);
+          setIsAdmin(false);
+        } else {
+          setIsAdmin(!!data);
+        }
+      } catch (error) {
+        console.error('useAdminCheck: Exception checking admin role:', error);
+        setIsAdmin(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAdminRole();
   }, [user]);
   
-  console.log('useAdminCheck: Returning isAdmin:', isAdmin);
-  return isAdmin;
+  return { isAdmin, loading };
 };

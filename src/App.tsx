@@ -12,6 +12,7 @@ import Purchases from "./pages/Purchases";
 import SupplierLedger from "./pages/SupplierLedger";
 import StockLedger from "./pages/StockLedger";
 import GSTExport from "./pages/GSTExport";
+import AmountReceived from "./pages/AmountReceived";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import GoogleDriveCallback from "./pages/GoogleDriveCallback";
@@ -70,6 +71,11 @@ const App = () => (
               <Route path="/gst-export" element={
                 <ProtectedRoute>
                   <GSTExport />
+                </ProtectedRoute>
+              } />
+              <Route path="/amount-received" element={
+                <ProtectedRoute>
+                  <AmountReceived />
                 </ProtectedRoute>
               } />
               <Route path="/" element={

@@ -27,10 +27,6 @@ const AmountReceived = () => {
   return (
     <PageLayout
       title={language === 'english' ? 'Amount Received' : 'பெற்ற தொகை'}
-      description={language === 'english'
-        ? 'Record and manage customer payments'
-        : 'வாடிக்கையாளர் பணம் பெற்ற தகவல்களை பதிவு செய்யவும் மற்றும் நிர்வகிக்கவும்'
-      }
     >
       <header className="sticky top-0 z-10 bg-background border-b">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">

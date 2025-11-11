@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, LogIn, UserPlus } from 'lucide-react';
 
 const Auth = () => {
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -55,8 +56,12 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      if (!username || !password) {
+        throw new Error('Please enter both username and password');
+      }
+
       cleanupAuthState();
-      
+
       // Attempt global sign out first
       try {
         await supabase.auth.signOut({ scope: 'global' });
@@ -64,8 +69,27 @@ const Auth = () => {
         // Continue even if this fails
       }
 
+      // Lookup username to get email using the profiles table
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', username)
+        .single();
+
+      if (profileError || !profileData) {
+        throw new Error('Username not found');
+      }
+
+      // Get the user's email from auth.users via their ID
+      const { data: { user: authUser }, error: getUserError } = await supabase.auth.admin.getUserById(profileData.id);
+
+      if (getUserError || !authUser?.email) {
+        throw new Error('User account configuration error');
+      }
+
+      // Now sign in with the email and password
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: authUser.email,
         password,
       });
 
@@ -83,7 +107,7 @@ const Auth = () => {
       toast({
         variant: "destructive",
         title: "Sign in failed",
-        description: error.message,
+        description: error.message || 'Invalid username or password',
       });
     } finally {
       setLoading(false);
@@ -95,25 +119,59 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      if (!username || !email || !password) {
+        throw new Error('Please enter username, email, and password');
+      }
+
       cleanupAuthState();
-      
+
+      // Check if username already exists
+      const { data: existingUser, error: checkError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', username)
+        .single();
+
+      if (existingUser) {
+        throw new Error('Username already taken');
+      }
+
       const redirectUrl = `${window.location.origin}/`;
-      
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl
+          emailRedirectTo: redirectUrl,
+          data: {
+            username: username
+          }
         }
       });
 
       if (error) throw error;
 
       if (data.user) {
+        // Create profile entry with username
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            username: username,
+            status: 'pending' // Admin approval required
+          });
+
+        if (profileError) throw profileError;
+
         toast({
           title: "Account created!",
-          description: "Please check your email to confirm your account.",
+          description: "Your account is pending admin approval. Please wait for confirmation.",
         });
+
+        // Clear form
+        setUsername('');
+        setEmail('');
+        setPassword('');
       }
     } catch (error: any) {
       toast({
@@ -153,13 +211,13 @@ const Auth = () => {
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div>
-                  <Label htmlFor="signin-email">Email</Label>
+                  <Label htmlFor="signin-username">Username</Label>
                   <Input
-                    id="signin-email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
+                    id="signin-username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Enter your username"
                     required
                   />
                 </div>
@@ -187,6 +245,17 @@ const Auth = () => {
             
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
+                <div>
+                  <Label htmlFor="signup-username">Username</Label>
+                  <Input
+                    id="signup-username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Choose a username"
+                    required
+                  />
+                </div>
                 <div>
                   <Label htmlFor="signup-email">Email</Label>
                   <Input

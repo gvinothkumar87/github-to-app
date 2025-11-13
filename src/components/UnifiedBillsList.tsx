@@ -201,20 +201,22 @@ export const UnifiedBillsList = ({
           data: creditNote,
           customer: creditNote.customers
         })),
-        ...(outwardEntriesData || []).map((entry: any) => ({
-          id: entry.id,
-          type: 'outward_entry' as const,
-          bill_no: `Entry #${entry.serial_no}`,
-          date: entry.entry_date,
-          entry_date: entry.entry_date,
-          customer_name: getDisplayName(entry.customers),
-          item_name: getDisplayName(entry.items),
-          amount: entry.net_weight || 0,
-          data: entry,
-          customer: entry.customers,
-          item: entry.items,
-          outward_entry: entry
-        }))
+        ...(outwardEntriesData || [])
+          .filter((entry: any) => !salesOutwardEntryIds.has(entry.id))
+          .map((entry: any) => ({
+            id: entry.id,
+            type: 'outward_entry' as const,
+            bill_no: `Entry #${entry.serial_no}`,
+            date: entry.entry_date,
+            entry_date: entry.entry_date,
+            customer_name: getDisplayName(entry.customers),
+            item_name: getDisplayName(entry.items),
+            amount: entry.net_weight || 0,
+            data: entry,
+            customer: entry.customers,
+            item: entry.items,
+            outward_entry: entry
+          }))
       ];
 
       // Sort by date (newest first)

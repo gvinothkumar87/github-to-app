@@ -91,6 +91,11 @@ const MobileSalesForm: React.FC = () => {
 
   // Get sales data for bill generation
   const { data: salesData } = useEnhancedOfflineData('offline_sales');
+  
+  // Get IDs of outward entries that already have sales
+  const salesOutwardEntryIds = new Set(
+    (salesData || []).map((sale: any) => sale.outward_entry_id).filter(Boolean)
+  );
 
   // Generate special serial (D-series)
   const generateSpecialSerial = async (): Promise<string> => {
@@ -254,7 +259,9 @@ const MobileSalesForm: React.FC = () => {
                     <SelectValue placeholder={language === 'english' ? 'Select outward entry' : 'வெளியீட்டு பதிவை தேர்ந்தெடுக்கவும்'} />
                   </SelectTrigger>
                   <SelectContent>
-                    {outwardEntries.filter((entry: any) => entry.is_completed).map((entry: any) => {
+                    {outwardEntries
+                      .filter((entry: any) => entry.is_completed && !salesOutwardEntryIds.has(entry.id))
+                      .map((entry: any) => {
                       const customer = customers.find((c: any) => c.id === entry.customer_id) as any;
                       const item = items.find((i: any) => i.id === entry.item_id) as any;
                       return (

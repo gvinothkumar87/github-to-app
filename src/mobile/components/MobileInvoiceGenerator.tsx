@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { MobileLayout } from './MobileLayout';
 import { useEnhancedOfflineData } from '../hooks/useEnhancedOfflineData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +25,8 @@ export const MobileInvoiceGenerator: React.FC = () => {
   const navigate = useNavigate();
   const { language, getDisplayName } = useLanguage();
   const { toast } = useToast();
-  const [sale, setSale] = useState<any>(null);
+  const { state } = useLocation();
+  const [sale, setSale] = useState<any>(state?.sale || null);
   const [allSales, setAllSales] = useState<any[]>([]);
   const [allSalesItems, setAllSalesItems] = useState<any[]>([]);
   const [companySettings, setCompanySettings] = useState<any>(null);
@@ -39,8 +40,36 @@ export const MobileInvoiceGenerator: React.FC = () => {
   const { data: outwardEntries } = useEnhancedOfflineData('offline_outward_entries');
   const { data: companySettingsData } = useEnhancedOfflineData('offline_company_settings');
 
+  // Initialize from navigation state if available
   useEffect(() => {
-    if (saleId && sales.length > 0) {
+    if (state?.sale) {
+      setSale(state.sale);
+      setIrnValue(state.sale.irn || '');
+      
+      // If we have the full data from state, use it
+      if (state.sale.bill_serial_no) {
+        // Check if there are other sales with same bill number
+        const sameBillSales = sales.filter((s: any) => s.bill_serial_no === state.sale.bill_serial_no);
+        if (sameBillSales.length > 0) {
+          setAllSales(sameBillSales);
+          const saleItems = sameBillSales.map((s: any) => 
+            items.find((i: any) => i.id === s.item_id)
+          ).filter(Boolean);
+          setAllSalesItems(saleItems);
+        } else {
+          // Single sale from state
+          setAllSales([state.sale]);
+          if (state.item) {
+            setAllSalesItems([state.item]);
+          }
+        }
+      }
+    }
+  }, [state, sales, items]);
+
+  useEffect(() => {
+    // Fetch from offline data if not provided via state
+    if (!state?.sale && saleId && sales.length > 0) {
       const foundSale = sales.find((s: any) => s.id === saleId);
       if (foundSale) {
         setSale(foundSale);
@@ -59,7 +88,7 @@ export const MobileInvoiceGenerator: React.FC = () => {
         }
       }
     }
-  }, [saleId, sales, items]);
+  }, [saleId, sales, items, state]);
 
   useEffect(() => {
     if (companySettingsData.length > 0 && sale) {
@@ -70,9 +99,10 @@ export const MobileInvoiceGenerator: React.FC = () => {
     }
   }, [companySettingsData, sale, outwardEntries]);
 
-  const customer: any = sale ? customers.find((c: any) => c.id === sale.customer_id) : null;
-  const item: any = sale ? items.find((i: any) => i.id === sale.item_id) : null;
-  const outwardEntry: any = sale ? outwardEntries.find((e: any) => e.id === sale.outward_entry_id) : null;
+  // Use data from state first, fall back to fetching from offline data
+  const customer: any = state?.customer || (sale ? customers.find((c: any) => c.id === sale.customer_id) : null);
+  const item: any = state?.item || (sale ? items.find((i: any) => i.id === sale.item_id) : null);
+  const outwardEntry: any = state?.outwardEntry || (sale ? outwardEntries.find((e: any) => e.id === sale.outward_entry_id) : null);
 
   const calculateAmounts = () => {
     if (!allSales.length || !allSalesItems.length) {

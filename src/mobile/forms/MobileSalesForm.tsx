@@ -224,8 +224,21 @@ const MobileSalesForm: React.FC = () => {
         description: language === 'english' ? 'Sale recorded successfully' : 'விற்பனை வெற்றிகரமாக பதிவு செய்யப்பட்டது',
       });
       
-      // Navigate to invoice view to show bill with all details
-      navigate(`/sales/${newSale.id}/view`);
+      // Navigate to invoice view with complete sale data
+      const customer = customers.find((c: any) => c.id === finalFormData.customer_id);
+      const item = items.find((i: any) => i.id === finalFormData.item_id);
+      
+      navigate(`/sales/${newSale.id}/view`, {
+        state: {
+          sale: {
+            ...newSale,
+            ...finalFormData,
+          },
+          customer,
+          item,
+          outwardEntry: selectedEntry,
+        }
+      });
     } catch (error: any) {
       toast({
         variant: 'destructive',

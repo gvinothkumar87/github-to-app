@@ -102,29 +102,39 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
         body: { dataUrl: compressed, fileName },
       });
 
-      console.log('Upload response:', { data, error });
+      console.log('Raw upload response:', JSON.stringify({ data, error }, null, 2));
 
       if (error) {
         console.error('Upload error:', error);
         throw new Error(error.message || 'Failed to upload photo');
       }
       
-      // The data might be wrapped or direct, handle both cases
-      const responseData = data?.success ? data : data;
-      console.log('Response data:', responseData);
+      // Unwrap nested response if needed
+      let responseData = data;
+      
+      // Check if response is wrapped in a data property
+      if (data && typeof data === 'object') {
+        // If we have data.data and no direct viewUrl/fileUrl, unwrap it
+        if ('data' in data && !data.viewUrl && !data.fileUrl && !data.url) {
+          responseData = data.data;
+          console.log('Unwrapped nested response:', responseData);
+        }
+      }
       
       if (!responseData) {
         throw new Error('No response data from upload');
       }
       
-      const viewUrl = responseData.viewUrl || responseData.fileUrl;
+      // Try multiple URL fields in order of preference
+      const viewUrl = responseData.viewUrl || responseData.fileUrl || responseData.url;
       
       if (!viewUrl) {
-        console.error('Missing viewUrl in response:', responseData);
-        throw new Error('No URL returned from upload');
+        console.error('Missing URL in response:', responseData);
+        console.error('Available keys:', Object.keys(responseData));
+        throw new Error(`No URL returned from upload. Keys: ${Object.keys(responseData).join(', ')}`);
       }
-
-      console.log('Upload successful:', viewUrl);
+      
+      console.log('Upload successful, URL:', viewUrl);
       return viewUrl;
     } catch (error: any) {
       console.error('Upload to Google Drive failed:', error);

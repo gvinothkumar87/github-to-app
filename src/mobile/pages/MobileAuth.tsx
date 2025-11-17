@@ -38,18 +38,6 @@ const MobileAuth = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const cleanupAuthState = () => {
-    Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-        localStorage.removeItem(key);
-      }
-    });
-    Object.keys(sessionStorage || {}).forEach((key) => {
-      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-        sessionStorage.removeItem(key);
-      }
-    });
-  };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,15 +46,6 @@ const MobileAuth = () => {
     try {
       if (!username || !password) {
         throw new Error('Please enter both username and password');
-      }
-
-      cleanupAuthState();
-
-      // Attempt global sign out first
-      try {
-        await supabase.auth.signOut({ scope: 'global' });
-      } catch (err) {
-        // Continue even if this fails
       }
 
       console.log('🔐 MobileAuth: Attempting login with username...');
@@ -119,8 +98,6 @@ const MobileAuth = () => {
       if (!username || !email || !password) {
         throw new Error('Please enter username, email, and password');
       }
-
-      cleanupAuthState();
 
       // Check if username already exists
       const { data: existingUser, error: checkError } = await supabase

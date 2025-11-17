@@ -1980,7 +1980,7 @@ export type Database = {
           id: string
           irn: string | null
           item_id: string
-          loading_place: string | null
+          loading_place: string
           lorry_no: string | null
           outward_entry_id: string | null
           quantity: number
@@ -1999,7 +1999,7 @@ export type Database = {
           id?: string
           irn?: string | null
           item_id: string
-          loading_place?: string | null
+          loading_place?: string
           lorry_no?: string | null
           outward_entry_id?: string | null
           quantity: number
@@ -2018,7 +2018,7 @@ export type Database = {
           id?: string
           irn?: string | null
           item_id?: string
-          loading_place?: string | null
+          loading_place?: string
           lorry_no?: string | null
           outward_entry_id?: string | null
           quantity?: number

@@ -186,6 +186,17 @@ const MobileSalesForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate loading_place exists
+    if (selectedEntry && !selectedEntry.loading_place) {
+      toast({
+        variant: 'destructive',
+        title: language === 'english' ? 'Error' : 'பிழை',
+        description: language === 'english' ? 'Loading place is missing from outward entry' : 'ஏற்றும் இடம் காணவில்லை',
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -195,6 +206,8 @@ const MobileSalesForm: React.FC = () => {
         quantity: parseFloat(formData.quantity),
         rate: parseFloat(formData.rate),
         total_amount: parseFloat(formData.total_amount),
+        loading_place: selectedEntry?.loading_place || 'PULIVANTHI',
+        lorry_no: selectedEntry?.lorry_no,
       };
 
       // If bill_serial_no is empty, generate one

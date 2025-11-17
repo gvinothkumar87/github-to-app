@@ -213,6 +213,16 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
       return;
     }
 
+    // Validate loading_place exists
+    if (!selectedEntry.loading_place) {
+      toast({
+        title: language === 'english' ? 'Error' : 'பிழை',
+        description: language === 'english' ? 'Loading place is missing from outward entry' : 'ஏற்றும் இடம் காணவில்லை',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -241,6 +251,8 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
         bill_serial_no: finalBillSerial,
         sale_date: saleDate,
         created_by: userId,
+        loading_place: selectedEntry.loading_place,
+        lorry_no: selectedEntry.lorry_no,
       };
 
       // Prepare ledger data

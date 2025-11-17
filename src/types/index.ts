@@ -152,3 +152,20 @@ export interface LanguageContextType {
   setLanguage: (lang: Language) => void;
   getDisplayName: (item: { name_english: string; name_tamil?: string }) => string;
 }
+
+export interface CreateSaleData {
+  outward_entry_id?: string | null;
+  customer_id: string;
+  item_id: string;
+  quantity: number;
+  rate: number;
+  base_amount: number;
+  gst_amount: number;
+  total_amount: number;
+  bill_serial_no: string;
+  sale_date: string;
+  created_by: string;
+  loading_place: string; // Required!
+  lorry_no?: string;
+  irn?: string;
+}

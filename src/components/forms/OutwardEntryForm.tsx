@@ -103,12 +103,47 @@ export const OutwardEntryForm: React.FC<OutwardEntryFormProps> = ({ onSuccess, o
           const compressed = await compressDataUrl(raw, { maxSize: 1600, quality: 0.7 });
 
           const fileName = `weighment_${Date.now()}_${file.name}`;
+          
+          console.log('Uploading to Google Drive...', fileName);
+          
           const { data, error } = await supabase.functions.invoke('upload-to-google-drive', {
             body: { dataUrl: compressed, fileName },
           });
-          if (error) throw error;
-          if (!data?.viewUrl) throw new Error('No URL returned from upload');
-          resolve(data.viewUrl);
+          
+          console.log('Raw upload response:', JSON.stringify({ data, error }, null, 2));
+          
+          if (error) {
+            console.error('Upload error:', error);
+            throw error;
+          }
+          
+          // Unwrap nested response if needed
+          let responseData = data;
+          
+          // Check if response is wrapped in a data property
+          if (data && typeof data === 'object') {
+            // If we have data.data and no direct viewUrl/fileUrl, unwrap it
+            if ('data' in data && !data.viewUrl && !data.fileUrl && !data.url) {
+              responseData = data.data;
+              console.log('Unwrapped nested response:', responseData);
+            }
+          }
+          
+          if (!responseData) {
+            throw new Error('No response data from upload');
+          }
+          
+          // Try multiple URL fields in order of preference
+          const viewUrl = responseData.viewUrl || responseData.fileUrl || responseData.url;
+          
+          if (!viewUrl) {
+            console.error('Missing URL in response:', responseData);
+            console.error('Available keys:', Object.keys(responseData));
+            throw new Error(`No URL returned from upload. Keys: ${Object.keys(responseData).join(', ')}`);
+          }
+          
+          console.log('Upload successful, URL:', viewUrl);
+          resolve(viewUrl);
         } catch (error) {
           reject(error as any);
         }

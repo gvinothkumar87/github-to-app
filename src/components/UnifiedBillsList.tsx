@@ -237,79 +237,96 @@ export const UnifiedBillsList = ({
 
   const handleDelete = async (bill: UnifiedBill) => {
     try {
-      let error;
-      
+      let deletedCount = 0;
+
       if (bill.type === 'credit_note') {
-        // First delete associated ledger entry/entries for this credit note
+        // Delete related ledger rows first
         const { error: ledgerError } = await supabase
           .from('customer_ledger')
           .delete()
-          .eq('reference_id', bill.id);
+          .eq('reference_id', bill.id)
+          .select('id');
         if (ledgerError) throw ledgerError;
-        // Then delete the credit note itself
-        const { error: deleteError } = await supabase
+
+        // Then delete the credit note
+        const { data: deleted, error: deleteError } = await supabase
           .from('credit_notes')
           .delete()
-          .eq('id', bill.id);
-        error = deleteError;
+          .eq('id', bill.id)
+          .select('id');
+        if (deleteError) throw deleteError;
+        deletedCount += deleted?.length || 0;
       } else if (bill.type === 'sale') {
         const saleData = bill.data as any;
-        
-        // If it's a grouped multi-product bill, delete all sales with same bill_serial_no
+
         if (saleData._isGrouped && saleData._allSales?.length > 1) {
-          // First, delete associated ledger entries for all sales
+          // Delete ledger rows for all grouped sales
           const saleIds = saleData._allSales.map((s: any) => s.id);
           const { error: ledgerError } = await supabase
             .from('customer_ledger')
             .delete()
-            .in('reference_id', saleIds);
-          
+            .in('reference_id', saleIds)
+            .select('id');
           if (ledgerError) throw ledgerError;
-          
-          // Then delete all sales with same bill_serial_no
-          const { error: deleteError } = await supabase
+
+          // Delete all sales with the same bill number
+          const { data: deleted, error: deleteError } = await supabase
             .from('sales')
             .delete()
-            .eq('bill_serial_no', saleData.bill_serial_no);
-          error = deleteError;
+            .eq('bill_serial_no', saleData.bill_serial_no)
+            .select('id');
+          if (deleteError) throw deleteError;
+          deletedCount += deleted?.length || 0;
         } else {
-          // Single product bill - first delete ledger entry
+          // Single sale
           const { error: ledgerError } = await supabase
             .from('customer_ledger')
             .delete()
-            .eq('reference_id', bill.id);
-          
+            .eq('reference_id', bill.id)
+            .select('id');
           if (ledgerError) throw ledgerError;
-          
-          // Then delete the sale by ID
-          const { error: deleteError } = await supabase
+
+          const { data: deleted, error: deleteError } = await supabase
             .from('sales')
             .delete()
-            .eq('id', bill.id);
-          error = deleteError;
+            .eq('id', bill.id)
+            .select('id');
+          if (deleteError) throw deleteError;
+          deletedCount += deleted?.length || 0;
         }
       } else if (bill.type === 'debit_note') {
         // First delete associated ledger entry/entries for this debit note
         const { error: ledgerError } = await supabase
           .from('customer_ledger')
           .delete()
-          .eq('reference_id', bill.id);
+          .eq('reference_id', bill.id)
+          .select('id');
         if (ledgerError) throw ledgerError;
         // Then delete the debit note itself
-        const { error: deleteError } = await supabase
+        const { data: deleted, error: deleteError } = await supabase
           .from('debit_notes')
           .delete()
-          .eq('id', bill.id);
-        error = deleteError;
+          .eq('id', bill.id)
+          .select('id');
+        if (deleteError) throw deleteError;
+        deletedCount += deleted?.length || 0;
       } else if (bill.type === 'outward_entry') {
-        const { error: deleteError } = await supabase
+        const { data: deleted, error: deleteError } = await supabase
           .from('outward_entries')
           .delete()
-          .eq('id', bill.id);
-        error = deleteError;
+          .eq('id', bill.id)
+          .select('id');
+        if (deleteError) throw deleteError;
+        deletedCount += deleted?.length || 0;
       }
 
-      if (error) throw error;
+      if (deletedCount === 0) {
+        throw new Error(
+          language === 'english' 
+            ? 'No rows deleted. You might not have permission.' 
+            : 'எந்த வரியும் நீக்கப்படவில்லை. உங்களுக்கு அனுமதி இருக்காமல் இருக்கலாம்.'
+        );
+      }
 
       toast({
         title: language === 'english' ? 'Success' : 'வெற்றி',
@@ -321,7 +338,7 @@ export const UnifiedBillsList = ({
     } catch (error: any) {
       toast({
         title: language === 'english' ? 'Error' : 'பிழை',
-        description: language === 'english' ? 'Failed to delete entry' : 'என்ட்ரி நீக்குவதில் தோல்வி',
+        description: error.message || (language === 'english' ? 'Failed to delete entry' : 'என்ட்ரி நீக்குவதில் தோல்வி'),
         variant: 'destructive',
       });
       console.error('Error deleting entry:', error);

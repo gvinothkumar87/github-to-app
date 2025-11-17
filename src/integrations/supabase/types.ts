@@ -1122,6 +1122,45 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_requests: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string | null
+          payee_name: string | null
+          status: string
+          updated_at: string
+          upi_id: string
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          payee_name?: string | null
+          status?: string
+          updated_at?: string
+          upi_id: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          payee_name?: string | null
+          status?: string
+          updated_at?: string
+          upi_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       payroll: {
         Row: {
           bonuses: number | null
@@ -2423,6 +2462,7 @@ export type Database = {
           leave_at: string | null
           location_lat: number | null
           location_lng: number | null
+          location_name: string | null
           location_radius: number | null
           priority: Database["public"]["Enums"]["task_priority_type"] | null
           status: Database["public"]["Enums"]["task_status_type"] | null
@@ -2444,6 +2484,7 @@ export type Database = {
           leave_at?: string | null
           location_lat?: number | null
           location_lng?: number | null
+          location_name?: string | null
           location_radius?: number | null
           priority?: Database["public"]["Enums"]["task_priority_type"] | null
           status?: Database["public"]["Enums"]["task_status_type"] | null
@@ -2465,6 +2506,7 @@ export type Database = {
           leave_at?: string | null
           location_lat?: number | null
           location_lng?: number | null
+          location_name?: string | null
           location_radius?: number | null
           priority?: Database["public"]["Enums"]["task_priority_type"] | null
           status?: Database["public"]["Enums"]["task_status_type"] | null
@@ -3278,6 +3320,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          email: string
+          id: string
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email: string
+          id: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -3520,6 +3589,10 @@ export type Database = {
         Returns: Json
       }
       rebuild_all_daily_balances: { Args: never; Returns: undefined }
+      rebuild_daily_balances_after_date: {
+        Args: { p_cutoff_date: string }
+        Returns: Json
+      }
       recalculate_all_running_balances: { Args: never; Returns: undefined }
       recalculate_customer_ledger_balances: {
         Args: { p_customer_id: string; p_from_date: string }

@@ -217,14 +217,15 @@ const MobileSalesForm: React.FC = () => {
           : await generateBillSerial(selectedEntry.loading_place);
       }
 
-      await createSale(finalFormData);
+      const newSale = await createSale(finalFormData);
       
       toast({
         title: language === 'english' ? 'Success' : 'வெற்றி',
         description: language === 'english' ? 'Sale recorded successfully' : 'விற்பனை வெற்றிகரமாக பதிவு செய்யப்பட்டது',
       });
       
-      navigate('/sales');
+      // Navigate to invoice view to show bill with all details
+      navigate(`/sales/${newSale.id}/view`);
     } catch (error: any) {
       toast({
         variant: 'destructive',

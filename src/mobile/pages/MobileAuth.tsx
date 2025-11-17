@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, LogIn, UserPlus, Smartphone } from 'lucide-react';
+import { Preferences } from '@capacitor/preferences';
 
 const MobileAuth = () => {
   const [username, setUsername] = useState('');
@@ -19,11 +20,56 @@ const MobileAuth = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if user is already authenticated
+    // Check if user is already authenticated or auto-login with saved credentials
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         navigate('/');
+        return;
+      }
+
+      // Try auto-login with saved credentials
+      try {
+        const { value: savedUsername } = await Preferences.get({ key: 'saved_username' });
+        const { value: savedPassword } = await Preferences.get({ key: 'saved_password' });
+        
+        if (savedUsername && savedPassword) {
+          console.log('🔐 MobileAuth: Auto-login with saved credentials');
+          setUsername(savedUsername);
+          setLoading(true);
+
+          // Use edge function to lookup email by username and authenticate
+          const { data: authData, error: authError } = await supabase.functions.invoke('username-login', {
+            body: { username: savedUsername, password: savedPassword }
+          });
+
+          if (authError || !authData?.email) {
+            // Clear invalid saved credentials
+            await Preferences.remove({ key: 'saved_username' });
+            await Preferences.remove({ key: 'saved_password' });
+            setLoading(false);
+            return;
+          }
+
+          // Sign in with the returned email and password
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: authData.email,
+            password: savedPassword,
+          });
+
+          if (error) {
+            // Clear invalid saved credentials
+            await Preferences.remove({ key: 'saved_username' });
+            await Preferences.remove({ key: 'saved_password' });
+            setLoading(false);
+          } else if (data.user) {
+            console.log('🔐 MobileAuth: Auto-login successful');
+            navigate('/');
+          }
+        }
+      } catch (error) {
+        console.error('🔐 MobileAuth: Auto-login error:', error);
+        setLoading(false);
       }
     };
     checkAuth();
@@ -72,6 +118,10 @@ const MobileAuth = () => {
       console.log('🔐 MobileAuth: Login successful');
 
       if (data.user) {
+        // Save credentials securely for auto-login
+        await Preferences.set({ key: 'saved_username', value: username });
+        await Preferences.set({ key: 'saved_password', value: password });
+        
         toast({
           title: "Welcome back!",
           description: "You have been signed in successfully.",

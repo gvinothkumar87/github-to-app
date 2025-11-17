@@ -1043,9 +1043,17 @@ export const MobileInvoiceGenerator: React.FC = () => {
                 <span className="text-muted-foreground">{language === 'english' ? 'Date:' : 'தேதி:'}</span>
                 <p className="font-semibold">{format(new Date(sale.sale_date), 'dd/MM/yyyy')}</p>
               </div>
-              <div>
-                <span className="text-muted-foreground">{language === 'english' ? 'Customer:' : 'வாடிக்கையாளர்:'}</span>
-                <p className="font-semibold">{getDisplayName(customer)}</p>
+              <div className="col-span-2">
+                <span className="text-muted-foreground">{language === 'english' ? 'Customer Details' : 'வாடிக்கையாளர் விவரங்கள்'}:</span>
+                <div className="mt-1 space-y-1">
+                  <p className="font-semibold">{getDisplayName(customer)}</p>
+                  {(customer.address_english || customer.address_tamil) && (
+                    <p className="text-sm">{language === 'english' ? customer.address_english : customer.address_tamil || customer.address_english}</p>
+                  )}
+                  {customer.pin_code && <p className="text-sm"><strong>{language === 'english' ? 'PIN:' : 'பின்:'}</strong> {customer.pin_code}</p>}
+                  {customer.phone && <p className="text-sm"><strong>{language === 'english' ? 'Phone:' : 'தொலைபேசி:'}</strong> {customer.phone}</p>}
+                  {customer.gstin && <p className="text-sm"><strong>GSTIN:</strong> {customer.gstin}</p>}
+                </div>
               </div>
               {outwardEntry?.lorry_no && (
                 <div>

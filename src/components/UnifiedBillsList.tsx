@@ -67,8 +67,8 @@ export const UnifiedBillsList = ({
     for (const pattern of patterns) {
       const match = url.match(pattern);
       if (match && match[1]) {
-        // Use direct view URL format that bypasses Google Drive's security headers
-        return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+        // Use the correct format that Google Drive allows for embedding
+        return `https://drive.google.com/file/d/${match[1]}/view`;
       }
     }
     

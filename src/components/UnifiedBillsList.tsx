@@ -289,6 +289,13 @@ export const UnifiedBillsList = ({
           error = deleteError;
         }
       } else if (bill.type === 'debit_note') {
+        // First delete associated ledger entry/entries for this debit note
+        const { error: ledgerError } = await supabase
+          .from('customer_ledger')
+          .delete()
+          .eq('reference_id', bill.id);
+        if (ledgerError) throw ledgerError;
+        // Then delete the debit note itself
         const { error: deleteError } = await supabase
           .from('debit_notes')
           .delete()

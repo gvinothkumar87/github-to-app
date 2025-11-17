@@ -207,14 +207,16 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
         Gstin: customer.gstin || "URP",
         LglNm: customer.name_english || getDisplayName(customer),
         TrdNm: customer.name_english || getDisplayName(customer),
-        Addr1: buyerAddr1 || customer.address_english || customer.address_tamil || null,
-        Addr2: buyerAddr2 || null,
-        Loc: buyerLoc || customer.address_english?.split(',').pop()?.trim() || null,
+        Addr1: buyerAddr1 || customer.address_english || customer.address_tamil || "",
+        Addr2: buyerAddr2 || "",
+        Loc: buyerLoc || customer.address_english?.split(',').pop()?.trim() || "",
         Pin: parseInt(customer.pin_code || "605201"),
         Pos: customer.place_of_supply || customer.state_code || "33",
         Stcd: customer.state_code || "33",
-        Ph: customer.phone || null,
-        Em: customer.email || null
+        Ph: customer.phone || "",
+        Em: customer.email || "",
+        ContactPerson: customer.contact_person || "",
+        Code: customer.code || ""
       },
       ValDtls: {
         AssVal: roundedBaseAmount,
@@ -634,13 +636,18 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
                 {language === 'english' ? 'Customer Details' : 'வாடிக்கையாளர் விவரங்கள்'}
               </h4>
               <div className="space-y-1 text-sm">
-                <p className="text-lg font-semibold">{getDisplayName(customer)}</p>
+                <p className="font-semibold">{getDisplayName(customer)}</p>
+                {customer.contact_person && (
+                  <p><strong>{language === 'english' ? 'Contact:' : 'தொடர்பு:'}</strong> {customer.contact_person}</p>
+                )}
                 {(customer.address_english || customer.address_tamil) && (
-                  <p>{customer.address_english || customer.address_tamil}</p>
+                  <p><strong>{language === 'english' ? 'Address:' : 'முகவரி:'}</strong> {language === 'english' ? customer.address_english : customer.address_tamil || customer.address_english}</p>
                 )}
                 {customer.pin_code && <p><strong>{language === 'english' ? 'PIN:' : 'பின்:'}</strong> {customer.pin_code}</p>}
                 {customer.phone && <p><strong>{language === 'english' ? 'Phone:' : 'தொலைபேசி:'}</strong> {customer.phone}</p>}
+                {customer.email && <p><strong>Email:</strong> {customer.email}</p>}
                 {customer.gstin && <p><strong>GSTIN:</strong> {customer.gstin}</p>}
+                {customer.state_code && <p><strong>{language === 'english' ? 'State Code:' : 'மாநில குறியீடு:'}</strong> {customer.state_code}</p>}
               </div>
             </div>
           </div>

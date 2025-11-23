@@ -92,12 +92,17 @@ const LoadWeightModal: React.FC<LoadWeightModalProps> = ({
     try {
       const fileName = `loadweight_${Date.now()}_${outwardEntry.serial_no}.jpg`;
       
-      console.log('Compressing image...');
+      console.log('📸 Original image data length:', dataUrl.length);
+      console.log('📸 Image data preview:', dataUrl.substring(0, 50));
+      
       // Compress before upload to avoid edge memory limits
       const { compressDataUrl } = await import('@/lib/image');
       const compressed = await compressDataUrl(dataUrl, { maxSize: 1600, quality: 0.7 });
+      
+      console.log('📸 Compressed image data length:', compressed.length);
+      console.log('📸 Compressed data preview:', compressed.substring(0, 50));
 
-      console.log('Uploading to Google Drive...', fileName);
+      console.log('☁️ Uploading to Google Drive...', fileName);
       const { data, error } = await supabase.functions.invoke('upload-to-google-drive', {
         body: { dataUrl: compressed, fileName },
       });

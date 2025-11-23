@@ -690,6 +690,89 @@ export type Database = {
         }
         Relationships: []
       }
+      frk_inward_entries: {
+        Row: {
+          batch_no: string
+          bill_no: string
+          created_at: string
+          created_by: string | null
+          entry_date: string
+          id: string
+          mill: string
+          quantity: number
+          serial_no: string
+          updated_at: string
+        }
+        Insert: {
+          batch_no: string
+          bill_no: string
+          created_at?: string
+          created_by?: string | null
+          entry_date?: string
+          id?: string
+          mill: string
+          quantity: number
+          serial_no: string
+          updated_at?: string
+        }
+        Update: {
+          batch_no?: string
+          bill_no?: string
+          created_at?: string
+          created_by?: string | null
+          entry_date?: string
+          id?: string
+          mill?: string
+          quantity?: number
+          serial_no?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      frk_outward_entries: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          entry_date: string
+          id: string
+          mill: string
+          quantity: number
+          rice_loading_bill_no: string
+          rice_loading_entry_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          entry_date?: string
+          id?: string
+          mill: string
+          quantity: number
+          rice_loading_bill_no: string
+          rice_loading_entry_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          entry_date?: string
+          id?: string
+          mill?: string
+          quantity?: number
+          rice_loading_bill_no?: string
+          rice_loading_entry_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "frk_outward_entries_rice_loading_entry_id_fkey"
+            columns: ["rice_loading_entry_id"]
+            isOneToOne: false
+            referencedRelation: "rice_loading_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       godown_expense_references: {
         Row: {
           bill_no: string
@@ -1712,6 +1795,7 @@ export type Database = {
           http_link_2_description: string | null
           id: string
           is_active: boolean
+          storage_type: string | null
           updated_at: string
           value: string
         }
@@ -1727,6 +1811,7 @@ export type Database = {
           http_link_2_description?: string | null
           id?: string
           is_active?: boolean
+          storage_type?: string | null
           updated_at?: string
           value: string
         }
@@ -1742,6 +1827,7 @@ export type Database = {
           http_link_2_description?: string | null
           id?: string
           is_active?: boolean
+          storage_type?: string | null
           updated_at?: string
           value?: string
         }
@@ -1758,6 +1844,7 @@ export type Database = {
           grade: string
           id: string
           is_unloaded: boolean
+          loading_point: string | null
           lorry_number: string
           mill: string
           serial_no: string
@@ -1776,6 +1863,7 @@ export type Database = {
           grade: string
           id?: string
           is_unloaded?: boolean
+          loading_point?: string | null
           lorry_number: string
           mill?: string
           serial_no: string
@@ -1794,6 +1882,7 @@ export type Database = {
           grade?: string
           id?: string
           is_unloaded?: boolean
+          loading_point?: string | null
           lorry_number?: string
           mill?: string
           serial_no?: string
@@ -2766,6 +2855,93 @@ export type Database = {
           synced?: boolean | null
           updated_at?: string
           weight?: number
+        }
+        Relationships: []
+      }
+      unified_offline_frk_inward_entries: {
+        Row: {
+          batch_no: string
+          bill_no: string
+          created_at: string
+          created_by: string | null
+          device_id: string
+          entry_date: string
+          id: string
+          mill: string
+          quantity: number
+          serial_no: string
+          synced: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          batch_no: string
+          bill_no: string
+          created_at?: string
+          created_by?: string | null
+          device_id: string
+          entry_date?: string
+          id: string
+          mill: string
+          quantity: number
+          serial_no: string
+          synced?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          batch_no?: string
+          bill_no?: string
+          created_at?: string
+          created_by?: string | null
+          device_id?: string
+          entry_date?: string
+          id?: string
+          mill?: string
+          quantity?: number
+          serial_no?: string
+          synced?: boolean | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      unified_offline_frk_outward_entries: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          device_id: string
+          entry_date: string
+          id: string
+          mill: string
+          quantity: number
+          rice_loading_bill_no: string
+          rice_loading_entry_id: string | null
+          synced: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          device_id: string
+          entry_date?: string
+          id: string
+          mill: string
+          quantity: number
+          rice_loading_bill_no: string
+          rice_loading_entry_id?: string | null
+          synced?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          device_id?: string
+          entry_date?: string
+          id?: string
+          mill?: string
+          quantity?: number
+          rice_loading_bill_no?: string
+          rice_loading_entry_id?: string | null
+          synced?: boolean | null
+          updated_at?: string
         }
         Relationships: []
       }

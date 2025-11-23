@@ -47,13 +47,6 @@ serve(async (req) => {
     const GOOGLE_REFRESH_TOKEN = Deno.env.get('GOOGLE_OAUTH_REFRESH_TOKEN_CASH');
     const GOOGLE_DRIVE_FOLDER_ID = Deno.env.get('GOOGLE_DRIVE_FOLDER_ID');
 
-    console.log('🔑 Checking secrets:', {
-      hasClientId: !!GOOGLE_CLIENT_ID,
-      hasClientSecret: !!GOOGLE_CLIENT_SECRET,
-      hasRefreshToken: !!GOOGLE_REFRESH_TOKEN,
-      hasFolderId: !!GOOGLE_DRIVE_FOLDER_ID,
-    });
-
     if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_REFRESH_TOKEN) {
       return new Response(
         JSON.stringify({ error: 'Missing required Google OAuth secrets' }), 
@@ -74,21 +67,31 @@ serve(async (req) => {
       GOOGLE_REFRESH_TOKEN
     );
 
-    // Parse the request body (support multiple payload shapes for backward compatibility)
+    // Parse the request body
     const body = await req.json();
     const fileName = body.fileName || body.name || body.filename;
-    const dataUrl = body.dataUrl || body.fileData || body.file; // support: dataUrl | fileData | file
+    const dataUrl = body.dataUrl || body.fileData || body.file;
     
+    console.log('📝 Request body keys:', Object.keys(body));
     console.log('📝 File details:', {
       fileName,
       hasDataUrl: !!dataUrl,
       dataUrlLength: dataUrl?.length || 0,
+      dataUrlPreview: dataUrl ? dataUrl.substring(0, 50) + '...' : 'null',
     });
+    
     if (!dataUrl || !fileName) {
-      const msg = `Missing required fields: ${(!!dataUrl) ? '' : 'dataUrl/fileData'} ${(!!fileName) ? '' : 'and fileName'}`.trim();
-      console.error('❌', msg);
+      const errorDetails = {
+        fileName: fileName || 'missing',
+        dataUrl: dataUrl ? 'present but invalid' : 'missing',
+        bodyKeys: Object.keys(body),
+      };
+      console.error('❌ Missing required fields:', errorDetails);
       return new Response(
-        JSON.stringify({ error: msg }),
+        JSON.stringify({ 
+          error: 'Missing required fields',
+          details: errorDetails
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

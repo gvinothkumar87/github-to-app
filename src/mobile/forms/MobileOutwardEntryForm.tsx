@@ -76,11 +76,18 @@ const MobileOutwardEntryForm: React.FC = () => {
 
   const uploadToGoogleDrive = async (dataUrl: string): Promise<string> => {
     try {
+      console.log('📸 Original image data length:', dataUrl.length);
+      console.log('📸 Image data preview:', dataUrl.substring(0, 50));
+      
       const { compressDataUrl } = await import('@/lib/image');
       const compressed = await compressDataUrl(dataUrl, { maxSize: 1600, quality: 0.7 });
+      
+      console.log('📸 Compressed image data length:', compressed.length);
+      console.log('📸 Compressed data preview:', compressed.substring(0, 50));
+      
       const fileName = `weighment_${Date.now()}.jpg`;
       
-      console.log('Uploading to Google Drive...', fileName);
+      console.log('☁️ Uploading to Google Drive...', fileName);
       
       const { data, error } = await supabase.functions.invoke('upload-to-google-drive', {
         body: { dataUrl: compressed, fileName },

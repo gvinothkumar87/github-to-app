@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          activity_type: string
+          created_at: string | null
+          description: string
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string | null
+          description: string
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       app_users: {
         Row: {
           created_at: string | null
@@ -657,6 +684,39 @@ export type Database = {
         }
         Relationships: []
       }
+      fcm_tokens: {
+        Row: {
+          created_at: string
+          device_info: string | null
+          id: string
+          last_used_at: string
+          platform: string
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_info?: string | null
+          id?: string
+          last_used_at?: string
+          platform: string
+          token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_info?: string | null
+          id?: string
+          last_used_at?: string
+          platform?: string
+          token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       financial_audit_log: {
         Row: {
           id: string
@@ -863,6 +923,263 @@ export type Database = {
         }
         Relationships: []
       }
+      gps_task_transfers: {
+        Row: {
+          from_user: string
+          gps_task_id: string
+          id: string
+          reason: string | null
+          to_user: string
+          transferred_at: string | null
+        }
+        Insert: {
+          from_user: string
+          gps_task_id: string
+          id?: string
+          reason?: string | null
+          to_user: string
+          transferred_at?: string | null
+        }
+        Update: {
+          from_user?: string
+          gps_task_id?: string
+          id?: string
+          reason?: string | null
+          to_user?: string
+          transferred_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gps_task_transfers_from_user_fkey"
+            columns: ["from_user"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gps_task_transfers_gps_task_id_fkey"
+            columns: ["gps_task_id"]
+            isOneToOne: false
+            referencedRelation: "gps_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gps_task_transfers_to_user_fkey"
+            columns: ["to_user"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gps_tasks: {
+        Row: {
+          assigned_by: string
+          assigned_to: string
+          assigned_to_group_id: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          latitude: number
+          longitude: number
+          radius: number
+          status: string | null
+          target_time: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_by: string
+          assigned_to: string
+          assigned_to_group_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          latitude: number
+          longitude: number
+          radius?: number
+          status?: string | null
+          target_time?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_by?: string
+          assigned_to?: string
+          assigned_to_group_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          radius?: number
+          status?: string | null
+          target_time?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gps_tasks_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gps_tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gps_tasks_assigned_to_group_id_fkey"
+            columns: ["assigned_to_group_id"]
+            isOneToOne: false
+            referencedRelation: "user_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gps_zone_entries: {
+        Row: {
+          acknowledged: boolean
+          created_at: string
+          entered_at: string
+          exited_at: string | null
+          gps_task_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          acknowledged?: boolean
+          created_at?: string
+          entered_at?: string
+          exited_at?: string | null
+          gps_task_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          acknowledged?: boolean
+          created_at?: string
+          entered_at?: string
+          exited_at?: string | null
+          gps_task_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gps_zone_entries_gps_task_id_fkey"
+            columns: ["gps_task_id"]
+            isOneToOne: false
+            referencedRelation: "gps_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gps_zone_entries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instruction_acceptance: {
+        Row: {
+          accepted_at: string | null
+          id: string
+          instruction_id: string
+          remarks: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          id?: string
+          instruction_id: string
+          remarks?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          id?: string
+          instruction_id?: string
+          remarks?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instruction_acceptance_instruction_id_fkey"
+            columns: ["instruction_id"]
+            isOneToOne: false
+            referencedRelation: "instructions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instructions: {
+        Row: {
+          assigned_by: string
+          assigned_to: string
+          assigned_to_group_id: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          status: string | null
+          title: string
+          updated_at: string | null
+          voice_recording_url: string | null
+        }
+        Insert: {
+          assigned_by: string
+          assigned_to: string
+          assigned_to_group_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          voice_recording_url?: string | null
+        }
+        Update: {
+          assigned_by?: string
+          assigned_to?: string
+          assigned_to_group_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          voice_recording_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instructions_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instructions_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instructions_assigned_to_group_id_fkey"
+            columns: ["assigned_to_group_id"]
+            isOneToOne: false
+            referencedRelation: "user_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       items: {
         Row: {
           code: string
@@ -1053,8 +1370,42 @@ export type Database = {
           },
         ]
       }
+      locations: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          latitude: number
+          longitude: number
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          latitude: number
+          longitude: number
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
+          acknowledged_at: string | null
           created_at: string | null
           id: string
           is_read: boolean | null
@@ -1065,6 +1416,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          acknowledged_at?: string | null
           created_at?: string | null
           id?: string
           is_read?: boolean | null
@@ -1075,6 +1427,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          acknowledged_at?: string | null
           created_at?: string | null
           id?: string
           is_read?: boolean | null
@@ -1171,6 +1524,68 @@ export type Database = {
             columns: ["item_id"]
             isOneToOne: false
             referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      paddy_inward_issue_memos: {
+        Row: {
+          additional_bag_grade: string | null
+          additional_bag_grade_2: string | null
+          additional_quantity: number | null
+          additional_quantity_2: number | null
+          bag_grade: string | null
+          bags: number | null
+          created_at: string | null
+          created_by: string | null
+          entry_unique_id: string | null
+          id: string
+          issue_memo_date: string
+          issue_memo_no: string
+          paddy_inward_entry_id: string
+          quantity: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          additional_bag_grade?: string | null
+          additional_bag_grade_2?: string | null
+          additional_quantity?: number | null
+          additional_quantity_2?: number | null
+          bag_grade?: string | null
+          bags?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          entry_unique_id?: string | null
+          id?: string
+          issue_memo_date: string
+          issue_memo_no: string
+          paddy_inward_entry_id: string
+          quantity?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          additional_bag_grade?: string | null
+          additional_bag_grade_2?: string | null
+          additional_quantity?: number | null
+          additional_quantity_2?: number | null
+          bag_grade?: string | null
+          bags?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          entry_unique_id?: string | null
+          id?: string
+          issue_memo_date?: string
+          issue_memo_no?: string
+          paddy_inward_entry_id?: string
+          quantity?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "paddy_inward_issue_memos_paddy_inward_entry_id_fkey"
+            columns: ["paddy_inward_entry_id"]
+            isOneToOne: false
+            referencedRelation: "rice_mill_inward_entries"
             referencedColumns: ["id"]
           },
         ]
@@ -1841,6 +2256,7 @@ export type Database = {
           created_by: string | null
           driver: string
           entry_date: string
+          entry_unique_id: string
           grade: string
           id: string
           is_unloaded: boolean
@@ -1860,6 +2276,7 @@ export type Database = {
           created_by?: string | null
           driver: string
           entry_date?: string
+          entry_unique_id: string
           grade: string
           id?: string
           is_unloaded?: boolean
@@ -1879,6 +2296,7 @@ export type Database = {
           created_by?: string | null
           driver?: string
           entry_date?: string
+          entry_unique_id?: string
           grade?: string
           id?: string
           is_unloaded?: boolean
@@ -2054,6 +2472,50 @@ export type Database = {
             columns: ["inward_entry_id"]
             isOneToOne: false
             referencedRelation: "rice_mill_inward_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rice_outward_acknowledgements: {
+        Row: {
+          ack_bags: number | null
+          ack_date: string | null
+          ack_godown: string | null
+          ack_number: string | null
+          ack_weight: number | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          rice_loading_entry_id: string | null
+        }
+        Insert: {
+          ack_bags?: number | null
+          ack_date?: string | null
+          ack_godown?: string | null
+          ack_number?: string | null
+          ack_weight?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          rice_loading_entry_id?: string | null
+        }
+        Update: {
+          ack_bags?: number | null
+          ack_date?: string | null
+          ack_godown?: string | null
+          ack_number?: string | null
+          ack_weight?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          rice_loading_entry_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rice_outward_acknowledgements_rice_loading_entry_id_fkey"
+            columns: ["rice_loading_entry_id"]
+            isOneToOne: false
+            referencedRelation: "rice_loading_entries"
             referencedColumns: ["id"]
           },
         ]
@@ -2486,6 +2948,130 @@ export type Database = {
           },
         ]
       }
+      task_routine_instances: {
+        Row: {
+          id: string
+          routine_id: string
+          task_id: string
+          triggered_at: string | null
+          triggered_for_date: string
+        }
+        Insert: {
+          id?: string
+          routine_id: string
+          task_id: string
+          triggered_at?: string | null
+          triggered_for_date: string
+        }
+        Update: {
+          id?: string
+          routine_id?: string
+          task_id?: string
+          triggered_at?: string | null
+          triggered_for_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_routine_instances_routine_id_fkey"
+            columns: ["routine_id"]
+            isOneToOne: false
+            referencedRelation: "task_routines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_routine_instances_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_routines: {
+        Row: {
+          assigned_by: string
+          assigned_to: string | null
+          assigned_to_group_id: string | null
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          last_triggered_at: string | null
+          monthly_dates: number[] | null
+          next_trigger_at: string | null
+          priority: string | null
+          recurrence_type: string
+          start_date: string | null
+          target_time: string | null
+          title: string
+          updated_at: string | null
+          weekdays: number[] | null
+        }
+        Insert: {
+          assigned_by: string
+          assigned_to?: string | null
+          assigned_to_group_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_triggered_at?: string | null
+          monthly_dates?: number[] | null
+          next_trigger_at?: string | null
+          priority?: string | null
+          recurrence_type: string
+          start_date?: string | null
+          target_time?: string | null
+          title: string
+          updated_at?: string | null
+          weekdays?: number[] | null
+        }
+        Update: {
+          assigned_by?: string
+          assigned_to?: string | null
+          assigned_to_group_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_triggered_at?: string | null
+          monthly_dates?: number[] | null
+          next_trigger_at?: string | null
+          priority?: string | null
+          recurrence_type?: string
+          start_date?: string | null
+          target_time?: string | null
+          title?: string
+          updated_at?: string | null
+          weekdays?: number[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_routines_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_routines_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_routines_assigned_to_group_id_fkey"
+            columns: ["assigned_to_group_id"]
+            isOneToOne: false
+            referencedRelation: "user_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_transfers: {
         Row: {
           from_user: string | null
@@ -2516,7 +3102,7 @@ export type Database = {
             foreignKeyName: "task_transfers_from_user_fkey"
             columns: ["from_user"]
             isOneToOne: false
-            referencedRelation: "app_users"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -2530,7 +3116,61 @@ export type Database = {
             foreignKeyName: "task_transfers_to_user_fkey"
             columns: ["to_user"]
             isOneToOne: false
-            referencedRelation: "app_users"
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_updates: {
+        Row: {
+          created_at: string | null
+          id: string
+          photo_url: string | null
+          remarks: string | null
+          status: string | null
+          task_id: string
+          updated_at: string | null
+          user_id: string
+          voice_recording_url: string | null
+          voice_url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          photo_url?: string | null
+          remarks?: string | null
+          status?: string | null
+          task_id: string
+          updated_at?: string | null
+          user_id: string
+          voice_recording_url?: string | null
+          voice_url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          photo_url?: string | null
+          remarks?: string | null
+          status?: string | null
+          task_id?: string
+          updated_at?: string | null
+          user_id?: string
+          voice_recording_url?: string | null
+          voice_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_updates_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_updates_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2540,6 +3180,7 @@ export type Database = {
           arrival_at: string | null
           assigned_by: string | null
           assigned_to: string | null
+          assigned_to_group_id: string | null
           completed_at: string | null
           completion_audio_url: string | null
           completion_image_urls: string[] | null
@@ -2562,6 +3203,7 @@ export type Database = {
           arrival_at?: string | null
           assigned_by?: string | null
           assigned_to?: string | null
+          assigned_to_group_id?: string | null
           completed_at?: string | null
           completion_audio_url?: string | null
           completion_image_urls?: string[] | null
@@ -2584,6 +3226,7 @@ export type Database = {
           arrival_at?: string | null
           assigned_by?: string | null
           assigned_to?: string | null
+          assigned_to_group_id?: string | null
           completed_at?: string | null
           completion_audio_url?: string | null
           completion_image_urls?: string[] | null
@@ -2607,14 +3250,21 @@ export type Database = {
             foreignKeyName: "tasks_assigned_by_fkey"
             columns: ["assigned_by"]
             isOneToOne: false
-            referencedRelation: "app_users"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "tasks_assigned_to_fkey"
             columns: ["assigned_to"]
             isOneToOne: false
-            referencedRelation: "app_users"
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_assigned_to_group_id_fkey"
+            columns: ["assigned_to_group_id"]
+            isOneToOne: false
+            referencedRelation: "user_groups"
             referencedColumns: ["id"]
           },
         ]
@@ -3380,6 +4030,98 @@ export type Database = {
         }
         Relationships: []
       }
+      user_gps_positions: {
+        Row: {
+          last_updated: string
+          latitude: number
+          longitude: number
+          user_id: string
+        }
+        Insert: {
+          last_updated?: string
+          latitude: number
+          longitude: number
+          user_id: string
+        }
+        Update: {
+          last_updated?: string
+          latitude?: number
+          longitude?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_gps_positions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_group_members: {
+        Row: {
+          added_at: string | null
+          group_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string | null
+          group_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string | null
+          group_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "user_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_group_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_groups: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       user_ledger_access: {
         Row: {
           business_contact_id: string | null
@@ -3544,6 +4286,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_sessions: {
+        Row: {
+          created_at: string
+          device_info: string | null
+          id: string
+          login_time: string
+          logout_time: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_info?: string | null
+          id?: string
+          login_time?: string
+          logout_time?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_info?: string | null
+          id?: string
+          login_time?: string
+          logout_time?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -3557,6 +4329,14 @@ export type Database = {
           salary_ledgers_deleted: number
           transactions_deleted: number
         }[]
+      }
+      change_user_role: {
+        Args: {
+          p_admin_user_id: string
+          p_new_role: Database["public"]["Enums"]["app_role"]
+          p_user_id: string
+        }
+        Returns: Json
       }
       check_and_fix_receipt_ledger_integrity: { Args: never; Returns: Json }
       check_ledger_integrity: {
@@ -3573,6 +4353,7 @@ export type Database = {
       }
       cleanup_duplicate_container_contents: { Args: never; Returns: undefined }
       cleanup_old_offline_data: { Args: never; Returns: Json }
+      clear_all_task_data: { Args: never; Returns: Json }
       clear_source_container: {
         Args: {
           p_batch_id: string
@@ -3601,6 +4382,16 @@ export type Database = {
       create_debit_note_with_ledger: {
         Args: { p_ledger_data: Json; p_note_data: Json }
         Returns: Json
+      }
+      create_notification: {
+        Args: {
+          p_message: string
+          p_related_job_id?: string
+          p_title: string
+          p_type: string
+          p_user_id: string
+        }
+        Returns: undefined
       }
       create_receipt_with_ledger: {
         Args: { p_ledger_data: Json; p_receipt_data: Json }
@@ -3790,6 +4581,35 @@ export type Database = {
         Args: { p_date: string; p_user_id: string }
         Returns: undefined
       }
+      tm_add_task_update: {
+        Args: {
+          p_photo_url?: string
+          p_remarks: string
+          p_status: string
+          p_task_id: string
+          p_user_id: string
+          p_voice_url?: string
+        }
+        Returns: Json
+      }
+      tm_transfer_gps_task: {
+        Args: {
+          p_from_user: string
+          p_reason: string
+          p_task_id: string
+          p_to_user: string
+        }
+        Returns: Json
+      }
+      tm_transfer_task: {
+        Args: {
+          p_from_user: string
+          p_reason: string
+          p_task_id: string
+          p_to_user: string
+        }
+        Returns: Json
+      }
       undo_transfer: { Args: { transfer_id: string }; Returns: Json }
       update_overdue_status: { Args: never; Returns: undefined }
       update_retry_attempt: {
@@ -3841,7 +4661,7 @@ export type Database = {
         | "arrived"
         | "left_without_completion"
         | "task_transferred"
-      app_role: "admin" | "moderator" | "user"
+      app_role: "admin" | "moderator" | "user" | "manager" | "employee"
       task_priority_type: "low" | "medium" | "high" | "urgent"
       task_status_type:
         | "assigned"
@@ -3985,7 +4805,7 @@ export const Constants = {
         "left_without_completion",
         "task_transferred",
       ],
-      app_role: ["admin", "moderator", "user"],
+      app_role: ["admin", "moderator", "user", "manager", "employee"],
       task_priority_type: ["low", "medium", "high", "urgent"],
       task_status_type: [
         "assigned",

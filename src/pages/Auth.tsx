@@ -70,7 +70,7 @@ const Auth = () => {
       }
 
       // Use edge function to lookup email by username and authenticate
-      const { data: authData, error: authError } = await supabase.functions.invoke('username-login', {
+      const { data: authData, error: authError } = await supabase.functions.invoke('grm-username-login', {
         body: { username, password }
       });
 

@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.upload-to-google-drive]
 verify_jwt = false
+
+[functions.grm-username-login]
+verify_jwt = false

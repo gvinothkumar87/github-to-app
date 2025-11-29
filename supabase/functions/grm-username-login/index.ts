@@ -38,17 +38,54 @@ serve(async (req) => {
       })
     }
 
-    // Lookup username in profiles table
-    const { data: profile, error: profileError } = await supabase
+    // Lookup username in profiles table - prefer approved accounts
+    const { data: profiles, error: profileError } = await supabase
       .from('profiles')
-      .select('id')
+      .select('id, status')
       .eq('username', username)
-      .single()
+      .order('status', { ascending: false }) // 'approved' comes before 'pending' and 'rejected'
 
-    if (profileError || !profile) {
+    if (profileError) {
+      console.error('GRM Username Login: Database error:', profileError)
+      return new Response(JSON.stringify({ error: 'Authentication service error' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    if (!profiles || profiles.length === 0) {
       console.log('GRM Username Login: Username not found:', username)
-      return new Response(JSON.stringify({ error: 'Username not found' }), {
+      return new Response(JSON.stringify({ error: 'Invalid username or password' }), {
         status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    // Find the first approved account, or check status of first account
+    const approvedProfile = profiles.find(p => p.status === 'approved')
+    const profile = approvedProfile || profiles[0]
+
+    // Check account status
+    if (profile.status === 'rejected') {
+      console.log('GRM Username Login: Account rejected:', username)
+      return new Response(JSON.stringify({ error: 'Your account has been rejected. Please contact administrator.' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    if (profile.status === 'pending') {
+      console.log('GRM Username Login: Account pending approval:', username)
+      return new Response(JSON.stringify({ error: 'Your account is pending admin approval. Please wait for confirmation.' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    if (profile.status !== 'approved') {
+      console.log('GRM Username Login: Invalid account status:', username, profile.status)
+      return new Response(JSON.stringify({ error: 'Account access denied. Please contact administrator.' }), {
+        status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }

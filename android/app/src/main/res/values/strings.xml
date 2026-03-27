@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">GRM Sales Mobile</string>
+    <string name="title_activity_main">GRM Sales Mobile</string>
+    <string name="package_name">app.lovable.a9552430852f41e8a662c1d2fbb827ad.mobile</string>
+    <string name="custom_url_scheme">app.lovable.a9552430852f41e8a662c1d2fbb827ad.mobile</string>
+</resources>

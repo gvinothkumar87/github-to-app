@@ -1,0 +1,10 @@
+project_id = "swxbydfypyojcerentsz"
+
+[functions.google-drive-oauth]
+verify_jwt = false
+
+[functions.upload-to-google-drive]
+verify_jwt = false
+
+[functions.grm-username-login]
+verify_jwt = false

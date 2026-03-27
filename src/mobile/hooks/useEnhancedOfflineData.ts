@@ -1,0 +1,366 @@
+import { useState, useEffect } from 'react';
+import { databaseService } from '../services/database.service';
+import { networkService } from '../services/network.service';
+import { syncService } from '../services/sync.service';
+import { useMobileServices } from '../providers/MobileServiceProvider';
+import { ONLINE_ONLY } from '../config';
+import { supabase } from '@/integrations/supabase/client';
+
+interface OfflineDataOptions {
+  autoSync?: boolean;
+  fallbackData?: any[];
+}
+
+export function useEnhancedOfflineData<T>(
+  table: string,
+  dependencies: any[] = [],
+  options: OfflineDataOptions = {}
+) {
+  const { isReady } = useMobileServices();
+  const [data, setData] = useState<T[]>(options.fallbackData || []);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isOnline, setIsOnline] = useState(networkService.isOnline());
+  
+  // Enable autoSync by default if not explicitly disabled
+  const autoSyncEnabled = options.autoSync !== false;
+
+  const normalizeTableName = (tableName: string) => {
+    // Remove 'offline_' prefix if it exists to avoid double-prefixing
+    return tableName.startsWith('offline_') ? tableName.substring(8) : tableName;
+  };
+
+  const loadData = async () => {
+    // In online-only mode we always fetch from Supabase
+    if (ONLINE_ONLY) {
+      try {
+        setLoading(true);
+        setError(null);
+        const normalizedTable = normalizeTableName(table);
+        const result = await supabase
+          .from(normalizedTable as any)
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (result.error) throw result.error;
+        setData((result.data || []) as T[]);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        setError(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // Don't load if services aren't ready
+    if (!isReady) {
+      console.log(`Services not ready, skipping ${table} data load`);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const normalizedTable = normalizeTableName(table);
+      const results = await databaseService.findAll(normalizedTable);
+      setData(results);
+      console.log(`Loaded ${results.length} records from ${normalizedTable}`);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setError(errorMessage);
+      console.error(`Error loading ${table} data:`, err);
+      
+      // Use fallback data if available
+      if (options.fallbackData) {
+        console.log(`Using fallback data for ${table}`);
+        setData(options.fallbackData);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const create = async (item: Omit<T, 'id' | 'created_at' | 'updated_at'>) => {
+    if (ONLINE_ONLY || isOnline) {
+      const normalizedTable = normalizeTableName(table);
+      
+      // Special handling for sales to maintain transactional integrity
+      if (normalizedTable === 'sales') {
+        const saleItem = item as any;
+        const saleData = { 
+          ...validateAndConvertData(saleItem), 
+          created_by: saleItem.created_by || saleItem.user_id 
+        };
+        const ledgerData = {
+          customer_id: saleItem.customer_id,
+          debit_amount: saleItem.total_amount,
+          credit_amount: 0,
+          transaction_date: saleItem.sale_date,
+          description: `Sale - Bill #${saleItem.bill_serial_no}`
+        };
+        
+        const result = await supabase.rpc('create_sale_with_ledger', {
+          p_sale_data: saleData as any,
+          p_ledger_data: ledgerData as any
+        });
+        
+        if (result.error) {
+          const errorMessage = result.error.message || 'Create sale failed';
+          setError(errorMessage);
+          throw result.error;
+        }
+        
+        await loadData();
+        return (result.data as any)?.sale_id || '';
+      }
+      
+      // Regular insert for non-sales tables
+      const result = await supabase
+        .from(normalizedTable as any)
+        .insert(validateAndConvertData(item) as any);
+      if (result.error) {
+        const errorMessage = result.error.message || 'Create failed';
+        setError(errorMessage);
+        throw result.error;
+      }
+      await loadData();
+      return '' as string;
+    }
+
+    if (!isReady) {
+      throw new Error('Services not ready');
+    }
+
+    try {
+      const normalizedTable = normalizeTableName(table);
+      
+      // Validate and convert data types before insertion
+      const validatedItem = validateAndConvertData(item);
+      
+      const id = await databaseService.insert(normalizedTable, {
+        ...validatedItem,
+        sync_status: 'pending'
+      });
+      
+      await loadData(); // Refresh data
+      
+      // Auto-sync if online and enabled
+      if (autoSyncEnabled && networkService.isOnline() && !syncService.isSyncInProgress()) {
+        syncService.startSync().catch(syncError => {
+          console.warn('Auto-sync failed:', syncError);
+        });
+      }
+      
+      return id;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Create failed';
+      setError(errorMessage);
+      throw err;
+    }
+  };
+
+  const update = async (id: string, item: Partial<T>) => {
+    if (ONLINE_ONLY) {
+      const normalizedTable = normalizeTableName(table);
+      const result = await supabase
+        .from(normalizedTable as any)
+        .update(validateAndConvertData(item) as any)
+        .eq('id', id);
+      if (result.error) {
+        const errorMessage = result.error.message || 'Update failed';
+        setError(errorMessage);
+        throw result.error;
+      }
+      await loadData();
+      return;
+    }
+
+    if (!isReady) {
+      throw new Error('Services not ready');
+    }
+
+    try {
+      const normalizedTable = normalizeTableName(table);
+      
+      // Validate and convert data types before update
+      const validatedItem = validateAndConvertData(item);
+      
+      await databaseService.update(normalizedTable, id, {
+        ...validatedItem,
+        sync_status: 'pending'
+      });
+      
+      await loadData(); // Refresh data
+      
+      // Auto-sync if online and enabled
+      if (autoSyncEnabled && networkService.isOnline() && !syncService.isSyncInProgress()) {
+        syncService.startSync().catch(syncError => {
+          console.warn('Auto-sync failed:', syncError);
+        });
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Update failed';
+      setError(errorMessage);
+      throw err;
+    }
+  };
+
+  const remove = async (id: string) => {
+    if (ONLINE_ONLY) {
+      const normalizedTable = normalizeTableName(table);
+      const result = await supabase
+        .from(normalizedTable as any)
+        .delete()
+        .eq('id', id);
+      if (result.error) {
+        const errorMessage = result.error.message || 'Delete failed';
+        setError(errorMessage);
+        throw result.error;
+      }
+      await loadData();
+      return;
+    }
+
+    if (!isReady) {
+      throw new Error('Services not ready');
+    }
+
+    try {
+      const normalizedTable = normalizeTableName(table);
+      await databaseService.delete(normalizedTable, id);
+      await loadData(); // Refresh data
+      
+      // Auto-sync if online and enabled
+      if (autoSyncEnabled && networkService.isOnline() && !syncService.isSyncInProgress()) {
+        syncService.startSync().catch(syncError => {
+          console.warn('Auto-sync failed:', syncError);
+        });
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Delete failed';
+      setError(errorMessage);
+      throw err;
+    }
+  };
+
+  const findById = async (id: string): Promise<T | null> => {
+    if (ONLINE_ONLY) {
+      try {
+        const normalizedTable = normalizeTableName(table);
+        const result = await supabase
+          .from(normalizedTable as any)
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
+        if (result.error) throw result.error;
+        return (result.data as T) || null;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Find failed';
+        setError(errorMessage);
+        return null;
+      }
+    }
+
+    if (!isReady) {
+      console.warn('Services not ready, cannot find by ID');
+      return null;
+    }
+
+    try {
+      const normalizedTable = normalizeTableName(table);
+      return await databaseService.findById(normalizedTable, id) as T | null;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Find failed';
+      setError(errorMessage);
+      return null;
+    }
+  };
+
+  // Listen for network status changes
+  useEffect(() => {
+    const unsubscribe = networkService.onStatusChange((status) => {
+      setIsOnline(status.connected);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  // Refresh data when a global offline data update event is dispatched (e.g., after manual sync)
+  useEffect(() => {
+    const handler = () => {
+      loadData();
+    };
+    window.addEventListener('offline-data-updated', handler as EventListener);
+    return () => {
+      window.removeEventListener('offline-data-updated', handler as EventListener);
+    };
+  }, [isReady]);
+
+  // Load data when services are ready or dependencies change
+  useEffect(() => {
+    if (isReady) {
+      loadData();
+    }
+  }, [isReady, ...dependencies]);
+
+  // Data validation and type conversion helper
+  function validateAndConvertData(data: any): any {
+    if (!data) return data;
+    
+    const converted = { ...data };
+    
+    // Convert dates to ISO string format
+    if (converted.entry_date && typeof converted.entry_date === 'object') {
+      converted.entry_date = converted.entry_date.toISOString().split('T')[0];
+    }
+    if (converted.sale_date && typeof converted.sale_date === 'object') {
+      converted.sale_date = converted.sale_date.toISOString().split('T')[0];
+    }
+    if (converted.receipt_date && typeof converted.receipt_date === 'object') {
+      converted.receipt_date = converted.receipt_date.toISOString().split('T')[0];
+    }
+    if (converted.note_date && typeof converted.note_date === 'object') {
+      converted.note_date = converted.note_date.toISOString().split('T')[0];
+    }
+    
+    // Ensure numeric fields are proper numbers
+    const numericFields = ['empty_weight', 'load_weight', 'net_weight', 'unit_weight', 'quantity', 'rate', 'total_amount', 'amount', 'pin_code'];
+    numericFields.forEach(field => {
+      if (converted[field] !== undefined && converted[field] !== null) {
+        const num = typeof converted[field] === 'string' ? parseFloat(converted[field]) : converted[field];
+        if (!isNaN(num)) {
+          converted[field] = num;
+        }
+      }
+    });
+    
+    // Convert boolean fields
+    const booleanFields = ['is_active', 'is_completed'];
+    booleanFields.forEach(field => {
+      if (converted[field] !== undefined && converted[field] !== null) {
+        converted[field] = Boolean(converted[field]);
+      }
+    });
+    
+    // Ensure pin_code is string for consistency with Supabase schema
+    if (converted.pin_code !== undefined && converted.pin_code !== null) {
+      converted.pin_code = String(converted.pin_code);
+    }
+    
+    return converted;
+  }
+
+  return {
+    data,
+    loading: loading || !isReady,
+    error,
+    create,
+    update,
+    remove,
+    findById,
+    refresh: loadData,
+    isOnline,
+    isServicesReady: isReady
+  };
+}

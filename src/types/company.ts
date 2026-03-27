@@ -1,0 +1,30 @@
+export interface CompanySetting {
+  id: string;
+  location_code: string;
+  location_name: string;
+  company_name: string;
+  gstin: string;
+  address_line1: string;
+  address_line2?: string;
+  locality: string;
+  pin_code: number;
+  state_code: string;
+  phone?: string;
+  email?: string;
+  bank_name?: string;
+  bank_account_no?: string;
+  bank_ifsc?: string;
+  bank_branch?: string;
+  start_bill_no?: number;
+  start_debit_note_no?: number;
+  start_credit_note_no?: number;
+  bill_prefix?: string;
+  bill_digits?: number;
+  debit_note_prefix?: string;
+  debit_note_digits?: number;
+  credit_note_prefix?: string;
+  credit_note_digits?: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}

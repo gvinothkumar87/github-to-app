@@ -36,6 +36,7 @@ interface UnifiedBillsListProps {
   onPrintDebitNote: (debitNote: DebitNote, customer: Customer) => void;
   onEditCreditNote: (creditNote: CreditNote, customer: Customer) => void;
   onPrintCreditNote: (creditNote: CreditNote, customer: Customer) => void;
+  onEditOutwardEntry: (outwardEntry: OutwardEntry, customer: Customer, item: Item) => void;
 }
 
 export const UnifiedBillsList = ({
@@ -44,7 +45,8 @@ export const UnifiedBillsList = ({
   onEditDebitNote,
   onPrintDebitNote,
   onEditCreditNote,
-  onPrintCreditNote
+  onPrintCreditNote,
+  onEditOutwardEntry
 }: UnifiedBillsListProps) => {
   const [bills, setBills] = useState<UnifiedBill[]>([]);
   const [loading, setLoading] = useState(true);
@@ -362,6 +364,8 @@ export const UnifiedBillsList = ({
       onEditDebitNote(bill.data as DebitNote, bill.customer);
     } else if (bill.type === 'credit_note') {
       onEditCreditNote(bill.data as CreditNote, bill.customer);
+    } else if (bill.type === 'outward_entry') {
+      onEditOutwardEntry(bill.data as OutwardEntry, bill.customer, bill.item!);
     }
   };
 
@@ -530,26 +534,24 @@ export const UnifiedBillsList = ({
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEdit(bill)}
+                          className="flex items-center gap-1"
+                        >
+                          <Edit className="h-3 w-3" />
+                          {language === 'english' ? 'Edit' : 'திருத்து'}
+                        </Button>
                         {bill.type !== 'outward_entry' && (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleEdit(bill)}
-                              className="flex items-center gap-1"
-                            >
-                              <Edit className="h-3 w-3" />
-                              {language === 'english' ? 'Edit' : 'திருத்து'}
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => handlePrint(bill)}
-                              className="flex items-center gap-1"
-                            >
-                              <FileText className="h-3 w-3" />
-                              {language === 'english' ? 'Print' : 'அச்சிடு'}
-                            </Button>
-                          </>
+                          <Button
+                            size="sm"
+                            onClick={() => handlePrint(bill)}
+                            className="flex items-center gap-1"
+                          >
+                            <FileText className="h-3 w-3" />
+                            {language === 'english' ? 'Print' : 'அச்சிடு'}
+                          </Button>
                         )}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>

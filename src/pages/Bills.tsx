@@ -5,6 +5,7 @@ import { UnifiedBillsList } from '@/components/UnifiedBillsList';
 import { EditSaleForm } from '@/components/forms/EditSaleForm';
 import { EditDebitNoteForm } from '@/components/forms/EditDebitNoteForm';
 import { EditCreditNoteForm } from '@/components/forms/EditCreditNoteForm';
+import { EditOutwardEntryForm } from '@/components/forms/EditOutwardEntryForm';
 import { InvoiceGenerator } from '@/components/InvoiceGenerator';
 import { DebitNoteInvoiceGenerator } from '@/components/DebitNoteInvoiceGenerator';
 import { CreditNoteInvoiceGenerator } from '@/components/CreditNoteInvoiceGenerator';
@@ -38,6 +39,13 @@ const Bills = () => {
   const [editingCreditNote, setEditingCreditNote] = useState<{
     creditNote: CreditNote;
     customer: Customer;
+  } | null>(null);
+
+  // Outward entry editing state
+  const [editingOutwardEntry, setEditingOutwardEntry] = useState<{
+    outwardEntry: OutwardEntry;
+    customer: Customer;
+    item: Item;
   } | null>(null);
   
   // Printing states
@@ -151,11 +159,17 @@ const Bills = () => {
     }
   };
 
+  // Outward entry handlers
+  const handleEditOutwardEntry = (outwardEntry: OutwardEntry, customer: Customer, item: Item) => {
+    setEditingOutwardEntry({ outwardEntry, customer, item });
+  };
+
   // Success handlers
   const handleEditSuccess = () => {
     setEditingSale(null);
     setEditingDebitNote(null);
     setEditingCreditNote(null);
+    setEditingOutwardEntry(null);
     setRefreshKey(prev => prev + 1);
   };
 
@@ -164,6 +178,7 @@ const Bills = () => {
     setEditingSale(null);
     setEditingDebitNote(null);
     setEditingCreditNote(null);
+    setEditingOutwardEntry(null);
   };
 
   const handleClosePrint = () => {
@@ -280,6 +295,45 @@ const Bills = () => {
           <EditCreditNoteForm
             creditNote={editingCreditNote.creditNote}
             customer={editingCreditNote.customer}
+            onSuccess={handleEditSuccess}
+            onCancel={handleCloseEdit}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Edit Outward Entry View
+  if (editingOutwardEntry) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="bg-gradient-primary text-primary-foreground shadow-elevated">
+          <div className="px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCloseEdit}
+                  className="bg-white/10 hover:bg-white/20 text-white border-white/20"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <FileText className="h-8 w-8" />
+                <h1 className="text-xl md:text-2xl font-bold">
+                  {language === 'english' ? 'Edit Outward Entry' : 'அவுட்வர்ட் என்ட்ரி திருத்து'}
+                </h1>
+              </div>
+              <LanguageToggle />
+            </div>
+          </div>
+        </header>
+        
+        <div className="container mx-auto p-6">
+          <EditOutwardEntryForm
+            outwardEntry={editingOutwardEntry.outwardEntry}
+            customer={editingOutwardEntry.customer}
+            item={editingOutwardEntry.item}
             onSuccess={handleEditSuccess}
             onCancel={handleCloseEdit}
           />
@@ -416,6 +470,7 @@ const Bills = () => {
           onPrintDebitNote={handlePrintDebitNote}
           onEditCreditNote={handleEditCreditNote}
           onPrintCreditNote={handlePrintCreditNote}
+          onEditOutwardEntry={handleEditOutwardEntry}
         />
       </div>
     </PageLayout>

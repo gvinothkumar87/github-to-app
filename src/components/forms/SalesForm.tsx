@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { OutwardEntry } from '@/types';
 import { InvoiceGenerator } from '@/components/InvoiceGenerator';
+import { buildFYPrefix, extractSerialNumber } from '@/utils/financialYear';
 
 interface SalesFormProps {
   onSuccess: () => void;
@@ -21,7 +22,7 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
   const [rate, setRate] = useState('');
   const [saleDate, setSaleDate] = useState(new Date().toISOString().split('T')[0]);
   const [billSerialNo, setBillSerialNo] = useState('');
-  const [useSpecialSerial, setUseSpecialSerial] = useState(true);
+  const [useSpecialSerial, setUseSpecialSerial] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
   const [createdSale, setCreatedSale] = useState<any>(null);
@@ -143,62 +144,49 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
 
   const generateBillSerial = async (loadingPlace: string) => {
     try {
-      // Fetch company settings for starting numbers
+      // Fetch company settings — reads prefix and financial year flag
       const { data: settings } = await supabase
         .from('company_settings')
-        .select('start_bill_no, bill_prefix, bill_digits')
+        .select('start_bill_no, bill_prefix, bill_digits, financial_year_in_serial')
         .eq('location_code', loadingPlace)
         .eq('is_active', true)
         .single();
 
       const startNo = settings?.start_bill_no || 1;
-      const prefix = settings?.bill_prefix || '';
+      const basePrefix = settings?.bill_prefix || '';
       const digits = settings?.bill_digits || 3;
+      const useFY = settings?.financial_year_in_serial ?? false;
 
+      // Build effective prefix: base only, or base + current FY label
+      const billDate = new Date(saleDate || Date.now());
+      const effectivePrefix = basePrefix
+        ? (useFY ? buildFYPrefix(basePrefix, billDate) : basePrefix)
+        : '';
+
+      // Query only bills matching this FY prefix (scoped to current year)
       let query = supabase.from('sales').select('bill_serial_no');
-
-      if (prefix) {
-        query = query.like('bill_serial_no', `${prefix}%`);
+      if (effectivePrefix) {
+        query = query.like('bill_serial_no', `${effectivePrefix}-%`);
       } else {
-        // If no prefix, try to match numeric-only or default-ish patterns
-        // But mainly we rely on settings now. 
         query = query.or('bill_serial_no.like.[0-9]%,bill_serial_no.like.[1-9][0-9]%');
       }
 
-      // Get all existing bills to find the highest number (not just the latest)
       const { data: existingBills } = await query;
 
-      let nextNumber = 1;
+      let nextNumber = startNo;
       if (existingBills && existingBills.length > 0) {
         let maxNumber = 0;
-
         existingBills.forEach(bill => {
-          const serial = bill.bill_serial_no;
-          let num = 0;
-
-          if (prefix && serial) {
-            num = parseInt(serial.replace(prefix, ''));
-          } else {
-            num = parseInt(serial || '0');
-          }
-
-          if (!isNaN(num)) {
-            maxNumber = Math.max(maxNumber, num);
-          }
+          const num = effectivePrefix
+            ? extractSerialNumber(bill.bill_serial_no || '')
+            : parseInt(bill.bill_serial_no || '0');
+          if (!isNaN(num)) maxNumber = Math.max(maxNumber, num);
         });
-
-        nextNumber = maxNumber + 1;
+        nextNumber = Math.max(startNo, maxNumber + 1);
       }
-
-      // Enforce configured bill start number
-      nextNumber = Math.max(startNo, nextNumber);
 
       const serialNumber = nextNumber.toString().padStart(digits, '0');
-      if (prefix) {
-        return `${prefix}${serialNumber}`;
-      } else {
-        return nextNumber.toString();
-      }
+      return effectivePrefix ? `${effectivePrefix}-${serialNumber}` : nextNumber.toString();
     } catch (error) {
       console.error('Error generating bill serial:', error);
       return '1';

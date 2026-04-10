@@ -20,6 +20,7 @@ export interface CompanySetting {
   start_credit_note_no?: number;
   bill_prefix?: string;
   bill_digits?: number;
+  financial_year_in_serial?: boolean;
   debit_note_prefix?: string;
   debit_note_digits?: number;
   credit_note_prefix?: string;

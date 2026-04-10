@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { MobileLayout } from '../components/MobileLayout';
 import { useEnhancedOfflineData } from '../hooks/useEnhancedOfflineData';
 import { supabase } from '@/integrations/supabase/client';
+import { buildFYPrefix, extractSerialNumber } from '@/utils/financialYear';
 
 
 const MobileSalesForm: React.FC = () => {
@@ -124,67 +125,53 @@ const MobileSalesForm: React.FC = () => {
     }
   };
 
-  // Generate bill serial number based on loading place
+  // Generate bill serial number based on loading place — reads prefix from company settings
   const generateBillSerial = async (loadingPlace: string): Promise<string> => {
     try {
-      // Fetch company settings for starting numbers
-      // Note: In mobile, we might need to sync company_settings or fetch online if available
-      // For now, attempting to fetch from Supabase directly as this is an async operation anyway
       const { data: settings } = await supabase
         .from('company_settings')
-        .select('start_bill_no, bill_prefix, bill_digits')
+        .select('start_bill_no, bill_prefix, bill_digits, financial_year_in_serial')
         .eq('location_code', loadingPlace)
         .eq('is_active', true)
         .single();
 
       const startNo = settings?.start_bill_no || 1;
-      const prefix = settings?.bill_prefix || '';
+      const basePrefix = settings?.bill_prefix || '';
       const digits = settings?.bill_digits || 3;
+      const useFY = settings?.financial_year_in_serial ?? false;
+
+      const billDate = new Date(formData.sale_date || Date.now());
+      const effectivePrefix = basePrefix
+        ? (useFY ? buildFYPrefix(basePrefix, billDate) : basePrefix)
+        : '';
 
       const sales = salesData || [];
-      let existingBills = [];
+      let existingBills: any[];
 
-      if (prefix) {
+      if (effectivePrefix) {
         existingBills = sales.filter((sale: any) =>
-          sale.bill_serial_no && sale.bill_serial_no.startsWith(prefix)
+          sale.bill_serial_no && sale.bill_serial_no.startsWith(`${effectivePrefix}-`)
         );
       } else {
-        // If no prefix, try to match numeric-only or default-ish patterns
-        // logic similar to SalesForm but client-side filtering since we have offline data
         existingBills = sales.filter((sale: any) =>
           sale.bill_serial_no && /^[0-9]+$/.test(sale.bill_serial_no) && !sale.bill_serial_no.startsWith('D')
         );
       }
 
-      let nextNumber = 1;
+      let nextNumber = startNo;
       if (existingBills.length > 0) {
-        // Find the highest number (not the latest chronologically)
         let maxNumber = 0;
         existingBills.forEach((sale: any) => {
-          let num = 0;
-          if (prefix && sale.bill_serial_no) {
-            num = parseInt(sale.bill_serial_no.replace(prefix, ''));
-          } else {
-            num = parseInt(sale.bill_serial_no || '0');
-          }
-
-          if (!isNaN(num)) {
-            maxNumber = Math.max(maxNumber, num);
-          }
+          const num = effectivePrefix
+            ? extractSerialNumber(sale.bill_serial_no || '')
+            : parseInt(sale.bill_serial_no || '0');
+          if (!isNaN(num)) maxNumber = Math.max(maxNumber, num);
         });
-
-        nextNumber = maxNumber + 1;
+        nextNumber = Math.max(startNo, maxNumber + 1);
       }
-
-      // Enforce configured bill start number
-      nextNumber = Math.max(startNo, nextNumber);
 
       const serialNumber = nextNumber.toString().padStart(digits, '0');
-      if (prefix) {
-        return `${prefix}${serialNumber}`;
-      } else {
-        return nextNumber.toString();
-      }
+      return effectivePrefix ? `${effectivePrefix}-${serialNumber}` : nextNumber.toString();
     } catch (error) {
       console.error('Error generating bill serial:', error);
       return '1';

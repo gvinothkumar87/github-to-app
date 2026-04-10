@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { CompanySetting } from "@/types/company";
+import { getFinancialYear } from "@/utils/financialYear";
 
 interface CompanySettingsFormProps {
   setting?: CompanySetting;
@@ -46,6 +47,7 @@ const CompanySettingsForm: React.FC<CompanySettingsFormProps> = ({
     start_credit_note_no: setting?.start_credit_note_no?.toString() || '1',
     bill_prefix: setting?.bill_prefix || '',
     bill_digits: setting?.bill_digits?.toString() || '3',
+    financial_year_in_serial: setting?.financial_year_in_serial ?? false,
     debit_note_prefix: setting?.debit_note_prefix || '',
     debit_note_digits: setting?.debit_note_digits?.toString() || '3',
     credit_note_prefix: setting?.credit_note_prefix || '',
@@ -65,6 +67,7 @@ const CompanySettingsForm: React.FC<CompanySettingsFormProps> = ({
         start_credit_note_no: parseInt(formData.start_credit_note_no) || 1,
         bill_prefix: formData.bill_prefix || null,
         bill_digits: parseInt(formData.bill_digits) || 3,
+        financial_year_in_serial: formData.financial_year_in_serial,
         debit_note_prefix: formData.debit_note_prefix || null,
         debit_note_digits: parseInt(formData.debit_note_digits) || 3,
         credit_note_prefix: formData.credit_note_prefix || null,
@@ -341,16 +344,25 @@ const CompanySettingsForm: React.FC<CompanySettingsFormProps> = ({
               <h4 className="font-medium text-sm text-muted-foreground">Bill Settings</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="bill_prefix">Prefix</Label>
+                  <Label htmlFor="bill_prefix">
+                    {language === 'english' ? 'Prefix (e.g. GRM, PUL)' : 'முன்னொட்டு (எ.கா. GRM, PUL)'}
+                  </Label>
                   <Input
                     id="bill_prefix"
                     value={formData.bill_prefix}
                     onChange={(e) => setFormData({ ...formData, bill_prefix: e.target.value.toUpperCase() })}
                     placeholder="e.g. GRM"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    {language === 'english'
+                      ? 'Base prefix only — do NOT include year (e.g. GRM, not GRM-25-26)'
+                      : 'மூல முன்னொட்டு மட்டும் — ஆண்டு சேர்க்க வேண்டாம் (எ.கா. GRM)'}
+                  </p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="bill_digits">Digits</Label>
+                  <Label htmlFor="bill_digits">
+                    {language === 'english' ? 'Digits' : 'இலக்கங்கள்'}
+                  </Label>
                   <Input
                     id="bill_digits"
                     type="number"
@@ -360,7 +372,9 @@ const CompanySettingsForm: React.FC<CompanySettingsFormProps> = ({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="start_bill_no">Start No</Label>
+                  <Label htmlFor="start_bill_no">
+                    {language === 'english' ? 'Start No' : 'தொடக்க எண்'}
+                  </Label>
                   <Input
                     id="start_bill_no"
                     type="number"
@@ -368,6 +382,28 @@ const CompanySettingsForm: React.FC<CompanySettingsFormProps> = ({
                     onChange={(e) => setFormData({ ...formData, start_bill_no: e.target.value })}
                     placeholder="1"
                   />
+                </div>
+              </div>
+              {/* Financial Year in Serial toggle */}
+              <div className="flex items-center gap-3 pt-2">
+                <input
+                  id="financial_year_in_serial"
+                  type="checkbox"
+                  checked={formData.financial_year_in_serial}
+                  onChange={(e) => setFormData({ ...formData, financial_year_in_serial: e.target.checked })}
+                  className="h-4 w-4 cursor-pointer accent-primary"
+                />
+                <div>
+                  <Label htmlFor="financial_year_in_serial" className="cursor-pointer font-medium">
+                    {language === 'english'
+                      ? 'Include Financial Year in Bill No'
+                      : 'பில் எண்ணில் நிதியாண்டு சேர்க்கவும்'}
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {language === 'english'
+                      ? `Preview: ${formData.bill_prefix ? `${formData.bill_prefix}-${getFinancialYear()}-001` : '001'} → resets to 001 each April 1`
+                      : `மாதிரி: ${formData.bill_prefix ? `${formData.bill_prefix}-${getFinancialYear()}-001` : '001'} → ஒவ்வொரு ஏப்ரல் 1-ம் 001 இலிருந்து தொடங்கும்`}
+                  </p>
                 </div>
               </div>
             </div>

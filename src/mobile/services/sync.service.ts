@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { databaseService, OfflineRecord } from './database.service';
 import { networkService } from './network.service';
+import { buildFYPrefix, extractSerialNumber } from '@/utils/financialYear';
 
 export interface SyncProgress {
   total: number;
@@ -775,7 +776,7 @@ export class SyncService {
     }
   }
 
-  // Generate bill number for sales that don't have one
+  // Generate bill number for sales that don't have one (offline→online sync fallback)
   private async generateMissingBillNumber(data: any): Promise<any> {
     try {
       // Get outward entry to determine loading place
@@ -784,55 +785,62 @@ export class SyncService {
         .select('loading_place')
         .eq('id', data.outward_entry_id)
         .single();
-      
+
       if (error) throw error;
-      
+
       const loadingPlace = outwardEntry.loading_place || 'PULIVANTHI';
-      
-      // Get latest bill number pattern and generate next one
-      let prefix = '';
+
+      // Fetch company settings for this location
+      const { data: settings } = await supabase
+        .from('company_settings')
+        .select('start_bill_no, bill_prefix, bill_digits, financial_year_in_serial')
+        .eq('location_code', loadingPlace)
+        .eq('is_active', true)
+        .single();
+
+      const startNo = settings?.start_bill_no || 1;
+      const basePrefix = settings?.bill_prefix || '';
+      const digits = settings?.bill_digits || 3;
+      const useFY = settings?.financial_year_in_serial ?? false;
+
+      const saleDate = data.sale_date ? new Date(data.sale_date) : new Date();
+      const effectivePrefix = basePrefix
+        ? (useFY ? buildFYPrefix(basePrefix, saleDate) : basePrefix)
+        : '';
+
       let query = supabase.from('sales').select('bill_serial_no');
-      
-      if (loadingPlace === 'PULIVANTHI') {
+      if (effectivePrefix) {
+        query = query.like('bill_serial_no', `${effectivePrefix}-%`);
+      } else {
         query = query.like('bill_serial_no', '[0-9][0-9][0-9]');
-      } else if (loadingPlace === 'MATTAPARAI') {
-        prefix = 'GRM';
-        query = query.like('bill_serial_no', 'GRM%');
       }
-      
+
       const { data: existingBills, error: billError } = await query
         .order('bill_serial_no', { ascending: false })
         .limit(1);
-      
+
       if (billError) throw billError;
-      
-      let nextNumber = 1;
+
+      let nextNumber = startNo;
       if (existingBills && existingBills.length > 0 && existingBills[0].bill_serial_no) {
-        const lastSerial = existingBills[0].bill_serial_no;
-        if (loadingPlace === 'PULIVANTHI') {
-          nextNumber = parseInt(lastSerial || '000') + 1;
-        } else if (loadingPlace === 'MATTAPARAI') {
-          nextNumber = parseInt((lastSerial || 'GRM000').replace('GRM', '')) + 1;
-        }
+        const lastNum = effectivePrefix
+          ? extractSerialNumber(existingBills[0].bill_serial_no)
+          : parseInt(existingBills[0].bill_serial_no || '0');
+        nextNumber = Math.max(startNo, lastNum + 1);
       }
-      
-      const serialNumber = nextNumber.toString().padStart(3, '0');
-      const newBillNo = loadingPlace === 'PULIVANTHI' ? serialNumber : `${prefix}${serialNumber}`;
-      
+
+      const serialNumber = nextNumber.toString().padStart(digits, '0');
+      const newBillNo = effectivePrefix
+        ? `${effectivePrefix}-${serialNumber}`
+        : nextNumber.toString();
+
       console.log(`Generated missing bill number: ${newBillNo} for loading place: ${loadingPlace}`);
-      
-      return {
-        ...data,
-        bill_serial_no: newBillNo
-      };
+
+      return { ...data, bill_serial_no: newBillNo };
     } catch (error) {
       console.error('Error generating missing bill number:', error);
-      // Fallback bill number
       const fallbackBill = `BILL-${Date.now()}`;
-      return {
-        ...data,
-        bill_serial_no: fallbackBill
-      };
+      return { ...data, bill_serial_no: fallbackBill };
     }
   }
 

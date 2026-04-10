@@ -14,6 +14,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Loader2 } from 'lucide-react';
 import { Customer, Item } from '@/types';
 import { useLocations } from '@/hooks/useLocations';
+import { buildFYPrefix, extractSerialNumber } from '@/utils/financialYear';
 
 interface LineItem {
   id: string;
@@ -128,56 +129,47 @@ const MobileDirectSalesForm: React.FC = () => {
 
   const generateBillSerial = async (location: string) => {
     try {
-      // Fetch settings
+      // Fetch settings for this location
       const { data: settings } = await supabase
         .from('company_settings')
-        .select('start_bill_no, bill_prefix, bill_digits')
+        .select('start_bill_no, bill_prefix, bill_digits, financial_year_in_serial')
         .eq('location_code', location)
         .eq('is_active', true)
         .single();
 
       const startNo = settings?.start_bill_no || 1;
-      const prefix = settings?.bill_prefix || '';
-      const digits = settings?.bill_digits || 0;
+      const basePrefix = settings?.bill_prefix || '';
+      const digits = settings?.bill_digits || 3;
+      const useFY = settings?.financial_year_in_serial ?? false;
+
+      const billDate = new Date(saleDate || Date.now());
+      const effectivePrefix = basePrefix
+        ? (useFY ? buildFYPrefix(basePrefix, billDate) : basePrefix)
+        : '';
 
       let query = supabase.from('sales').select('bill_serial_no');
-
-      if (prefix) {
-        query = query.like('bill_serial_no', `${prefix}%`);
+      if (effectivePrefix) {
+        query = query.like('bill_serial_no', `${effectivePrefix}-%`);
       } else {
-        // If no prefix, assume numeric
         query = query.or('bill_serial_no.like.[0-9]%,bill_serial_no.like.[1-9][0-9]%');
       }
 
       const { data: existingBills } = await query;
 
-      let nextNumber = 1;
+      let nextNumber = startNo;
       if (existingBills && existingBills.length > 0) {
         let maxNumber = 0;
-
         existingBills.forEach(bill => {
-          const serial = bill.bill_serial_no;
-          if (prefix) {
-            const num = parseInt((serial || '').replace(prefix, ''));
-            if (!isNaN(num)) maxNumber = Math.max(maxNumber, num);
-          } else {
-            const num = parseInt(serial || '0');
-            if (!isNaN(num)) maxNumber = Math.max(maxNumber, num);
-          }
+          const num = effectivePrefix
+            ? extractSerialNumber(bill.bill_serial_no || '')
+            : parseInt(bill.bill_serial_no || '0');
+          if (!isNaN(num)) maxNumber = Math.max(maxNumber, num);
         });
-
-        nextNumber = maxNumber + 1;
+        nextNumber = Math.max(startNo, maxNumber + 1);
       }
 
-      nextNumber = Math.max(startNo, nextNumber);
-
-      if (prefix) {
-        const serialNumber = nextNumber.toString().padStart(digits, '0');
-        return `${prefix}${serialNumber}`;
-      } else {
-        return nextNumber.toString();
-      }
-
+      const serialNumber = nextNumber.toString().padStart(digits, '0');
+      return effectivePrefix ? `${effectivePrefix}-${serialNumber}` : nextNumber.toString();
     } catch (error) {
       console.error('Error generating bill serial:', error);
       return '1';

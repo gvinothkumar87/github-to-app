@@ -26,10 +26,20 @@ $assetsPath = "android\app\src\main\assets"
 # Step 5.5: Force refresh Android platform
 if (Test-Path "android") {
     Write-Host "Removing old Android platform..."
-    Remove-Item -Recurse -Force .\android
+    # Using cmd /c rd to be more aggressive than Remove-Item on Windows
+    cmd /c rd /s /q android
+    
+    if (Test-Path "android") {
+        Write-Host "Warning: Could not fully remove 'android' directory. Please close Android Studio or other processes using it." -ForegroundColor Yellow
+    }
 }
-Write-Host "Adding fresh Android platform..."
-npx cap add android
+
+if (-not (Test-Path "android")) {
+    Write-Host "Adding fresh Android platform..."
+    npx cap add android
+} else {
+    Write-Host "Android platform already exists, skipping 'add'..."
+}
 
 # Step 5.6: Recreate assets folder if missing
 if (-not (Test-Path $assetsPath)) {

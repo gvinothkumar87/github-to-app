@@ -9,7 +9,7 @@ import { MobileLayout } from '../components/MobileLayout';
 import { useEnhancedOfflineData } from '../hooks/useEnhancedOfflineData';
 import { OfflineStatusBanner } from '../components/OfflineStatusBanner';
 import LoadWeightModal from '../components/LoadWeightModal';
-import { Plus, Truck, User, Package, Weight, Edit, Trash2, WifiOff } from 'lucide-react';
+import { Plus, Truck, User, Package, Weight, Edit, WifiOff } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 
@@ -70,17 +70,7 @@ const MobileTransitList: React.FC = () => {
     setSelectedEntry(null);
   };
 
-  const handleDeleteEntry = async (entryId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      await remove(entryId);
-      toast.success('Outward entry deleted successfully');
-      refresh();
-    } catch (error) {
-      console.error('Error deleting outward entry:', error);
-      toast.error('Failed to delete outward entry');
-    }
-  };
+
 
   // Filter entries based on active tab
   const filteredEntries = useMemo(() => {
@@ -199,35 +189,7 @@ const MobileTransitList: React.FC = () => {
                               {entry.load_weight ? 'Edit' : 'Add'} Weight
                             </Button>
                           )}
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={(e) => e.stopPropagation()}
-                                className="h-6 px-2 text-xs"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Outward Entry</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete this outward entry? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={(e) => handleDeleteEntry(entry.id, e)}
-                                  className="bg-destructive text-destructive-foreground"
-                                >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+
                         </div>
                       </div>
                     </div>

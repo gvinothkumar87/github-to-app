@@ -74,8 +74,8 @@ export const IrnInputDialog = ({ open, onOpenChange, saleId, onIrnSaved, tableTy
           </DialogTitle>
           <DialogDescription>
             {language === 'english' 
-              ? 'Please enter the Invoice Reference Number (IRN) for this bill to proceed with printing.'
-              : 'இந்த பில்லை அச்சிடுவதற்கு Invoice Reference Number (IRN) உள்ளிடவும்.'
+              ? 'Enter or update the Invoice Reference Number (IRN) for this bill. It will appear as a QR code on the printed invoice.'
+              : 'இந்த பில்லுக்கான Invoice Reference Number (IRN) உள்ளிடவும். அச்சிட்ட பில்லில் QR குறியீடாக தோன்றும்.'
             }
           </DialogDescription>
         </DialogHeader>
@@ -96,13 +96,13 @@ export const IrnInputDialog = ({ open, onOpenChange, saleId, onIrnSaved, tableTy
         </div>
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={handleSkip} disabled={loading}>
-            {language === 'english' ? 'Skip' : 'தவிர்'}
+          <Button variant="outline" onClick={() => { onOpenChange(false); setIrn(''); }} disabled={loading}>
+            {language === 'english' ? 'Cancel' : 'ரத்து'}
           </Button>
           <Button onClick={handleSave} disabled={loading || !irn.trim()}>
             {loading 
               ? (language === 'english' ? 'Saving...' : 'சேமிக்கிறது...') 
-              : (language === 'english' ? 'Save & Print' : 'சேமித்து அச்சிடு')
+              : (language === 'english' ? 'Save IRN' : 'IRN சேமி')
             }
           </Button>
         </DialogFooter>

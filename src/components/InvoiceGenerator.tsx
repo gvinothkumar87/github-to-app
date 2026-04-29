@@ -2,7 +2,7 @@ import { Sale, OutwardEntry, Customer, Item } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Download, FileText } from 'lucide-react';
+import { Download, FileText, Edit } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useState, useEffect } from 'react';
 import { IrnInputDialog } from '@/components/IrnInputDialog';
@@ -98,19 +98,14 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
   };
 
   const handlePrintButtonClick = () => {
-    // Check if sale already has IRN
-    if (currentSale.irn) {
-      printInvoice();
-    } else {
-      // Show IRN dialog first
-      setShowIrnDialog(true);
-    }
+    printInvoice();
   };
 
   const handleIrnSaved = (irn: string) => {
-    // Update the current sale with IRN and print
-    setCurrentSale({ ...currentSale, irn });
-    printInvoice();
+    // Update the current sale with IRN (print is separate)
+    if (irn) {
+      setCurrentSale({ ...currentSale, irn });
+    }
   };
 
   // Calculate totals for all products
@@ -379,7 +374,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
             <!-- Header Section -->
             <div class="header">
               <div class="logo-section">
-                ${sale.irn && qrCodeDataUrl ? `
+                ${currentSale.irn && qrCodeDataUrl ? `
                   <img src="${qrCodeDataUrl}" alt="IRN QR Code" class="logo" />
                 ` : `
                   <img src="${window.location.origin}/lovable-uploads/8ef45f84-cd7a-4909-9f31-86a578d28f2f.png" alt="GRM Logo" class="logo" onerror="this.style.display='none'" />
@@ -722,10 +717,14 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
           </div>
 
           {/* Actions */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button onClick={handlePrintButtonClick} className="flex items-center gap-2">
               <Download className="h-4 w-4" />
               {language === 'english' ? 'Print Invoice' : 'இன்வாய்ஸ் அச்சிடவும்'}
+            </Button>
+            <Button onClick={() => setShowIrnDialog(true)} variant="outline" className="flex items-center gap-2">
+              <Edit className="h-4 w-4" />
+              {language === 'english' ? 'Save IRN' : 'IRN சேமி'}
             </Button>
             <Button onClick={generateEInvoiceJSON} variant="outline" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />

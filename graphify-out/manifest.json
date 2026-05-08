@@ -1,0 +1,1286 @@
+{
+  "D:\\git\\CASH LEDGER\\github-to-app123\\build-electron-app.ps1": {
+    "mtime": 1774625455.2535388,
+    "hash": "50f8d629fda295e2ae6f87d1a8d1b214"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\build-run-mobile.ps1": {
+    "mtime": 1777039607.9048903,
+    "hash": "93fa83d892b0ec3d28c2c518ccd06874"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\capacitor.config.ts": {
+    "mtime": 1774625455.2606807,
+    "hash": "fc05b943d3443861856273e9f737db0e"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\eslint.config.js": {
+    "mtime": 1764752196.086614,
+    "hash": "2e240281bad56fce6a86cb0e49590ae9"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\postcss.config.js": {
+    "mtime": 1764752196.2438815,
+    "hash": "5b84f4567208c7c747079c0477373231"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\tailwind.config.ts": {
+    "mtime": 1764752197.8195672,
+    "hash": "9224c793eb116e2ef1de57befbed32fa"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\vite.config.ts": {
+    "mtime": 1774625455.6359837,
+    "hash": "33765aa6c23759ac03d57c8faccb21d8"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\vite.config.ts.timestamp-1767284058488-d9163d092f4f3.mjs": {
+    "mtime": 1774625455.6384418,
+    "hash": "59fd9f33146b218bbf2688579c7e6d56"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\gradlew": {
+    "mtime": 1755723804.0,
+    "hash": "f092910dfa8e47c5a37a452c3f6baf8a"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\androidTest\\java\\com\\getcapacitor\\myapp\\ExampleInstrumentedTest.java": {
+    "mtime": 1755723804.0,
+    "hash": "fbaf7cc870c663eb52dcf218531c439d"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\assets\\public\\cordova.js": {
+    "mtime": 1777040006.5144398,
+    "hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\assets\\public\\cordova_plugins.js": {
+    "mtime": 1777040006.5144398,
+    "hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\assets\\public\\assets\\image-CNYWCT7Q.js": {
+    "mtime": 1777040003.6416922,
+    "hash": "60d823d5a64b6446fe28a000e687b6b8"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\assets\\public\\assets\\index.es-CMyiMMMG.js": {
+    "mtime": 1777040003.6416922,
+    "hash": "7ba046b182d8de0b93a0b8543abe42ee"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\assets\\public\\assets\\main-CESTmi9X.js": {
+    "mtime": 1777040003.6422033,
+    "hash": "647f5920d05cdf33b4a88d087ff1d47c"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\assets\\public\\assets\\purify.es-BFmuJLeH.js": {
+    "mtime": 1777040003.6416922,
+    "hash": "e7a910e9f09453f8f02a84a28cfd5b24"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\assets\\public\\assets\\web-BmgP7iqV.js": {
+    "mtime": 1777040003.6422033,
+    "hash": "7625e5daa540db1c5564c32c7100890f"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\assets\\public\\assets\\web-CgtKier5.js": {
+    "mtime": 1777040003.6416922,
+    "hash": "6cbdbde32e88436eac652569d0d8ab30"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\assets\\public\\assets\\web-CKUb5S0o.js": {
+    "mtime": 1777040003.6416922,
+    "hash": "14d0ef1faf5dab07450dcdaf86c7d3ed"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\assets\\public\\assets\\web-lurSq8pj.js": {
+    "mtime": 1777040003.6422033,
+    "hash": "4bb26121b00b3e4be14c0112653cc590"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\assets\\public\\assets\\web-yE8SDZTF.js": {
+    "mtime": 1777040003.6422033,
+    "hash": "71fc50966e7acc6caf4a2fc472a06afa"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\assets\\public\\assets\\web-YNTsQsPc.js": {
+    "mtime": 1777040003.6416922,
+    "hash": "d1e4e4c6648e6ede0fc9b370ff2a774c"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\java\\app\\lovable\\a9552430852f41e8a662c1d2fbb827ad\\mobile\\MainActivity.java": {
+    "mtime": 1777040004.8821266,
+    "hash": "a8850052821ac788d4735ef32b24eaa9"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\test\\java\\com\\getcapacitor\\myapp\\ExampleUnitTest.java": {
+    "mtime": 1755723804.0,
+    "hash": "e91b4501c14da821682fa5c26a16d616"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\dist-electron\\main.js": {
+    "mtime": 1774625455.2638166,
+    "hash": "ac8ea06a3fea59a7a772af920be358b1"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\dist-electron\\preload.mjs": {
+    "mtime": 1774625455.2648392,
+    "hash": "b6f58774c94dace68964e8231a75d04d"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\dist-mobile\\assets\\image-CNYWCT7Q.js": {
+    "mtime": 1777040003.6416922,
+    "hash": "60d823d5a64b6446fe28a000e687b6b8"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\dist-mobile\\assets\\index.es-CMyiMMMG.js": {
+    "mtime": 1777040003.6416922,
+    "hash": "7ba046b182d8de0b93a0b8543abe42ee"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\dist-mobile\\assets\\main-CESTmi9X.js": {
+    "mtime": 1777040003.6422033,
+    "hash": "647f5920d05cdf33b4a88d087ff1d47c"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\dist-mobile\\assets\\purify.es-BFmuJLeH.js": {
+    "mtime": 1777040003.6416922,
+    "hash": "e7a910e9f09453f8f02a84a28cfd5b24"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\dist-mobile\\assets\\web-BmgP7iqV.js": {
+    "mtime": 1777040003.6422033,
+    "hash": "7625e5daa540db1c5564c32c7100890f"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\dist-mobile\\assets\\web-CgtKier5.js": {
+    "mtime": 1777040003.6416922,
+    "hash": "6cbdbde32e88436eac652569d0d8ab30"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\dist-mobile\\assets\\web-CKUb5S0o.js": {
+    "mtime": 1777040003.6416922,
+    "hash": "14d0ef1faf5dab07450dcdaf86c7d3ed"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\dist-mobile\\assets\\web-lurSq8pj.js": {
+    "mtime": 1777040003.6422033,
+    "hash": "4bb26121b00b3e4be14c0112653cc590"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\dist-mobile\\assets\\web-yE8SDZTF.js": {
+    "mtime": 1777040003.6422033,
+    "hash": "71fc50966e7acc6caf4a2fc472a06afa"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\dist-mobile\\assets\\web-YNTsQsPc.js": {
+    "mtime": 1777040003.6416922,
+    "hash": "d1e4e4c6648e6ede0fc9b370ff2a774c"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\electron\\main.ts": {
+    "mtime": 1774625455.2673688,
+    "hash": "fe04a18b9f6a085c9f42b0a75c6c9579"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\electron\\preload.ts": {
+    "mtime": 1774625455.2705266,
+    "hash": "71c58ccfc84be0591cac55a4dcc1f558"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\App.tsx": {
+    "mtime": 1774625455.3378036,
+    "hash": "b3713df73d3ba0ee4149393f28b29939"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\main.tsx": {
+    "mtime": 1764752197.1496198,
+    "hash": "cf567f8f60b7cfe4f5183c0028cf6a3b"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile-main.tsx": {
+    "mtime": 1774625455.445418,
+    "hash": "6ccba36b6a2667f13fd87ecfca8690d5"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\vite-env-mobile.d.ts": {
+    "mtime": 1774625455.5384972,
+    "hash": "805fb6a78fccb266968299c66ee43180"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\vite-env.d.ts": {
+    "mtime": 1764752197.496136,
+    "hash": "8f68c27c3fc38817b2726b20e2d4f1ee"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\BackButtonHandler.tsx": {
+    "mtime": 1774625455.3398213,
+    "hash": "40dfc06914979332ec5f909627df7a0f"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\BillsList.tsx": {
+    "mtime": 1774625455.3420815,
+    "hash": "18ebebe893407c0cd23e6c77add03693"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\CreditNoteInvoiceGenerator.tsx": {
+    "mtime": 1774625455.345065,
+    "hash": "fad8583d96feaa0e8284af7aef813cf0"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\CustomerLedgerView.tsx": {
+    "mtime": 1774625455.3484316,
+    "hash": "63d51e163d5fab9f5e80a1946601c2a6"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\DebitNoteInvoiceGenerator.tsx": {
+    "mtime": 1774625455.35088,
+    "hash": "35fb7e600f45ef6de0ca89821534a066"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\InvoiceGenerator.tsx": {
+    "mtime": 1777457406.8966596,
+    "hash": "21c446ed9e9d694f82c4dac78e453b23"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\IrnInputDialog.tsx": {
+    "mtime": 1777457211.4055116,
+    "hash": "cd98c63259be9f1164a1673030de71da"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\LanguageToggle.tsx": {
+    "mtime": 1774625455.3579576,
+    "hash": "eb36939f64f6a2e2b86542f519dbc37d"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\Layout.tsx": {
+    "mtime": 1774625455.3602319,
+    "hash": "edd78d9ef10e9fe8a60cfa5d9b2f6ffa"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\PageLayout.tsx": {
+    "mtime": 1774625455.3619835,
+    "hash": "600829375724d34cdaf3f0879b3dc2c3"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ProtectedRoute.tsx": {
+    "mtime": 1774625455.3619835,
+    "hash": "4c078eafdcf2aa27cee5a1baff0850b7"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ReceiptsList.tsx": {
+    "mtime": 1774625455.3638558,
+    "hash": "ee1debc7b279ce5c386e7ca363d731a1"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\SalesLedgerView.tsx": {
+    "mtime": 1774625455.3664262,
+    "hash": "692151033d2d7a7e85482dd7a928150f"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\StockLedgerView.tsx": {
+    "mtime": 1774625455.367447,
+    "hash": "d0dee92c4b1c3a5a6fa53e3c5d3b137f"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\SupplierLedgerView.tsx": {
+    "mtime": 1774625455.3697581,
+    "hash": "2b1bde67c118875abc5dc8db27a2e627"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\TransitLogbook.tsx": {
+    "mtime": 1774625455.3722963,
+    "hash": "e50342183350cb67b08169bb13102972"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\UnifiedBillsList.tsx": {
+    "mtime": 1777037414.8951676,
+    "hash": "ce26bed0196ed72203bc79ba7bd11f39"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\forms\\AdminDeleteForm.tsx": {
+    "mtime": 1774625455.3774154,
+    "hash": "d78f6e42e7f087c3792a8a570d6d8446"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\forms\\AmountReceivedForm.tsx": {
+    "mtime": 1774625455.3804312,
+    "hash": "605b0887511395343657da0ce3fc4e32"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\forms\\CompanySettingsForm.tsx": {
+    "mtime": 1777037414.895707,
+    "hash": "e3876b5c260ceae39edd5547f2e842f4"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\forms\\CreditNoteForm.tsx": {
+    "mtime": 1774625455.3838778,
+    "hash": "abfae0ffd660476eb23276f0c824765f"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\forms\\CustomerForm.tsx": {
+    "mtime": 1774625455.3869622,
+    "hash": "b2cea2beacea5c6e7d245b2997fdb8d4"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\forms\\DebitNoteForm.tsx": {
+    "mtime": 1774625455.3889856,
+    "hash": "60601dd7b1438909688901fe449b9a17"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\forms\\DirectSalesForm.tsx": {
+    "mtime": 1777037414.896712,
+    "hash": "520eb6c116a444301fb0f1e27e41b280"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\forms\\EditCreditNoteForm.tsx": {
+    "mtime": 1774625455.3927376,
+    "hash": "4dcf67ff8df3c5dfe53ae0b40e565f8c"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\forms\\EditDebitNoteForm.tsx": {
+    "mtime": 1774625455.3937435,
+    "hash": "b47c2a88fbc31f1b63a9e6a6bcef3e71"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\forms\\EditOutwardEntryForm.tsx": {
+    "mtime": 1774625455.3957417,
+    "hash": "a5ead2e66fea8622c6988a09e77358df"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\forms\\EditSaleForm.tsx": {
+    "mtime": 1774625455.3982935,
+    "hash": "941bd92835c032741a12394c425ef16d"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\forms\\ItemForm.tsx": {
+    "mtime": 1774625455.4008503,
+    "hash": "109abff5fd37893db340a8aef5a50001"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\forms\\OutwardEntryForm.tsx": {
+    "mtime": 1774625455.4033809,
+    "hash": "19a1648c765ba9b8e2cd52ce5c9a8b21"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\forms\\PurchaseForm.tsx": {
+    "mtime": 1774625455.4054,
+    "hash": "ed3a7c28460807926389a6903f675072"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\forms\\SalesForm.tsx": {
+    "mtime": 1777037414.896712,
+    "hash": "1aa3f2ccf886994af99d15563614ac5b"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\forms\\SupplierForm.tsx": {
+    "mtime": 1774625455.4087806,
+    "hash": "ab3593b25316b4f269841a906a41e205"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\accordion.tsx": {
+    "mtime": 1764752196.7609668,
+    "hash": "1a18877296af9e613340447038cb8cb1"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\alert-dialog.tsx": {
+    "mtime": 1764752196.7609668,
+    "hash": "18a643a884fd4f2832ef3abe20b35eb6"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\alert.tsx": {
+    "mtime": 1764752196.7619672,
+    "hash": "59e3895ea793fed08d8d9f0f83ad13df"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\aspect-ratio.tsx": {
+    "mtime": 1764752196.7649686,
+    "hash": "114d53f29a18d0e8b5e48f5ff3811e15"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\avatar.tsx": {
+    "mtime": 1764752196.766966,
+    "hash": "8f44230e5058b7ace8269c971da7189e"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\badge.tsx": {
+    "mtime": 1764752196.7712073,
+    "hash": "2ba8b44541085f725b216267f9feb892"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\breadcrumb.tsx": {
+    "mtime": 1764752196.7731786,
+    "hash": "9fca9864de9b9b15e088c2a237c8594b"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\button.tsx": {
+    "mtime": 1764752196.7757146,
+    "hash": "55bae00127c054032e205b63a62802db"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\calendar.tsx": {
+    "mtime": 1764752196.7781954,
+    "hash": "476dc9f9aa1ea81ac3dd0138011ac442"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\card.tsx": {
+    "mtime": 1764752196.8716674,
+    "hash": "aed5be3990f288c539122080ef55490c"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\carousel.tsx": {
+    "mtime": 1764752196.8726723,
+    "hash": "14a5dcc894d9bc2b7730372507ed1b43"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\chart.tsx": {
+    "mtime": 1764752196.8736703,
+    "hash": "145e8ee7e39401d9b5d59f0e9f05318f"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\checkbox.tsx": {
+    "mtime": 1764752196.894667,
+    "hash": "e8850db2b4357ce03822d84c54b72633"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\collapsible.tsx": {
+    "mtime": 1764752196.9066687,
+    "hash": "1048c23a2aadd5fdbbde0b04ec61e5cf"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\command.tsx": {
+    "mtime": 1764752196.9901128,
+    "hash": "ddaf5f8eb7775107668d1a8175ea32f8"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\context-menu.tsx": {
+    "mtime": 1764752196.992349,
+    "hash": "45f2a0aa025bab9b8f9965b24a73b970"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\dialog.tsx": {
+    "mtime": 1764752196.993364,
+    "hash": "3d8d7b8910a4fc37afd0cf021e16edde"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\drawer.tsx": {
+    "mtime": 1764752196.9948418,
+    "hash": "2a1e7b21cfd5c0043e6abc45a9117d4e"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\dropdown-menu.tsx": {
+    "mtime": 1764752196.9958594,
+    "hash": "feacc91c0a5b8640b6f5cc8a98699c50"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\form.tsx": {
+    "mtime": 1764752196.997862,
+    "hash": "d6d30c3aae6f6d8d6299d67745504b48"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\hover-card.tsx": {
+    "mtime": 1764752196.997862,
+    "hash": "d7a103b77cc23f719887c6c90abef8a4"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\input-otp.tsx": {
+    "mtime": 1764752197.0003448,
+    "hash": "feb9e193d5c6666a5682df9fbba1536b"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\input.tsx": {
+    "mtime": 1774625455.4105804,
+    "hash": "4fbd7f33de423938f640868a29fd5d82"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\label.tsx": {
+    "mtime": 1764752197.014307,
+    "hash": "99b8b7244860ecba9ce05f5a644e0360"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\menubar.tsx": {
+    "mtime": 1764752197.0283074,
+    "hash": "791b0aa130a5be6588b3710a5ab704dd"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\navigation-menu.tsx": {
+    "mtime": 1764752197.033309,
+    "hash": "595bbede1d5900b44f8f101f40b51ae2"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\pagination.tsx": {
+    "mtime": 1764752197.0673108,
+    "hash": "fbe4e3289596434c7135c536a71887d1"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\popover.tsx": {
+    "mtime": 1764752197.0703018,
+    "hash": "686fa6dc4c8e3f0e5c0e542b2a62ec4f"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\progress.tsx": {
+    "mtime": 1764752197.0713067,
+    "hash": "7a84c9ee8e9cd63771d4b472704d8d80"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\radio-group.tsx": {
+    "mtime": 1764752197.072306,
+    "hash": "e59c6e8ca6130d694a2cae82a83cb8dc"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\resizable.tsx": {
+    "mtime": 1764752197.0737486,
+    "hash": "a2f25b7becb25ae05252b81ca564bc5e"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\scroll-area.tsx": {
+    "mtime": 1764752197.0747695,
+    "hash": "6399ea030114b4a772f03f7dae127708"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\select.tsx": {
+    "mtime": 1774625455.4137206,
+    "hash": "bc0cfc5f9e543a2c496449332a27c45e"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\separator.tsx": {
+    "mtime": 1764752197.0777688,
+    "hash": "14b352d106f7c90830cea0ce57cdbde5"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\sheet.tsx": {
+    "mtime": 1764752197.0802834,
+    "hash": "2e1504ca5868ca649a2e79fc0891057e"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\sidebar.tsx": {
+    "mtime": 1764752197.0813043,
+    "hash": "1a26aa46e0801e649150dc50e3851bfe"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\skeleton.tsx": {
+    "mtime": 1764752197.0843053,
+    "hash": "0166abaa35206d438bd5ac705fb5dfb7"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\slider.tsx": {
+    "mtime": 1764752197.0863051,
+    "hash": "e8f00aaf3fa17aeaab4f63145045be78"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\sonner.tsx": {
+    "mtime": 1764752197.088613,
+    "hash": "86a425e27fb4e58a48d9cfb6868fb715"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\switch.tsx": {
+    "mtime": 1764752197.0906136,
+    "hash": "c86b3514e573211535c13444639bcc30"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\table.tsx": {
+    "mtime": 1774625455.4159684,
+    "hash": "1e9364c9b259f0d6f772717a939f1ff5"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\tabs.tsx": {
+    "mtime": 1764752197.092609,
+    "hash": "3e664ca1ea5a9fbedaba0c2a4c0ca2d2"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\textarea.tsx": {
+    "mtime": 1774625455.4180615,
+    "hash": "0b053fa7de8f8034cd6f43dfe854eb33"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\toast.tsx": {
+    "mtime": 1764752197.0961206,
+    "hash": "dbe9a151d339d621290dd6b42406e5fe"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\toaster.tsx": {
+    "mtime": 1764752197.0981052,
+    "hash": "daf7b04904d77303dd96a17236e24fbb"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\toggle-group.tsx": {
+    "mtime": 1764752197.099107,
+    "hash": "9cdf37fe38d53d66fd4c7131599fd6f1"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\toggle.tsx": {
+    "mtime": 1764752197.101107,
+    "hash": "3914f58aeec727c94dfb13b6a25487c1"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\tooltip.tsx": {
+    "mtime": 1764752197.1021183,
+    "hash": "57dbf3a262604092e7b52ffe1b715c5c"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\components\\ui\\use-toast.ts": {
+    "mtime": 1764752197.1031182,
+    "hash": "5bff9ea3904b15a9e1908b128c88e75f"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\contexts\\AuthContext.tsx": {
+    "mtime": 1777039292.39861,
+    "hash": "d8d878bb34f073c62d51975cfd9cb165"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\contexts\\LanguageContext.tsx": {
+    "mtime": 1764752197.1061115,
+    "hash": "6687de54b88e06bbc5ea056f94af8e8f"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\hooks\\use-mobile.tsx": {
+    "mtime": 1764752197.1314893,
+    "hash": "654e2ca2e9fddc27eb7e3954900dc48e"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\hooks\\use-toast.ts": {
+    "mtime": 1764752197.1329744,
+    "hash": "e69924e5c597f9350d681937b80afc51"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\hooks\\useAdminCheck.ts": {
+    "mtime": 1774625455.4197364,
+    "hash": "4f8c7533bfe1d894c18643ae1c8fe234"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\hooks\\useLocations.ts": {
+    "mtime": 1774625455.422541,
+    "hash": "a768c5f5ef12057bc789a6f542bb2f32"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\hooks\\usePageAccess.ts": {
+    "mtime": 1774625455.4234064,
+    "hash": "f3e9c08c0c227f967bcf011862eaaf99"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\integrations\\supabase\\client.ts": {
+    "mtime": 1774625455.4285657,
+    "hash": "63a3cd88c834dc032b4cc321121c6190"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\integrations\\supabase\\types.ts": {
+    "mtime": 1774625455.4351392,
+    "hash": "be5d3f8f291c0b3fcf653fbf31af7e2e"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\lib\\googleDriveOAuth.ts": {
+    "mtime": 1774625455.439413,
+    "hash": "dad542e4630eb59fbb89bc26870c3cf2"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\lib\\googleDriveOAuthMobile.ts": {
+    "mtime": 1774625455.4404156,
+    "hash": "56cc0b03a87b77ea905c2d14da1e5985"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\lib\\image.ts": {
+    "mtime": 1774625455.4434078,
+    "hash": "feaa65930cc10e835342bde808835997"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\lib\\utils.ts": {
+    "mtime": 1764752197.1481438,
+    "hash": "1d8011eb18769078bf77502b220daa5e"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\lib\\exports\\gstExcel.ts": {
+    "mtime": 1774625455.437396,
+    "hash": "69031caa84de62ed97672517bf0c0c67"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\App.tsx": {
+    "mtime": 1774625455.4464035,
+    "hash": "1b41a82661ebe84116bff6c060b8731a"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\config.ts": {
+    "mtime": 1774625455.4619002,
+    "hash": "c3142df6e970a3b6a9cce12ca4038c1a"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\components\\LoadWeightModal.tsx": {
+    "mtime": 1774625455.4509888,
+    "hash": "e6f3d9c3a3d87d2f0a42945514ff8a19"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\components\\MobileInvoiceGenerator.tsx": {
+    "mtime": 1774625455.4526951,
+    "hash": "22e40c737e79b3108d77434ab715c175"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\components\\MobileLayout.tsx": {
+    "mtime": 1774625455.4537642,
+    "hash": "a8ffcef469535ab15b8accb3b382601d"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\components\\MobileProtectedRoute.tsx": {
+    "mtime": 1774625455.4547763,
+    "hash": "6cd566005fc22ef0a99b8eb1b799509a"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\components\\OfflineIndicator.tsx": {
+    "mtime": 1774625455.4563317,
+    "hash": "e1ee2a92c27baa9b4767e99ccb79008c"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\components\\OfflineStatusBanner.tsx": {
+    "mtime": 1774625455.458704,
+    "hash": "e1120126be485509aedfdf0702b01a69"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\components\\ServiceStatusIndicator.tsx": {
+    "mtime": 1774625455.4593787,
+    "hash": "cb621e7f1e2d2b6ad2dc7b0861c14ef7"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\components\\SyncStatusDisplay.tsx": {
+    "mtime": 1774625455.4608963,
+    "hash": "33ccf7ec3f470a45bea85d1e4ec37010"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\forms\\MobileCustomerForm.tsx": {
+    "mtime": 1774625455.4647298,
+    "hash": "4e05f9d4510f26da6226fa07bcf39f52"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\forms\\MobileDirectSalesForm.tsx": {
+    "mtime": 1777037414.8977118,
+    "hash": "deb15d25ad839981090703b9c5dc38a2"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\forms\\MobileEditSaleForm.tsx": {
+    "mtime": 1774625455.4695365,
+    "hash": "c7b3f13648a207b1d0483f599a9f27b7"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\forms\\MobileItemForm.tsx": {
+    "mtime": 1774625455.4705524,
+    "hash": "836599c1d2b63e34d5b88333af8b91f6"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\forms\\MobileOutwardEntryForm.tsx": {
+    "mtime": 1774625455.4730833,
+    "hash": "2f147aa418f2388269344c99e0103413"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\forms\\MobileReceiptForm.tsx": {
+    "mtime": 1774625455.475976,
+    "hash": "866217faa481c935e21ffbdebcd1358e"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\forms\\MobileSalesForm.tsx": {
+    "mtime": 1777037414.8977118,
+    "hash": "50742070fda83b6fdcdfe19473af4c66"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\hooks\\useEnhancedOfflineData.ts": {
+    "mtime": 1774625455.4806008,
+    "hash": "98774413aa21dfeaf0129f7b7d346633"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\hooks\\useOfflineData.ts": {
+    "mtime": 1774625455.4833183,
+    "hash": "2d443a0884b4371ad2b4351e4f709e1b"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\pages\\MobileAuth.tsx": {
+    "mtime": 1774625455.4843342,
+    "hash": "2ec58478dfb38d96e06b383830d18674"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\pages\\MobileBillsList.tsx": {
+    "mtime": 1774625455.4853494,
+    "hash": "ce2db1f25b7081da2a750dff2bc1632b"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\pages\\MobileCreditNoteForm.tsx": {
+    "mtime": 1774625455.4878364,
+    "hash": "6eedba94a493422361180b26cc6c716d"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\pages\\MobileCustomerLedgerOffline.tsx": {
+    "mtime": 1774625455.489387,
+    "hash": "cc9eeb4087def09cb6a2582987eacd00"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\pages\\MobileCustomerList.tsx": {
+    "mtime": 1774625455.4913878,
+    "hash": "5f12f8b735ef1473c979197962f670bc"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\pages\\MobileDebitNoteForm.tsx": {
+    "mtime": 1774625455.4933891,
+    "hash": "16f918f48128daf272b10d148f78fc66"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\pages\\MobileIndex.tsx": {
+    "mtime": 1774625455.4943967,
+    "hash": "2ab66936d5114838239fd6b3a66d2673"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\pages\\MobileItemList.tsx": {
+    "mtime": 1774625455.496388,
+    "hash": "5d17358143feedc1658897bc80afbfe8"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\pages\\MobileReceiptList.tsx": {
+    "mtime": 1774625455.498573,
+    "hash": "9d109c2f267159bea52f85158e21d065"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\pages\\MobileReports.tsx": {
+    "mtime": 1774590039.4340808,
+    "hash": "6331aebf3aeb2974bd508157274d2051"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\pages\\MobileSalesLedgerOffline.tsx": {
+    "mtime": 1774625455.5001106,
+    "hash": "4ce89ba810c26c5940c9fed6dd986b05"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\pages\\MobileSalesList.tsx": {
+    "mtime": 1774625455.5011458,
+    "hash": "f8a27cba150aa8a7b9eb83a5e26988e3"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\pages\\MobileSettings.tsx": {
+    "mtime": 1774625455.503127,
+    "hash": "c35582fe5bab3182cadff853764f9a80"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\pages\\MobileTransitList.tsx": {
+    "mtime": 1777456975.6535923,
+    "hash": "18bf4e60ec64c6d3871ffefc488415f8"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\providers\\MobileServiceProvider.tsx": {
+    "mtime": 1774625455.5061648,
+    "hash": "edb4433288a8e2d8545f8e00869067ff"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\services\\database.service.ts": {
+    "mtime": 1774625455.5091999,
+    "hash": "4356a0b1f225631f546e814d4ea649b8"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\services\\network.service.ts": {
+    "mtime": 1774625455.5113456,
+    "hash": "e969ab9d9061c0deb879a1dab2ce1f18"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\services\\sync.service.ts": {
+    "mtime": 1777037414.8987117,
+    "hash": "1e197cb39d35cdb9170d622fd1e6a9d5"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\pages\\AmountReceived.tsx": {
+    "mtime": 1774625455.5149286,
+    "hash": "5762d5e454901874ec41de91bcd7af9b"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\pages\\Auth.tsx": {
+    "mtime": 1774625455.5159345,
+    "hash": "fbb82e2dc8b879a1dae8244395baa0c4"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\pages\\Bills.tsx": {
+    "mtime": 1777037414.8997107,
+    "hash": "6dcbe7fa0f412f9b9fd7b4beeef1760c"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\pages\\CompanySettings.tsx": {
+    "mtime": 1774625455.51975,
+    "hash": "9dcb7c19b6a5332121f33eda20b7aca7"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\pages\\CreditNote.tsx": {
+    "mtime": 1774625455.5215669,
+    "hash": "390c3b049b96ead45f7a35c7d4887f7b"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\pages\\DebitNote.tsx": {
+    "mtime": 1774625455.5225801,
+    "hash": "f7aeb5e5b500a9f33862e9591a2b79c4"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\pages\\GoogleDriveCallback.tsx": {
+    "mtime": 1774625455.5235803,
+    "hash": "31fa0ebe07cddad3b1e4b054339404a8"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\pages\\GSTExport.tsx": {
+    "mtime": 1774625455.5225801,
+    "hash": "b31e013f50391bb8263c80bd7c3f5b51"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\pages\\Index.tsx": {
+    "mtime": 1774625455.526541,
+    "hash": "5a4621e23383208fe0bfc8e00e2ba078"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\pages\\NotFound.tsx": {
+    "mtime": 1764752197.3656726,
+    "hash": "ae75445e38e704549f03c920e728d506"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\pages\\PageAccessControl.tsx": {
+    "mtime": 1774625455.5275762,
+    "hash": "99e981cd872fcfa30d271e785e19759b"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\pages\\Purchases.tsx": {
+    "mtime": 1774625455.5305002,
+    "hash": "720be27b972c3f0df6a5a44e06a66f16"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\pages\\StockLedger.tsx": {
+    "mtime": 1774625455.5310483,
+    "hash": "7c85c331ee0ae487831631aef4198b2a"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\pages\\SupplierLedger.tsx": {
+    "mtime": 1774625455.5316365,
+    "hash": "7ceadc0c9827b4eb2448fddfd34b3069"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\pages\\Suppliers.tsx": {
+    "mtime": 1774625455.5326514,
+    "hash": "95b243d4540f1f287f8855ed5a68f560"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\types\\company.ts": {
+    "mtime": 1777037414.8997107,
+    "hash": "15e209180f70298432ae468d0a084bf8"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\types\\index.ts": {
+    "mtime": 1774625455.5372288,
+    "hash": "ee596958a2fae4bb32f67603365c2e13"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\utils\\financialYear.ts": {
+    "mtime": 1777037414.8997107,
+    "hash": "0fea25cc06cb5b542a0c00beaf05ae89"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\functions\\google-drive-oauth\\index.ts": {
+    "mtime": 1774625455.5424924,
+    "hash": "48105a5e33b21d0adc6ba47d3cafad31"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\functions\\grm-username-login\\index.ts": {
+    "mtime": 1774625455.5453236,
+    "hash": "00a517f1f494e14fbcf0f5e0d9f65d5e"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\functions\\upload-to-google-drive\\index.ts": {
+    "mtime": 1774625455.5486608,
+    "hash": "531bf32fe632ceb869b188d2d1a9c6e6"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\functions\\username-login\\index.ts": {
+    "mtime": 1774625455.5501783,
+    "hash": "d4ed48fb7443e15fcb65d311b353ba61"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250902053123_1bf225fc-fca4-4348-beae-16b5a5e38868.sql": {
+    "mtime": 1764752197.5500398,
+    "hash": "8246cc66da59e9bac4be39a5668ac6d3"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250902053156_b1ac5f49-4fc5-4560-b8d8-5085b04afbc3.sql": {
+    "mtime": 1764752197.5510356,
+    "hash": "8246cc66da59e9bac4be39a5668ac6d3"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250902053228_216a86a3-8749-4571-8385-6472be83f67a.sql": {
+    "mtime": 1764752197.5601459,
+    "hash": "9ce9bb785d1448529e70c839c41327fb"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250902053249_490ae0a6-e035-4f05-bf22-a7511ca02937.sql": {
+    "mtime": 1764752197.562141,
+    "hash": "e4698c431a5ee764d75f638956d48dec"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250902053311_6e71e213-0aba-48ab-9e03-9fd37edc9dca.sql": {
+    "mtime": 1764752197.563141,
+    "hash": "3bf3284ea1f23e82c2ad7d41346177c7"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250902054042_862aa7b7-6eec-4371-9943-507dd3f9f3c8.sql": {
+    "mtime": 1764752197.5641384,
+    "hash": "d70d52a113cccf200c60b1c97cc1b58a"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250902054112_4f8320ae-0551-4234-9488-55c627f18390.sql": {
+    "mtime": 1764752197.5653045,
+    "hash": "d3effda85a7b0b5a1d2a1ee9d872a9fa"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250902054220_c1587889-73ed-4fab-9917-b1e7cb3651d9.sql": {
+    "mtime": 1764752197.5699904,
+    "hash": "d70d52a113cccf200c60b1c97cc1b58a"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250902054841_4d82248e-5e23-44f0-9c9f-c65e25c79f1f.sql": {
+    "mtime": 1764752197.5713491,
+    "hash": "45cfb8aca31d49692aa1875be3baeb5f"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250909083437_390c5663-8970-489b-9be0-2bed1eade755.sql": {
+    "mtime": 1764752197.5766535,
+    "hash": "64c48e3d598a73b624726c64a271adbc"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250909143310_f6c01dd0-e4ea-4b6d-a379-d59db3d033c6.sql": {
+    "mtime": 1764752197.5987937,
+    "hash": "f4737ffa0c5f6298eb74bb9bbddf37c7"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250909143359_1994d819-6d00-4059-a3e4-ceebc9fd635f.sql": {
+    "mtime": 1764752197.6010103,
+    "hash": "c3d0a2bfde8c0ef97ea0bb71bb1fd116"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250909163042_935765d6-2838-4c92-a447-87d76f64a780.sql": {
+    "mtime": 1774625455.5521908,
+    "hash": "0f9d0acb602eef3fedaada119db3491c"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250909163106_0dbbb8dc-0817-4f95-add6-2e04387da4d1.sql": {
+    "mtime": 1774625455.553629,
+    "hash": "0f9d0acb602eef3fedaada119db3491c"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250909163506_da7e8912-4caf-4fee-9787-c6a98b60da00.sql": {
+    "mtime": 1774625455.5544546,
+    "hash": "b57592dfce2e44e539267fa07eaba51d"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250909164315_3acc1712-52ee-42b9-9bcb-91b25c1954a0.sql": {
+    "mtime": 1774625455.5544546,
+    "hash": "54785d9c46d0889c7f30a0987c8e6e56"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250909164715_55c4984e-815e-4307-8217-d21cc0afb790.sql": {
+    "mtime": 1774625455.5564685,
+    "hash": "2ff6960c3a2551cd56474b6b5b10119f"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250910050647_780ae101-b154-4424-bc60-8395c870da1c.sql": {
+    "mtime": 1774625455.5577981,
+    "hash": "76548974c9ae29e7f1500bd552d6db5f"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250910051432_944d42e6-d3a0-4fa8-9722-21a94cdd27e7.sql": {
+    "mtime": 1774625455.5583072,
+    "hash": "bc56d30a3b663d8acd7149a8f54c7d13"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250910052620_6465ac22-8c47-4082-9de8-67b7e979d3d2.sql": {
+    "mtime": 1774625455.5599244,
+    "hash": "b6027332b783341dd37e3e9e2b565d21"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250910065307_2610928d-4c29-46c8-b233-dfa6e2eec35b.sql": {
+    "mtime": 1774625455.561756,
+    "hash": "9cc1979841e3c172bc418fb88f38118e"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250910065730_1d2840a1-002d-4391-b5b0-12367b12562f.sql": {
+    "mtime": 1774625455.563368,
+    "hash": "34d3e7248ce24ac54974904328b0147f"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250910065810_86afd965-743e-4cfa-94ee-c9e8b7871fdc.sql": {
+    "mtime": 1774625455.563368,
+    "hash": "d0fb08e66896a069a15fe7d9965407d5"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250910070405_b8e0b09d-b1e2-4b51-915e-255db6bc1406.sql": {
+    "mtime": 1774625455.5650594,
+    "hash": "075bdacdd65123559d7ab6485083181e"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250910070520_eb393be2-b393-4c10-ac0a-57006b2d5b05.sql": {
+    "mtime": 1774625455.5650594,
+    "hash": "89799279a009055fa95ef411eaca127d"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250912063118_4a3cd0d6-5d58-4fa1-b88a-80de20279677.sql": {
+    "mtime": 1774625455.5660808,
+    "hash": "24858938dbd2ddb4bc26ea021ef54788"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250912134756_5cf14bfc-aeea-45cc-8e9c-275947f3c74b.sql": {
+    "mtime": 1774625455.567544,
+    "hash": "0f4594faf8b07346d3044872eda28ba9"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250914070422_be3b2234-10e3-4d20-a1fa-1634c6bf0a93.sql": {
+    "mtime": 1774625455.567544,
+    "hash": "fbce082749e5d4785548627e51417965"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250916111928_b7a8748e-d0fb-462f-97d5-a0d321c3611d.sql": {
+    "mtime": 1774625455.568567,
+    "hash": "d479c79d72ccdc8143c82f70b1d7a4cb"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250916131446_a33d2442-9a01-4be4-97a8-872fb761c97e.sql": {
+    "mtime": 1774625455.5696766,
+    "hash": "ecfc3768763368601f1a9f68b7bf495a"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250916132717_40202d53-a2c6-45ae-8426-4b1cb777be72.sql": {
+    "mtime": 1774625455.5706916,
+    "hash": "49bff2df85175448e4e6832c55f1e142"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250930124019_ae012986-29f0-48f6-9cb6-aa573f55ad76.sql": {
+    "mtime": 1774625455.572203,
+    "hash": "d417da0f89863d4af23091f900aec7ec"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250930125142_198c6774-87c9-4540-9653-aa78fada3793.sql": {
+    "mtime": 1774625455.5732205,
+    "hash": "351661ec5d821da4cf18cd38af418caf"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20250930125848_f22f032e-1b5f-49dc-b61f-ceef2deb65e3.sql": {
+    "mtime": 1774625455.5747347,
+    "hash": "726b954331aaad0c9ce0298df5a56d5f"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251006082906_7e8a6593-c5da-4338-9ebc-4ff37971b22f.sql": {
+    "mtime": 1774625455.5757475,
+    "hash": "0fc11b25ce03b5f318e2650f16197c29"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251012044243_7ee4aeca-07e3-49b2-8af3-31b1fb7e2a91.sql": {
+    "mtime": 1774625455.5762587,
+    "hash": "ca1211f6738295324a2d6db33eda2f02"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251012114939_46fc05b9-f23d-44d8-96d0-4316262a478d.sql": {
+    "mtime": 1774625455.5772705,
+    "hash": "390495c7b60dd4f5f51c63d1b4ba3757"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251015051853_cb838add-cb48-4fd1-9534-4ba2983221b6.sql": {
+    "mtime": 1774625455.57827,
+    "hash": "d352e00227549aab676aaa2d650de70b"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251015144930_98e77533-2001-4ef4-a7a3-923a427c249f.sql": {
+    "mtime": 1774625455.5792754,
+    "hash": "05c3b84f5a9951643efff68fe6cfb98d"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251015145031_800df0d2-9798-44ae-ba77-178684e98433.sql": {
+    "mtime": 1774625455.5802767,
+    "hash": "05c3b84f5a9951643efff68fe6cfb98d"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251015145438_4099fb6c-07c5-43f8-a2cb-6895502c147d.sql": {
+    "mtime": 1774625455.5812736,
+    "hash": "91648ecce48ef6695143fbecf2e6fc7e"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251015145738_403dc7a3-6f7b-4cad-9d89-115038bf7826.sql": {
+    "mtime": 1774625455.5833006,
+    "hash": "df7253c8d7537df3f1871bf93e9624c6"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251015150154_a853cdb4-3fc4-4e93-b741-49018414b25f.sql": {
+    "mtime": 1774625455.585276,
+    "hash": "57433dc269ca4bc90f9e5a6856120964"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251015153707_7e8fdc9f-c36a-4b1b-a352-d0e9a24c932d.sql": {
+    "mtime": 1774625455.5862758,
+    "hash": "250390e7f536a854f62c5c4441858fe9"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251015161511_2b8d3b49-c63a-4dfb-bed2-4c92e3eb8d7a.sql": {
+    "mtime": 1774625455.5880823,
+    "hash": "15f800f4898ee1c0f2c3106556187724"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251015162226_2c1782f5-3830-4ffb-b892-48ffffa2f260.sql": {
+    "mtime": 1774625455.5900984,
+    "hash": "18c78087182242a9b41cf6613e526a81"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251021070908_239cc0e3-fbae-4387-a8a3-dd19a917eb1d.sql": {
+    "mtime": 1774625455.5917573,
+    "hash": "39ad88c7a8b7c8ce4bb741dab2e84418"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251021071800_cd666133-2d0d-4316-850f-0e2f1233d1a3.sql": {
+    "mtime": 1774625455.5927658,
+    "hash": "0ee590133c6094ab5413c97994841ef5"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251021072222_c937e9d5-a024-44ac-b20a-514bef069571.sql": {
+    "mtime": 1774625455.5947673,
+    "hash": "0bf26908630367bf1bed3c60c30a981e"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251021072720_389ab57b-96ae-4634-b040-10c4f6b91935.sql": {
+    "mtime": 1774625455.5967698,
+    "hash": "238134afaaf3b27c29606c082ecfd8cc"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251021073449_ddb1d570-4d01-42a7-8652-2e66ff255794.sql": {
+    "mtime": 1774625455.5977728,
+    "hash": "ac762bd87ff19c935297660766585f50"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251022071314_0654233f-3930-4705-9c35-b27feddb7ae5.sql": {
+    "mtime": 1774625455.6014798,
+    "hash": "a4069860631e5c2efc3fa8b47101c046"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251022071356_cf4309c7-6112-49d8-be64-d273135de82a.sql": {
+    "mtime": 1774625455.6014798,
+    "hash": "a4069860631e5c2efc3fa8b47101c046"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251022072240_84ac6ff5-7406-482e-baab-cf8fcaa4b8ae.sql": {
+    "mtime": 1774625455.6046865,
+    "hash": "81df3a9d2fa9df5b3739a157630b9711"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251022072323_fb57a7e4-4a32-4686-9d00-565b4a18fb91.sql": {
+    "mtime": 1774625455.6056876,
+    "hash": "81df3a9d2fa9df5b3739a157630b9711"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251022072859_73ca394f-62e3-4c6e-a26f-e8cfbe78c900.sql": {
+    "mtime": 1774625455.6072133,
+    "hash": "b980ef8b09c50bd40824b83c2e25e858"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251101100147_b99292a0-c9e4-4978-a4bf-4ab1e264a49c.sql": {
+    "mtime": 1774625455.6082475,
+    "hash": "ae3eab96f4e3d252b7f713e597887385"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251104145527_bc4de071-0a10-439a-af4d-6593f404c69b.sql": {
+    "mtime": 1774625455.6099644,
+    "hash": "5bb780a03bf8a9853256cb1be02a4955"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251104145607_39ee65ed-a933-451e-91af-8884f2df179c.sql": {
+    "mtime": 1774625455.6119819,
+    "hash": "6c9c5b0e1879a25bf2a78f8eb1dc3219"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251117053052_6ad51d3a-36a2-4382-98b2-88a353ab3f8b.sql": {
+    "mtime": 1774625455.6140244,
+    "hash": "59a7ec7a5dabee154035a05b0da98c23"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251117121900_33b13d50-7bed-47af-90a1-5540e093c419.sql": {
+    "mtime": 1774625455.6150427,
+    "hash": "dd32593f22c3987084ac79aaceed2020"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251117121929_206bb9bc-6968-4735-87fc-9888e1db4bb7.sql": {
+    "mtime": 1774625455.6166022,
+    "hash": "dd32593f22c3987084ac79aaceed2020"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251117122033_8ac5603d-6d45-402a-ae18-8e6820e27b40.sql": {
+    "mtime": 1774625455.6176353,
+    "hash": "fd640cafb006d870842f3e3b7bc70887"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251117122102_1c144946-5f00-4c6b-b944-7f18092068dc.sql": {
+    "mtime": 1774625455.619748,
+    "hash": "fd640cafb006d870842f3e3b7bc70887"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251117122426_023d80e1-f26b-4a79-bd24-6f5e338b496f.sql": {
+    "mtime": 1774625455.6207695,
+    "hash": "77e906cf00daaa4e67743b0b663802fa"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20251117122652_698b02d2-464a-467c-9192-a96bad475501.sql": {
+    "mtime": 1774625455.623037,
+    "hash": "c722820ade64157416b4c1b370c093ff"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20260102000000_add_seq_config.sql": {
+    "mtime": 1774625455.6250613,
+    "hash": "f48e2f4f05bd3724d0d53f1be7bdb9f3"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20260102000001_add_seq_format.sql": {
+    "mtime": 1774625455.6264405,
+    "hash": "93546d278e75c72080f636e8ce165d7e"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20260102001600_add_kooli_to_items.sql": {
+    "mtime": 1774625455.6274655,
+    "hash": "ae27ecd1ce9bb019b20df7c1cb67e991"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20260102093500_add_labour_to_outward_entries.sql": {
+    "mtime": 1774625455.6284742,
+    "hash": "84bfff5c763754c8c29e596241f6d334"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20260208104000_ensure_company_settings_access.sql": {
+    "mtime": 1774625455.6304622,
+    "hash": "d92dbb51076b9abd7864a4f713f49196"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20260208110900_page_access_control.sql": {
+    "mtime": 1774625455.6324615,
+    "hash": "724e271d222dd6f6d54509a69e3d656b"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\supabase\\migrations\\20260208120000_fix_ambiguous_function.sql": {
+    "mtime": 1774625455.6334777,
+    "hash": "bf7634f2778a708d9fbf50094b117ccd"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\build_log.txt": {
+    "mtime": 1774625455.2591734,
+    "hash": "9b54461671ab186b6be6083fa6d9005b"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\index.html": {
+    "mtime": 1774625455.274088,
+    "hash": "e3023346f91234596ba79c75dd2ce175"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\mobile-index.html": {
+    "mtime": 1774625455.277583,
+    "hash": "f677d9eed9bf4bb6b32fbed91264a42b"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\README.md": {
+    "mtime": 1764752195.9971256,
+    "hash": "08d4e3aa2320d1698c21adb5dacf71da"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\assets\\public\\index.html": {
+    "mtime": 1777040003.6416922,
+    "hash": "f9b0ac68b376654dbecb44fcbea122b9"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\assets\\public\\mobile-index.html": {
+    "mtime": 1777040003.6416922,
+    "hash": "f9b0ac68b376654dbecb44fcbea122b9"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\assets\\public\\robots.txt": {
+    "mtime": 1764752196.3545294,
+    "hash": "a9b03494151fe90e5decd2405400e106"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\dist-electron_installer\\builder-debug.yml": {
+    "mtime": 1773065880.9470644,
+    "hash": "5d674f968a0ea2a211afc689789951b5"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\dist-electron_installer\\builder-effective-config.yaml": {
+    "mtime": 1773065546.2413518,
+    "hash": "0a74ad2f0ba32e7bdb4f589b2685fe4f"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\dist-electron_installer\\latest.yml": {
+    "mtime": 1773065901.592269,
+    "hash": "65a0adb81b939e2b0f673411ee991f61"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\dist-electron_installer\\win-unpacked\\LICENSE.electron.txt": {
+    "mtime": 1773065750.7505734,
+    "hash": "4d42118d35941e0f664dddbd83f633c5"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\dist-electron_installer\\win-unpacked\\LICENSES.chromium.html": {
+    "mtime": 1773065750.7653806,
+    "hash": "adc1ff1ecd313896455e610d15d4eaa5"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\dist-electron_installer\\win-unpacked\\resources\\app-update.yml": {
+    "mtime": 1773065842.1084833,
+    "hash": "b9760570d7e08097eab05f5a608924e5"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\dist-mobile\\index.html": {
+    "mtime": 1777040003.6416922,
+    "hash": "f9b0ac68b376654dbecb44fcbea122b9"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\dist-mobile\\mobile-index.html": {
+    "mtime": 1777040003.6416922,
+    "hash": "f9b0ac68b376654dbecb44fcbea122b9"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\dist-mobile\\robots.txt": {
+    "mtime": 1764752196.3545294,
+    "hash": "a9b03494151fe90e5decd2405400e106"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\public\\robots.txt": {
+    "mtime": 1764752196.3545294,
+    "hash": "a9b03494151fe90e5decd2405400e106"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\src\\mobile\\README.md": {
+    "mtime": 1774625455.4474032,
+    "hash": "2718254f9637ac539964547e2d1b69ea"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\assets\\public\\placeholder.svg": {
+    "mtime": 1764752196.351532,
+    "hash": "35707bd9960ba5281c72af927b79291f"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\assets\\public\\lovable-uploads\\8ef45f84-cd7a-4909-9f31-86a578d28f2f.png": {
+    "mtime": 1774625455.3342686,
+    "hash": "fca204b9c435e3dd417da015bb25ba2c"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\res\\drawable\\splash.png": {
+    "mtime": 1755723804.0,
+    "hash": "acc976d4a36479233371a53021525c0c"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\res\\drawable-land-hdpi\\splash.png": {
+    "mtime": 1755723804.0,
+    "hash": "f7a80786dd355bd39014e58027aa6e19"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\res\\drawable-land-mdpi\\splash.png": {
+    "mtime": 1755723804.0,
+    "hash": "acc976d4a36479233371a53021525c0c"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\res\\drawable-land-xhdpi\\splash.png": {
+    "mtime": 1755723804.0,
+    "hash": "b8c72969bc1f78aab71a76035360d4af"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\res\\drawable-land-xxhdpi\\splash.png": {
+    "mtime": 1755723804.0,
+    "hash": "f87e988387b07d843905f38b084929fb"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\res\\drawable-land-xxxhdpi\\splash.png": {
+    "mtime": 1755723804.0,
+    "hash": "055a69553b16b0bf5f72094a2e459fc7"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\res\\drawable-port-hdpi\\splash.png": {
+    "mtime": 1755723804.0,
+    "hash": "5eb10d16c81338abe8bbc033d49638a8"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\res\\drawable-port-mdpi\\splash.png": {
+    "mtime": 1755723804.0,
+    "hash": "d855a76a5070c8e6fcfd83a27549bdce"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\res\\drawable-port-xhdpi\\splash.png": {
+    "mtime": 1755723804.0,
+    "hash": "df100b2a36bdb98b711cca58941728de"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\res\\drawable-port-xxhdpi\\splash.png": {
+    "mtime": 1755723804.0,
+    "hash": "2c1b668364e815256f67b71dcdfa4d6e"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\res\\drawable-port-xxxhdpi\\splash.png": {
+    "mtime": 1755723804.0,
+    "hash": "b5b1b22b59abe686c1df0d74a423d034"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\res\\mipmap-hdpi\\ic_launcher.png": {
+    "mtime": 1755723804.0,
+    "hash": "1956941339dd5fe36d5c66601c89a08d"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\res\\mipmap-hdpi\\ic_launcher_foreground.png": {
+    "mtime": 1755723804.0,
+    "hash": "73b1e06d769fa08a9c3b8328cc15fd75"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\res\\mipmap-hdpi\\ic_launcher_round.png": {
+    "mtime": 1755723804.0,
+    "hash": "f43e5674865a00186dd76183cf1f2f8e"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\res\\mipmap-mdpi\\ic_launcher.png": {
+    "mtime": 1755723804.0,
+    "hash": "7ed1b3739b83215d0c4a0b4a7f2dcab4"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\res\\mipmap-mdpi\\ic_launcher_foreground.png": {
+    "mtime": 1755723804.0,
+    "hash": "5b77e8aec8b17eed320a97567c7cb8bf"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\res\\mipmap-mdpi\\ic_launcher_round.png": {
+    "mtime": 1755723804.0,
+    "hash": "a49547a32c7d9b529af607b033811d81"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\res\\mipmap-xhdpi\\ic_launcher.png": {
+    "mtime": 1755723804.0,
+    "hash": "5689511ee4e41a367d0342f37ac48bdf"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\res\\mipmap-xhdpi\\ic_launcher_foreground.png": {
+    "mtime": 1755723804.0,
+    "hash": "15cdded29b9877ac98c5931024c5da5d"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\res\\mipmap-xhdpi\\ic_launcher_round.png": {
+    "mtime": 1755723804.0,
+    "hash": "c890fa4af62a63486d5dea62441ce7ab"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\res\\mipmap-xxhdpi\\ic_launcher.png": {
+    "mtime": 1755723804.0,
+    "hash": "a3285eeaedda8201f04e7737b9df8421"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\res\\mipmap-xxhdpi\\ic_launcher_foreground.png": {
+    "mtime": 1755723804.0,
+    "hash": "4e9584ecc16d1fc75afb798688ce576f"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\res\\mipmap-xxhdpi\\ic_launcher_round.png": {
+    "mtime": 1755723804.0,
+    "hash": "14cde87848553e24d7106f56eb8ceb6f"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\res\\mipmap-xxxhdpi\\ic_launcher.png": {
+    "mtime": 1755723804.0,
+    "hash": "9e029293ab1ae8e3a6a7b7d0b7177e46"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\res\\mipmap-xxxhdpi\\ic_launcher_foreground.png": {
+    "mtime": 1755723804.0,
+    "hash": "ed3696b7c52d9747411a475dbe3fa34a"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\android\\app\\src\\main\\res\\mipmap-xxxhdpi\\ic_launcher_round.png": {
+    "mtime": 1755723804.0,
+    "hash": "85addb4159ecd3f76f02fbacd5ec86de"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\dist-mobile\\placeholder.svg": {
+    "mtime": 1764752196.351532,
+    "hash": "35707bd9960ba5281c72af927b79291f"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\dist-mobile\\lovable-uploads\\8ef45f84-cd7a-4909-9f31-86a578d28f2f.png": {
+    "mtime": 1774625455.3342686,
+    "hash": "fca204b9c435e3dd417da015bb25ba2c"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\public\\placeholder.svg": {
+    "mtime": 1764752196.351532,
+    "hash": "35707bd9960ba5281c72af927b79291f"
+  },
+  "D:\\git\\CASH LEDGER\\github-to-app123\\public\\lovable-uploads\\8ef45f84-cd7a-4909-9f31-86a578d28f2f.png": {
+    "mtime": 1774625455.3342686,
+    "hash": "fca204b9c435e3dd417da015bb25ba2c"
+  }
+}

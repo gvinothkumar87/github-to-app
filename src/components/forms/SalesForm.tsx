@@ -10,6 +10,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { OutwardEntry } from '@/types';
 import { InvoiceGenerator } from '@/components/InvoiceGenerator';
 import { buildFYPrefix, extractSerialNumber } from '@/utils/financialYear';
+import { validateBillSequence } from '@/utils/billValidation';
 
 interface SalesFormProps {
   onSuccess: () => void;
@@ -226,6 +227,30 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
       const finalBillSerial = billSerialNo || (useSpecialSerial
         ? await generateSpecialSerial()
         : await generateBillSerial(selectedEntry.loading_place));
+
+      // Fetch existing bills with same prefix for validation
+      const prefixMatch = finalBillSerial.match(/^(.*?)(\d+)$/);
+      const prefix = prefixMatch ? prefixMatch[1] : '';
+      
+      let query = supabase.from('sales').select('bill_serial_no, sale_date');
+      if (prefix) {
+        query = query.like('bill_serial_no', `${prefix}%`);
+      } else {
+        query = query.or('bill_serial_no.like.[0-9]%,bill_serial_no.like.[1-9][0-9]%');
+      }
+      
+      const { data: existingBills } = await query;
+      
+      const validation = validateBillSequence(finalBillSerial, saleDate, existingBills || []);
+      if (!validation.isValid) {
+        toast({
+          title: language === 'english' ? 'Sequence Error' : 'வரிசை பிழை',
+          description: language === 'english' ? validation.error : validation.errorTa,
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
 
       // Prepare sale data
       const baseAmount = getBaseAmount();

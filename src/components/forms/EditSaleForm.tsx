@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Sale, OutwardEntry, Customer, Item } from '@/types';
+import { Trash2 } from 'lucide-react';
 
 interface EditSaleFormProps {
   sale: any; // Can be a single sale or grouped sale with _allSales
@@ -24,6 +25,7 @@ interface LineItemEdit {
   quantity: number;
   rate: string;
   unit: string;
+  sale_date?: string;
 }
 
 export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, onCancel }: EditSaleFormProps) => {
@@ -38,7 +40,8 @@ export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, on
         item: s.items,
         quantity: s.quantity,
         rate: s.rate.toString(),
-        unit: s.items?.unit || 'KG'
+        unit: s.items?.unit || 'KG',
+        sale_date: s.sale_date
       }));
     } else {
       return [{
@@ -47,7 +50,8 @@ export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, on
         item: item,
         quantity: sale.quantity,
         rate: sale.rate.toString(),
-        unit: item.unit
+        unit: item.unit,
+        sale_date: sale.sale_date
       }];
     }
   });
@@ -83,6 +87,57 @@ export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, on
     const load = parseFloat(loadWeight) || 0;
     const empty = parseFloat(emptyWeight) || 0;
     return load - empty;
+  };
+
+  const deleteLineItem = async (lineItemId: string, saleId: string) => {
+    if (lineItems.length === 1) {
+      toast({
+        title: language === 'english' ? 'Error' : 'பிழை',
+        description: language === 'english' 
+          ? 'Cannot delete the only item. Delete the entire bill from the main list instead.'
+          : 'ஒரே ஒரு பொருளை நீக்க முடியாது. அதற்கு பதிலாக முழு பில்லையும் நீக்கவும்.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!window.confirm(language === 'english' ? 'Are you sure you want to delete this item?' : 'இந்த பொருளை நீக்க விரும்புகிறீர்களா?')) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // 1. Delete ledger
+      const { error: ledgerErr } = await supabase
+        .from('customer_ledger')
+        .delete()
+        .eq('reference_id', saleId)
+        .eq('transaction_type', 'sale');
+      if (ledgerErr) throw ledgerErr;
+
+      // 2. Delete sale
+      const { error: saleErr } = await supabase
+        .from('sales')
+        .delete()
+        .eq('id', saleId);
+      if (saleErr) throw saleErr;
+
+      // 3. Update state
+      setLineItems(lineItems.filter(li => li.id !== lineItemId));
+      
+      toast({
+        title: language === 'english' ? 'Success' : 'வெற்றி',
+        description: language === 'english' ? 'Item deleted successfully' : 'பொருள் வெற்றிகரமாக நீக்கப்பட்டது',
+      });
+    } catch (error: any) {
+      toast({
+        title: language === 'english' ? 'Error' : 'பிழை',
+        description: error.message || 'Failed to delete item',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -241,11 +296,30 @@ export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, on
               <div key={lineItem.id} className="p-4 bg-muted rounded-lg space-y-3">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="font-medium">{getDisplayName(lineItem.item)}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">{getDisplayName(lineItem.item)}</p>
+                      {lineItem.sale_date && isMultiProduct && (
+                        <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                          {new Date(lineItem.sale_date).toLocaleDateString('en-IN')}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-sm text-muted-foreground">
                       {lineItem.quantity} {lineItem.unit} @ GST {lineItem.item.gst_percentage}%
                     </p>
                   </div>
+                  {isMultiProduct && lineItems.length > 1 && (
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="icon" 
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => deleteLineItem(lineItem.id, lineItem.sale_id)}
+                      disabled={loading}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
                 
                 <div className="grid grid-cols-2 gap-3">

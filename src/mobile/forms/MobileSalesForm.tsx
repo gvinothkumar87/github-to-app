@@ -11,7 +11,7 @@ import { MobileLayout } from '../components/MobileLayout';
 import { useEnhancedOfflineData } from '../hooks/useEnhancedOfflineData';
 import { supabase } from '@/integrations/supabase/client';
 import { buildFYPrefix, extractSerialNumber } from '@/utils/financialYear';
-
+import { validateBillSequence } from '@/utils/billValidation';
 
 const MobileSalesForm: React.FC = () => {
   const { language } = useLanguage();
@@ -209,6 +209,17 @@ const MobileSalesForm: React.FC = () => {
         finalFormData.bill_serial_no = useSpecialSerial
           ? await generateSpecialSerial()
           : await generateBillSerial(selectedEntry.loading_place);
+      }
+
+      const validation = validateBillSequence(finalFormData.bill_serial_no, finalFormData.sale_date, salesData || []);
+      if (!validation.isValid) {
+        toast({
+          variant: 'destructive',
+          title: language === 'english' ? 'Sequence Error' : 'வரிசை பிழை',
+          description: language === 'english' ? validation.error : validation.errorTa,
+        });
+        setLoading(false);
+        return;
       }
 
       const newSale = await createSale(finalFormData);

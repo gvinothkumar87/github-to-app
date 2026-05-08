@@ -1,5 +1,5 @@
 import React from 'react';
-import { Truck, Package, Users, ClipboardList, BarChart3, Menu, Scale, LogOut, ShoppingCart, Receipt, Book, FileText, Plus, Minus, Trash2, Home, Settings, Lock } from 'lucide-react';
+import { Truck, Package, Users, ClipboardList, BarChart3, Menu, Scale, LogOut, ShoppingCart, Receipt, Book, FileText, Plus, Minus, Trash2, Home, Settings, Lock, AlertCircle } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -63,7 +63,15 @@ const AppSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabChange
       isNavigation: true,
       onClick: () => navigate('/bills'),
       route: '/bills'
-
+    },
+    {
+      id: 'bill-validation-report',
+      label: language === 'english' ? 'Bill Sequence Errors' : 'பில் வரிசை பிழைகள்',
+      icon: AlertCircle,
+      adminOnly: true,
+      isNavigation: true,
+      onClick: () => navigate('/bill-validation-report'),
+      route: '/bill-validation-report'
     },
     {
       id: 'debit-note',

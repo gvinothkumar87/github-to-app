@@ -23,6 +23,8 @@ import { LanguageProvider } from "./contexts/LanguageContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import BackButtonHandler from "./components/BackButtonHandler";
 
+import BillValidationReport from "./pages/BillValidationReport";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -40,6 +42,11 @@ const App = () => (
               <Route path="/bills" element={
                 <ProtectedRoute>
                   <Bills />
+                </ProtectedRoute>
+              } />
+              <Route path="/bill-validation-report" element={
+                <ProtectedRoute>
+                  <BillValidationReport />
                 </ProtectedRoute>
               } />
               <Route path="/debit-note" element={

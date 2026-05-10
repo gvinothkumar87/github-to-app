@@ -160,9 +160,9 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
 
       // Build effective prefix: base only, or base + current FY label
       const billDate = new Date(saleDate || Date.now());
-      const effectivePrefix = basePrefix
-        ? (useFY ? buildFYPrefix(basePrefix, billDate) : basePrefix)
-        : '';
+      const effectivePrefix = useFY
+        ? buildFYPrefix(basePrefix, billDate)
+        : basePrefix;
 
       // Query only bills matching this FY prefix (scoped to current year)
       let query = supabase.from('sales').select('bill_serial_no');

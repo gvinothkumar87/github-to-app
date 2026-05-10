@@ -143,9 +143,9 @@ const MobileDirectSalesForm: React.FC = () => {
       const useFY = settings?.financial_year_in_serial ?? false;
 
       const billDate = new Date(saleDate || Date.now());
-      const effectivePrefix = basePrefix
-        ? (useFY ? buildFYPrefix(basePrefix, billDate) : basePrefix)
-        : '';
+      const effectivePrefix = useFY
+        ? buildFYPrefix(basePrefix, billDate)
+        : basePrefix;
 
       let query = supabase.from('sales').select('bill_serial_no');
       if (effectivePrefix) {

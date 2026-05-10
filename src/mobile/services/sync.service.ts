@@ -804,9 +804,9 @@ export class SyncService {
       const useFY = settings?.financial_year_in_serial ?? false;
 
       const saleDate = data.sale_date ? new Date(data.sale_date) : new Date();
-      const effectivePrefix = basePrefix
-        ? (useFY ? buildFYPrefix(basePrefix, saleDate) : basePrefix)
-        : '';
+      const effectivePrefix = useFY
+        ? buildFYPrefix(basePrefix, saleDate)
+        : basePrefix;
 
       let query = supabase.from('sales').select('bill_serial_no');
       if (effectivePrefix) {

@@ -141,9 +141,9 @@ const MobileSalesForm: React.FC = () => {
       const useFY = settings?.financial_year_in_serial ?? false;
 
       const billDate = new Date(formData.sale_date || Date.now());
-      const effectivePrefix = basePrefix
-        ? (useFY ? buildFYPrefix(basePrefix, billDate) : basePrefix)
-        : '';
+      const effectivePrefix = useFY
+        ? buildFYPrefix(basePrefix, billDate)
+        : basePrefix;
 
       const sales = salesData || [];
       let existingBills: any[];

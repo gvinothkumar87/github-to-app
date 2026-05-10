@@ -142,9 +142,9 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
 
       // Build the effective prefix (base only, or base + FY label)
       const billDate = new Date(saleDate || Date.now());
-      const effectivePrefix = basePrefix
-        ? (useFY ? buildFYPrefix(basePrefix, billDate) : basePrefix)
-        : '';
+      const effectivePrefix = useFY
+        ? buildFYPrefix(basePrefix, billDate)
+        : basePrefix;
 
       // Query existing bills scoped to this FY prefix (or base prefix)
       let query = supabase.from('sales').select('bill_serial_no');

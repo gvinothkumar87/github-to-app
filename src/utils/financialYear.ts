@@ -28,7 +28,8 @@ export function getFinancialYear(date: Date = new Date()): string {
  * @param date       - the bill/sale date, defaults to today
  */
 export function buildFYPrefix(basePrefix: string, date: Date = new Date()): string {
-  return `${basePrefix}-${getFinancialYear(date)}`;
+  const fy = getFinancialYear(date);
+  return basePrefix ? `${basePrefix}-${fy}` : fy;
 }
 
 /**

@@ -50,8 +50,10 @@ const CompanySettingsForm: React.FC<CompanySettingsFormProps> = ({
     financial_year_in_serial: setting?.financial_year_in_serial ?? false,
     debit_note_prefix: setting?.debit_note_prefix || '',
     debit_note_digits: setting?.debit_note_digits?.toString() || '3',
+    debit_note_financial_year_in_serial: setting?.debit_note_financial_year_in_serial ?? false,
     credit_note_prefix: setting?.credit_note_prefix || '',
     credit_note_digits: setting?.credit_note_digits?.toString() || '3',
+    credit_note_financial_year_in_serial: setting?.credit_note_financial_year_in_serial ?? false,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,8 +72,10 @@ const CompanySettingsForm: React.FC<CompanySettingsFormProps> = ({
         financial_year_in_serial: formData.financial_year_in_serial,
         debit_note_prefix: formData.debit_note_prefix || null,
         debit_note_digits: parseInt(formData.debit_note_digits) || 3,
+        debit_note_financial_year_in_serial: formData.debit_note_financial_year_in_serial,
         credit_note_prefix: formData.credit_note_prefix || null,
         credit_note_digits: parseInt(formData.credit_note_digits) || 3,
+        credit_note_financial_year_in_serial: formData.credit_note_financial_year_in_serial,
         is_active: true,
       };
 
@@ -441,6 +445,28 @@ const CompanySettingsForm: React.FC<CompanySettingsFormProps> = ({
                   />
                 </div>
               </div>
+              {/* Financial Year in Serial toggle for Debit Note */}
+              <div className="flex items-center gap-3 pt-2">
+                <input
+                  id="debit_note_financial_year_in_serial"
+                  type="checkbox"
+                  checked={formData.debit_note_financial_year_in_serial}
+                  onChange={(e) => setFormData({ ...formData, debit_note_financial_year_in_serial: e.target.checked })}
+                  className="h-4 w-4 cursor-pointer accent-primary"
+                />
+                <div>
+                  <Label htmlFor="debit_note_financial_year_in_serial" className="cursor-pointer font-medium">
+                    {language === 'english'
+                      ? 'Include Financial Year in Debit Note No'
+                      : 'டெபிட் நோட் எண்ணில் நிதியாண்டு சேர்க்கவும்'}
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {language === 'english'
+                      ? `Preview: ${formData.debit_note_prefix ? `${formData.debit_note_prefix}-${getFinancialYear()}-001` : '001'} → resets to 001 each April 1`
+                      : `மாதிரி: ${formData.debit_note_prefix ? `${formData.debit_note_prefix}-${getFinancialYear()}-001` : '001'} → ஒவ்வொரு ஏப்ரல் 1-ம் 001 இலிருந்து தொடங்கும்`}
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="border p-4 rounded-md space-y-4">
@@ -474,6 +500,28 @@ const CompanySettingsForm: React.FC<CompanySettingsFormProps> = ({
                     onChange={(e) => setFormData({ ...formData, start_credit_note_no: e.target.value })}
                     placeholder="1"
                   />
+                </div>
+              </div>
+              {/* Financial Year in Serial toggle for Credit Note */}
+              <div className="flex items-center gap-3 pt-2">
+                <input
+                  id="credit_note_financial_year_in_serial"
+                  type="checkbox"
+                  checked={formData.credit_note_financial_year_in_serial}
+                  onChange={(e) => setFormData({ ...formData, credit_note_financial_year_in_serial: e.target.checked })}
+                  className="h-4 w-4 cursor-pointer accent-primary"
+                />
+                <div>
+                  <Label htmlFor="credit_note_financial_year_in_serial" className="cursor-pointer font-medium">
+                    {language === 'english'
+                      ? 'Include Financial Year in Credit Note No'
+                      : 'கிரெடிட் நோட் எண்ணில் நிதியாண்டு சேர்க்கவும்'}
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {language === 'english'
+                      ? `Preview: ${formData.credit_note_prefix ? `${formData.credit_note_prefix}-${getFinancialYear()}-001` : '001'} → resets to 001 each April 1`
+                      : `மாதிரி: ${formData.credit_note_prefix ? `${formData.credit_note_prefix}-${getFinancialYear()}-001` : '001'} → ஒவ்வொரு ஏப்ரல் 1-ம் 001 இலிருந்து தொடங்கும்`}
+                  </p>
                 </div>
               </div>
             </div>

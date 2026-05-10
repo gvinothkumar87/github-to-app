@@ -8,7 +8,8 @@ export interface BillRecord {
 export function validateBillSequence(
   newBillSerial: string,
   newSaleDate: string, // YYYY-MM-DD
-  existingBills: BillRecord[]
+  existingBills: BillRecord[],
+  isSpecialSerial: boolean = false
 ): { isValid: boolean; error?: string; errorEn?: string; errorTa?: string } {
   if (!newBillSerial || !newSaleDate) return { isValid: true };
 
@@ -49,26 +50,28 @@ export function validateBillSequence(
       };
     }
 
-    const bDateObj = new Date(bill.sale_date).getTime();
-    
-    // If existing bill has a smaller number, its date must be <= newDate
-    if (bNum < newNum && bDateObj > newDateTime) {
-      return { 
-        isValid: false, 
-        error: `Invalid Date: Bill ${newBillSerial} cannot be on ${newSaleDate} because an earlier Bill ${bill.bill_serial_no} is on a later date (${bill.sale_date}).`,
-        errorEn: `Invalid Date: Bill ${newBillSerial} cannot be on ${newSaleDate} because an earlier Bill ${bill.bill_serial_no} is on a later date (${bill.sale_date}).`,
-        errorTa: `தவறான தேதி: முந்தைய பில் ${bill.bill_serial_no} பிந்தைய தேதியில் (${bill.sale_date}) உள்ளதால், புதிய பில் ${newBillSerial} ஐ ${newSaleDate} தேதியில் உருவாக்க முடியாது.`
-      };
-    }
-    
-    // If existing bill has a larger number, its date must be >= newDate
-    if (bNum > newNum && bDateObj < newDateTime) {
-      return { 
-        isValid: false, 
-        error: `Invalid Date: Bill ${newBillSerial} cannot be on ${newSaleDate} because a later Bill ${bill.bill_serial_no} is on an earlier date (${bill.sale_date}).`,
-        errorEn: `Invalid Date: Bill ${newBillSerial} cannot be on ${newSaleDate} because a later Bill ${bill.bill_serial_no} is on an earlier date (${bill.sale_date}).`,
-        errorTa: `தவறான தேதி: பிந்தைய பில் ${bill.bill_serial_no} முந்தைய தேதியில் (${bill.sale_date}) உள்ளதால், புதிய பில் ${newBillSerial} ஐ ${newSaleDate} தேதியில் உருவாக்க முடியாது.`
-      };
+    if (!isSpecialSerial) {
+      const bDateObj = new Date(bill.sale_date).getTime();
+      
+      // If existing bill has a smaller number, its date must be <= newDate
+      if (bNum < newNum && bDateObj > newDateTime) {
+        return { 
+          isValid: false, 
+          error: `Invalid Date: Bill ${newBillSerial} cannot be on ${newSaleDate} because an earlier Bill ${bill.bill_serial_no} is on a later date (${bill.sale_date}).`,
+          errorEn: `Invalid Date: Bill ${newBillSerial} cannot be on ${newSaleDate} because an earlier Bill ${bill.bill_serial_no} is on a later date (${bill.sale_date}).`,
+          errorTa: `தவறான தேதி: முந்தைய பில் ${bill.bill_serial_no} பிந்தைய தேதியில் (${bill.sale_date}) உள்ளதால், புதிய பில் ${newBillSerial} ஐ ${newSaleDate} தேதியில் உருவாக்க முடியாது.`
+        };
+      }
+      
+      // If existing bill has a larger number, its date must be >= newDate
+      if (bNum > newNum && bDateObj < newDateTime) {
+        return { 
+          isValid: false, 
+          error: `Invalid Date: Bill ${newBillSerial} cannot be on ${newSaleDate} because a later Bill ${bill.bill_serial_no} is on an earlier date (${bill.sale_date}).`,
+          errorEn: `Invalid Date: Bill ${newBillSerial} cannot be on ${newSaleDate} because a later Bill ${bill.bill_serial_no} is on an earlier date (${bill.sale_date}).`,
+          errorTa: `தவறான தேதி: பிந்தைய பில் ${bill.bill_serial_no} முந்தைய தேதியில் (${bill.sale_date}) உள்ளதால், புதிய பில் ${newBillSerial} ஐ ${newSaleDate} தேதியில் உருவாக்க முடியாது.`
+        };
+      }
     }
   }
 

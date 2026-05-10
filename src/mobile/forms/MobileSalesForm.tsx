@@ -211,7 +211,7 @@ const MobileSalesForm: React.FC = () => {
           : await generateBillSerial(selectedEntry.loading_place);
       }
 
-      const validation = validateBillSequence(finalFormData.bill_serial_no, finalFormData.sale_date, salesData || []);
+      const validation = validateBillSequence(finalFormData.bill_serial_no, finalFormData.sale_date, salesData || [], useSpecialSerial);
       if (!validation.isValid) {
         toast({
           variant: 'destructive',
@@ -276,6 +276,13 @@ const MobileSalesForm: React.FC = () => {
                   onValueChange={(value) => {
                     const entry = outwardEntries.find((e: any) => e.id === value) as any;
                     setSelectedEntry(entry);
+                    
+                    const defaultDate = entry?.load_weight_updated_at 
+                      ? new Date(entry.load_weight_updated_at).toISOString().split('T')[0]
+                      : entry?.entry_date 
+                        ? new Date(entry.entry_date).toISOString().split('T')[0]
+                        : new Date().toISOString().split('T')[0];
+
                     setFormData(prev => ({
                       ...prev,
                       outward_entry_id: value,
@@ -283,6 +290,7 @@ const MobileSalesForm: React.FC = () => {
                       item_id: entry?.item_id || '',
                       quantity: '', // Will be auto-calculated
                       bill_serial_no: '', // Reset to trigger auto-generation
+                      sale_date: defaultDate, // Set to load weight date
                     }));
                     setUseSpecialSerial(false); // Reset special serial checkbox
                   }}

@@ -241,7 +241,7 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
       
       const { data: existingBills } = await query;
       
-      const validation = validateBillSequence(finalBillSerial, saleDate, existingBills || []);
+      const validation = validateBillSequence(finalBillSerial, saleDate, existingBills || [], useSpecialSerial);
       if (!validation.isValid) {
         toast({
           title: language === 'english' ? 'Sequence Error' : 'வரிசை பிழை',
@@ -358,6 +358,15 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
               setSelectedEntry(entry || null);
               setBillSerialNo(''); // Reset bill serial to trigger auto-generation
               setUseSpecialSerial(false); // Reset special serial checkbox
+              
+              if (entry) {
+                const defaultDate = entry.load_weight_updated_at 
+                  ? new Date(entry.load_weight_updated_at).toISOString().split('T')[0]
+                  : entry.entry_date 
+                    ? new Date(entry.entry_date).toISOString().split('T')[0]
+                    : new Date().toISOString().split('T')[0];
+                setSaleDate(defaultDate);
+              }
             }}>
               <SelectTrigger>
                 <SelectValue placeholder={language === 'english' ? 'Choose entry...' : 'என்ட்ரியை தேர்ந்தெடுக்கவும்...'} />

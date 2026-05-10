@@ -12,6 +12,7 @@ import { Customer, Item } from '@/types';
 import { InvoiceGenerator } from '@/components/InvoiceGenerator';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getFinancialYear, buildFYPrefix, extractSerialNumber } from '@/utils/financialYear';
+import { validateBillSequence } from '@/utils/billValidation';
 
 interface DirectSalesFormProps {
   onSuccess: () => void;
@@ -231,6 +232,26 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No user found');
+
+      // Validate sequence
+      const prefixMatch = billSerialNo.match(/^(.*?)(\d+)$/);
+      const prefix = prefixMatch ? prefixMatch[1] : '';
+      
+      let query = supabase.from('sales').select('bill_serial_no, sale_date');
+      if (prefix) {
+        query = query.like('bill_serial_no', `${prefix}%`);
+      } else {
+        query = query.or('bill_serial_no.like.[0-9]%,bill_serial_no.like.[1-9][0-9]%');
+      }
+      
+      const { data: existingBills } = await query;
+      
+      const validation = validateBillSequence(billSerialNo, saleDate, existingBills || [], useSpecialSerial);
+      if (!validation.isValid) {
+        toast.error(validation.error);
+        setLoading(false);
+        return;
+      }
 
       const grandTotal = calculateGrandTotal();
       const createdSales = [];

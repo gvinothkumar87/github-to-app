@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import type { Customer, Item } from "@/types";
 import { DebitNoteInvoiceGenerator } from "@/components/DebitNoteInvoiceGenerator";
 import { useLocations } from '@/hooks/useLocations';
+import { buildFYPrefix, extractSerialNumber } from '@/utils/financialYear';
 
 const DebitNoteForm = () => {
   const { locations } = useLocations();
@@ -51,13 +52,13 @@ const DebitNoteForm = () => {
 
   useEffect(() => {
     const fetchPreviewNoteNo = async () => {
-      const noteNo = await generateDebitNoteNo(formData.mill);
+      const noteNo = await generateDebitNoteNo(formData.mill, formData.note_date);
       if (noteNo) {
         setPreviewNoteNo(noteNo);
       }
     };
     fetchPreviewNoteNo();
-  }, [formData.mill]);
+  }, [formData.mill, formData.note_date]);
 
   const fetchCustomers = async () => {
     const { data, error } = await supabase
@@ -89,44 +90,46 @@ const DebitNoteForm = () => {
     setItems(data || []);
   };
 
-  const generateDebitNoteNo = async (mill: string) => {
+  const generateDebitNoteNo = async (mill: string, date: Date = new Date()) => {
     try {
       // Fetch settings
       const { data: settings } = await supabase
         .from('company_settings')
-        .select('start_debit_note_no, debit_note_prefix, debit_note_digits')
+        .select('start_debit_note_no, debit_note_prefix, debit_note_digits, debit_note_financial_year_in_serial')
         .eq('location_code', mill)
         .eq('is_active', true)
         .single();
 
       const startNo = settings?.start_debit_note_no || 1;
-      const prefix = settings?.debit_note_prefix || '';
+      const basePrefix = settings?.debit_note_prefix || '';
       const digits = settings?.debit_note_digits || 3;
+      const useFY = settings?.debit_note_financial_year_in_serial ?? false;
 
-      // Fetch existing notes for this mill
-      const { data: existingNotes } = await supabase
-        .from('debit_notes')
-        .select('note_no')
-        .eq('mill', mill);
+      const effectivePrefix = useFY
+        ? buildFYPrefix(basePrefix, date)
+        : basePrefix;
 
-      let nextNo = 1;
-
-      // If we have a prefix, filter in JS for now or assume all notes for this mill follow pattern
-      // To be safe, let's filter specifically for prefix if it exists
-      let relevantNotes = existingNotes || [];
-      if (prefix) {
-        relevantNotes = relevantNotes.filter(n => n.note_no?.startsWith(prefix));
+      let query = supabase.from('debit_notes').select('note_no');
+      if (effectivePrefix) {
+        query = query.like('note_no', `${effectivePrefix}%`);
       } else {
-        // If no prefix configured, maybe look for numeric ones or default
-        relevantNotes = relevantNotes.filter(n => /^\d+$/.test(n.note_no));
+        query = query.or('note_no.like.[0-9]%,note_no.like.[1-9][0-9]%');
       }
 
-      if (relevantNotes.length > 0) {
+      const { data: existingNotes } = await query;
+
+      let nextNo = startNo;
+
+      if (existingNotes && existingNotes.length > 0) {
         let maxNo = 0;
-        relevantNotes.forEach(note => {
+        existingNotes.forEach(note => {
           let num = 0;
-          if (prefix) {
-            num = parseInt(note.note_no.replace(prefix, ''));
+          if (effectivePrefix) {
+            if (useFY) {
+              num = extractSerialNumber(note.note_no);
+            } else {
+              num = parseInt(note.note_no.replace(effectivePrefix, ''));
+            }
           } else {
             num = parseInt(note.note_no);
           }
@@ -134,14 +137,12 @@ const DebitNoteForm = () => {
             maxNo = Math.max(maxNo, num);
           }
         });
-        nextNo = maxNo + 1;
+        nextNo = Math.max(startNo, maxNo + 1);
       }
 
-      nextNo = Math.max(startNo, nextNo);
-
       const serialNumber = nextNo.toString().padStart(digits, '0');
-      if (prefix) {
-        return `${prefix}${serialNumber}`;
+      if (effectivePrefix) {
+        return useFY ? `${effectivePrefix}-${serialNumber}` : `${effectivePrefix}${serialNumber}`;
       }
       return nextNo.toString();
 
@@ -160,7 +161,7 @@ const DebitNoteForm = () => {
       const { data: { user } } = await supabase.auth.getUser();
       const userId = user?.id || '';
 
-      const noteNo = await generateDebitNoteNo(formData.mill);
+      const noteNo = await generateDebitNoteNo(formData.mill, formData.note_date);
       if (!noteNo) {
         toast.error('Error generating debit note number');
         return;

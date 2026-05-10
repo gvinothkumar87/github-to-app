@@ -23,8 +23,10 @@ export interface CompanySetting {
   financial_year_in_serial?: boolean;
   debit_note_prefix?: string;
   debit_note_digits?: number;
+  debit_note_financial_year_in_serial?: boolean;
   credit_note_prefix?: string;
   credit_note_digits?: number;
+  credit_note_financial_year_in_serial?: boolean;
   is_active: boolean;
   created_at: string;
   updated_at: string;

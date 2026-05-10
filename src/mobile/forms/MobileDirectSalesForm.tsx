@@ -15,6 +15,7 @@ import { Loader2 } from 'lucide-react';
 import { Customer, Item } from '@/types';
 import { useLocations } from '@/hooks/useLocations';
 import { buildFYPrefix, extractSerialNumber } from '@/utils/financialYear';
+import { validateBillSequence } from '@/utils/billValidation';
 
 interface LineItem {
   id: string;
@@ -226,6 +227,26 @@ const MobileDirectSalesForm: React.FC = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No user found');
+
+      // Validate sequence
+      const prefixMatch = billSerialNo.match(/^(.*?)(\d+)$/);
+      const prefix = prefixMatch ? prefixMatch[1] : '';
+      
+      let query = supabase.from('sales').select('bill_serial_no, sale_date');
+      if (prefix) {
+        query = query.like('bill_serial_no', `${prefix}%`);
+      } else {
+        query = query.or('bill_serial_no.like.[0-9]%,bill_serial_no.like.[1-9][0-9]%');
+      }
+      
+      const { data: existingBills } = await query;
+      
+      const validation = validateBillSequence(billSerialNo, saleDate, existingBills || [], useSpecialSerial);
+      if (!validation.isValid) {
+        toast.error(language === 'english' ? validation.error : validation.errorTa);
+        setLoading(false);
+        return;
+      }
 
       const grandTotal = calculateGrandTotal();
       const createdSales = [];

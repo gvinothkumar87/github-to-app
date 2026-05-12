@@ -16,6 +16,7 @@ import { Customer, Item } from '@/types';
 import { useLocations } from '@/hooks/useLocations';
 import { buildFYPrefix, extractSerialNumber } from '@/utils/financialYear';
 import { validateBillSequence } from '@/utils/billValidation';
+import { generateUUID } from '@/lib/utils';
 
 interface LineItem {
   id: string;
@@ -32,7 +33,7 @@ const MobileDirectSalesForm: React.FC = () => {
   const [items, setItems] = useState<Item[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [lineItems, setLineItems] = useState<LineItem[]>([{
-    id: crypto.randomUUID(),
+    id: generateUUID(),
     item_id: '',
     quantity: '',
     rate: ''
@@ -151,8 +152,6 @@ const MobileDirectSalesForm: React.FC = () => {
       let query = supabase.from('sales').select('bill_serial_no');
       if (effectivePrefix) {
         query = query.like('bill_serial_no', `${effectivePrefix}-%`);
-      } else {
-        query = query.or('bill_serial_no.like.[0-9]%,bill_serial_no.like.[1-9][0-9]%');
       }
 
       const { data: existingBills } = await query;
@@ -179,7 +178,7 @@ const MobileDirectSalesForm: React.FC = () => {
 
   const addLineItem = () => {
     setLineItems([...lineItems, {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       item_id: '',
       quantity: '',
       rate: ''
@@ -235,8 +234,6 @@ const MobileDirectSalesForm: React.FC = () => {
       let query = supabase.from('sales').select('bill_serial_no, sale_date');
       if (prefix) {
         query = query.like('bill_serial_no', `${prefix}%`);
-      } else {
-        query = query.or('bill_serial_no.like.[0-9]%,bill_serial_no.like.[1-9][0-9]%');
       }
       
       const { data: existingBills } = await query;

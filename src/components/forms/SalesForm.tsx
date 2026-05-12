@@ -168,8 +168,6 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
       let query = supabase.from('sales').select('bill_serial_no');
       if (effectivePrefix) {
         query = query.like('bill_serial_no', `${effectivePrefix}-%`);
-      } else {
-        query = query.or('bill_serial_no.like.[0-9]%,bill_serial_no.like.[1-9][0-9]%');
       }
 
       const { data: existingBills } = await query;
@@ -235,8 +233,6 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
       let query = supabase.from('sales').select('bill_serial_no, sale_date');
       if (prefix) {
         query = query.like('bill_serial_no', `${prefix}%`);
-      } else {
-        query = query.or('bill_serial_no.like.[0-9]%,bill_serial_no.like.[1-9][0-9]%');
       }
       
       const { data: existingBills } = await query;

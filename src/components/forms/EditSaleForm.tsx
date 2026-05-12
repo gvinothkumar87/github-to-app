@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Sale, OutwardEntry, Customer, Item } from '@/types';
 import { Trash2 } from 'lucide-react';
+import { generateUUID } from '@/lib/utils';
 
 interface EditSaleFormProps {
   sale: any; // Can be a single sale or grouped sale with _allSales
@@ -35,7 +36,7 @@ export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, on
   const [lineItems, setLineItems] = useState<LineItemEdit[]>(() => {
     if (isMultiProduct) {
       return sale._allSales.map((s: any) => ({
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         sale_id: s.id,
         item: s.items,
         quantity: s.quantity,
@@ -45,7 +46,7 @@ export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, on
       }));
     } else {
       return [{
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         sale_id: sale.id,
         item: item,
         quantity: sale.quantity,

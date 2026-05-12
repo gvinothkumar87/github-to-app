@@ -13,6 +13,7 @@ import { InvoiceGenerator } from '@/components/InvoiceGenerator';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getFinancialYear, buildFYPrefix, extractSerialNumber } from '@/utils/financialYear';
 import { validateBillSequence } from '@/utils/billValidation';
+import { generateUUID } from '@/lib/utils';
 
 interface DirectSalesFormProps {
   onSuccess: () => void;
@@ -32,7 +33,7 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
   const [items, setItems] = useState<Item[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [lineItems, setLineItems] = useState<LineItem[]>([{
-    id: crypto.randomUUID(),
+    id: generateUUID(),
     item_id: '',
     quantity: '',
     rate: ''
@@ -151,9 +152,6 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
       let query = supabase.from('sales').select('bill_serial_no');
       if (effectivePrefix) {
         query = query.like('bill_serial_no', `${effectivePrefix}-%`);
-      } else {
-        // Numeric serials (no prefix)
-        query = query.or('bill_serial_no.like.[0-9]%,bill_serial_no.like.[1-9][0-9]%');
       }
 
       const { data: existingBills } = await query;
@@ -184,7 +182,7 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
 
   const addLineItem = () => {
     setLineItems([...lineItems, {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       item_id: '',
       quantity: '',
       rate: ''
@@ -240,8 +238,6 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
       let query = supabase.from('sales').select('bill_serial_no, sale_date');
       if (prefix) {
         query = query.like('bill_serial_no', `${prefix}%`);
-      } else {
-        query = query.or('bill_serial_no.like.[0-9]%,bill_serial_no.like.[1-9][0-9]%');
       }
       
       const { data: existingBills } = await query;
@@ -335,7 +331,7 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
 
       // Create temp outward entry for invoice
       const tempOutwardEntry = {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         serial_no: 0,
         entry_date: saleDate,
         customer_id: selectedCustomer,

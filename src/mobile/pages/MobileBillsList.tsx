@@ -57,6 +57,26 @@ export const MobileBillsList = () => {
     getItemName(sale.item_id).toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Find repeated bill numbers in filtered sales
+  const billNoCounts = new Map<string, number>();
+  filteredSales.forEach((s: any) => {
+    if (s.bill_serial_no) {
+      const count = billNoCounts.get(s.bill_serial_no) || 0;
+      billNoCounts.set(s.bill_serial_no, count + 1);
+    }
+  });
+
+  const billNoIndices = new Map<string, number>();
+  const salesWithDisplayData = filteredSales.map((sale: any) => {
+    const count = billNoCounts.get(sale.bill_serial_no) || 0;
+    if (count > 1) {
+      const index = billNoIndices.get(sale.bill_serial_no) || 0;
+      billNoIndices.set(sale.bill_serial_no, index + 1);
+      return { ...sale, _billNoDisplay: `${sale.bill_serial_no} (Repeated ${index + 1})` };
+    }
+    return { ...sale, _billNoDisplay: sale.bill_serial_no || 'N/A' };
+  });
+
   const handleEditSale = (sale: any) => {
     navigate(`/sales/${sale.id}/edit`);
   };
@@ -162,7 +182,7 @@ export const MobileBillsList = () => {
           </Card>
         ) : (
           <div className="space-y-3">
-            {filteredSales.map((sale: any) => {
+            {salesWithDisplayData.map((sale: any) => {
               const outwardEntry = getOutwardEntry(sale.outward_entry_id);
               return (
                 <Card key={sale.id} className="p-4">
@@ -170,7 +190,7 @@ export const MobileBillsList = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <FileText className="h-4 w-4 text-primary" />
-                        <span className="font-semibold">{sale.bill_serial_no}</span>
+                        <span className="font-semibold">{sale._billNoDisplay}</span>
                       </div>
                       <Badge variant="secondary">
                         {new Date(sale.sale_date).toLocaleDateString('en-IN')}

@@ -136,7 +136,7 @@ export const UnifiedBillsList = ({
         (salesData || []).map((sale: any) => sale.outward_entry_id).filter(Boolean)
       );
 
-      // Group sales by bill_serial_no for multi-product bills
+      // Group sales by bill_serial_no + customer_id + sale_date for multi-product bills
       const groupedSales: any[] = [];
       const billMap = new Map();
 
@@ -146,31 +146,56 @@ export const UnifiedBillsList = ({
           return;
         }
 
-        if (!billMap.has(sale.bill_serial_no)) {
-          // First sale with this bill_serial_no
-          billMap.set(sale.bill_serial_no, {
+        const groupKey = `${sale.bill_serial_no}_${sale.customer_id}_${sale.sale_date}`;
+
+        if (!billMap.has(groupKey)) {
+          billMap.set(groupKey, {
             ...sale,
-            _allSales: [sale], // Store all sales with same bill number
+            _allSales: [sale], // Store all sales with same bill number, customer, and date
             _isGrouped: true
           });
         } else {
-          // Additional sale with same bill_serial_no - add to group
-          const existingBill = billMap.get(sale.bill_serial_no);
+          const existingBill = billMap.get(groupKey);
           existingBill._allSales.push(sale);
-          // Update totals
           existingBill.total_amount += sale.total_amount;
         }
       });
 
-      // Add grouped bills to the list
-      billMap.forEach(bill => groupedSales.push(bill));
+      // Extract bills from map
+      const billsList: any[] = [];
+      billMap.forEach(bill => billsList.push(bill));
+
+      // Find repeated bill numbers across different groups
+      const billNoCounts = new Map<string, number>();
+      billsList.forEach(bill => {
+        const count = billNoCounts.get(bill.bill_serial_no) || 0;
+        billNoCounts.set(bill.bill_serial_no, count + 1);
+      });
+
+      // Add tag index to repeated bills
+      const billNoIndices = new Map<string, number>();
+      billsList.forEach(bill => {
+        const count = billNoCounts.get(bill.bill_serial_no) || 0;
+        if (count > 1) {
+          const index = billNoIndices.get(bill.bill_serial_no) || 0;
+          billNoIndices.set(bill.bill_serial_no, index + 1);
+          bill._repeatedIndex = index + 1;
+        }
+      });
+
+      // Add bills to groupedSales
+      groupedSales.push(...billsList);
 
       // Transform data into unified format
       const unifiedBills: UnifiedBill[] = [
         ...groupedSales.map((sale: any) => ({
           id: sale.id,
           type: 'sale' as const,
-          bill_no: sale.bill_serial_no || 'N/A',
+          bill_no: sale.bill_serial_no 
+            ? (sale._repeatedIndex 
+                ? `${sale.bill_serial_no} (Repeated ${sale._repeatedIndex})` 
+                : sale.bill_serial_no)
+            : 'N/A',
           date: sale.sale_date,
           entry_date: sale.outward_entries?.entry_date,
           customer_name: getDisplayName(sale.customers),

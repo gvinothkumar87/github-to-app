@@ -199,7 +199,7 @@ export const CreditNoteInvoiceGenerator = ({ creditNote, customer, item, onClose
 
     const eInvoiceData = {
       Version: '1.1',
-      TxnDtls: {
+      TranDtls: {
         TaxSch: 'GST',
         SupTyp: 'B2B'
       },
@@ -258,7 +258,8 @@ export const CreditNoteInvoiceGenerator = ({ creditNote, customer, item, onClose
       return value;
     };
 
-    const blob = new Blob([JSON.stringify(eInvoiceData, replacer, 2)], {
+    const eInvoiceArray = [eInvoiceData];
+    const blob = new Blob([JSON.stringify(eInvoiceArray, replacer, 2)], {
       type: 'application/json'
     });
     const url = URL.createObjectURL(blob);
@@ -292,9 +293,7 @@ export const CreditNoteInvoiceGenerator = ({ creditNote, customer, item, onClose
     pdf.text(`Amount: ₹${currentNote.amount.toFixed(2)}`, 20, 120);
     pdf.text(`Reason: ${currentNote.reason}`, 20, 130);
 
-    if (currentNote.reference_bill_no) {
-      pdf.text(`Reference Bill: ${currentNote.reference_bill_no}`, 20, 140);
-    }
+    pdf.text(`Reference Bill No: ${currentNote.reference_bill_no || 'N/A'}`, 20, 140);
 
     if (currentNote.irn) {
       pdf.text(`IRN: ${currentNote.irn}`, 20, 160);
@@ -357,9 +356,7 @@ export const CreditNoteInvoiceGenerator = ({ creditNote, customer, item, onClose
                 <h2 className="text-xl font-bold mb-2">CREDIT NOTE</h2>
                 <p><strong>Note No:</strong> {currentNote.note_no}</p>
                 <p><strong>Date:</strong> {new Date(currentNote.note_date).toLocaleDateString()}</p>
-                {currentNote.reference_bill_no && (
-                  <p><strong>Reference Bill:</strong> {currentNote.reference_bill_no}</p>
-                )}
+                <p><strong>Reference Bill No:</strong> {currentNote.reference_bill_no || 'N/A'}</p>
                 {currentNote.irn && (
                   <p><strong>IRN:</strong> {currentNote.irn}</p>
                 )}

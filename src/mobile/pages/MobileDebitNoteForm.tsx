@@ -12,7 +12,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useLocations } from '@/hooks/useLocations';
-import { buildFYPrefix, extractSerialNumber } from '@/utils/financialYear';
+import { buildFYPrefix, extractSerialNumber, getFinancialYear } from '@/utils/financialYear';
+import { validateBillSequence } from '@/utils/billValidation';
 
 export const MobileDebitNoteForm = () => {
   const navigate = useNavigate();
@@ -34,6 +35,7 @@ export const MobileDebitNoteForm = () => {
 
   const { data: customers } = useEnhancedOfflineData('offline_customers');
   const { data: items } = useEnhancedOfflineData('offline_items');
+  const { data: debitNotes, create: createDebitNote } = useEnhancedOfflineData('offline_debit_notes', [], { autoSync: true });
 
   const selectedCustomer = customers.find((c: any) => c.id === formData.customer_id);
   const selectedItem = items.find((i: any) => i.id === formData.item_id);
@@ -73,20 +75,24 @@ export const MobileDebitNoteForm = () => {
         ? buildFYPrefix(basePrefix, date)
         : basePrefix;
 
-      let query = supabase.from('debit_notes').select('note_no');
-      if (effectivePrefix) {
-        query = query.like('note_no', `${effectivePrefix}%`);
-      } else {
-        query = query.or('note_no.like.[0-9]%,note_no.like.[1-9][0-9]%');
-      }
-
-      const { data: existingNotes } = await query;
+      const existingNotes = debitNotes || [];
+      const filteredNotes = existingNotes.filter((note: any) => {
+        if (!note.note_no) return false;
+        if (useFY) {
+          const fy = getFinancialYear(date);
+          return note.note_no.includes(fy);
+        } else if (effectivePrefix) {
+          return note.note_no.startsWith(effectivePrefix);
+        } else {
+          return /^[0-9]+$/.test(note.note_no);
+        }
+      });
 
       let nextNo = startNo;
 
-      if (existingNotes && existingNotes.length > 0) {
+      if (filteredNotes.length > 0) {
         let maxNo = 0;
-        existingNotes.forEach(note => {
+        filteredNotes.forEach(note => {
           let num = 0;
           if (effectivePrefix) {
             if (useFY) {
@@ -136,22 +142,35 @@ export const MobileDebitNoteForm = () => {
 
       const noteNo = await generateDebitNoteNo(formData.mill, new Date(formData.note_date));
 
-      const { error: noteError } = await supabase
-        .from('debit_notes')
-        .insert({
-          note_no: noteNo,
-          customer_id: formData.customer_id,
-          item_id: formData.item_id || null,
-          reference_bill_no: formData.reference_bill_no || null,
-          amount: parseFloat(formData.amount),
-          gst_percentage: parseFloat(formData.gst_percentage),
-          reason: formData.reason,
-          note_date: formData.note_date,
-          mill: formData.mill,
-          created_by: user.id,
+      // Validate sequence rules (same as bills)
+      const mappedNotes = (debitNotes || []).map((note: any) => ({
+        bill_serial_no: note.note_no,
+        sale_date: note.note_date
+      }));
+      
+      const validation = validateBillSequence(noteNo, formData.note_date, mappedNotes, false);
+      if (!validation.isValid) {
+        toast({
+          variant: 'destructive',
+          title: language === 'english' ? 'Sequence Error' : 'வரிசை பிழை',
+          description: language === 'english' ? validation.error : validation.errorTa,
         });
+        setLoading(false);
+        return;
+      }
 
-      if (noteError) throw noteError;
+      await createDebitNote({
+        note_no: noteNo,
+        customer_id: formData.customer_id,
+        item_id: formData.item_id || null,
+        reference_bill_no: formData.reference_bill_no || null,
+        amount: parseFloat(formData.amount),
+        gst_percentage: parseFloat(formData.gst_percentage),
+        reason: formData.reason,
+        note_date: formData.note_date,
+        mill: formData.mill,
+        created_by: user.id,
+      });
 
       toast({
         title: language === 'english' ? 'Success' : 'வெற்றி',

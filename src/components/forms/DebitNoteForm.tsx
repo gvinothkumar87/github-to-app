@@ -15,10 +15,13 @@ import { toast } from "sonner";
 import type { Customer, Item } from "@/types";
 import { DebitNoteInvoiceGenerator } from "@/components/DebitNoteInvoiceGenerator";
 import { useLocations } from '@/hooks/useLocations';
-import { buildFYPrefix, extractSerialNumber } from '@/utils/financialYear';
+import { buildFYPrefix, extractSerialNumber, getFinancialYear } from '@/utils/financialYear';
+import { validateBillSequence } from '@/utils/billValidation';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const DebitNoteForm = () => {
   const { locations } = useLocations();
+  const { language } = useLanguage();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [formData, setFormData] = useState({
@@ -110,10 +113,13 @@ const DebitNoteForm = () => {
         : basePrefix;
 
       let query = supabase.from('debit_notes').select('note_no');
-      if (effectivePrefix) {
-        query = query.like('note_no', `${effectivePrefix}%`);
+      if (useFY) {
+        const fy = getFinancialYear(formData.note_date || date);
+        query = query.ilike('note_no', `%${fy}-%`);
+      } else if (effectivePrefix) {
+        query = query.ilike('note_no', `${effectivePrefix}%`);
       } else {
-        query = query.or('note_no.like.[0-9]%,note_no.like.[1-9][0-9]%');
+        query = query.or('note_no.ilike.[0-9]%,note_no.ilike.[1-9][0-9]%');
       }
 
       const { data: existingNotes } = await query;
@@ -168,6 +174,30 @@ const DebitNoteForm = () => {
       }
 
       const noteDate = format(formData.note_date, 'yyyy-MM-dd');
+
+      // Fetch existing notes for validation
+      const prefixMatch = noteNo.match(/^(.*?)(\d+)$/);
+      const prefix = prefixMatch ? prefixMatch[1] : '';
+      
+      let vQuery = supabase.from('debit_notes').select('note_no, note_date');
+      if (prefix) {
+        vQuery = vQuery.ilike('note_no', `${prefix}%`);
+      }
+      
+      const { data: existingNotes } = await vQuery;
+      
+      // Map for validation function
+      const mappedNotes = (existingNotes || []).map((note: any) => ({
+        bill_serial_no: note.note_no,
+        sale_date: note.note_date
+      }));
+
+      const validation = validateBillSequence(noteNo, noteDate, mappedNotes, false);
+      if (!validation.isValid) {
+        toast.error(language === 'english' ? validation.error : validation.errorTa);
+        setIsLoading(false);
+        return;
+      }
 
       // Prepare debit note data
       const noteDataPayload = {

@@ -1,7 +1,9 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "grm-sales",
   "private": true,
   "version": "0.0.0",
+  "author": "grm sales",
+  "description": "grm sales",
   "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -110,7 +112,7 @@
   },
   "build": {
     "appId": "com.sales.app",
-    "productName": "Sales",
+    "productName": "grm sales",
     "copyright": "Copyright © 2025",
     "directories": {
       "output": "dist-electron_installer"
@@ -122,7 +124,8 @@
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
-      "deleteAppDataOnUninstall": true
+      "deleteAppDataOnUninstall": true,
+      "shortcutName": "grm sales"
     },
     "files": [
       "dist/**/*",

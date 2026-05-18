@@ -201,7 +201,10 @@ export const DebitNoteInvoiceGenerator = ({ debitNote, customer, item, onClose }
       Version: '1.1',
       TranDtls: {
         TaxSch: 'GST',
-        SupTyp: 'B2B'
+        SupTyp: 'B2B',
+        IgstOnIntra: 'N',
+        RegRev: 'N',
+        EcmGstin: null
       },
       DocDtls: {
         Typ: 'DBN',
@@ -212,28 +215,48 @@ export const DebitNoteInvoiceGenerator = ({ debitNote, customer, item, onClose }
         Gstin: companySettings.gstin,
         LglNm: companySettings.company_name,
         Addr1: companySettings.address_line1,
-        Addr2: companySettings.address_line2 || '',
+        Addr2: companySettings.address_line2 || null,
         Loc: companySettings.locality,
-        Pin: companySettings.pin_code.toString(),
-        Stcd: companySettings.state_code || '33'
+        Pin: companySettings.pin_code ? parseInt(companySettings.pin_code.toString()) : null,
+        Stcd: companySettings.state_code || '33',
+        Ph: companySettings.phone || null,
+        Em: companySettings.email || null
       },
       BuyerDtls: {
         Gstin: customer.gstin || null,
         LglNm: customer.name_english,
-        Pos: customer.place_of_supply || customer.state_code || '33',
         Addr1: customer.address_english || 'Address Not Available',
-        Pin: customer.pin_code || 'PIN Not Available',
-        Stcd: customer.state_code || '33'
+        Addr2: customer.address_tamil || null,
+        Loc: customer.address_english ? customer.address_english.split(',')[0] : 'Not Available',
+        Pin: customer.pin_code ? parseInt(customer.pin_code.toString()) : null,
+        Pos: customer.place_of_supply || customer.state_code || '33',
+        Stcd: customer.state_code || '33',
+        Ph: customer.phone || null,
+        Em: customer.email || null
       },
       ValDtls: {
+        AssVal: calculateGST(currentNote.amount, currentNote.gst_percentage).taxableAmount,
+        IgstVal: 0,
+        CgstVal: calculateGST(currentNote.amount, currentNote.gst_percentage).cgstAmount,
+        SgstVal: calculateGST(currentNote.amount, currentNote.gst_percentage).sgstAmount,
+        CesVal: 0,
+        StCesVal: 0,
+        Discount: 0,
+        OthChrg: 0,
+        RndOffAmt: 0,
         TotInvVal: currentNote.amount
+      },
+      RefDtls: {
+        InvRm: "NICGEPP2.0"
       },
       ItemList: [
         {
           SlNo: '1',
+          PrdDesc: item.name_english || 'Product',
           IsServc: 'N',
           HsnCd: item.hsn_no || '',
           Qty: 1,
+          FreeQty: 0,
           Unit: item.unit || 'NOS',
           UnitPrice: calculateGST(currentNote.amount, currentNote.gst_percentage).taxableAmount,
           TotAmt: calculateGST(currentNote.amount, currentNote.gst_percentage).taxableAmount,
@@ -244,6 +267,13 @@ export const DebitNoteInvoiceGenerator = ({ debitNote, customer, item, onClose }
           IgstAmt: 0,
           CgstAmt: calculateGST(currentNote.amount, currentNote.gst_percentage).cgstAmount,
           SgstAmt: calculateGST(currentNote.amount, currentNote.gst_percentage).sgstAmount,
+          CesRt: 0,
+          CesAmt: 0,
+          CesNonAdvlAmt: 0,
+          StateCesRt: 0,
+          StateCesAmt: 0,
+          StateCesNonAdvlAmt: 0,
+          OthChrg: 0,
           TotItemVal: currentNote.amount
         }
       ]

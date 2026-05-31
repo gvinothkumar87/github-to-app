@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { InwardEntryForm } from '@/components/forms/InwardEntryForm';
 import { PurchaseForm } from '@/components/forms/PurchaseForm';
 import { PurchaseFromTransitForm } from '@/components/forms/PurchaseFromTransitForm';
@@ -12,7 +13,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { InwardEntry, Purchase } from '@/types';
-import { Plus, Scale, Truck, ShoppingCart, ClipboardList, Book, Upload } from 'lucide-react';
+import { Plus, Scale, Truck, ShoppingCart, ClipboardList, Book, Upload, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { Loader2 } from 'lucide-react';
 import {
@@ -32,6 +33,7 @@ const PurchaseSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabC
   const { language } = useLanguage();
   const { setOpenMobile } = useSidebar();
   const { checkAccess, loading } = usePageAccess();
+  const navigate = useNavigate();
 
   const canAccessTab = (tabId: string) => {
     if (loading) return false;
@@ -88,6 +90,16 @@ const PurchaseSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabC
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
+        </div>
+        
+        <div className="p-4 border-t border-gray-100 bg-gray-50/50 mt-auto">
+          <SidebarMenuButton
+            onClick={() => navigate('/')}
+            className="w-full justify-start text-blue-600 hover:text-blue-700 hover:bg-blue-50/50 transition-colors"
+          >
+            <ArrowLeft className="mr-3 h-5 w-5" />
+            <span className="text-lg font-medium">{language === 'english' ? 'Back to Sales' : 'விற்பனைக்குத் திரும்பு'}</span>
+          </SidebarMenuButton>
         </div>
       </SidebarContent>
     </Sidebar>

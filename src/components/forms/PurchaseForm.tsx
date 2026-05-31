@@ -9,9 +9,10 @@ import { Loader2 } from "lucide-react";
 
 interface PurchaseFormProps {
   onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-export function PurchaseForm({ onSuccess }: PurchaseFormProps) {
+export function PurchaseForm({ onSuccess, onCancel }: PurchaseFormProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [suppliers, setSuppliers] = useState<any[]>([]);
@@ -237,10 +238,17 @@ export function PurchaseForm({ onSuccess }: PurchaseFormProps) {
         </div>
       </div>
 
-      <Button type="submit" disabled={loading}>
-        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Add Purchase
-      </Button>
+      <div className="flex gap-2">
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+        )}
+        <Button type="submit" disabled={loading}>
+          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Add Purchase
+        </Button>
+      </div>
     </form>
   );
 }

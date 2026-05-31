@@ -146,6 +146,70 @@ export interface CreditNote {
   items?: Item;
 }
 
+export interface Supplier {
+  id: string;
+  name_english: string;
+  name_tamil?: string;
+  code: string;
+  contact_person?: string;
+  phone?: string;
+  email?: string;
+  address_english?: string;
+  address_tamil?: string;
+  gstin?: string;
+  pin_code?: string;
+  state_code?: string;
+  place_of_supply?: string;
+  opening_balance?: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InwardEntry {
+  id: string;
+  serial_no: number;
+  entry_date: string;
+  supplier_id: string;
+  item_id: string;
+  lorry_no: string;
+  driver_mobile: string;
+  full_weight: number;
+  empty_weight?: number;
+  net_weight?: number;
+  empty_weight_updated_at?: string;
+  empty_weight_updated_by?: string;
+  remarks?: string;
+  loading_place: string;
+  weighment_photo_url?: string;
+  empty_weight_photo_url?: string;
+  labour?: string;
+  is_completed: boolean;
+  created_at: string;
+  updated_at: string;
+  suppliers?: Supplier;
+  items?: Item;
+}
+
+export interface Purchase {
+  id: string;
+  inward_entry_id?: string;
+  supplier_id: string;
+  item_id: string;
+  quantity: number;
+  rate: number;
+  total_amount: number;
+  bill_serial_no?: string;
+  purchase_date: string;
+  mill: string;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+  suppliers?: Supplier;
+  items?: Item;
+  inward_entries?: InwardEntry;
+}
+
 export type Language = 'english' | 'tamil';
 
 export interface LanguageContextType {

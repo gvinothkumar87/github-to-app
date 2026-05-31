@@ -1,9 +1,10 @@
 import React from 'react';
-import { Menu, LogOut, Home, FileText, Plus, Minus, Users, ShoppingCart, Book, Package, Truck, Scale, ClipboardList, Receipt, Trash2, BarChart3, FileSpreadsheet, Settings } from 'lucide-react';
+import { Menu, LogOut, Home, FileText, Plus, Minus, Users, ShoppingCart, Book, Package, Truck, Scale, ClipboardList, Receipt, Trash2, BarChart3, FileSpreadsheet, Settings, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
+import { usePageAccess } from '@/hooks/usePageAccess';
 import { LanguageToggle } from './LanguageToggle';
 import {
   Sidebar,
@@ -27,6 +28,7 @@ const NavigationSidebar = () => {
   const { setOpenMobile, setOpen } = useSidebar();
   const navigate = useNavigate();
   const { isAdmin } = useAdminCheck();
+  const { checkAccess } = usePageAccess();
 
   // Since we're on navigation pages, we need to communicate with Index page for tab changes
   // For now, we'll just navigate to home with the intention of showing that tab
@@ -138,6 +140,19 @@ const NavigationSidebar = () => {
               </SidebarMenuItem>
             );
           })}
+
+          {/* Activities Log */}
+          {checkAccess('/activities') && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={() => handleNavigation('/activities')}
+                className="w-full justify-start px-4 py-3 h-auto transition-all duration-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              >
+                <Activity className="mr-3 h-5 w-5" />
+                <span className="text-lg font-medium">{language === 'english' ? 'Activities Log' : 'செயல்பாட்டு பதிவு'}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
 
           {/* Sales & Bills Section */}
           {salesMenuItems.filter(item => !item.adminOnly || isAdmin).map((item) => {

@@ -24,6 +24,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import BackButtonHandler from "./components/BackButtonHandler";
 
 import BillValidationReport from "./pages/BillValidationReport";
+import ActivitiesLog from "./pages/ActivitiesLog";
 
 const queryClient = new QueryClient();
 
@@ -105,6 +106,11 @@ const App = () => (
                 </ProtectedRoute>
               } />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="/activities" element={
+                <ProtectedRoute>
+                  <ActivitiesLog />
+                </ProtectedRoute>
+              } />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </LanguageProvider>

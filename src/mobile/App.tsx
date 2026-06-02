@@ -28,6 +28,16 @@ import MobileDebitNoteForm from './pages/MobileDebitNoteForm';
 import MobileReceiptList from './pages/MobileReceiptList';
 import MobileReports from './pages/MobileReports';
 import MobileDirectSalesForm from './forms/MobileDirectSalesForm';
+import MobilePurchases from './pages/MobilePurchases';
+import MobileSuppliers from './pages/MobileSuppliers';
+import MobileSupplierLedger from './pages/MobileSupplierLedger';
+import MobileInwardEntries from './pages/MobileInwardEntries';
+import MobileEmptyWeight from './pages/MobileEmptyWeight';
+import MobilePurchaseBillsList from './pages/MobilePurchaseBillsList';
+import MobilePurchaseList from './pages/MobilePurchaseList';
+import MobileInwardEntryForm from './forms/MobileInwardEntryForm';
+import MobileDirectPurchaseForm from './forms/MobileDirectPurchaseForm';
+import MobilePurchaseFromTransitForm from './forms/MobilePurchaseFromTransitForm';
 
 // Create a query client for React Query
 const queryClient = new QueryClient({
@@ -171,6 +181,64 @@ const MobileApp: React.FC = () => {
               <Route path="/settings" element={
                 <MobileProtectedRoute>
                   <MobileSettings />
+                </MobileProtectedRoute>
+              } />
+              
+              {/* Purchases Hub & Sub-routes */}
+              <Route path="/purchases" element={
+                <MobileProtectedRoute>
+                  <MobilePurchases />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/purchases/inward" element={
+                <MobileProtectedRoute>
+                  <MobileInwardEntries />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/purchases/inward/new" element={
+                <MobileProtectedRoute>
+                  <MobileInwardEntryForm />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/purchases/empty-weight" element={
+                <MobileProtectedRoute>
+                  <MobileEmptyWeight />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/purchases/direct" element={
+                <MobileProtectedRoute>
+                  <MobileDirectPurchaseForm />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/purchases/from-transit" element={
+                <MobileProtectedRoute>
+                  <MobilePurchaseFromTransitForm />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/purchases/list" element={
+                <MobileProtectedRoute>
+                  <MobilePurchaseList />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/purchases/bills" element={
+                <MobileProtectedRoute>
+                  <MobilePurchaseBillsList />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/purchases/supplier-ledger" element={
+                <MobileProtectedRoute>
+                  <MobileSupplierLedger />
+                </MobileProtectedRoute>
+              } />
+              
+              <Route path="/suppliers" element={
+                <MobileProtectedRoute>
+                  <MobileSuppliers />
+                </MobileProtectedRoute>
+              } />
+              <Route path="/supplier-ledger" element={
+                <MobileProtectedRoute>
+                  <MobileSupplierLedger />
                 </MobileProtectedRoute>
               } />
             </Routes>

@@ -13,11 +13,15 @@ import {
   Settings,
   Database,
   Wifi,
-  WifiOff
+  WifiOff,
+  ShoppingCart,
+  Truck as SupplierIcon,
+  BookOpen
 } from 'lucide-react';
 import { networkService } from '../services/network.service';
 import { useMobileServices } from '../providers/MobileServiceProvider';
-import { useAdminCheck } from '@/hooks/useAdminCheck';
+import { usePageAccess } from '@/hooks/usePageAccess';
+import { mapMobileRouteToWebRoute } from '../components/MobileProtectedRoute';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 
@@ -25,7 +29,7 @@ const MobileIndex: React.FC = () => {
   const { isReady } = useMobileServices();
   const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState(networkService.isOnline());
-  const { isAdmin } = useAdminCheck();
+  const { checkAccess, isAdmin } = usePageAccess();
 
   useEffect(() => {
     const unsubscribe = networkService.onStatusChange((status) => {
@@ -81,7 +85,7 @@ const MobileIndex: React.FC = () => {
       icon: Receipt,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
-      href: '/receipts/new'
+      href: '/receipts' // Changed from /receipts/new to match the pattern, or checkAccess handles prefix
     },
     {
       title: 'Sales',
@@ -98,6 +102,30 @@ const MobileIndex: React.FC = () => {
       color: 'text-pink-600',
       bgColor: 'bg-pink-50',
       href: '/direct-sales'
+    },
+    {
+      title: 'Purchases',
+      description: 'Manage purchases',
+      icon: ShoppingCart,
+      color: 'text-teal-600',
+      bgColor: 'bg-teal-50',
+      href: '/purchases'
+    },
+    {
+      title: 'Suppliers',
+      description: 'Manage suppliers',
+      icon: SupplierIcon,
+      color: 'text-lime-600',
+      bgColor: 'bg-lime-50',
+      href: '/suppliers'
+    },
+    {
+      title: 'Supplier Ledger',
+      description: 'View supplier ledger',
+      icon: BookOpen,
+      color: 'text-emerald-600',
+      bgColor: 'bg-emerald-50',
+      href: '/supplier-ledger'
     },
     {
       title: 'Credit Note',
@@ -157,16 +185,17 @@ const MobileIndex: React.FC = () => {
     }
   ];
 
-  // Filter menu items based on user type
+  // Filter menu items based on user type and permissions
   const getFilteredMenuItems = () => {
     if (isAdmin) {
-      // Admin users can see ALL functions
       return menuItems;
-    } else {
-      // Non-admin users can only see: Transit Logbook, Customers, Items, Settings
-      const normalUserAllowedItems = ['Transit Logbook', 'Customers', 'Items', 'Settings'];
-      return menuItems.filter(item => normalUserAllowedItems.includes(item.title));
     }
+    
+    return menuItems.filter(item => {
+      // Get the equivalent web route to check access
+      const webRoute = mapMobileRouteToWebRoute(item.href);
+      return checkAccess(webRoute);
+    });
   };
 
   const handleMenuClick = (href: string) => {
@@ -178,7 +207,6 @@ const MobileIndex: React.FC = () => {
       <div className="space-y-6">
         {/* Service Status Indicator */}
         <ServiceStatusIndicator />
-
 
         {/* Menu Grid */}
         <div className="grid grid-cols-2 gap-4">
@@ -205,7 +233,7 @@ const MobileIndex: React.FC = () => {
             <CardTitle className="text-base">Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {!isAdmin && (
+            {(isAdmin || checkAccess(mapMobileRouteToWebRoute('/transit'))) && (
               <Button
                 className="w-full justify-start"
                 variant="outline"
@@ -215,27 +243,19 @@ const MobileIndex: React.FC = () => {
                 New Outward Entry
               </Button>
             )}
-            {isAdmin && (
-              <>
-                <Button
-                  className="w-full justify-start"
-                  variant="outline"
-                  onClick={() => handleMenuClick('/receipts/new')}
-                >
-                  <Receipt className="h-4 w-4 mr-2" />
-                  New Receipt
-                </Button>
-                <Button
-                  className="w-full justify-start"
-                  variant="outline"
-                  onClick={() => handleMenuClick('/transit/new')}
-                >
-                  <Truck className="h-4 w-4 mr-2" />
-                  New Outward Entry
-                </Button>
-              </>
+            
+            {(isAdmin || checkAccess(mapMobileRouteToWebRoute('/receipts'))) && (
+              <Button
+                className="w-full justify-start"
+                variant="outline"
+                onClick={() => handleMenuClick('/receipts/new')}
+              >
+                <Receipt className="h-4 w-4 mr-2" />
+                New Receipt
+              </Button>
             )}
-            {!isAdmin && (
+
+            {(isAdmin || checkAccess(mapMobileRouteToWebRoute('/customers'))) && (
               <Button
                 className="w-full justify-start"
                 variant="outline"

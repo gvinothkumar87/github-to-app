@@ -4,6 +4,10 @@ import { InwardEntryForm } from '@/components/forms/InwardEntryForm';
 import { PurchaseForm } from '@/components/forms/PurchaseForm';
 import { PurchaseFromTransitForm } from '@/components/forms/PurchaseFromTransitForm';
 import { SupplierLedgerView } from '@/components/SupplierLedgerView';
+import { UnifiedPurchaseBillsList } from '@/components/UnifiedPurchaseBillsList';
+import { EditPurchaseForm } from '@/components/forms/EditPurchaseForm';
+import { EditInwardEntryForm } from '@/components/forms/EditInwardEntryForm';
+import { PurchaseInvoiceGenerator } from '@/components/PurchaseInvoiceGenerator';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -12,8 +16,8 @@ import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { InwardEntry, Purchase } from '@/types';
-import { Plus, Scale, Truck, ShoppingCart, ClipboardList, Book, Upload, ArrowLeft } from 'lucide-react';
+import { InwardEntry, Purchase, Supplier, Item } from '@/types';
+import { Plus, Scale, Truck, ShoppingCart, ClipboardList, Book, Upload, ArrowLeft, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { Loader2 } from 'lucide-react';
 import {
@@ -47,6 +51,7 @@ const PurchaseSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabC
     { id: 'purchase-direct', label: language === 'english' ? 'Direct Purchase' : 'நேரடி கொள்முதல்', icon: ShoppingCart },
     { id: 'purchase-from-transit', label: language === 'english' ? 'Purchase from Transit' : 'போக்குவரத்து கொள்முதல்', icon: Truck },
     { id: 'purchase-list', label: language === 'english' ? 'Purchase List' : 'கொள்முதல் பட்டியல்', icon: ClipboardList },
+    { id: 'purchase-bills', label: language === 'english' ? 'Purchase Bills Management' : 'கொள்முதல் பில் மேலாண்மை', icon: FileText },
     { id: 'purchase-supplier-ledger', label: language === 'english' ? 'Supplier Ledger' : 'சப்ளையர் லெட்ஜர்', icon: Book },
   ].filter(tab => canAccessTab(tab.id));
 
@@ -121,6 +126,14 @@ export default function Purchases() {
   const [emptyWeights, setEmptyWeights] = useState<{ [key: string]: string }>({});
   const [photoData, setPhotoData] = useState<{ [key: string]: string }>({});
   const [uploadingMap, setUploadingMap] = useState<{ [key: string]: boolean }>({});
+
+  // Edit / Print states
+  const [editingPurchase, setEditingPurchase] = useState<Purchase | null>(null);
+  const [editingInwardEntry, setEditingInwardEntry] = useState<InwardEntry | null>(null);
+  const [printingPurchase, setPrintingPurchase] = useState<Purchase | null>(null);
+  const [currentSupplier, setCurrentSupplier] = useState<Supplier | null>(null);
+  const [currentItem, setCurrentItem] = useState<Item | null>(null);
+  const [linkedInwardEntry, setLinkedInwardEntry] = useState<InwardEntry | null>(null);
 
   useEffect(() => {
     if (activeTab === 'purchase-inward-entries') {
@@ -322,6 +335,66 @@ export default function Purchases() {
   };
 
   const renderContent = () => {
+    if (editingPurchase && currentSupplier && currentItem) {
+      return (
+        <div className="space-y-4">
+          <Button variant="outline" onClick={() => setEditingPurchase(null)}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            {language === 'english' ? 'Back' : 'பின்னே'}
+          </Button>
+          <EditPurchaseForm 
+            purchase={editingPurchase} 
+            supplier={currentSupplier}
+            item={currentItem}
+            onSuccess={() => {
+              setEditingPurchase(null);
+              fetchPurchases();
+            }} 
+            onCancel={() => setEditingPurchase(null)} 
+          />
+        </div>
+      );
+    }
+
+    if (editingInwardEntry && currentSupplier && currentItem) {
+      return (
+        <div className="space-y-4">
+          <Button variant="outline" onClick={() => setEditingInwardEntry(null)}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            {language === 'english' ? 'Back' : 'பின்னே'}
+          </Button>
+          <EditInwardEntryForm 
+            inwardEntry={editingInwardEntry} 
+            supplier={currentSupplier}
+            item={currentItem}
+            onSuccess={() => {
+              setEditingInwardEntry(null);
+              fetchInwardEntries();
+            }} 
+            onCancel={() => setEditingInwardEntry(null)} 
+          />
+        </div>
+      );
+    }
+
+    if (printingPurchase && currentSupplier && currentItem) {
+      return (
+        <div className="space-y-4">
+          <Button variant="outline" onClick={() => setPrintingPurchase(null)}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            {language === 'english' ? 'Back' : 'பின்னே'}
+          </Button>
+          <PurchaseInvoiceGenerator 
+            purchase={printingPurchase} 
+            inwardEntry={linkedInwardEntry}
+            supplier={currentSupplier}
+            item={currentItem}
+            onClose={() => setPrintingPurchase(null)} 
+          />
+        </div>
+      );
+    }
+
     if (showForm) {
       switch (activeTab) {
         case 'purchase-inward-entries':
@@ -359,6 +432,7 @@ export default function Purchases() {
             {activeTab === 'purchase-direct' && (language === 'english' ? 'Direct Purchase' : 'நேரடி கொள்முதல்')}
             {activeTab === 'purchase-from-transit' && (language === 'english' ? 'Purchase from Transit' : 'போக்குவரத்து கொள்முதல்')}
             {activeTab === 'purchase-list' && (language === 'english' ? 'All Purchases' : 'அனைத்து கொள்முதல்கள்')}
+            {activeTab === 'purchase-bills' && (language === 'english' ? 'Purchase Bills Management' : 'கொள்முதல் பில் மேலாண்மை')}
             {activeTab === 'purchase-supplier-ledger' && (language === 'english' ? 'Supplier Ledger' : 'சப்ளையர் லெட்ஜர்')}
           </h2>
 
@@ -826,6 +900,29 @@ export default function Purchases() {
               )}
             </CardContent>
           </Card>
+        )}
+
+        {/* Purchase Bills Management Tab */}
+        {activeTab === 'purchase-bills' && (
+          <UnifiedPurchaseBillsList 
+            onEditPurchase={(purchase, inwardEntry, supplier, item) => {
+              setEditingPurchase(purchase);
+              setLinkedInwardEntry(inwardEntry);
+              setCurrentSupplier(supplier);
+              setCurrentItem(item);
+            }}
+            onEditInwardEntry={(inwardEntry, supplier, item) => {
+              setEditingInwardEntry(inwardEntry);
+              setCurrentSupplier(supplier);
+              setCurrentItem(item);
+            }}
+            onPrintPurchase={(purchase, inwardEntry, supplier, item) => {
+              setPrintingPurchase(purchase);
+              setLinkedInwardEntry(inwardEntry);
+              setCurrentSupplier(supplier);
+              setCurrentItem(item);
+            }}
+          />
         )}
 
         {/* Supplier Ledger tab content */}

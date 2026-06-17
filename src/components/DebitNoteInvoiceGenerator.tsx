@@ -137,7 +137,7 @@ export const DebitNoteInvoiceGenerator = ({ debitNote, customer, item, onClose }
         DocDtls: {
           Typ: 'DBN',
           No: currentNote.note_no,
-          Dt: currentNote.note_date
+          Dt: new Date(currentNote.note_date).toISOString().split('T')[0].split('-').reverse().join('/')
         },
         SellerDtls: {
           Gstin: companySettings.gstin,
@@ -209,7 +209,7 @@ export const DebitNoteInvoiceGenerator = ({ debitNote, customer, item, onClose }
       DocDtls: {
         Typ: 'DBN',
         No: currentNote.note_no,
-        Dt: currentNote.note_date
+        Dt: new Date(currentNote.note_date).toISOString().split('T')[0].split('-').reverse().join('/')
       },
       SellerDtls: {
         Gstin: companySettings.gstin,

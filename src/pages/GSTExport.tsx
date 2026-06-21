@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { PageLayout } from '@/components/PageLayout';
 import { FileSpreadsheet, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { exportGSTExcel, calculateGSTSummary } from '@/lib/exports/gstExcel';
 import { format } from 'date-fns';
+import { useLocations } from '@/hooks/useLocations';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface SaleRecord {
   id: string;
@@ -31,6 +33,8 @@ interface SaleRecord {
 }
 
 const GSTExport = () => {
+  const { locations } = useLocations();
+  const [selectedGstin, setSelectedGstin] = useState<string>('all');
   
   // GST Export state
   const [gstStartDate, setGstStartDate] = useState(() => {
@@ -49,10 +53,34 @@ const GSTExport = () => {
   const [loadingGST, setLoadingGST] = useState(false);
   const [salesData, setSalesData] = useState<SaleRecord[]>([]);
 
-  // Fetch GST data when dates change
+  // Group locations by unique GSTIN
+  const gstinGroups = useMemo(() => {
+    const groups: { [key: string]: { companyName: string; locations: string[]; codes: string[] } } = {};
+    (locations || []).forEach((loc) => {
+      const gstin = loc.gstin?.trim();
+      if (!gstin) return;
+      if (!groups[gstin]) {
+        groups[gstin] = {
+          companyName: loc.company_name,
+          locations: [],
+          codes: []
+        };
+      }
+      const locName = loc.location_name || loc.location_code;
+      if (!groups[gstin].locations.includes(locName)) {
+        groups[gstin].locations.push(locName);
+      }
+      if (!groups[gstin].codes.includes(loc.location_code)) {
+        groups[gstin].codes.push(loc.location_code);
+      }
+    });
+    return groups;
+  }, [locations]);
+
+  // Fetch GST data when dates, selected gstin, or locations change
   useEffect(() => {
     fetchGSTData();
-  }, [gstStartDate, gstEndDate]);
+  }, [gstStartDate, gstEndDate, selectedGstin, locations]);
 
   const fetchGSTData = async () => {
     setLoadingGST(true);
@@ -72,7 +100,7 @@ const GSTExport = () => {
       if (customersRes.error) throw customersRes.error;
       if (itemsRes.error) throw itemsRes.error;
 
-      // Filter sales by date range and exclude D-series
+      // Filter sales by date range, exclude D-series, and filter by selected GSTIN
       const filteredSales = (salesRes.data || []).filter((sale) => {
         const saleDate = new Date(sale.sale_date);
         const start = new Date(gstStartDate);
@@ -81,7 +109,13 @@ const GSTExport = () => {
         const matchesDate = saleDate >= start && saleDate <= end;
         const notDSeries = !sale.bill_serial_no || !sale.bill_serial_no.startsWith('D');
         
-        return matchesDate && notDSeries;
+        let matchesGstin = true;
+        if (selectedGstin !== 'all') {
+          const matchingCodes = gstinGroups[selectedGstin]?.codes || [];
+          matchesGstin = matchingCodes.includes(sale.loading_place);
+        }
+        
+        return matchesDate && notDSeries && matchesGstin;
       });
 
       // Filter debit notes
@@ -89,7 +123,14 @@ const GSTExport = () => {
         const noteDate = new Date(note.note_date);
         const start = new Date(gstStartDate);
         const end = new Date(gstEndDate);
-        return noteDate >= start && noteDate <= end;
+        
+        let matchesGstin = true;
+        if (selectedGstin !== 'all') {
+          const matchingCodes = gstinGroups[selectedGstin]?.codes || [];
+          matchesGstin = matchingCodes.includes(note.mill);
+        }
+        
+        return noteDate >= start && noteDate <= end && matchesGstin;
       });
 
       // Filter credit notes
@@ -97,7 +138,14 @@ const GSTExport = () => {
         const noteDate = new Date(note.note_date);
         const start = new Date(gstStartDate);
         const end = new Date(gstEndDate);
-        return noteDate >= start && noteDate <= end;
+        
+        let matchesGstin = true;
+        if (selectedGstin !== 'all') {
+          const matchingCodes = gstinGroups[selectedGstin]?.codes || [];
+          matchesGstin = matchingCodes.includes(note.mill);
+        }
+        
+        return noteDate >= start && noteDate <= end && matchesGstin;
       });
 
       const records: SaleRecord[] = [];
@@ -216,9 +264,9 @@ const GSTExport = () => {
 
       // Calculate summary
       const summary = calculateGSTSummary({
-        sales: salesRes.data || [],
-        debitNotes: debitNotesRes.data || [],
-        creditNotes: creditNotesRes.data || [],
+        sales: filteredSales,
+        debitNotes: filteredDebitNotes,
+        creditNotes: filteredCreditNotes,
         customers: customersRes.data || [],
         items: itemsRes.data || [],
         startDate: gstStartDate,
@@ -253,10 +301,35 @@ const GSTExport = () => {
       if (customersRes.error) throw customersRes.error;
       if (itemsRes.error) throw itemsRes.error;
 
+      // Filter by selected GSTIN
+      const filteredSales = (salesRes.data || []).filter((sale) => {
+        if (selectedGstin !== 'all') {
+          const matchingCodes = gstinGroups[selectedGstin]?.codes || [];
+          return matchingCodes.includes(sale.loading_place);
+        }
+        return true;
+      });
+
+      const filteredDebitNotes = (debitNotesRes.data || []).filter((note) => {
+        if (selectedGstin !== 'all') {
+          const matchingCodes = gstinGroups[selectedGstin]?.codes || [];
+          return matchingCodes.includes(note.mill);
+        }
+        return true;
+      });
+
+      const filteredCreditNotes = (creditNotesRes.data || []).filter((note) => {
+        if (selectedGstin !== 'all') {
+          const matchingCodes = gstinGroups[selectedGstin]?.codes || [];
+          return matchingCodes.includes(note.mill);
+        }
+        return true;
+      });
+
       const result = exportGSTExcel({
-        sales: salesRes.data || [],
-        debitNotes: debitNotesRes.data || [],
-        creditNotes: creditNotesRes.data || [],
+        sales: filteredSales,
+        debitNotes: filteredDebitNotes,
+        creditNotes: filteredCreditNotes,
         customers: customersRes.data || [],
         items: itemsRes.data || [],
         startDate: gstStartDate,
@@ -292,7 +365,7 @@ const GSTExport = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <label htmlFor="gst-start-date" className="text-sm font-medium">
                   Start Date
@@ -314,6 +387,24 @@ const GSTExport = () => {
                   value={gstEndDate}
                   onChange={(e) => setGstEndDate(e.target.value)}
                 />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="company-gstin" className="text-sm font-medium">
+                  Company GSTIN Filter
+                </label>
+                <Select value={selectedGstin} onValueChange={setSelectedGstin}>
+                  <SelectTrigger id="company-gstin">
+                    <SelectValue placeholder="All GSTINs" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All GSTINs</SelectItem>
+                    {Object.entries(gstinGroups).map(([gstin, group]) => (
+                      <SelectItem key={gstin} value={gstin}>
+                        {gstin} - {group.companyName} ({group.locations.join(', ')})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </CardContent>

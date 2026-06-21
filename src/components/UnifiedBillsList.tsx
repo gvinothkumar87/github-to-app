@@ -11,6 +11,7 @@ import { Edit, FileText, Search, Trash2, Image } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useLocations } from '@/hooks/useLocations';
 
 type BillType = 'all' | 'sales' | 'debit_notes' | 'credit_notes' | 'outward_entries';
 
@@ -52,6 +53,8 @@ export const UnifiedBillsList = ({
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [billTypeFilter, setBillTypeFilter] = useState<BillType>('all');
+  const [selectedLocation, setSelectedLocation] = useState<string>('all');
+  const { locations } = useLocations();
   const { toast } = useToast();
   const { language, getDisplayName } = useLanguage();
 
@@ -379,7 +382,19 @@ export const UnifiedBillsList = ({
       (billTypeFilter === 'credit_notes' && bill.type === 'credit_note') ||
       (billTypeFilter === 'outward_entries' && bill.type === 'outward_entry');
 
-    return matchesSearch && matchesType;
+    let matchesLocation = true;
+    if (selectedLocation !== 'all') {
+      const billData = bill.data as any;
+      const locationCode = bill.type === 'sale'
+        ? (billData.loading_place || bill.outward_entry?.loading_place)
+        : bill.type === 'outward_entry'
+        ? billData.loading_place
+        : billData.mill; // debit_note and credit_note use mill
+      
+      matchesLocation = locationCode === selectedLocation;
+    }
+
+    return matchesSearch && matchesType && matchesLocation;
   });
 
   const handleEdit = (bill: UnifiedBill) => {
@@ -471,6 +486,21 @@ export const UnifiedBillsList = ({
               <SelectItem value="debit_notes">{language === 'english' ? 'Debit Notes' : 'டெபிட் நோட்கள்'}</SelectItem>
               <SelectItem value="credit_notes">{language === 'english' ? 'Credit Notes' : 'கிரெடிட் நோட்கள்'}</SelectItem>
               <SelectItem value="outward_entries">{language === 'english' ? 'Outward Entries' : 'அவுட்வர்ட் என்ட்ரிகள்'}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder={language === 'english' ? 'Select location' : 'இடத்தை தேர்ந்தெடுக்கவும்'} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {language === 'english' ? 'All Locations' : 'அனைத்து இடங்கள்'}
+              </SelectItem>
+              {locations.map((loc) => (
+                <SelectItem key={loc.location_code} value={loc.location_code}>
+                  {loc.location_name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

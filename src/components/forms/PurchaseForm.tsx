@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { useLocations } from "@/hooks/useLocations";
 
 interface PurchaseFormProps {
   onSuccess?: () => void;
@@ -26,6 +27,21 @@ export function PurchaseForm({ onSuccess, onCancel }: PurchaseFormProps) {
     mill: "MATTAPARAI",
     purchase_date: new Date().toISOString().split('T')[0],
   });
+  const { locations } = useLocations();
+
+  useEffect(() => {
+    if (locations.length > 0) {
+      const hasCurrentMill = locations.some(loc => loc.location_code === formData.mill);
+      if (!hasCurrentMill) {
+        const mattaparaiLoc = locations.find(loc => loc.location_code === 'MATTAPARAI');
+        if (mattaparaiLoc) {
+          setFormData(prev => ({ ...prev, mill: 'MATTAPARAI' }));
+        } else {
+          setFormData(prev => ({ ...prev, mill: locations[0].location_code }));
+        }
+      }
+    }
+  }, [locations]);
 
   useEffect(() => {
     fetchSuppliers();
@@ -106,13 +122,17 @@ export function PurchaseForm({ onSuccess, onCancel }: PurchaseFormProps) {
         description: "Purchase added successfully",
       });
 
+      const defaultMill = locations.find(loc => loc.location_code === 'MATTAPARAI') 
+        ? 'MATTAPARAI' 
+        : (locations[0]?.location_code || 'MATTAPARAI');
+
       setFormData({
         supplier_id: "",
         item_id: "",
         quantity: "",
         rate: "",
         bill_serial_no: "",
-        mill: "MATTAPARAI",
+        mill: defaultMill,
         purchase_date: new Date().toISOString().split('T')[0],
       });
 
@@ -206,8 +226,11 @@ export function PurchaseForm({ onSuccess, onCancel }: PurchaseFormProps) {
               <SelectValue placeholder="Select mill" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="MATTAPARAI">MATTAPARAI</SelectItem>
-              <SelectItem value="PULIVANTHI">PULIVANTHI</SelectItem>
+              {locations.map((loc) => (
+                <SelectItem key={loc.location_code} value={loc.location_code}>
+                  {loc.location_name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

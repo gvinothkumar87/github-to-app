@@ -14,6 +14,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { getFinancialYear, buildFYPrefix, extractSerialNumber } from '@/utils/financialYear';
 import { validateBillSequence } from '@/utils/billValidation';
 import { generateUUID } from '@/lib/utils';
+import { useLocations } from '@/hooks/useLocations';
 
 interface DirectSalesFormProps {
   onSuccess: () => void;
@@ -40,6 +41,21 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
   }]);
   const [loadingPlace, setLoadingPlace] = useState<string>('PULIVANTHI');
   const [billSerialNo, setBillSerialNo] = useState<string>('');
+  const { locations } = useLocations();
+
+  useEffect(() => {
+    if (locations.length > 0) {
+      const hasCurrentPlace = locations.some(loc => loc.location_code === loadingPlace);
+      if (!hasCurrentPlace) {
+        const pulivanthiLoc = locations.find(loc => loc.location_code === 'PULIVANTHI');
+        if (pulivanthiLoc) {
+          setLoadingPlace('PULIVANTHI');
+        } else {
+          setLoadingPlace(locations[0].location_code);
+        }
+      }
+    }
+  }, [locations]);
   const [lorryNo, setLorryNo] = useState<string>('');
   const [remarks, setRemarks] = useState<string>('');
   const [saleDate, setSaleDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -514,15 +530,14 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
               </Label>
               <Select value={loadingPlace} onValueChange={setLoadingPlace}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder={language === 'english' ? 'Select location' : 'இடத்தை தேர்ந்தெடுக்கவும்'} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="PULIVANTHI">
-                    {language === 'english' ? 'PULIVANTHI' : 'புலியந்தி'}
-                  </SelectItem>
-                  <SelectItem value="MATTAPARAI">
-                    {language === 'english' ? 'MATTAPARAI' : 'மட்டப்பாறை'}
-                  </SelectItem>
+                  {locations.map((loc) => (
+                    <SelectItem key={loc.location_code} value={loc.location_code}>
+                      {loc.location_name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

@@ -27,11 +27,14 @@ import { cn } from '@/lib/utils';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { useLocations } from '@/hooks/useLocations';
 
 export const TransitLogbook = () => {
   const { language, getDisplayName } = useLanguage();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('entries');
+  const { locations } = useLocations();
+  const [selectedLocation, setSelectedLocation] = useState<string>('all');
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
 
@@ -76,7 +79,7 @@ export const TransitLogbook = () => {
     if (activeTab === 'reports') {
       fetchReportData();
     }
-  }, [startDate, endDate, selectedCustomer, selectedItem, activeTab]);
+  }, [startDate, endDate, selectedCustomer, selectedItem, selectedLocation, activeTab]);
 
   const fetchEntries = async () => {
     setLoading(true);
@@ -181,6 +184,11 @@ export const TransitLogbook = () => {
       // Apply item filter
       if (selectedItem && selectedItem !== 'all') {
         query = query.eq('item_id', selectedItem);
+      }
+
+      // Apply location filter
+      if (selectedLocation && selectedLocation !== 'all') {
+        query = query.eq('loading_place', selectedLocation);
       }
 
       const { data, error } = await query.order('sale_date', { ascending: false });
@@ -1025,7 +1033,7 @@ export const TransitLogbook = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                   {/* Start Date */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium">
@@ -1135,6 +1143,30 @@ export const TransitLogbook = () => {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {/* Location/Company Filter */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      {language === 'english' ? 'Company / Location' : 'நிறுவனம் / இடம்'}
+                    </label>
+                    <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={
+                          language === 'english' ? 'Select location' : 'இடத்தை தேர்ந்தெடுக்கவும்'
+                        } />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">
+                          {language === 'english' ? 'All Locations' : 'அனைத்து இடங்கள்'}
+                        </SelectItem>
+                        {locations.map((loc) => (
+                          <SelectItem key={loc.location_code} value={loc.location_code}>
+                            {loc.location_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div className="flex gap-4">
@@ -1148,6 +1180,7 @@ export const TransitLogbook = () => {
                       setEndDate(undefined);
                       setSelectedCustomer('all');
                       setSelectedItem('all');
+                      setSelectedLocation('all');
                       setReportEntries([]);
                     }}
                     variant="outline"

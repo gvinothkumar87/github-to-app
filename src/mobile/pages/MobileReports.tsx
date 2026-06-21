@@ -10,6 +10,7 @@ import { useEnhancedOfflineData } from '../hooks/useEnhancedOfflineData';
 import { format } from 'date-fns';
 import { toast } from '@/components/ui/use-toast';
 import { exportGSTExcel } from '@/lib/exports/gstExcel';
+import { useLocations } from '@/hooks/useLocations';
 
 const MobileReports: React.FC = () => {
   const [selectedReport, setSelectedReport] = useState<string>('');
@@ -17,6 +18,8 @@ const MobileReports: React.FC = () => {
   const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [customerId, setCustomerId] = useState<string>('all');
   const [itemId, setItemId] = useState<string>('all');
+  const [locationId, setLocationId] = useState<string>('all');
+  const { locations } = useLocations();
 
   const { data: sales, loading: salesLoading, isServicesReady } = useEnhancedOfflineData('offline_sales');
   const { data: customers } = useEnhancedOfflineData('offline_customers');
@@ -46,8 +49,9 @@ const MobileReports: React.FC = () => {
       let matchesDate = saleDate >= start && saleDate <= end;
       let matchesCustomer = customerId === 'all' || sale.customer_id === customerId;
       let matchesItem = itemId === 'all' || sale.item_id === itemId;
+      let matchesLocation = locationId === 'all' || sale.loading_place === locationId;
       
-      return matchesDate && matchesCustomer && matchesItem;
+      return matchesDate && matchesCustomer && matchesItem && matchesLocation;
     }) || [];
 
     switch (selectedReport) {
@@ -261,6 +265,23 @@ const MobileReports: React.FC = () => {
                   {(items || []).map((item: any) => (
                     <SelectItem key={item.id} value={item.id}>
                       {item.name_english}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="location">Company / Location (Optional)</Label>
+              <Select value={locationId} onValueChange={setLocationId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All locations" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All locations</SelectItem>
+                  {(locations || []).map((loc: any) => (
+                    <SelectItem key={loc.location_code} value={loc.location_code}>
+                      {loc.location_name}
                     </SelectItem>
                   ))}
                 </SelectContent>

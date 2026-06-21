@@ -27,6 +27,7 @@ interface SaleRecord {
   cgst: number;
   sgst: number;
   final_total: number;
+  type: 'Sale' | 'Debit Note' | 'Credit Note';
 }
 
 const GSTExport = () => {
@@ -57,13 +58,17 @@ const GSTExport = () => {
     setLoadingGST(true);
     try {
       // Fetch all required data
-      const [salesRes, customersRes, itemsRes] = await Promise.all([
+      const [salesRes, debitNotesRes, creditNotesRes, customersRes, itemsRes] = await Promise.all([
         supabase.from('sales').select('*'),
+        supabase.from('debit_notes').select('*'),
+        supabase.from('credit_notes').select('*'),
         supabase.from('customers').select('id, name_english, gstin'),
         supabase.from('items').select('id, name_english, hsn_no, unit_weight, gst_percentage')
       ]);
 
       if (salesRes.error) throw salesRes.error;
+      if (debitNotesRes.error) throw debitNotesRes.error;
+      if (creditNotesRes.error) throw creditNotesRes.error;
       if (customersRes.error) throw customersRes.error;
       if (itemsRes.error) throw itemsRes.error;
 
@@ -79,8 +84,26 @@ const GSTExport = () => {
         return matchesDate && notDSeries;
       });
 
-      // Map sales to display records
-      const records: SaleRecord[] = filteredSales.map((sale) => {
+      // Filter debit notes
+      const filteredDebitNotes = (debitNotesRes.data || []).filter((note) => {
+        const noteDate = new Date(note.note_date);
+        const start = new Date(gstStartDate);
+        const end = new Date(gstEndDate);
+        return noteDate >= start && noteDate <= end;
+      });
+
+      // Filter credit notes
+      const filteredCreditNotes = (creditNotesRes.data || []).filter((note) => {
+        const noteDate = new Date(note.note_date);
+        const start = new Date(gstStartDate);
+        const end = new Date(gstEndDate);
+        return noteDate >= start && noteDate <= end;
+      });
+
+      const records: SaleRecord[] = [];
+
+      // Map sales
+      filteredSales.forEach((sale) => {
         const customer = customersRes.data?.find((c) => c.id === sale.customer_id);
         const item = itemsRes.data?.find((i) => i.id === sale.item_id);
         
@@ -97,7 +120,7 @@ const GSTExport = () => {
         const cgst = gstAmount / 2;
         const sgst = gstAmount / 2;
 
-        return {
+        records.push({
           id: sale.id,
           sale_date: sale.sale_date,
           bill_serial_no: sale.bill_serial_no,
@@ -113,15 +136,89 @@ const GSTExport = () => {
           gst_percentage: gstPercentage,
           cgst,
           sgst,
-          final_total: finalTotal
-        };
+          final_total: finalTotal,
+          type: 'Sale'
+        });
       });
+
+      // Map debit notes
+      filteredDebitNotes.forEach((note) => {
+        const customer = customersRes.data?.find((c) => c.id === note.customer_id);
+        const item = itemsRes.data?.find((i) => i.id === note.item_id);
+        
+        const gstPercentage = Number(note.gst_percentage) || Number(item?.gst_percentage) || 0;
+        const finalTotal = Number(note.amount) || 0;
+        
+        const amount = finalTotal / (1 + gstPercentage / 100);
+        const gstAmount = finalTotal - amount;
+        const cgst = gstAmount / 2;
+        const sgst = gstAmount / 2;
+
+        records.push({
+          id: note.id,
+          sale_date: note.note_date,
+          bill_serial_no: note.note_no,
+          customer_name: customer?.name_english || '',
+          gstin: customer?.gstin,
+          item_name: item?.name_english || '',
+          hsn_no: item?.hsn_no,
+          unit_weight: 0,
+          bags: 0,
+          total_weight: 0,
+          rate: 0,
+          amount,
+          gst_percentage: gstPercentage,
+          cgst,
+          sgst,
+          final_total: finalTotal,
+          type: 'Debit Note'
+        });
+      });
+
+      // Map credit notes (negative amounts/GST)
+      filteredCreditNotes.forEach((note) => {
+        const customer = customersRes.data?.find((c) => c.id === note.customer_id);
+        const item = itemsRes.data?.find((i) => i.id === note.item_id);
+        
+        const gstPercentage = Number(note.gst_percentage) || Number(item?.gst_percentage) || 0;
+        const finalTotal = Number(note.amount) || 0;
+        
+        const amount = finalTotal / (1 + gstPercentage / 100);
+        const gstAmount = finalTotal - amount;
+        const cgst = gstAmount / 2;
+        const sgst = gstAmount / 2;
+
+        records.push({
+          id: note.id,
+          sale_date: note.note_date,
+          bill_serial_no: note.note_no,
+          customer_name: customer?.name_english || '',
+          gstin: customer?.gstin,
+          item_name: item?.name_english || '',
+          hsn_no: item?.hsn_no,
+          unit_weight: 0,
+          bags: 0,
+          total_weight: 0,
+          rate: 0,
+          amount: -amount,
+          gst_percentage: gstPercentage,
+          cgst: -cgst,
+          sgst: -sgst,
+          final_total: -finalTotal,
+          type: 'Credit Note'
+        });
+      });
+
+      // Sort records by date ascending
+      records.sort((a, b) => new Date(a.sale_date).getTime() - new Date(b.sale_date).getTime());
 
       setSalesData(records);
 
       // Calculate summary
       const summary = calculateGSTSummary({
         sales: salesRes.data || [],
+        debitNotes: debitNotesRes.data || [],
+        creditNotes: creditNotesRes.data || [],
         customers: customersRes.data || [],
         items: itemsRes.data || [],
         startDate: gstStartDate,
@@ -142,18 +239,24 @@ const GSTExport = () => {
     setLoadingGST(true);
     try {
       // Fetch all required data
-      const [salesRes, customersRes, itemsRes] = await Promise.all([
+      const [salesRes, debitNotesRes, creditNotesRes, customersRes, itemsRes] = await Promise.all([
         supabase.from('sales').select('*'),
+        supabase.from('debit_notes').select('*'),
+        supabase.from('credit_notes').select('*'),
         supabase.from('customers').select('id, name_english, gstin'),
         supabase.from('items').select('id, name_english, hsn_no, unit_weight, gst_percentage')
       ]);
 
       if (salesRes.error) throw salesRes.error;
+      if (debitNotesRes.error) throw debitNotesRes.error;
+      if (creditNotesRes.error) throw creditNotesRes.error;
       if (customersRes.error) throw customersRes.error;
       if (itemsRes.error) throw itemsRes.error;
 
       const result = exportGSTExcel({
         sales: salesRes.data || [],
+        debitNotes: debitNotesRes.data || [],
+        creditNotes: creditNotesRes.data || [],
         customers: customersRes.data || [],
         items: itemsRes.data || [],
         startDate: gstStartDate,
@@ -222,7 +325,7 @@ const GSTExport = () => {
             <CardHeader>
               <CardTitle>GST Summary</CardTitle>
               <CardDescription>
-                Summary for {gstStartDate} to {gstEndDate} (excluding D series)
+                Summary for {gstStartDate} to {gstEndDate} (excluding D series, including Credit/Debit Notes)
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -264,13 +367,14 @@ const GSTExport = () => {
             {loadingGST ? 'Exporting...' : 'Export GST Excel'}
           </Button>
         </div>
+
         {/* Data Table */}
         {salesData.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle>GST Records</CardTitle>
               <CardDescription>
-                {salesData.length} records found (excluding D series)
+                {salesData.length} records found (excluding D series, including Credit/Debit Notes)
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -280,7 +384,8 @@ const GSTExport = () => {
                     <TableRow>
                       <TableHead className="w-12">S.No</TableHead>
                       <TableHead>Date</TableHead>
-                      <TableHead>Bill No</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Bill/Note No</TableHead>
                       <TableHead>Party</TableHead>
                       <TableHead>GSTIN</TableHead>
                       <TableHead>Feed</TableHead>
@@ -298,18 +403,27 @@ const GSTExport = () => {
                   </TableHeader>
                   <TableBody>
                     {salesData.map((record, index) => (
-                      <TableRow key={record.id}>
+                      <TableRow key={`${record.type}-${record.id}`}>
                         <TableCell>{index + 1}</TableCell>
                         <TableCell>{format(new Date(record.sale_date), 'dd/MM/yyyy')}</TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                            record.type === 'Sale' ? 'bg-blue-100 text-blue-800' :
+                            record.type === 'Debit Note' ? 'bg-green-100 text-green-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {record.type}
+                          </span>
+                        </TableCell>
                         <TableCell>{record.bill_serial_no || '-'}</TableCell>
                         <TableCell>{record.customer_name}</TableCell>
                         <TableCell>{record.gstin || '-'}</TableCell>
                         <TableCell>{record.item_name}</TableCell>
                         <TableCell>{record.hsn_no || '-'}</TableCell>
-                        <TableCell className="text-right">{record.unit_weight}</TableCell>
-                        <TableCell className="text-right">{record.bags}</TableCell>
-                        <TableCell className="text-right">{record.total_weight}</TableCell>
-                        <TableCell className="text-right">₹{record.rate.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">{record.unit_weight || '-'}</TableCell>
+                        <TableCell className="text-right">{record.bags || '-'}</TableCell>
+                        <TableCell className="text-right">{record.total_weight || '-'}</TableCell>
+                        <TableCell className="text-right">{record.rate ? `₹${record.rate.toFixed(2)}` : '-'}</TableCell>
                         <TableCell className="text-right">₹{record.amount.toFixed(2)}</TableCell>
                         <TableCell className="text-right">{record.gst_percentage}%</TableCell>
                         <TableCell className="text-right">₹{record.cgst.toFixed(2)}</TableCell>
@@ -328,7 +442,7 @@ const GSTExport = () => {
         {!loadingGST && salesData.length === 0 && (
           <Card>
             <CardContent className="py-10 text-center text-muted-foreground">
-              No sales data found for the selected period (excluding D series)
+              No GST records found for the selected period (excluding D series)
             </CardContent>
           </Card>
         )}

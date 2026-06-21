@@ -215,7 +215,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
         TotInvVal: roundedTotalAmount
       },
       RefDtls: {
-        InvRm: "NICGEPP2.0"
+        InvRm: "NICGEPP"
       },
       ItemList: allSales.map((s, index) => {
         const currentItem = allItems[index] || item;

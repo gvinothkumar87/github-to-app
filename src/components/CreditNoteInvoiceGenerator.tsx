@@ -197,6 +197,33 @@ export const CreditNoteInvoiceGenerator = ({ creditNote, customer, item, onClose
   const downloadEInvoiceJSON = () => {
     if (!companySettings) return;
 
+    const customerAddress = customer.address_english || customer.address_tamil || "";
+    const addressParts = customerAddress.split(',').map(p => p.trim()).filter(Boolean);
+    
+    let buyerAddr1 = customerAddress.substring(0, 100);
+    let buyerAddr2 = customerAddress.length > 100 ? customerAddress.substring(100) : "";
+    let buyerLoc = "";
+
+    if (addressParts.length >= 3) {
+      buyerAddr1 = addressParts.slice(0, 2).join(', ') + ',';
+      buyerAddr2 = addressParts.slice(2).join(',');
+      buyerLoc = addressParts[addressParts.length - 2];
+    } else if (addressParts.length === 2) {
+      buyerAddr1 = addressParts[0];
+      buyerAddr2 = addressParts[1];
+      buyerLoc = addressParts[1];
+    } else {
+      buyerAddr1 = customerAddress || "Address Not Available";
+      buyerAddr2 = "";
+      buyerLoc = customerAddress || "Not Available";
+    }
+
+    // Clean up pincode from location if present
+    buyerLoc = buyerLoc.replace(/\d{6}/g, '').replace(/[^\w\s]/g, '').trim();
+    if (!buyerLoc && customer.state_code === '33') {
+      buyerLoc = "Tamil Nadu";
+    }
+
     const eInvoiceData = {
       Version: '1.1',
       TranDtls: {
@@ -225,9 +252,9 @@ export const CreditNoteInvoiceGenerator = ({ creditNote, customer, item, onClose
       BuyerDtls: {
         Gstin: customer.gstin || null,
         LglNm: customer.name_english,
-        Addr1: customer.address_english || 'Address Not Available',
-        Addr2: customer.address_tamil || null,
-        Loc: customer.address_english ? customer.address_english.split(',')[0] : 'Not Available',
+        Addr1: buyerAddr1,
+        Addr2: buyerAddr2 || null,
+        Loc: buyerLoc,
         Pin: customer.pin_code ? parseInt(customer.pin_code.toString()) : null,
         Pos: customer.place_of_supply || customer.state_code || '33',
         Stcd: customer.state_code || '33',
@@ -247,7 +274,7 @@ export const CreditNoteInvoiceGenerator = ({ creditNote, customer, item, onClose
         TotInvVal: currentNote.amount
       },
       RefDtls: {
-        InvRm: "NICGEPP2.0"
+        InvRm: "NICGEPP"
       },
       ItemList: [
         {
@@ -261,9 +288,9 @@ export const CreditNoteInvoiceGenerator = ({ creditNote, customer, item, onClose
           UnitPrice: calculateGST(currentNote.amount, currentNote.gst_percentage).taxableAmount,
           TotAmt: calculateGST(currentNote.amount, currentNote.gst_percentage).taxableAmount,
           Discount: 0,
-          PreTaxVal: calculateGST(currentNote.amount, currentNote.gst_percentage).taxableAmount,
+          PreTaxVal: 0,
           AssAmt: calculateGST(currentNote.amount, currentNote.gst_percentage).taxableAmount,
-          GstRt: currentNote.gst_percentage || 18,
+          GstRt: currentNote.gst_percentage || 5,
           IgstAmt: 0,
           CgstAmt: calculateGST(currentNote.amount, currentNote.gst_percentage).cgstAmount,
           SgstAmt: calculateGST(currentNote.amount, currentNote.gst_percentage).sgstAmount,

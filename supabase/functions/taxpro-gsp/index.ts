@@ -75,15 +75,17 @@ serve(async (req) => {
       const supabaseServiceRole = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
       const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRole)
 
-      const { data: settings, error: settingsError } = await supabaseAdmin
+      const { data: settingsList, error: settingsError } = await supabaseAdmin
         .from('company_settings')
         .select('einvoice_aspid, einvoice_asppassword, einvoice_username, einvoice_password, ewaybill_password')
         .eq('gstin', gstin)
-        .maybeSingle()
 
       if (settingsError) {
         console.error('Error fetching settings from DB:', settingsError)
       }
+
+      // If multiple settings exist for the same GSTIN, choose the one that has GSP credentials filled in
+      const settings = settingsList?.find(s => s.einvoice_aspid && s.einvoice_username)
 
       if (settings) {
         if (!aspid) aspid = settings.einvoice_aspid

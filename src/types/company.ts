@@ -28,6 +28,14 @@ export interface CompanySetting {
   credit_note_digits?: number;
   credit_note_financial_year_in_serial?: boolean;
   is_active: boolean;
+  einvoice_enabled?: boolean;
+  einvoice_aspid?: string;
+  einvoice_asppassword?: string;
+  einvoice_username?: string;
+  einvoice_password?: string;
+  einvoice_sandbox?: boolean;
+  ewaybill_enabled?: boolean;
+  ewaybill_password?: string;
   created_at: string;
   updated_at: string;
 }

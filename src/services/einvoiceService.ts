@@ -1,0 +1,2226 @@
+import { supabase } from '@/integrations/supabase/client';
+import { Sale, Customer, Item, OutwardEntry } from '@/types';
+import { CompanySetting } from '@/types/company';
+
+// Helper to format date in DD/MM/YYYY format
+const formatDateDDMMYYYY = (dateStr: string) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const yyyy = date.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+};
+
+// Helper to format unit code to standard 3 to 8 character UQC
+const formatUnitCode = (unit: string | null | undefined) => {
+  if (!unit) return 'NOS';
+  const u = unit.trim().toUpperCase();
+  if (!u) return 'NOS';
+  
+  // Direct mappings for common units in Cash Ledger app
+  if (u === 'KG' || u === 'KGS' || u === 'KILO' || u === 'KILOGRAM' || u === 'KILOGRAMS') return 'KGS';
+  if (u === 'PC' || u === 'PCS' || u === 'PIECE' || u === 'PIECES') return 'PCS';
+  if (u === 'BG' || u === 'BGS' || u === 'BAG' || u === 'BAGS') return 'BAG';
+  if (u === 'BX' || u === 'BOX' || u === 'BOXES') return 'BOX';
+  if (u === 'TN' || u === 'TNE' || u === 'TON' || u === 'TONS' || u === 'TONNES') return 'TNE';
+  if (u === 'NO' || u === 'NOS' || u === 'NUMBER' || u === 'NUMBERS') return 'NOS';
+  if (u === 'MTR' || u === 'MTRS' || u === 'METER' || u === 'METERS' || u === 'MT' || u === 'M') return 'MTR';
+  if (u === 'G' || u === 'GM' || u === 'GMS' || u === 'GRAM' || u === 'GRAMS') return 'GMS';
+  if (u === 'BTL' || u === 'BTLS' || u === 'BOTTLE' || u === 'BOTTLES') return 'BTL';
+  if (u === 'DOZ' || u === 'DOZEN' || u === 'DOZENS') return 'DOZ';
+  if (u === 'SET' || u === 'SETS') return 'SET';
+  if (u === 'ROL' || u === 'ROLS' || u === 'ROLL' || u === 'ROLLS') return 'ROL';
+  if (u === 'PAC' || u === 'PACK' || u === 'PACKS' || u === 'PKT' || u === 'PKTS') return 'PAC';
+  if (u === 'LTR' || u === 'LTRS' || u === 'LITRE' || u === 'LITRES' || u === 'L') return 'KLR';
+  
+  let formatted = u;
+  if (formatted.length < 3) {
+    formatted = `${formatted}S`.padEnd(3, 'S');
+  }
+  return formatted.substring(0, 8);
+};
+
+// Helper to format HSN code to standard 6 to 8 character string
+const formatHsnCode = (hsn: string | null | undefined): string => {
+  if (!hsn) return '520511'; // Default service/others/yarn HSN if missing
+  const clean = hsn.replace(/[^\d]/g, '');
+  if (clean.length < 6) {
+    return clean.padEnd(6, '0');
+  }
+  return clean.substring(0, 8);
+};
+
+
+// Helper to derive state code from GSTIN
+const getStateCodeFromGstin = (gstin: string | null | undefined, defaultStateCode: string = '33'): string => {
+  if (!gstin) return defaultStateCode;
+  const clean = gstin.trim();
+  if (clean.length >= 2) {
+    const code = clean.substring(0, 2);
+    if (/^\d{2}$/.test(code)) {
+      return code;
+    }
+  }
+  return defaultStateCode;
+};
+
+// Helper to get a valid pin code for a derived state code if there is a mismatch
+const getValidPinForState = (
+  derivedStateCode: string,
+  configuredStateCode: string | null | undefined,
+  originalPin: string | number | null | undefined
+): number => {
+  const pinStr = originalPin ? originalPin.toString().trim() : '';
+  
+  // If the derived state matches the configured state, keep the original pin if it is a valid 6 digit number
+  const cleanDerived = derivedStateCode.trim().padStart(2, '0');
+  const cleanConfigured = configuredStateCode ? configuredStateCode.trim().padStart(2, '0') : '';
+  
+  if (cleanDerived === cleanConfigured && pinStr.length === 6 && /^\d{6}$/.test(pinStr)) {
+    return parseInt(pinStr, 10);
+  }
+  
+  const statePinDefaults: Record<string, string> = {
+    '01': '190001', // Jammu & Kashmir
+    '02': '171001', // Himachal Pradesh
+    '03': '141001', // Punjab
+    '04': '160017', // Chandigarh
+    '05': '248001', // Uttarakhand
+    '06': '121001', // Haryana
+    '07': '110001', // Delhi
+    '08': '302001', // Rajasthan
+    '09': '226001', // Uttar Pradesh
+    '10': '800001', // Bihar
+    '11': '797112', // Sikkim
+    '12': '791111', // Arunachal Pradesh
+    '13': '797001', // Nagaland
+    '14': '795001', // Manipur
+    '15': '796001', // Mizoram
+    '16': '799001', // Tripura
+    '17': '793001', // Meghalaya
+    '18': '781001', // Assam
+    '19': '700001', // West Bengal
+    '20': '834001', // Jharkhand
+    '21': '751001', // Odisha
+    '22': '492001', // Chhattisgarh
+    '23': '462001', // Madhya Pradesh
+    '24': '380001', // Gujarat
+    '26': '396230', // Dadra & Nagar Haveli and Daman & Diu
+    '27': '400001', // Maharashtra
+    '29': '560001', // Karnataka
+    '30': '403001', // Goa
+    '31': '682001', // Lakshadweep
+    '32': '682001', // Kerala
+    '33': '600001', // Tamil Nadu
+    '34': '605001', // Puducherry
+    '35': '744101', // Andaman & Nicobar Islands
+    '36': '500001', // Telangana
+    '37': '520001', // Andhra Pradesh
+    '38': '792001', // Ladakh
+    '97': '999999', // Other Territory
+  };
+
+  const defaultPin = statePinDefaults[cleanDerived] || '600001';
+  return parseInt(defaultPin, 10);
+};
+
+// Helper to handle GSP non-ok responses (400, 412, etc.) and extract detailed error message if present
+const handleNonOkResponse = async (response: Response, defaultErrorPrefix: string): Promise<never> => {
+  let text = '';
+  try {
+    text = await response.text();
+    console.error(`Non-OK response body from ${response.url}:`, text);
+  } catch (err) {
+    // ignore read failure
+  }
+
+  if (text) {
+    try {
+      const result = JSON.parse(text);
+      const errorMsg = result.ErrorDetails?.[0]?.ErrorMessage || result.error?.message || result.message || result.Message || result.errorMessage || result.ErrorMessage;
+      const errorCode = result.ErrorDetails?.[0]?.ErrorCode || result.error?.error_cd || result.errorCode || result.ErrorCode || '';
+      if (errorMsg) {
+        throw new Error(`${defaultErrorPrefix}: ${errorMsg}${errorCode ? ` (${errorCode})` : ''}`);
+      }
+    } catch (e: any) {
+      if (e.message && e.message.includes(defaultErrorPrefix)) {
+        throw e;
+      }
+    }
+
+    // Strip HTML tags and summarize text if not JSON
+    const cleanText = text.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+    if (cleanText) {
+      const shortText = cleanText.substring(0, 200) + (cleanText.length > 200 ? '...' : '');
+      throw new Error(`${defaultErrorPrefix}: ${shortText}`);
+    }
+  }
+
+  throw new Error(`${defaultErrorPrefix} (Status Code: ${response.status})`);
+};
+
+// Helper to extract error message from dynamic GSP JSON response objects
+const extractErrorMessage = (result: any, defaultMsg: string): string => {
+  if (!result) return defaultMsg;
+  const msg = result.ErrorDetails?.[0]?.ErrorMessage || 
+              result.error?.message || 
+              result.ErrorMessage || 
+              result.ErrorMsg || 
+              result.errorMsg || 
+              result.message || 
+              result.Message;
+  const code = result.ErrorDetails?.[0]?.ErrorCode || 
+               result.error?.error_cd || 
+               result.ErrorCode || 
+               result.errorCode || 
+               result.ErrorCode;
+  if (msg) {
+    return `${msg}${code ? ` (${code})` : ''}`;
+  }
+  return defaultMsg;
+};
+
+// Helper to extract calculated distance from GSP distance mismatch error messages (e.g. error 702 / 4013)
+const parseDistanceLimit = (errorMsg: string | null | undefined): number | null => {
+  if (!errorMsg) return null;
+  
+  try {
+    // Check if the error message contains a JSON-like substring representing the pincodes and distance
+    const jsonMatch = errorMsg.match(/\{.*?\}/);
+    if (jsonMatch) {
+      const data = JSON.parse(jsonMatch[0]);
+      if (data.distance !== undefined && data.distance !== null) {
+        const d = parseInt(data.distance.toString(), 10);
+        if (!isNaN(d) && d >= 0) return d;
+      }
+    }
+  } catch (e) {
+    // Ignore JSON parse errors
+  }
+
+  // Fallback to regex checks (e.g., "distance:36" or "distance":36 or "distance: 36")
+  const regexes = [
+    /distance["'\s:]+(\d+)/i,
+    /(\d+)\s*km/i
+  ];
+
+  for (const regex of regexes) {
+    const match = errorMsg.match(regex);
+    if (match) {
+      const d = parseInt(match[1], 10);
+      if (!isNaN(d) && d >= 0) return d;
+    }
+  }
+
+  return null;
+};
+
+
+
+interface TokenCache {
+  token: string;
+  expiry: number;
+}
+
+export const einvoiceService = {
+  /**
+   * Helper to execute a request with failover support for production.
+   * Urged by TaxPro GSP Team:
+   * - Primary Server: https://einvapi.charteredinfo.com
+   * - Backup1: https://einvapimum1.charteredinfo.com
+   * - Backup2: https://einvapidel2.charteredinfo.com
+   */
+  async executeRequest(
+    sandbox: boolean, 
+    pathAndQuery: string, 
+    options: RequestInit
+  ): Promise<Response> {
+    let servers = sandbox 
+      ? ['https://gstsandbox.charteredinfo.com', 'https://gstsandbox.charteredinfo.com']
+      : [
+          'https://einvapi.charteredinfo.com',
+          'https://einvapimum1.charteredinfo.com',
+          'https://einvapidel2.charteredinfo.com'
+        ];
+
+    const isBrowser = typeof window !== 'undefined';
+    const isLocalDev = isBrowser && (
+      window.location.hostname === 'localhost' || 
+      window.location.hostname === '127.0.0.1' || 
+      window.location.hostname.startsWith('10.') || 
+      window.location.hostname.startsWith('192.168.')
+    );
+
+    if (isLocalDev) {
+      servers = servers.map(s => {
+        if (s.includes('gstsandbox.charteredinfo.com')) return '/api-gsp-sandbox';
+        if (s.includes('einvapi.charteredinfo.com')) return '/api-gsp-prod-primary';
+        if (s.includes('einvapimum1.charteredinfo.com')) return '/api-gsp-prod-backup1';
+        if (s.includes('einvapidel2.charteredinfo.com')) return '/api-gsp-prod-backup2';
+        return s;
+      });
+    }
+
+    let lastError: any = null;
+
+    for (let i = 0; i < servers.length; i++) {
+      const server = servers[i];
+      const url = `${server}${pathAndQuery}`;
+      console.log(`E-Invoice API request: ${url} (Attempt ${i + 1}/${servers.length})`);
+      
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds timeout per server (more resilient for slow NIC servers)
+
+        const response = await fetch(url, {
+          ...options,
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        // Failover if server returns a gateway timeout, service unavailable, or internal server error (status >= 500)
+        if (response.status >= 500) {
+          console.warn(`Server returned error status ${response.status} from ${server}. Trying backup server...`);
+          lastError = new Error(`Server returned error status ${response.status}`);
+          // Wait 1.5 seconds before retrying to allow temporary gateways to clear
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          continue;
+        }
+
+        return response;
+      } catch (err: any) {
+        console.error(`Request to ${server} failed:`, err);
+        lastError = err;
+        // Wait 1.5 seconds before retrying
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Proceed to next backup server
+      }
+    }
+
+    throw new Error(`All E-Invoice GSP servers failed. Last error: ${lastError?.message || lastError || 'Unknown network error'}`);
+  },
+
+  /**
+   * Performs authentication to get AuthToken. Caches token in sessionStorage.
+   */
+  async authenticate(settings: CompanySetting, forceRefresh = false): Promise<string> {
+    const sandbox = settings.einvoice_sandbox ?? true;
+    const aspid = settings.einvoice_aspid || '';
+    const password = settings.einvoice_asppassword || '';
+    const gstin = settings.gstin || '';
+    const username = settings.einvoice_username || '';
+    const eInvPwd = settings.einvoice_password || '';
+
+    if (!aspid || !password || !gstin || !username || !eInvPwd) {
+      throw new Error('E-Invoice GSP credentials are not fully configured in Company Settings.');
+    }
+
+    const cacheKey = `einvoice_token_${gstin}_${sandbox ? 'sandbox' : 'prod'}`;
+    if (forceRefresh) {
+      sessionStorage.removeItem(cacheKey);
+    } else {
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        const cachedData: TokenCache = JSON.parse(cached);
+        if (cachedData.expiry > Date.now()) {
+          return cachedData.token;
+        }
+      }
+    }
+
+    const pathAndQuery = `/eivital/dec/v1.04/auth?aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}&User_name=${encodeURIComponent(username)}&eInvPwd=${encodeURIComponent(eInvPwd)}`;
+
+    console.log('Authenticating with TaxPro GSP...');
+    const response = await this.executeRequest(sandbox, pathAndQuery, {
+      method: 'GET',
+      headers: {
+        'aspid': aspid,
+        'password': password,
+      }
+    });
+
+    if (!response.ok) {
+      await handleNonOkResponse(response, 'Authentication server returned error');
+    }
+
+    const result = await response.json();
+    console.log('Authentication response:', result);
+
+    const statusVal = result.Status !== undefined ? result.Status : (result.status !== undefined ? result.status : result.status_cd);
+    const isSuccess = statusVal === 1 || statusVal === '1' || statusVal === 'SUCCESS' || statusVal === 'success';
+    
+    let token = '';
+    if (result.Data && typeof result.Data === 'object') {
+      token = result.Data.AuthToken || result.Data.authtoken || result.Data.token || result.Data.Auth_Token;
+    }
+    if (!token && result.data && typeof result.data === 'object') {
+      token = result.data.AuthToken || result.data.authtoken || result.data.token || result.data.Auth_Token;
+    }
+    if (!token) {
+      token = result.AuthToken || result.authtoken || result.token || result.Auth_Token;
+    }
+
+    if (isSuccess && token) {
+      // Tokens are typically valid for 6 hours. Cache for 5 hours and 50 minutes to be safe.
+      const expiry = Date.now() + 5.8 * 60 * 60 * 1000;
+      sessionStorage.setItem(cacheKey, JSON.stringify({ token, expiry }));
+      return token;
+    } else {
+      console.error('GSP authentication error result:', JSON.stringify(result));
+      const fullError = extractErrorMessage(result, 'Unknown authentication error');
+      throw new Error(`GSP Authentication Failed: ${fullError}`);
+    }
+  },
+
+  /**
+   * Performs authentication to get E-Way Bill AuthToken. Caches token in sessionStorage.
+   */
+  async authenticateEWayBill(settings: CompanySetting, forceRefresh = false): Promise<string> {
+    const sandbox = settings.einvoice_sandbox ?? true;
+    const aspid = settings.einvoice_aspid || '';
+    const password = settings.einvoice_asppassword || '';
+    const gstin = settings.gstin || '';
+    const username = settings.einvoice_username || '';
+    const ewbpwd = settings.ewaybill_password || '';
+
+    if (!aspid || !password || !gstin || !username || !ewbpwd) {
+      throw new Error('E-Way Bill GSP credentials are not fully configured in Company Settings (E-Way Bill password is required).');
+    }
+
+    const cacheKey = `ewaybill_token_${gstin}_${sandbox ? 'sandbox' : 'prod'}`;
+    if (forceRefresh) {
+      sessionStorage.removeItem(cacheKey);
+    } else {
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        const cachedData: TokenCache = JSON.parse(cached);
+        if (cachedData.expiry > Date.now()) {
+          return cachedData.token;
+        }
+      }
+    }
+
+    const pathAndQuery = `/ewaybillapi/dec/v1.03/auth?action=ACCESSTOKEN&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&username=${encodeURIComponent(username)}&ewbpwd=${encodeURIComponent(ewbpwd)}`;
+
+    console.log('Authenticating for E-Way Bill with TaxPro GSP...');
+    const response = await this.executeRequest(sandbox, pathAndQuery, {
+      method: 'GET',
+      headers: {
+        'aspid': aspid,
+        'password': password,
+      }
+    });
+
+    if (!response.ok) {
+      await handleNonOkResponse(response, 'E-Way Bill authentication server returned error');
+    }
+
+    const result = await response.json();
+    console.log('E-Way Bill Authentication response:', result);
+
+    const statusVal = result.Status !== undefined ? result.Status : (result.status !== undefined ? result.status : result.status_cd);
+    const isSuccess = statusVal === 1 || statusVal === '1' || statusVal === 'SUCCESS' || statusVal === 'success';
+    
+    let token = '';
+    if (result.Data && typeof result.Data === 'object') {
+      token = result.Data.AuthToken || result.Data.authtoken || result.Data.token || result.Data.Auth_Token;
+    }
+    if (!token && result.data && typeof result.data === 'object') {
+      token = result.data.AuthToken || result.data.authtoken || result.data.token || result.data.Auth_Token;
+    }
+    if (!token) {
+      token = result.AuthToken || result.authtoken || result.token || result.Auth_Token;
+    }
+
+    if (isSuccess && token) {
+      // Cache for 5.8 hours
+      const expiry = Date.now() + 5.8 * 60 * 60 * 1000;
+      sessionStorage.setItem(cacheKey, JSON.stringify({ token, expiry }));
+      return token;
+    } else {
+      console.error('GSP E-Way Bill authentication error result:', JSON.stringify(result));
+      const fullError = extractErrorMessage(result, 'Unknown authentication error');
+      throw new Error(`GSP E-Way Bill Authentication Failed: ${fullError}`);
+    }
+  },
+
+  /**
+   * Generate E-Invoice (IRN) and optionally E-Way Bill
+   */
+  async generateEInvoice(params: {
+    sale: Sale;
+    allSales: Sale[];
+    allItems: Item[];
+    customer: Customer;
+    item: Item;
+    companySettings: CompanySetting;
+    outwardEntry?: OutwardEntry | null;
+    generateEwayBill: boolean;
+    distance?: number;
+    transporterId?: string;
+    transporterName?: string;
+    transDocNo?: string;
+    transDocDt?: string;
+    vehType?: 'R' | 'O';
+    transMode?: '1' | '2' | '3' | '4';
+  }): Promise<{ irn: string; ewayBillNo?: string; signedQrcode: string }> {
+    const {
+      sale,
+      allSales,
+      allItems,
+      customer,
+      item,
+      companySettings,
+      outwardEntry,
+      generateEwayBill,
+      distance = 0,
+      transporterId = '',
+      transporterName = '',
+      transDocNo = '',
+      transDocDt = '',
+      vehType = 'R',
+      transMode = '1',
+    } = params;
+
+    // 1. Authenticate first
+    const token = await this.authenticate(companySettings);
+    const sandbox = companySettings.einvoice_sandbox ?? true;
+
+    // 2. Prepare payload
+    const calculateTotals = () => {
+      return allSales.reduce((acc, s, index) => {
+        const currentItem = allItems[index] || item;
+        const base = s.quantity * s.rate;
+        const gst = base * (currentItem.gst_percentage / 100);
+        return {
+          baseAmount: acc.baseAmount + base,
+          gstAmount: acc.gstAmount + gst,
+          totalAmount: acc.totalAmount + base + gst,
+        };
+      }, { baseAmount: 0, gstAmount: 0, totalAmount: 0 });
+    };
+
+    const { baseAmount, gstAmount, totalAmount } = calculateTotals();
+    const roundedBaseAmount = Math.round(baseAmount * 100) / 100;
+    const roundedGstAmount = Math.round(gstAmount * 100) / 100;
+    const roundedCgstAmount = Math.round((roundedGstAmount / 2) * 100) / 100;
+    const roundedSgstAmount = Math.round((roundedGstAmount / 2) * 100) / 100;
+    const roundedTotalAmount = Math.round((roundedBaseAmount + roundedCgstAmount + roundedSgstAmount) * 100) / 100;
+
+    const customerAddress = customer.address_english || customer.address_tamil || '';
+    const buyerAddr1 = customerAddress.substring(0, 100);
+    const buyerAddr2 = customerAddress.length > 100 ? customerAddress.substring(100, 200) : '';
+
+    const addressParts = customerAddress.split(',');
+    let buyerLoc = addressParts.length > 0 ? addressParts[addressParts.length - 1].trim() : '';
+    buyerLoc = buyerLoc.replace(/\d{6}/g, '').replace(/[^\w\s]/g, '').trim() || 'Tamil Nadu';
+
+    // Vehicle details
+    const vehicleNo = sale.lorry_no || outwardEntry?.lorry_no || '';
+
+    // Combined E-Way Bill Details if checked
+    let ewbDtls = null;
+    if (generateEwayBill && vehicleNo) {
+      ewbDtls = {
+        TransId: transporterId || null,
+        TransName: transporterName || null,
+        Distance: distance || 0,
+        TransDocNo: transDocNo || null,
+        TransDocDt: transDocDt ? formatDateDDMMYYYY(transDocDt) : null,
+        VehNo: vehicleNo.replace(/\s+/g, '').toUpperCase(),
+        VehType: vehType,
+        TransMode: transMode
+      };
+    }
+
+    const payload = {
+      Version: '1.1',
+      TranDtls: {
+        TaxSch: 'GST',
+        SupTyp: 'B2B',
+        IgstOnIntra: 'N',
+        RegRev: 'N',
+        EcmGstin: null
+      },
+      DocDtls: {
+        Typ: 'INV',
+        No: sale.bill_serial_no,
+        Dt: formatDateDDMMYYYY(sale.sale_date)
+      },
+      SellerDtls: {
+        Gstin: companySettings.gstin,
+        LglNm: companySettings.company_name,
+        Addr1: companySettings.address_line1,
+        Addr2: companySettings.address_line2 || null,
+        Loc: companySettings.locality,
+        Pin: getValidPinForState(
+          getStateCodeFromGstin(companySettings.gstin, companySettings.state_code),
+          companySettings.state_code,
+          companySettings.pin_code
+        ),
+        Stcd: getStateCodeFromGstin(companySettings.gstin, companySettings.state_code),
+        Ph: companySettings.phone || null,
+        Em: companySettings.email || null
+      },
+      BuyerDtls: {
+        Gstin: customer.gstin || 'URP',
+        LglNm: customer.name_english || customer.name_tamil || 'UNKNOWN',
+        TrdNm: customer.name_english || customer.name_tamil || 'UNKNOWN',
+        Addr1: buyerAddr1,
+        Addr2: buyerAddr2 || null,
+        Loc: buyerLoc,
+        Pin: getValidPinForState(
+          getStateCodeFromGstin(customer.gstin || '', customer.state_code || '33'),
+          customer.state_code || '33',
+          customer.pin_code
+        ),
+        Pos: getStateCodeFromGstin(customer.gstin || '', customer.place_of_supply || customer.state_code || '33'),
+        Stcd: getStateCodeFromGstin(customer.gstin || '', customer.state_code || '33'),
+        Ph: customer.phone || null,
+        Em: customer.email || null
+      },
+      ValDtls: {
+        AssVal: roundedBaseAmount,
+        IgstVal: 0,
+        CgstVal: roundedCgstAmount,
+        SgstVal: roundedSgstAmount,
+        CesVal: 0,
+        StCesVal: 0,
+        Discount: 0,
+        OthChrg: 0,
+        RndOffAmt: 0,
+        TotInvVal: roundedTotalAmount
+      },
+      RefDtls: {
+        InvRm: 'NICGEPP'
+      },
+      ItemList: allSales.map((s, index) => {
+        const currentItem = allItems[index] || item;
+        const itemBase = s.quantity * s.rate;
+        const itemGst = itemBase * (currentItem.gst_percentage / 100);
+        const itemCgst = Math.round((itemGst / 2) * 100) / 100;
+        const itemSgst = Math.round((itemGst / 2) * 100) / 100;
+        const itemTotal = Math.round((itemBase + itemCgst + itemSgst) * 100) / 100;
+
+        return {
+          SlNo: (index + 1).toString(),
+          PrdDesc: currentItem.name_english,
+          IsServc: 'N',
+          HsnCd: formatHsnCode(currentItem.hsn_no),
+          Qty: s.quantity,
+          FreeQty: 0,
+          Unit: formatUnitCode(currentItem.unit),
+          UnitPrice: Math.round(s.rate * 100) / 100,
+          TotAmt: Math.round(itemBase * 100) / 100,
+          Discount: 0,
+          PreTaxVal: 0,
+          AssAmt: Math.round(itemBase * 100) / 100,
+          GstRt: currentItem.gst_percentage,
+          IgstAmt: 0,
+          CgstAmt: itemCgst,
+          SgstAmt: itemSgst,
+          CesRt: 0,
+          CesAmt: 0,
+          CesNonAdvlAmt: 0,
+          StateCesRt: 0,
+          StateCesAmt: 0,
+          StateCesNonAdvlAmt: 0,
+          OthChrg: 0,
+          TotItemVal: itemTotal
+        };
+      }),
+      ...(ewbDtls ? { EwbDtls: ewbDtls } : {})
+    };
+
+    console.log('Sending payload to TaxPro IRN Generation:', payload);
+
+    const aspid = companySettings.einvoice_aspid || '';
+    const password = companySettings.einvoice_asppassword || '';
+    const gstin = companySettings.gstin || '';
+    const username = companySettings.einvoice_username || '';
+
+    let finalToken = token;
+    let finalDistance = distance;
+
+    const makeRequest = async (tokenVal: string, distVal: number) => {
+      if (payload.EwbDtls) {
+        payload.EwbDtls.Distance = distVal;
+      }
+      const pathAndQuery = `/eicore/dec/v1.03/Invoice?aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}&AuthToken=${encodeURIComponent(tokenVal)}&QrCodeSize=250&User_name=${encodeURIComponent(username)}`;
+      return await this.executeRequest(sandbox, pathAndQuery, {
+        method: 'POST',
+        headers: {
+          'aspid': aspid,
+          'password': password,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+    };
+
+    let response: Response;
+    try {
+      response = await makeRequest(finalToken, finalDistance);
+      if (!response.ok) {
+        await handleNonOkResponse(response, 'IRN generation server error');
+      }
+    } catch (err: any) {
+      // 1. Check if token expired
+      if (err.message && (err.message.includes('GSP752') || err.message.includes('AuthToken not found') || err.message.includes('expired'))) {
+        console.warn('AuthToken expired. Retrying IRN generation with a fresh token...');
+        finalToken = await this.authenticate(companySettings, true);
+        try {
+          response = await makeRequest(finalToken, finalDistance);
+          if (!response.ok) {
+            await handleNonOkResponse(response, 'IRN generation server error');
+          }
+        } catch (innerErr: any) {
+          // If the second attempt failed due to distance mismatch
+          if (innerErr.message && (innerErr.message.includes('702') || innerErr.message.includes('4013') || innerErr.message.includes('distance'))) {
+            const correctDist = parseDistanceLimit(innerErr.message);
+            if (correctDist) {
+              console.warn(`Distance mismatch after token refresh. Retrying IRN generation with corrected distance: ${correctDist} km`);
+              finalDistance = correctDist;
+              response = await makeRequest(finalToken, finalDistance);
+              if (!response.ok) {
+                await handleNonOkResponse(response, 'IRN generation server error');
+              }
+            } else {
+              throw innerErr;
+            }
+          } else {
+            throw innerErr;
+          }
+        }
+      } 
+      // 2. Check if distance mismatch on first attempt
+      else if (err.message && (err.message.includes('702') || err.message.includes('4013') || err.message.includes('distance'))) {
+        const correctDist = parseDistanceLimit(err.message);
+        if (correctDist) {
+          console.warn(`Distance mismatch. Retrying IRN generation with corrected distance: ${correctDist} km`);
+          finalDistance = correctDist;
+          try {
+            response = await makeRequest(finalToken, finalDistance);
+            if (!response.ok) {
+              await handleNonOkResponse(response, 'IRN generation server error');
+            }
+          } catch (innerErr: any) {
+            // What if the second attempt fails with expired token?
+            if (innerErr.message && (innerErr.message.includes('GSP752') || innerErr.message.includes('AuthToken not found') || innerErr.message.includes('expired'))) {
+              console.warn('AuthToken expired on retry. Retrying IRN generation with a fresh token...');
+              finalToken = await this.authenticate(companySettings, true);
+              response = await makeRequest(finalToken, finalDistance);
+              if (!response.ok) {
+                await handleNonOkResponse(response, 'IRN generation server error');
+              }
+            } else {
+              throw innerErr;
+            }
+          }
+        } else {
+          throw err;
+        }
+      } else {
+        throw err;
+      }
+    }
+
+    const result = await response.json();
+    console.log('IRN Generation Response:', result);
+
+    const isSuccess = result.Status === 1 || result.Status === '1' || result.status_cd === '1' || result.status === 1 || result.status === '1';
+
+    let parsedData = result.Data || result.data;
+    if (typeof parsedData === 'string' && parsedData) {
+      try {
+        parsedData = JSON.parse(parsedData);
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    const isDuplicate = result.ErrorDetails?.[0]?.ErrorCode === '2150' || 
+                        result.ErrorDetails?.[0]?.ErrorMessage?.includes('Duplicate') ||
+                        result.ErrorDetails?.[0]?.ErrorMessage?.includes('duplicate');
+    const dupInfo = result.InfoDtls?.find((info: any) => info.InfCd === 'DUPIRN' || info.Desc?.Irn);
+
+    if ((isSuccess && parsedData?.Irn) || (isDuplicate && dupInfo)) {
+      const data = parsedData || {};
+      const irn = data.Irn || dupInfo.Desc.Irn;
+      const ackNo = (data.AckNo || dupInfo.Desc.AckNo)?.toString() || '';
+      const ackDate = data.AckDt || dupInfo.Desc.AckDt || '';
+      const signedInvoice = data.SignedInvoice || '';
+      const signedQrcode = data.SignedQRCode || '';
+      const ewayBillNo = (data.EwbNo || data.ewbNo || result.EwbNo || result.ewbNo)?.toString() || '';
+      const ewayBillDate = data.EwbDt || '';
+
+      // Update in Supabase
+      const updateData: any = {
+        irn,
+        ack_no: ackNo,
+        ack_date: ackDate,
+        signed_invoice: signedInvoice,
+        signed_qrcode: signedQrcode,
+        einvoice_status: 'GENERATED',
+      };
+
+      if (ewayBillNo) {
+        updateData.eway_bill_no = ewayBillNo;
+        updateData.eway_bill_date = ewayBillDate;
+        updateData.eway_bill_status = 'GENERATED';
+      }
+
+      const { error } = await supabase
+        .from('sales')
+        .update(updateData)
+        .eq('bill_serial_no', sale.bill_serial_no);
+
+      if (error) {
+        console.error('Error updating sale in DB:', error);
+      }
+
+      return { irn, ewayBillNo, signedQrcode, correctedDistance: finalDistance };
+    } else {
+      console.error('IRN generation error result:', JSON.stringify(result));
+      const fullError = extractErrorMessage(result, 'Failed to generate IRN');
+      throw new Error(`E-Invoice Generation Failed: ${fullError}`);
+    }
+  },
+
+  /**
+   * Generate E-Way Bill separately for an existing IRN
+   */
+  async generateEWayBill(params: {
+    sale: Sale;
+    companySettings: CompanySetting;
+    distance: number;
+    transporterId?: string;
+    transporterName?: string;
+    transDocNo?: string;
+    transDocDt?: string;
+    vehType?: 'R' | 'O';
+    transMode?: '1' | '2' | '3' | '4';
+    outwardEntry?: OutwardEntry | null;
+  }): Promise<{ ewayBillNo: string; ewayBillDate: string }> {
+    const {
+      sale,
+      companySettings,
+      distance,
+      transporterId = '',
+      transporterName = '',
+      transDocNo = '',
+      transDocDt = '',
+      vehType = 'R',
+      transMode = '1',
+      outwardEntry
+    } = params;
+
+    if (!sale.irn) {
+      throw new Error('E-Invoice (IRN) must be generated before generating E-Way Bill.');
+    }
+
+    const token = await this.authenticate(companySettings);
+    const sandbox = companySettings.einvoice_sandbox ?? true;
+
+    const vehicleNo = sale.lorry_no || outwardEntry?.lorry_no || '';
+    if (!vehicleNo) {
+      throw new Error('Vehicle number (Lorry No) is required to generate E-Way Bill.');
+    }
+
+    const payload = {
+      Irn: sale.irn,
+      Distance: distance,
+      TransMode: transMode,
+      TransId: transporterId || null,
+      TransName: transporterName || null,
+      TransDocDt: transDocDt ? formatDateDDMMYYYY(transDocDt) : null,
+      TransDocNo: transDocNo || null,
+      VehNo: vehicleNo.replace(/\s+/g, '').toUpperCase(),
+      VehType: vehType,
+    };
+
+    console.log('Sending payload to TaxPro E-Way Bill Generation:', payload);
+
+    const aspid = companySettings.einvoice_aspid || '';
+    const password = companySettings.einvoice_asppassword || '';
+    const gstin = companySettings.gstin || '';
+    const username = companySettings.einvoice_username || '';
+
+    let finalToken = token;
+    let finalDistance = distance;
+
+    const makeRequest = async (tokenVal: string, distVal: number) => {
+      payload.Distance = distVal;
+      const pathAndQuery = `/eiewb/dec/v1.03/ewaybill?aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}&User_name=${encodeURIComponent(username)}&AuthToken=${encodeURIComponent(tokenVal)}`;
+      return await this.executeRequest(sandbox, pathAndQuery, {
+        method: 'POST',
+        headers: {
+          'aspid': aspid,
+          'password': password,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+    };
+
+    const isDuplicateEwbError = (errMsg: string) => {
+      return errMsg && (errMsg.includes('4002') || errMsg.includes('already generated') || errMsg.includes('Already generated'));
+    };
+
+    const handleAlreadyGenerated = async (errMsg: string) => {
+      console.warn('E-Way Bill already generated for this IRN. Fetching existing E-Way Bill details...');
+      let ewayBillNo = '';
+      let ewayBillDate = '';
+      if (sale.irn) {
+        try {
+          const invDetails = await this.getEInvoiceDetails(sale.irn, companySettings);
+          let invData = invDetails.Data || invDetails.data || invDetails;
+          if (typeof invData === 'string' && invData) {
+            try { invData = JSON.parse(invData); } catch (e) {}
+          }
+          ewayBillNo = (invData?.EwbNo || invData?.ewbNo || invData?.EwayBillNo || invData?.ewayBillNo)?.toString() || '';
+          ewayBillDate = invData?.EwbDt || invData?.EwbDate || invData?.ewayBillDate || '';
+        } catch (fetchErr) {
+          console.error('Failed to fetch existing E-Invoice details:', fetchErr);
+        }
+
+        if (!ewayBillNo && sandbox) {
+          console.warn('Sandbox mode fallback: Generating mock E-Way Bill details...');
+          ewayBillNo = '88' + Math.floor(1000000000 + Math.random() * 9000000000).toString();
+          ewayBillDate = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        }
+
+        if (ewayBillNo) {
+          const { error } = await supabase
+            .from('sales')
+            .update({
+              eway_bill_no: ewayBillNo,
+              eway_bill_date: ewayBillDate,
+              eway_bill_status: 'GENERATED'
+            })
+            .eq('bill_serial_no', sale.bill_serial_no);
+
+          if (error) {
+            console.error('Error updating existing E-Way Bill in DB:', error);
+          }
+
+          return { ewayBillNo, ewayBillDate, correctedDistance: finalDistance };
+        }
+      }
+      throw new Error(errMsg);
+    };
+
+    let response: Response;
+    try {
+      response = await makeRequest(finalToken, finalDistance);
+      if (!response.ok) {
+        await handleNonOkResponse(response, 'E-Way Bill generation server error');
+      }
+    } catch (err: any) {
+      if (isDuplicateEwbError(err.message)) {
+        return await handleAlreadyGenerated(err.message);
+      }
+      // 1. Check if token expired
+      else if (err.message && (err.message.includes('GSP752') || err.message.includes('AuthToken not found') || err.message.includes('expired'))) {
+        console.warn('AuthToken expired. Retrying E-Way Bill with a fresh token...');
+        finalToken = await this.authenticate(companySettings, true);
+        try {
+          response = await makeRequest(finalToken, finalDistance);
+          if (!response.ok) {
+            await handleNonOkResponse(response, 'E-Way Bill generation server error');
+          }
+        } catch (innerErr: any) {
+          if (isDuplicateEwbError(innerErr.message)) {
+            return await handleAlreadyGenerated(innerErr.message);
+          }
+          // If the second attempt failed due to distance mismatch
+          if (innerErr.message && (innerErr.message.includes('702') || innerErr.message.includes('4013') || innerErr.message.includes('distance'))) {
+            const correctDist = parseDistanceLimit(innerErr.message);
+            if (correctDist) {
+              console.warn(`Distance mismatch after token refresh. Retrying E-Way Bill with corrected distance: ${correctDist} km`);
+              finalDistance = correctDist;
+              response = await makeRequest(finalToken, finalDistance);
+              if (!response.ok) {
+                await handleNonOkResponse(response, 'E-Way Bill generation server error');
+              }
+            } else {
+              throw innerErr;
+            }
+          } else {
+            throw innerErr;
+          }
+        }
+      } 
+      // 2. Check if distance mismatch on first attempt
+      else if (err.message && (err.message.includes('702') || err.message.includes('4013') || err.message.includes('distance'))) {
+        const correctDist = parseDistanceLimit(err.message);
+        if (correctDist) {
+          console.warn(`Distance mismatch. Retrying E-Way Bill with corrected distance: ${correctDist} km`);
+          finalDistance = correctDist;
+          try {
+            response = await makeRequest(finalToken, finalDistance);
+            if (!response.ok) {
+              await handleNonOkResponse(response, 'E-Way Bill generation server error');
+            }
+          } catch (innerErr: any) {
+            if (isDuplicateEwbError(innerErr.message)) {
+              return await handleAlreadyGenerated(innerErr.message);
+            }
+            // What if the second attempt fails with expired token?
+            if (innerErr.message && (innerErr.message.includes('GSP752') || innerErr.message.includes('AuthToken not found') || innerErr.message.includes('expired'))) {
+              console.warn('AuthToken expired on retry. Retrying E-Way Bill with a fresh token...');
+              finalToken = await this.authenticate(companySettings, true);
+              response = await makeRequest(finalToken, finalDistance);
+              if (!response.ok) {
+                await handleNonOkResponse(response, 'E-Way Bill generation server error');
+              }
+            } else {
+              throw innerErr;
+            }
+          }
+        } else {
+          throw err;
+        }
+      } else {
+        throw err;
+      }
+    }
+
+    const result = await response.json();
+    console.log('E-Way Bill Generation Response:', result);
+
+    const isSuccess = result.Status === 1 || result.Status === '1' || result.status_cd === '1' || result.status === 1 || result.status === '1';
+    
+    let parsedData = result.Data || result.data;
+    if (typeof parsedData === 'string' && parsedData) {
+      try {
+        parsedData = JSON.parse(parsedData);
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    const ewayBillNo = (parsedData?.EwbNo || parsedData?.ewbNo || result.EwbNo || result.ewbNo)?.toString();
+    const ewayBillDate = parsedData?.EwbDt || parsedData?.EwbDate || parsedData?.ewayBillDate || result.EwbDt || '';
+
+    if (isSuccess && ewayBillNo) {
+      const { error } = await supabase
+        .from('sales')
+        .update({
+          eway_bill_no: ewayBillNo,
+          eway_bill_date: ewayBillDate,
+          eway_bill_status: 'GENERATED'
+        })
+        .eq('bill_serial_no', sale.bill_serial_no);
+
+      if (error) {
+        console.error('Error updating sale E-Way Bill in DB:', error);
+      }
+
+      return { ewayBillNo, ewayBillDate, correctedDistance: finalDistance };
+    } else {
+      console.error('E-Way Bill generation error result:', JSON.stringify(result));
+      const fullError = extractErrorMessage(result, 'Failed to generate E-Way Bill');
+      if (isDuplicateEwbError(fullError)) {
+        return await handleAlreadyGenerated(fullError);
+      }
+      throw new Error(`E-Way Bill Generation Failed: ${fullError}`);
+    }
+  },
+
+  /**
+   * Generate Standalone E-Way Bill (without IRN)
+   */
+  async generateStandaloneEWayBill(params: {
+    sale: Sale;
+    allSales: Sale[];
+    allItems: Item[];
+    customer: Customer;
+    item: Item;
+    companySettings: CompanySetting;
+    outwardEntry?: OutwardEntry | null;
+    distance: number;
+    transporterId?: string;
+    transporterName?: string;
+    transDocNo?: string;
+    transDocDt?: string;
+    vehType?: 'R' | 'O';
+    transMode?: '1' | '2' | '3' | '4';
+    transactionType?: number;
+  }): Promise<{ ewayBillNo: string; ewayBillDate: string }> {
+    const {
+      sale,
+      allSales,
+      allItems,
+      customer,
+      item,
+      companySettings,
+      outwardEntry,
+      distance,
+      transporterId = '',
+      transporterName = '',
+      transDocNo = '',
+      transDocDt = '',
+      vehType = 'R',
+      transMode = '1',
+      transactionType = 1,
+    } = params;
+
+    const token = await this.authenticateEWayBill(companySettings);
+    const sandbox = companySettings.einvoice_sandbox ?? true;
+
+    const calculateTotals = () => {
+      return allSales.reduce((acc, s, index) => {
+        const currentItem = allItems[index] || item;
+        const base = s.quantity * s.rate;
+        const gst = base * (currentItem.gst_percentage / 100);
+        return {
+          baseAmount: acc.baseAmount + base,
+          gstAmount: acc.gstAmount + gst,
+          totalAmount: acc.totalAmount + base + gst,
+        };
+      }, { baseAmount: 0, gstAmount: 0, totalAmount: 0 });
+    };
+
+    const { baseAmount, gstAmount } = calculateTotals();
+    const roundedBaseAmount = Math.round(baseAmount * 100) / 100;
+    const roundedGstAmount = Math.round(gstAmount * 100) / 100;
+    const roundedCgstAmount = Math.round((roundedGstAmount / 2) * 100) / 100;
+    const roundedSgstAmount = Math.round((roundedGstAmount / 2) * 100) / 100;
+    const roundedTotalAmount = Math.round((roundedBaseAmount + roundedCgstAmount + roundedSgstAmount) * 100) / 100;
+
+    const customerAddress = customer.address_english || customer.address_tamil || '';
+    const buyerAddr1 = customerAddress.substring(0, 100);
+    const buyerAddr2 = customerAddress.length > 100 ? customerAddress.substring(100, 200) : '';
+
+    const addressParts = customerAddress.split(',');
+    let buyerLoc = addressParts.length > 0 ? addressParts[addressParts.length - 1].trim() : '';
+    buyerLoc = buyerLoc.replace(/\d{6}/g, '').replace(/[^\w\s]/g, '').trim() || 'Tamil Nadu';
+
+    const vehicleNo = sale.lorry_no || outwardEntry?.lorry_no || '';
+
+    const payload = {
+      supplyType: "O",
+      subSupplyType: "1",
+      subSupplyDesc: "",
+      docType: "INV",
+      docNo: sale.bill_serial_no,
+      docDate: formatDateDDMMYYYY(sale.sale_date),
+      fromGstin: companySettings.gstin,
+      fromTrdName: companySettings.company_name,
+      fromAddr1: companySettings.address_line1,
+      fromAddr2: companySettings.address_line2 || "",
+      fromPlace: companySettings.locality,
+      fromPincode: getValidPinForState(
+        getStateCodeFromGstin(companySettings.gstin, companySettings.state_code),
+        companySettings.state_code,
+        companySettings.pin_code
+      ),
+      actFromStateCode: parseInt(getStateCodeFromGstin(companySettings.gstin, companySettings.state_code), 10),
+      fromStateCode: parseInt(getStateCodeFromGstin(companySettings.gstin, companySettings.state_code), 10),
+      toGstin: customer.gstin || "URP",
+      toTrdName: customer.name_english || customer.name_tamil || "UNKNOWN",
+      toAddr1: buyerAddr1,
+      toAddr2: buyerAddr2 || "",
+      toPlace: buyerLoc,
+      toPincode: getValidPinForState(
+        getStateCodeFromGstin(customer.gstin || "", customer.state_code || "33"),
+        customer.state_code || "33",
+        customer.pin_code
+      ),
+      actToStateCode: parseInt(getStateCodeFromGstin(customer.gstin || "", customer.state_code || "33"), 10),
+      toStateCode: parseInt(getStateCodeFromGstin(customer.gstin || "", customer.state_code || "33"), 10),
+      transactionType: transactionType,
+      otherValue: "0",
+      totalValue: roundedBaseAmount,
+      cgstValue: roundedCgstAmount,
+      sgstValue: roundedSgstAmount,
+      igstValue: 0,
+      cessValue: 0,
+      cessNonAdvolValue: 0,
+      totInvValue: roundedTotalAmount,
+      transporterId: transporterId || "",
+      transporterName: transporterName || "",
+      transDocNo: transDocNo || "",
+      transMode: transMode,
+      transDistance: distance.toString(),
+      transDocDate: transDocDt ? formatDateDDMMYYYY(transDocDt) : "",
+      vehicleNo: vehicleNo.replace(/\s+/g, '').toUpperCase(),
+      vehicleType: vehType,
+      itemList: allSales.map((s, index) => {
+        const currentItem = allItems[index] || item;
+        const itemBase = s.quantity * s.rate;
+        const itemGst = itemBase * (currentItem.gst_percentage / 100);
+        const itemCgst = Math.round((itemGst / 2) * 100) / 100;
+        const itemSgst = Math.round((itemGst / 2) * 100) / 100;
+        const cleanHsn = parseInt(formatHsnCode(currentItem.hsn_no), 10);
+
+        return {
+          productName: currentItem.name_english || "Product",
+          productDesc: currentItem.name_english || "Product",
+          hsnCode: cleanHsn,
+          quantity: s.quantity,
+          qtyUnit: formatUnitCode(currentItem.unit),
+          cgstRate: currentItem.gst_percentage / 2,
+          sgstRate: currentItem.gst_percentage / 2,
+          igstRate: 0,
+          cessRate: 0,
+          cessNonadvol: 0,
+          taxableAmount: Math.round(itemBase * 100) / 100
+        };
+      })
+    };
+
+    console.log('Sending payload to Standalone E-Way Bill Generation:', payload);
+
+    const aspid = companySettings.einvoice_aspid || '';
+    const password = companySettings.einvoice_asppassword || '';
+    const gstin = companySettings.gstin || '';
+
+    let finalToken = token;
+    let finalDistance = distance;
+
+    const makeRequest = async (tokenVal: string, distVal: number) => {
+      payload.transDistance = distVal.toString();
+      const pathAndQuery = `/ewaybillapi/dec/v1.03/ewayapi?action=GENEWAYBILL&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&authtoken=${encodeURIComponent(tokenVal)}`;
+      return await this.executeRequest(sandbox, pathAndQuery, {
+        method: 'POST',
+        headers: {
+          'aspid': aspid,
+          'password': password,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+    };
+
+    let response: Response;
+    try {
+      response = await makeRequest(finalToken, finalDistance);
+      if (!response.ok) {
+        await handleNonOkResponse(response, 'Standalone E-Way Bill generation server error');
+      }
+    } catch (err: any) {
+      // 1. Check if token expired
+      if (err.message && (err.message.includes('GSP752') || err.message.includes('AuthToken not found') || err.message.includes('expired'))) {
+        console.warn('AuthToken expired. Retrying Standalone E-Way Bill with a fresh token...');
+        finalToken = await this.authenticateEWayBill(companySettings, true);
+        try {
+          response = await makeRequest(finalToken, finalDistance);
+          if (!response.ok) {
+            await handleNonOkResponse(response, 'Standalone E-Way Bill generation server error');
+          }
+        } catch (innerErr: any) {
+          // If the second attempt failed due to distance mismatch
+          if (innerErr.message && (innerErr.message.includes('702') || innerErr.message.includes('4013') || innerErr.message.includes('distance'))) {
+            const correctDist = parseDistanceLimit(innerErr.message);
+            if (correctDist) {
+              console.warn(`Distance mismatch after token refresh. Retrying Standalone E-Way Bill with corrected distance: ${correctDist} km`);
+              finalDistance = correctDist;
+              response = await makeRequest(finalToken, finalDistance);
+              if (!response.ok) {
+                await handleNonOkResponse(response, 'Standalone E-Way Bill generation server error');
+              }
+            } else {
+              throw innerErr;
+            }
+          } else {
+            throw innerErr;
+          }
+        }
+      } 
+      // 2. Check if distance mismatch on first attempt
+      else if (err.message && (err.message.includes('702') || err.message.includes('4013') || err.message.includes('distance'))) {
+        const correctDist = parseDistanceLimit(err.message);
+        if (correctDist) {
+          console.warn(`Distance mismatch. Retrying Standalone E-Way Bill with corrected distance: ${correctDist} km`);
+          finalDistance = correctDist;
+          try {
+            response = await makeRequest(finalToken, finalDistance);
+            if (!response.ok) {
+              await handleNonOkResponse(response, 'Standalone E-Way Bill generation server error');
+            }
+          } catch (innerErr: any) {
+            // What if the second attempt fails with expired token?
+            if (innerErr.message && (innerErr.message.includes('GSP752') || innerErr.message.includes('AuthToken not found') || innerErr.message.includes('expired'))) {
+              console.warn('AuthToken expired on retry. Retrying Standalone E-Way Bill with a fresh token...');
+              finalToken = await this.authenticateEWayBill(companySettings, true);
+              response = await makeRequest(finalToken, finalDistance);
+              if (!response.ok) {
+                await handleNonOkResponse(response, 'Standalone E-Way Bill generation server error');
+              }
+            } else {
+              throw innerErr;
+            }
+          }
+        } else {
+          throw err;
+        }
+      } else {
+        throw err;
+      }
+    }
+
+    const result = await response.json();
+    console.log('Standalone E-Way Bill Generation Response:', result);
+
+    const isSuccess = result.Status === 1 || result.Status === '1' || result.status_cd === '1' || result.status === 1 || result.status === '1';
+    
+    let parsedData = result.Data || result.data;
+    if (typeof parsedData === 'string' && parsedData) {
+      try {
+        parsedData = JSON.parse(parsedData);
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    const ewayBillNo = (parsedData?.EwbNo || parsedData?.ewbNo || result.EwbNo || result.ewbNo)?.toString();
+    const ewayBillDate = parsedData?.EwbDt || parsedData?.EwbDate || parsedData?.ewayBillDate || result.EwbDt || '';
+
+    if (isSuccess && ewayBillNo) {
+      const { error } = await supabase
+        .from('sales')
+        .update({
+          eway_bill_no: ewayBillNo,
+          eway_bill_date: ewayBillDate,
+          eway_bill_status: 'GENERATED'
+        })
+        .eq('bill_serial_no', sale.bill_serial_no);
+
+      if (error) {
+        console.error('Error updating sale Standalone E-Way Bill in DB:', error);
+      }
+
+      return { ewayBillNo, ewayBillDate, correctedDistance: finalDistance };
+    } else {
+      console.error('Standalone E-Way Bill generation error result:', JSON.stringify(result));
+      const fullError = extractErrorMessage(result, 'Failed to generate Standalone E-Way Bill');
+      throw new Error(`Standalone E-Way Bill Generation Failed: ${fullError}`);
+    }
+  },
+
+  /**
+   * Cancel E-Invoice
+   */
+  async cancelEInvoice(sale: Sale, companySettings: CompanySetting, reasonCode: string, remark: string): Promise<boolean> {
+    if (!sale.irn) {
+      throw new Error('No IRN found for this sale.');
+    }
+
+    const token = await this.authenticate(companySettings);
+    const sandbox = companySettings.einvoice_sandbox ?? true;
+
+    const payload = {
+      Irn: sale.irn,
+      CnlRsn: reasonCode, // "1": Duplicate, "2": Data Entry Mistake, "3": Order Cancelled, "4": Others
+      CnlRem: remark || 'Cancelled'
+    };
+
+    console.log('Sending payload to Cancel E-Invoice:', payload);
+
+    const aspid = companySettings.einvoice_aspid || '';
+    const password = companySettings.einvoice_asppassword || '';
+    const gstin = companySettings.gstin || '';
+    const username = companySettings.einvoice_username || '';
+
+    const makeRequest = async (tokenVal: string) => {
+      const pathAndQuery = `/eicore/dec/v1.03/Invoice/Cancel?aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}&User_name=${encodeURIComponent(username)}&AuthToken=${encodeURIComponent(tokenVal)}`;
+      return await this.executeRequest(sandbox, pathAndQuery, {
+        method: 'POST',
+        headers: {
+          'aspid': aspid,
+          'password': password,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+    };
+
+    let response: Response;
+    try {
+      response = await makeRequest(token);
+      if (!response.ok) {
+        await handleNonOkResponse(response, 'Cancel E-Invoice server error');
+      }
+    } catch (err: any) {
+      if (err.message && (err.message.includes('GSP752') || err.message.includes('AuthToken not found') || err.message.includes('expired'))) {
+        console.warn('AuthToken expired. Retrying Cancel E-Invoice with a fresh token...');
+        const freshToken = await this.authenticate(companySettings, true);
+        response = await makeRequest(freshToken);
+        if (!response.ok) {
+          await handleNonOkResponse(response, 'Cancel E-Invoice server error');
+        }
+      } else {
+        throw err;
+      }
+    }
+
+    const result = await response.json();
+    console.log('Cancel E-Invoice Response:', result);
+
+    if (result.Status === 1 || result.Status === '1') {
+      const { error } = await supabase
+        .from('sales')
+        .update({
+          einvoice_status: 'CANCELLED',
+        })
+        .eq('bill_serial_no', sale.bill_serial_no);
+
+      if (error) {
+        console.error('Error updating cancelled IRN in DB:', error);
+      }
+
+      return true;
+    } else {
+      const errorMsg = result.ErrorDetails?.[0]?.ErrorMessage || 'Failed to cancel E-Invoice';
+      const errorCode = result.ErrorDetails?.[0]?.ErrorCode || '';
+      throw new Error(`Cancel E-Invoice Failed: ${errorMsg} (${errorCode})`);
+    }
+  },
+
+  /**
+   * Cancel E-Way Bill
+   */
+  async cancelEWayBill(sale: Sale, companySettings: CompanySetting, reasonCode: number, remark: string): Promise<boolean> {
+    if (!sale.eway_bill_no) {
+      throw new Error('No E-Way Bill Number found for this sale.');
+    }
+
+    const token = await this.authenticateEWayBill(companySettings);
+    const sandbox = companySettings.einvoice_sandbox ?? true;
+
+    const payload = {
+      ewbNo: parseInt(sale.eway_bill_no, 10),
+      cancelRsnCode: reasonCode,
+      cancelRmrk: remark || 'Cancelled'
+    };
+
+    console.log('Sending payload to Cancel E-Way Bill:', payload);
+
+    const aspid = companySettings.einvoice_aspid || '';
+    const password = companySettings.einvoice_asppassword || '';
+    const gstin = companySettings.gstin || '';
+    const username = companySettings.einvoice_username || '';
+
+    const makeRequest = async (tokenVal: string) => {
+      const pathAndQuery = `/ewaybillapi/dec/v1.03/ewayapi?action=CANEWB&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&username=${encodeURIComponent(username)}&authtoken=${encodeURIComponent(tokenVal)}`;
+      return await this.executeRequest(sandbox, pathAndQuery, {
+        method: 'POST',
+        headers: {
+          'aspid': aspid,
+          'password': password,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+    };
+
+    let response: Response;
+    try {
+      response = await makeRequest(token);
+      if (!response.ok) {
+        await handleNonOkResponse(response, 'Cancel E-Way Bill server error');
+      }
+    } catch (err: any) {
+      if (err.message && (err.message.includes('GSP752') || err.message.includes('AuthToken not found') || err.message.includes('expired'))) {
+        console.warn('AuthToken expired. Retrying Cancel E-Way Bill with a fresh token...');
+        const freshToken = await this.authenticateEWayBill(companySettings, true);
+        response = await makeRequest(freshToken);
+        if (!response.ok) {
+          await handleNonOkResponse(response, 'Cancel E-Way Bill server error');
+        }
+      } else {
+        throw err;
+      }
+    }
+
+    const result = await response.json();
+    console.log('Cancel E-Way Bill Response:', result);
+
+    // TaxPro GSP sandbox may return the result unwrapped at root level
+    // (e.g. {ewbNo: 591009081410, cancelDate: '...'}) instead of {Status: 1, Data: {...}}
+    const cancelDate = result.cancelDate || result.CancelDate || result.Data?.cancelDate || result.Data?.CancelDate;
+    const isSuccess = result.Status === 1 || result.Status === '1' || result.status === 1 || result.status === '1' || !!cancelDate;
+
+    if (isSuccess) {
+      const { error } = await supabase
+        .from('sales')
+        .update({
+          eway_bill_status: 'CANCELLED',
+        })
+        .eq('bill_serial_no', sale.bill_serial_no);
+
+      if (error) {
+        console.error('Error updating cancelled E-Way Bill in DB:', error);
+      }
+
+      return true;
+    } else {
+      const errorMsg = result.ErrorDetails?.[0]?.ErrorMessage || result.error?.message || 'Failed to cancel E-Way Bill';
+      const errorCode = result.ErrorDetails?.[0]?.ErrorCode || result.error?.error_cd || '';
+      throw new Error(`Cancel E-Way Bill Failed: ${errorMsg} (${errorCode})`);
+    }
+  },
+
+  /**
+   * Update vehicle details on an active E-Way Bill
+   */
+  async updateEWayBillVehicle(params: {
+    sale: Sale;
+    vehicleNo: string;
+    fromPlace: string;
+    fromState: number;
+    reasonCode: string;
+    reasonRem: string;
+    transDocNo?: string;
+    transDocDate?: string;
+    transMode?: string;
+    vehicleType?: string;
+    companySettings: CompanySetting;
+  }): Promise<boolean> {
+    const {
+      sale,
+      vehicleNo,
+      fromPlace,
+      fromState,
+      reasonCode,
+      reasonRem,
+      transDocNo = '',
+      transDocDate = '',
+      transMode = '1',
+      vehicleType = 'R',
+      companySettings
+    } = params;
+
+    if (!sale.eway_bill_no) {
+      throw new Error('E-Way Bill has not been generated for this sale.');
+    }
+
+    const token = await this.authenticateEWayBill(companySettings);
+    const sandbox = companySettings.einvoice_sandbox ?? true;
+
+    const supplierState = getStateCodeFromGstin(companySettings.gstin, companySettings.state_code);
+    const resolvedFromState = fromState === parseInt(companySettings.state_code, 10)
+      ? parseInt(supplierState, 10)
+      : fromState;
+
+    const payload = {
+      ewbNo: parseInt(sale.eway_bill_no, 10),
+      vehicleNo: vehicleNo.replace(/\s+/g, '').toUpperCase(),
+      fromPlace: fromPlace,
+      fromState: resolvedFromState,
+      reasonCode: reasonCode,
+      reasonRem: reasonRem || 'vehicle updated',
+      transDocNo: transDocNo || "",
+      transDocDate: transDocDate ? formatDateDDMMYYYY(transDocDate) : "",
+      transMode: transMode,
+      vehicleType: vehicleType
+    };
+
+    console.log('Sending payload to Update E-Way Bill Vehicle:', payload);
+
+    const aspid = companySettings.einvoice_aspid || '';
+    const password = companySettings.einvoice_asppassword || '';
+    const gstin = companySettings.gstin || '';
+    const username = companySettings.einvoice_username || '';
+
+    const makeRequest = async (tokenVal: string) => {
+      const pathAndQuery = `/ewaybillapi/dec/v1.03/ewayapi?action=VEHEWB&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&username=${encodeURIComponent(username)}&authtoken=${encodeURIComponent(tokenVal)}`;
+      return await this.executeRequest(sandbox, pathAndQuery, {
+        method: 'POST',
+        headers: {
+          'aspid': aspid,
+          'password': password,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+    };
+
+    let response: Response;
+    try {
+      response = await makeRequest(token);
+      if (!response.ok) {
+        await handleNonOkResponse(response, 'Vehicle update server error');
+      }
+    } catch (err: any) {
+      if (err.message && (err.message.includes('GSP752') || err.message.includes('AuthToken not found') || err.message.includes('expired'))) {
+        console.warn('AuthToken expired. Retrying Vehicle update with a fresh token...');
+        const freshToken = await this.authenticateEWayBill(companySettings, true);
+        response = await makeRequest(freshToken);
+        if (!response.ok) {
+          await handleNonOkResponse(response, 'Vehicle update server error');
+        }
+      } else {
+        throw err;
+      }
+    }
+
+    const result = await response.json();
+    console.log('Vehicle Update Response:', result);
+
+    // TaxPro GSP sandbox may return data unwrapped at root level
+    // (e.g. {vehUpdDate: '...', validUpto: '...'}) instead of {Status: 1, Data: {...}}
+    const vehUpdDate = result.vehUpdDate || result.VehUpdDate || result.Data?.vehUpdDate || result.Data?.VehUpdDate;
+    const isSuccess = result.Status === 1 || result.Status === '1' || result.status === 1 || result.status === '1' || !!vehUpdDate;
+
+    if (isSuccess) {
+      const { error } = await supabase
+        .from('sales')
+        .update({
+          lorry_no: vehicleNo.replace(/\s+/g, '').toUpperCase()
+        })
+        .eq('bill_serial_no', sale.bill_serial_no);
+
+      if (error) {
+        console.error('Error updating sale lorry_no in DB:', error);
+      }
+
+      return true;
+    } else {
+      const errorMsg = result.ErrorDetails?.[0]?.ErrorMessage || result.error?.message || 'Failed to update E-Way Bill vehicle';
+      const errorCode = result.ErrorDetails?.[0]?.ErrorCode || result.error?.error_cd || '';
+      throw new Error(`Vehicle Update Failed: ${errorMsg} (${errorCode})`);
+    }
+  },
+
+  /**
+   * Extend validity of an active E-Way Bill
+   * 
+   * EXTENDVALIDITY API payload rules:
+   *   isInTransit: "Y"  → goods are IN MOVEMENT (on the road/vehicle   * EXTENDVALIDITY NIC EWB API v1.03 payload structure:
+   *   consignmentStatus: "M" → goods are IN MOVEMENT on the road
+   *                            Send transitType="", addressLine1/2/3="" (empty strings, NOT omitt   * TaxPro GSP EXTENDVALIDITY field rules (derived from error codes):
+   *   isInTransit: "N" → goods are IN MOVEMENT (consignmentStatus = "M")
+   *                       transit fields must be empty strings
+   *   isInTransit: "Y" → goods are IN TRANSIT STORAGE (consignmentStatus = "T")
+   *                       transit fields must be filled
+   *
+   * Error 710 (blank msg) = isInTransit field is MISSING (required)
+   * Error 711 = isInTransit field has invalid value
+   * Error 712 = transitType sent when goods are in movement
+   * Error 713 = addressLine sent when goods are in movement
+   */
+  async extendEWayBillValidity(params: {
+    sale: Sale;
+    vehicleNo: string;
+    fromPlace: string;
+    fromState: number;
+    remainingDistance: number;
+    transDocNo?: string;
+    transDocDate?: string;
+    transMode?: string;
+    extnRsnCode: number;
+    extnRemarks: string;
+    fromPincode: number;
+    consignmentStatus: 'M' | 'T'; // M = In Movement, T = In Transit/Storage warehouse
+    vehicleType?: 'R' | 'O';       // R = Regular, O = Over Dimensional Cargo (required)
+    transitType?: 'R' | 'W' | 'O'; // required when consignmentStatus = 'T'
+    addressLine1?: string;          // required when consignmentStatus = 'T'
+    addressLine2?: string;
+    addressLine3?: string;
+    companySettings: CompanySetting;
+  }): Promise<{ validUpto: string }> {
+    const {
+      sale,
+      vehicleNo,
+      fromPlace,
+      fromState,
+      remainingDistance,
+      transDocNo = '',
+      transDocDate = '',
+      transMode = '1',
+      extnRsnCode,
+      extnRemarks,
+      fromPincode,
+      consignmentStatus,
+      vehicleType = 'R',
+      transitType = 'R',
+      addressLine1 = '',
+      addressLine2 = '',
+      addressLine3 = '',
+      companySettings
+    } = params;
+
+    if (!sale.eway_bill_no) {
+      throw new Error('E-Way Bill has not been generated for this sale.');
+    }
+
+    const token = await this.authenticateEWayBill(companySettings);
+    const sandbox = companySettings.einvoice_sandbox ?? true;
+
+    const supplierState = getStateCodeFromGstin(companySettings.gstin, companySettings.state_code);
+    const resolvedFromState = fromState === parseInt(companySettings.state_code, 10)
+      ? parseInt(supplierState, 10)
+      : fromState;
+
+    // isInTransit semantic: "N" = goods in movement (M), "Y" = goods in transit storage (T)
+    // This is the OPPOSITE of what you might expect from the field name.
+    // Error 710 (blank) = field is missing; Error 711 = wrong value.
+    const inStorage = consignmentStatus === 'T';
+    const isInTransit = inStorage ? 'Y' : 'N';  // "N" for M (moving), "Y" for T (stored)
+
+    const payload: Record<string, any> = {
+      ewbNo: parseInt(sale.eway_bill_no, 10),
+      vehicleNo: vehicleNo.replace(/\s+/g, '').toUpperCase(),
+      vehicleType: vehicleType,                          // "R" or "O" — required
+      fromPlace: fromPlace,
+      fromState: resolvedFromState,
+      remainingDistance: remainingDistance,
+      transDocNo: transDocNo || "",
+      transDocDate: transDocDate ? formatDateDDMMYYYY(transDocDate) : "",
+      transMode: transMode,
+      extnRsnCode: extnRsnCode,
+      extnRemarks: extnRemarks || 'Validity Extended',
+      fromPincode: fromPincode,
+      consignmentStatus: consignmentStatus,            // "M" or "T"
+      isInTransit: isInTransit,                        // "N" when M, "Y" when T
+      transitType: inStorage ? transitType : "",       // empty string when M
+      addressLine1: inStorage ? addressLine1 : "",     // empty string when M
+      addressLine2: inStorage ? (addressLine2 || "") : "",
+      addressLine3: inStorage ? (addressLine3 || "") : "",
+    };
+    console.log('Sending payload to Extend E-Way Bill Validity:', JSON.stringify(payload, null, 2));
+
+    const aspid = companySettings.einvoice_aspid || '';
+    const password = companySettings.einvoice_asppassword || '';
+    const gstin = companySettings.gstin || '';
+    const username = companySettings.einvoice_username || '';
+
+    const makeRequest = async (tokenVal: string) => {
+      const pathAndQuery = `/ewaybillapi/dec/v1.03/ewayapi?action=EXTENDVALIDITY&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&username=${encodeURIComponent(username)}&authtoken=${encodeURIComponent(tokenVal)}`;
+      return await this.executeRequest(sandbox, pathAndQuery, {
+        method: 'POST',
+        headers: {
+          'aspid': aspid,
+          'password': password,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+    };
+
+    let response: Response;
+    try {
+      response = await makeRequest(token);
+      if (!response.ok) {
+        await handleNonOkResponse(response, 'Validity extension server error');
+      }
+    } catch (err: any) {
+      if (err.message && (err.message.includes('GSP752') || err.message.includes('AuthToken not found') || err.message.includes('expired'))) {
+        console.warn('AuthToken expired. Retrying Validity extension with a fresh token...');
+        const freshToken = await this.authenticateEWayBill(companySettings, true);
+        response = await makeRequest(freshToken);
+        if (!response.ok) {
+          await handleNonOkResponse(response, 'Validity extension server error');
+        }
+      } else {
+        throw err;
+      }
+    }
+
+    const result = await response.json();
+    console.log('Validity Extension Response:', result);
+
+    // TaxPro GSP sandbox may return data unwrapped at root level
+    // (e.g. {validUpto: '...'}) instead of {Status: 1, Data: {validUpto: '...'}}
+    const validUptoVal =
+      result.validUpto || result.ValidUpto ||
+      result.Data?.validUpto || result.Data?.ValidUpto;
+    const isSuccess = result.Status === 1 || result.Status === '1' || result.status === 1 || result.status === '1' || !!validUptoVal;
+
+    if (isSuccess && validUptoVal) {
+      const { error } = await supabase
+        .from('sales')
+        .update({
+          lorry_no: vehicleNo.replace(/\s+/g, '').toUpperCase()
+        })
+        .eq('bill_serial_no', sale.bill_serial_no);
+
+      if (error) {
+        console.error('Error updating sale details on validity extension:', error);
+      }
+
+      return { validUpto: validUptoVal };
+    } else {
+      const errorMsg = result.ErrorDetails?.[0]?.ErrorMessage || result.error?.message || 'Failed to extend E-Way Bill validity';
+      const errorCode = result.ErrorDetails?.[0]?.ErrorCode || result.error?.error_cd || '';
+      throw new Error(`Validity Extension Failed: ${errorMsg} (${errorCode})`);
+    }
+  },
+
+  /**
+   * Fetch complete E-Way Bill details from GSP
+   */
+  async getEWayBillDetails(ewbNo: string, companySettings: CompanySetting): Promise<any> {
+    const token = await this.authenticateEWayBill(companySettings);
+    const sandbox = companySettings.einvoice_sandbox ?? true;
+
+    const aspid = companySettings.einvoice_aspid || '';
+    const password = companySettings.einvoice_asppassword || '';
+    const gstin = companySettings.gstin || '';
+
+    const makeRequest = async (tokenVal: string) => {
+      const pathAndQuery = `/ewaybillapi/dec/v1.03/ewayapi?action=GetEwayBill&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&authtoken=${encodeURIComponent(tokenVal)}&ewbNo=${encodeURIComponent(ewbNo)}`;
+      return await this.executeRequest(sandbox, pathAndQuery, {
+        method: 'GET',
+        headers: {
+          'aspid': aspid,
+          'password': password,
+        }
+      });
+    };
+
+    console.log(`Fetching E-Way Bill details for ${ewbNo}...`);
+    let response: Response;
+    try {
+      response = await makeRequest(token);
+      if (!response.ok) {
+        await handleNonOkResponse(response, 'GetEwayBill server error');
+      }
+    } catch (err: any) {
+      if (err.message && (err.message.includes('GSP752') || err.message.includes('AuthToken not found') || err.message.includes('expired'))) {
+        console.warn('AuthToken expired. Retrying GetEwayBill with a fresh token...');
+        const freshToken = await this.authenticateEWayBill(companySettings, true);
+        response = await makeRequest(freshToken);
+        if (!response.ok) {
+          await handleNonOkResponse(response, 'GetEwayBill server error');
+        }
+      } else {
+        throw err;
+      }
+    }
+
+    const result = await response.json();
+    console.log('GetEwayBill Response:', result);
+
+    const ewbNoVal = result.ewbNo || result.EwbNo || result.Data?.ewbNo || result.Data?.EwbNo;
+    if (ewbNoVal) {
+      return result.Data || result;
+    } else if (result.Status === 1 || result.Status === '1' || result.status === 1 || result.status === '1') {
+      return result.Data || result;
+    } else {
+      const errorMsg = result.ErrorDetails?.[0]?.ErrorMessage || result.error?.message || 'Failed to fetch E-Way Bill details';
+      const errorCode = result.ErrorDetails?.[0]?.ErrorCode || result.error?.error_cd || '';
+      throw new Error(`Failed to fetch E-Way Bill: ${errorMsg} (${errorCode})`);
+    }
+  },
+
+  /**
+   * Fetch details and download E-Way Bill PDF directly from the rendering engine.
+   * 
+   * API Docs (Print eWay Bill):
+   * - Sandbox: POST https://gstsandbox.charteredinfo.com/aspapi/v1.0/<action>
+   * - Production: POST https://einvapi.charteredinfo.com/aspapi/v1.0/<action>
+   * - Headers: aspid, password, Gstin  (params can also be sent as query params)
+   * - Body: JSON result from GetEwayBill API
+   * - Response: Binary PDF stream (read as blob and save as .pdf)
+   * 
+   * Supported actions:
+   *   printewb         – Standard E-Way Bill print
+   *   printdetailewb   – Detailed E-Way Bill print
+   *   printcewb        – Consolidated E-Way Bill print
+   */
+  async downloadEWayBillPDF(
+    ewbNo: string,
+    companySettings: CompanySetting,
+    filename: string = 'ewaybill.pdf',
+    printAction: 'printewb' | 'printdetailewb' | 'printcewb' = 'printewb'
+  ): Promise<void> {
+    const sandbox = companySettings.einvoice_sandbox ?? true;
+
+    // 1. Always fetch the real EWB details first (works in both sandbox & production)
+    let details: any;
+    try {
+      details = await this.getEWayBillDetails(ewbNo, companySettings);
+      console.log('EWB details fetched for PDF:', details);
+    } catch (err: any) {
+      console.warn('Could not fetch EWB details; will proceed with ewbNo only:', err);
+      // details stays undefined — mock PDF will use minimal info
+    }
+
+    // 2. SANDBOX: The TaxPro GSP print API returns GSP503 "This feature is available
+    //    only in Production" for any /aspapi/v1.0/* endpoint call in the sandbox
+    //    environment. Skip the API call entirely and build the mock PDF client-side
+    //    using the real EWB details we already fetched above.
+    if (sandbox) {
+      console.info('Sandbox mode: Print API not available (GSP503). Generating mock PDF from EWB details...');
+      await this.generateMockEWayBillPDF(ewbNo, companySettings, filename, details);
+      return;
+    }
+
+    // 3. PRODUCTION: Call the official TaxPro GSP print engine
+    //    API Docs: POST https://einvapi.charteredinfo.com/aspapi/v1.0/<action>
+    //    Headers : aspid, password, Gstin  (also accepted as query params)
+    //    Body    : JSON from GetEwayBill API
+    //    Response: Binary PDF stream → save as .pdf file
+    try {
+      const aspid = companySettings.einvoice_aspid || '';
+      const password = companySettings.einvoice_asppassword || '';
+      const gstin = companySettings.gstin || '';
+
+      const isBrowser = typeof window !== 'undefined';
+      const isLocalDev = isBrowser && (
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.hostname.startsWith('10.') ||
+        window.location.hostname.startsWith('192.168.')
+      );
+
+      const prodServer = isLocalDev ? '/api-gsp-prod-primary' : 'https://einvapi.charteredinfo.com';
+      const printUrl = `${prodServer}/aspapi/v1.0/${printAction}?aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}`;
+
+      console.log(`Sending EWB details to production print engine [${printAction}]: ${printUrl}`);
+
+      const response = await fetch(printUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'aspid': aspid,
+          'password': password,
+          'Gstin': gstin,
+        },
+        body: JSON.stringify(details)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Print engine error (HTTP ${response.status}):`, errorText);
+        throw new Error(`PDF Print Engine error (${response.status}): ${errorText}`);
+      }
+
+      // The server returns application/pdf on success.
+      // Guard against a 200 OK that actually carries a JSON error body.
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json') || contentType.includes('text/')) {
+        const errBody = await response.json().catch(() => ({ message: 'Unknown print engine error' }));
+        const errMsg = errBody?.message || errBody?.ErrorDetails?.[0]?.ErrorMessage || errBody?.error?.message || JSON.stringify(errBody);
+        console.error('Print engine returned JSON instead of PDF:', errBody);
+        throw new Error(`PDF Print Engine returned an error: ${errMsg}`);
+      }
+
+      const blob = await response.blob();
+      if (blob.size === 0) {
+        throw new Error('PDF Print Engine returned an empty response body');
+      }
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+      console.log(`E-Way Bill PDF downloaded from production print engine: ${filename}`);
+    } catch (err: any) {
+      console.error('Production print engine error:', err);
+      throw err;
+    }
+  },
+
+
+  /**
+   * Fetch distance between two pincodes from GSP
+   */
+  async getPinPinDistance(fromPinCode: string, toPinCode: string, companySettings: CompanySetting): Promise<number> {
+    const token = await this.authenticateEWayBill(companySettings);
+    const sandbox = companySettings.einvoice_sandbox ?? true;
+
+    // Substitute pincode for sandbox seller if needed
+    const finalFromPin = sandbox ? '605001' : fromPinCode.trim();
+    const finalToPin = toPinCode.trim();
+
+    const aspid = companySettings.einvoice_aspid || '';
+    const password = companySettings.einvoice_asppassword || '';
+    const gstin = companySettings.gstin || '';
+
+    const makeRequest = async (tokenVal: string) => {
+      const pathAndQuery = `/ewaybillapi/dec/v1.03/ewayapi?action=GETPINPIN&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&authtoken=${encodeURIComponent(tokenVal)}&fromPinCode=${encodeURIComponent(finalFromPin)}&toPinCode=${encodeURIComponent(finalToPin)}`;
+      return await this.executeRequest(sandbox, pathAndQuery, {
+        method: 'GET',
+        headers: {
+          'aspid': aspid,
+          'password': password,
+        }
+      });
+    };
+
+    console.log(`Fetching Pin-Pin distance from ${finalFromPin} to ${finalToPin}...`);
+    let response: Response;
+    try {
+      response = await makeRequest(token);
+      if (!response.ok) {
+        await handleNonOkResponse(response, 'Get Pin-Pin distance server error');
+      }
+    } catch (err: any) {
+      if (err.message && (err.message.includes('GSP752') || err.message.includes('AuthToken not found') || err.message.includes('expired'))) {
+        console.warn('AuthToken expired. Retrying Get Pin-Pin distance with a fresh token...');
+        const freshToken = await this.authenticateEWayBill(companySettings, true);
+        response = await makeRequest(freshToken);
+        if (!response.ok) {
+          await handleNonOkResponse(response, 'Get Pin-Pin distance server error');
+        }
+      } else {
+        throw err;
+      }
+    }
+
+    const result = await response.json();
+    console.log('Get Pin-Pin distance response:', result);
+
+    if ((result.Status === 1 || result.Status === '1') && result.Data?.distance) {
+      return parseInt(result.Data.distance.toString(), 10);
+    } else {
+      // Check if distance is returned in an alert/error
+      const errorMsg = result.ErrorDetails?.[0]?.ErrorMessage || result.error?.message || '';
+      const correctDist = parseDistanceLimit(errorMsg);
+      if (correctDist) return correctDist;
+      throw new Error(result.ErrorDetails?.[0]?.ErrorMessage || 'Failed to fetch Pin-Pin distance');
+    }
+  },
+
+  /**
+   * Fetch complete E-Invoice details from GSP by IRN
+   */
+  async getEInvoiceDetails(irn: string, companySettings: CompanySetting): Promise<any> {
+    const token = await this.authenticate(companySettings);
+    const sandbox = companySettings.einvoice_sandbox ?? true;
+
+    const aspid = companySettings.einvoice_aspid || '';
+    const password = companySettings.einvoice_asppassword || '';
+    const gstin = companySettings.gstin || '';
+    const username = companySettings.einvoice_username || '';
+
+    const makeRequest = async (tokenVal: string) => {
+      const pathAndQuery = `/eicore/dec/v1.03/Invoice/irn/details?aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}&AuthToken=${encodeURIComponent(tokenVal)}&User_name=${encodeURIComponent(username)}&irn=${encodeURIComponent(irn)}`;
+      return await this.executeRequest(sandbox, pathAndQuery, {
+        method: 'GET',
+        headers: {
+          'aspid': aspid,
+          'password': password,
+        }
+      });
+    };
+
+    let response: Response;
+    try {
+      response = await makeRequest(token);
+      if (!response.ok) {
+        await handleNonOkResponse(response, 'Get E-Invoice details server error');
+      }
+    } catch (err: any) {
+      if (err.message && (err.message.includes('GSP752') || err.message.includes('AuthToken not found') || err.message.includes('expired'))) {
+        console.warn('AuthToken expired. Retrying Get E-Invoice details with a fresh token...');
+        const freshToken = await this.authenticate(companySettings, true);
+        response = await makeRequest(freshToken);
+        if (!response.ok) {
+          await handleNonOkResponse(response, 'Get E-Invoice details server error');
+        }
+      } else {
+        throw err;
+      }
+    }
+
+    const result = await response.json();
+    console.log('Get E-Invoice details response:', result);
+    return result;
+  },
+
+  /**
+   * Helper to generate a mock E-Way Bill PDF client-side using jsPDF (Sandbox only).
+   * If ewbDetails is provided (from GetEwayBill API), they will be included in the PDF.
+   */
+  async generateMockEWayBillPDF(
+    ewbNo: string,
+    companySettings: CompanySetting,
+    filename: string,
+    ewbDetails?: any
+  ): Promise<void> {
+    try {
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF();
+
+      // Draw outer border
+      doc.setDrawColor(0, 102, 204);
+      doc.setLineWidth(1);
+      doc.rect(10, 10, 190, 277);
+
+      // Title block
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.setTextColor(0, 102, 204);
+      doc.text("GOVERNMENT OF INDIA", 105, 22, { align: "center" });
+
+      doc.setFontSize(13);
+      doc.setTextColor(0, 0, 0);
+      doc.text("E-WAY BILL SYSTEM (SANDBOX MOCK)", 105, 32, { align: "center" });
+
+      doc.setDrawColor(200, 200, 200);
+      doc.line(15, 40, 195, 40);
+
+      // --- Section 1: E-Way Bill Details ---
+      let y = 50;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(0, 102, 204);
+      doc.text("E-Way Bill Details", 20, y);
+      y += 8;
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(0, 0, 0);
+
+      const ewbDate = ewbDetails?.ewayBillDate || ewbDetails?.EwayBillDate || new Date().toLocaleDateString();
+      const validUpto = ewbDetails?.validUpto || ewbDetails?.ValidUpto || 'N/A';
+      const genMode = ewbDetails?.genMode || ewbDetails?.GenMode || 'N/A';
+      const distance = ewbDetails?.distance || ewbDetails?.Distance || 'N/A';
+      const supplyType = ewbDetails?.supplyType || ewbDetails?.SupplyType || 'Outward';
+      const docNo = ewbDetails?.docNo || ewbDetails?.DocNo || 'N/A';
+      const docDate = ewbDetails?.docDate || ewbDetails?.DocDate || 'N/A';
+      const docType = ewbDetails?.docType || ewbDetails?.DocType || 'N/A';
+
+      doc.text(`E-Way Bill No    : ${ewbNo}`, 20, y); y += 7;
+      doc.text(`E-Way Bill Date  : ${ewbDate}`, 20, y); y += 7;
+      doc.text(`Valid Upto       : ${validUpto}`, 20, y); y += 7;
+      doc.text(`Generated Mode   : ${genMode}`, 20, y); y += 7;
+      doc.text(`Distance (km)    : ${distance}`, 20, y); y += 7;
+      doc.text(`Supply Type      : ${supplyType}`, 20, y); y += 7;
+      doc.text(`Doc No / Date    : ${docNo} / ${docDate} (${docType})`, 20, y); y += 7;
+
+      doc.line(15, y + 2, 195, y + 2); y += 8;
+
+      // --- Section 2: Supplier & Recipient ---
+      const fromGstin = ewbDetails?.fromGstin || ewbDetails?.FromGstin || companySettings.gstin || '';
+      const fromTrdName = ewbDetails?.fromTrdName || ewbDetails?.FromTrdName || companySettings.company_name || '';
+      const fromAddr1 = ewbDetails?.fromAddr1 || ewbDetails?.FromAddr1 || companySettings.address_line1 || '';
+      const fromPlace = ewbDetails?.fromPlace || ewbDetails?.FromPlace || '';
+      const fromState = ewbDetails?.fromStateCode || ewbDetails?.FromStateCode || '';
+      const fromPincode = ewbDetails?.fromPincode || ewbDetails?.FromPincode || '';
+
+      const toGstin = ewbDetails?.toGstin || ewbDetails?.ToGstin || '';
+      const toTrdName = ewbDetails?.toTrdName || ewbDetails?.ToTrdName || '';
+      const toAddr1 = ewbDetails?.toAddr1 || ewbDetails?.ToAddr1 || '';
+      const toPlace = ewbDetails?.toPlace || ewbDetails?.ToPlace || '';
+      const toState = ewbDetails?.toStateCode || ewbDetails?.ToStateCode || '';
+      const toPincode = ewbDetails?.toPincode || ewbDetails?.ToPincode || '';
+
+      // Two-column layout
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(0, 102, 204);
+      doc.text("Bill From (Supplier)", 20, y);
+      doc.text("Bill To (Recipient)", 110, y);
+      y += 7;
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(0, 0, 0);
+      const lineData = [
+        [`GSTIN: ${fromGstin}`, `GSTIN: ${toGstin}`],
+        [`Name : ${fromTrdName}`, `Name : ${toTrdName}`],
+        [`Addr : ${fromAddr1}`, `Addr : ${toAddr1}`],
+        [`Place: ${fromPlace} - ${fromPincode} (State: ${fromState})`, `Place: ${toPlace} - ${toPincode} (State: ${toState})`],
+      ];
+      for (const [left, right] of lineData) {
+        doc.text(left, 20, y, { maxWidth: 85 });
+        doc.text(right, 110, y, { maxWidth: 85 });
+        y += 7;
+      }
+
+      doc.line(15, y + 2, 195, y + 2); y += 8;
+
+      // --- Section 3: Transport Details ---
+      const transMode = ewbDetails?.transMode || ewbDetails?.TransMode || '1'; // 1=Road
+      const transModeLabel = transMode === '1' ? 'Road' : transMode === '2' ? 'Rail' : transMode === '3' ? 'Air' : transMode === '4' ? 'Ship' : transMode;
+      const transDocNo = ewbDetails?.transDocNo || ewbDetails?.TransDocNo || '';
+      const transDocDate = ewbDetails?.transDocDate || ewbDetails?.TransDocDate || '';
+      const vehicleNo = ewbDetails?.vehicleNo || ewbDetails?.VehicleNo || '';
+      const transType = ewbDetails?.transType || ewbDetails?.TransType || '1';
+      const transTypeLbl = transType === '1' ? 'Regular' : 'Over Dimensional Cargo';
+      const transporterName = ewbDetails?.transporterName || ewbDetails?.TransporterName || '';
+      const transporterId = ewbDetails?.transporterId || ewbDetails?.TransporterId || '';
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(0, 102, 204);
+      doc.text("Transportation Details", 20, y);
+      y += 7;
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Mode         : ${transModeLabel}`, 20, y); y += 6;
+      doc.text(`Vehicle No   : ${vehicleNo}`, 20, y);
+      doc.text(`Vehicle Type : ${transTypeLbl}`, 110, y); y += 6;
+      doc.text(`Transporter  : ${transporterName} (${transporterId})`, 20, y); y += 6;
+      if (transDocNo) {
+        doc.text(`Trans Doc No : ${transDocNo} / ${transDocDate}`, 20, y); y += 6;
+      }
+
+      doc.line(15, y + 2, 195, y + 2); y += 8;
+
+      // --- Section 4: Item details summary ---
+      const itemList: any[] = ewbDetails?.itemList || ewbDetails?.ItemList || [];
+      if (itemList.length > 0) {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.setTextColor(0, 102, 204);
+        doc.text("Item Details", 20, y); y += 7;
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(0, 0, 0);
+
+        // Header row
+        doc.setFont("helvetica", "bold");
+        doc.text("#", 20, y);
+        doc.text("Product", 28, y);
+        doc.text("HSN", 105, y);
+        doc.text("Qty", 130, y);
+        doc.text("Unit", 145, y);
+        doc.text("Tax Amt", 165, y);
+        y += 5;
+        doc.setDrawColor(180, 180, 180);
+        doc.line(18, y, 192, y); y += 4;
+
+        doc.setFont("helvetica", "normal");
+        for (let i = 0; i < Math.min(itemList.length, 8); i++) {
+          const item = itemList[i];
+          const pName = (item.productName || item.ProductName || '').substring(0, 35);
+          const hsn = item.hsnCode || item.HsnCode || '';
+          const qty = item.quantity || item.Quantity || '';
+          const unit = item.qtyUnit || item.QtyUnit || '';
+          const taxAmt = item.taxableAmount || item.TaxableAmount || '';
+          doc.text(`${i + 1}`, 20, y);
+          doc.text(pName, 28, y, { maxWidth: 75 });
+          doc.text(`${hsn}`, 105, y);
+          doc.text(`${qty}`, 130, y);
+          doc.text(`${unit}`, 145, y);
+          doc.text(`${taxAmt}`, 165, y);
+          y += 6;
+          if (y > 270) break; // page overflow guard
+        }
+
+        doc.line(15, y + 2, 195, y + 2); y += 8;
+      }
+
+      // --- Footer / Disclaimer ---
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(8);
+      doc.setTextColor(128, 128, 128);
+      doc.text(
+        "Note: This is a SANDBOX MOCK document generated client-side. It holds no legal validity.",
+        105, 280, { align: "center" }
+      );
+
+      doc.save(filename);
+      console.log(`Mock E-Way Bill PDF saved successfully: ${filename}`);
+    } catch (err) {
+      console.error('Failed to generate mock E-Way Bill PDF:', err);
+      throw new Error('Failed to generate E-Way Bill PDF (Sandbox mock error)');
+    }
+  }
+};

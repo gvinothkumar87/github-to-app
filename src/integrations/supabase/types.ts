@@ -1,1 +1,8262 @@
-{"types":"export type Json =\n  | string\n  | number\n  | boolean\n  | null\n  | { [key: string]: Json | undefined }\n  | Json[]\n\nexport type Database = {\n  // Allows to automatically instantiate createClient with right options\n  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)\n  __InternalSupabase: {\n    PostgrestVersion: \"12.2.3 (519615d)\"\n  }\n  public: {\n    Tables: {\n      activity_logs: {\n        Row: {\n          activity_type: string\n          created_at: string | null\n          description: string\n          id: string\n          metadata: Json | null\n          user_id: string\n        }\n        Insert: {\n          activity_type: string\n          created_at?: string | null\n          description: string\n          id?: string\n          metadata?: Json | null\n          user_id: string\n        }\n        Update: {\n          activity_type?: string\n          created_at?: string | null\n          description?: string\n          id?: string\n          metadata?: Json | null\n          user_id?: string\n        }\n        Relationships: []\n      }\n      api_credentials: {\n        Row: {\n          api_key: string\n          client_code: string\n          created_at: string | null\n          id: string\n          password: string\n          totp_secret: string\n          updated_at: string | null\n          user_id: string | null\n        }\n        Insert: {\n          api_key: string\n          client_code: string\n          created_at?: string | null\n          id?: string\n          password: string\n          totp_secret: string\n          updated_at?: string | null\n          user_id?: string | null\n        }\n        Update: {\n          api_key?: string\n          client_code?: string\n          created_at?: string | null\n          id?: string\n          password?: string\n          totp_secret?: string\n          updated_at?: string | null\n          user_id?: string | null\n        }\n        Relationships: []\n      }\n      app_pages: {\n        Row: {\n          created_at: string | null\n          description: string | null\n          id: string\n          name: string\n          route: string\n          updated_at: string | null\n        }\n        Insert: {\n          created_at?: string | null\n          description?: string | null\n          id?: string\n          name: string\n          route: string\n          updated_at?: string | null\n        }\n        Update: {\n          created_at?: string | null\n          description?: string | null\n          id?: string\n          name?: string\n          route?: string\n          updated_at?: string | null\n        }\n        Relationships: []\n      }\n      app_users: {\n        Row: {\n          created_at: string | null\n          email: string\n          id: string\n          location_permission: boolean | null\n          name: string\n          phone: string | null\n          role: Database[\"public\"][\"Enums\"][\"user_role_type\"]\n          status: string | null\n          task_role: string | null\n          updated_at: string | null\n        }\n        Insert: {\n          created_at?: string | null\n          email: string\n          id: string\n          location_permission?: boolean | null\n          name: string\n          phone?: string | null\n          role?: Database[\"public\"][\"Enums\"][\"user_role_type\"]\n          status?: string | null\n          task_role?: string | null\n          updated_at?: string | null\n        }\n        Update: {\n          created_at?: string | null\n          email?: string\n          id?: string\n          location_permission?: boolean | null\n          name?: string\n          phone?: string | null\n          role?: Database[\"public\"][\"Enums\"][\"user_role_type\"]\n          status?: string | null\n          task_role?: string | null\n          updated_at?: string | null\n        }\n        Relationships: []\n      }\n      attachments: {\n        Row: {\n          drive_file_id: string | null\n          file_type: string\n          file_url: string | null\n          id: string\n          task_id: string | null\n          transaction_id: string | null\n          uploaded_at: string | null\n          uploaded_by: string | null\n        }\n        Insert: {\n          drive_file_id?: string | null\n          file_type: string\n          file_url?: string | null\n          id?: string\n          task_id?: string | null\n          transaction_id?: string | null\n          uploaded_at?: string | null\n          uploaded_by?: string | null\n        }\n        Update: {\n          drive_file_id?: string | null\n          file_type?: string\n          file_url?: string | null\n          id?: string\n          task_id?: string | null\n          transaction_id?: string | null\n          uploaded_at?: string | null\n          uploaded_by?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"attachments_task_id_fkey\"\n            columns: [\"task_id\"]\n            isOneToOne: false\n            referencedRelation: \"tasks\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"attachments_transaction_id_fkey\"\n            columns: [\"transaction_id\"]\n            isOneToOne: false\n            referencedRelation: \"transactions\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"attachments_uploaded_by_fkey\"\n            columns: [\"uploaded_by\"]\n            isOneToOne: false\n            referencedRelation: \"app_users\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      attendance: {\n        Row: {\n          absent_duration: string | null\n          attendance_status: string | null\n          clock_in_time: string | null\n          clock_out_time: string | null\n          created_at: string | null\n          daily_salary: number | null\n          date: string\n          department: string | null\n          employee_id: string\n          full_name: string | null\n          id: number\n          late_duration: string | null\n          overtime_duration: string | null\n          salary_missing: boolean | null\n          worked_hours: string | null\n        }\n        Insert: {\n          absent_duration?: string | null\n          attendance_status?: string | null\n          clock_in_time?: string | null\n          clock_out_time?: string | null\n          created_at?: string | null\n          daily_salary?: number | null\n          date: string\n          department?: string | null\n          employee_id: string\n          full_name?: string | null\n          id?: never\n          late_duration?: string | null\n          overtime_duration?: string | null\n          salary_missing?: boolean | null\n          worked_hours?: string | null\n        }\n        Update: {\n          absent_duration?: string | null\n          attendance_status?: string | null\n          clock_in_time?: string | null\n          clock_out_time?: string | null\n          created_at?: string | null\n          daily_salary?: number | null\n          date?: string\n          department?: string | null\n          employee_id?: string\n          full_name?: string | null\n          id?: never\n          late_duration?: string | null\n          overtime_duration?: string | null\n          salary_missing?: boolean | null\n          worked_hours?: string | null\n        }\n        Relationships: []\n      }\n      bank_narration_mappings: {\n        Row: {\n          cleaned_narration: string\n          created_at: string | null\n          id: string\n          reconciliation_type: string | null\n          target_id: string\n          target_type: string\n          updated_at: string | null\n        }\n        Insert: {\n          cleaned_narration: string\n          created_at?: string | null\n          id?: string\n          reconciliation_type?: string | null\n          target_id: string\n          target_type: string\n          updated_at?: string | null\n        }\n        Update: {\n          cleaned_narration?: string\n          created_at?: string | null\n          id?: string\n          reconciliation_type?: string | null\n          target_id?: string\n          target_type?: string\n          updated_at?: string | null\n        }\n        Relationships: []\n      }\n      bank_reconciliations: {\n        Row: {\n          cleaned_narration: string\n          closing_balance: number | null\n          created_at: string | null\n          credit_amount: number | null\n          debit_amount: number | null\n          id: string\n          original_narration: string\n          reconciled_target_id: string | null\n          reconciled_target_type: string | null\n          reconciled_transaction_id: string | null\n          reconciliation_type: string | null\n          reference_number: string\n          source_ledger_id: string | null\n          status: string | null\n          transaction_date: string\n          updated_at: string | null\n          value_date: string | null\n        }\n        Insert: {\n          cleaned_narration: string\n          closing_balance?: number | null\n          created_at?: string | null\n          credit_amount?: number | null\n          debit_amount?: number | null\n          id?: string\n          original_narration: string\n          reconciled_target_id?: string | null\n          reconciled_target_type?: string | null\n          reconciled_transaction_id?: string | null\n          reconciliation_type?: string | null\n          reference_number: string\n          source_ledger_id?: string | null\n          status?: string | null\n          transaction_date: string\n          updated_at?: string | null\n          value_date?: string | null\n        }\n        Update: {\n          cleaned_narration?: string\n          closing_balance?: number | null\n          created_at?: string | null\n          credit_amount?: number | null\n          debit_amount?: number | null\n          id?: string\n          original_narration?: string\n          reconciled_target_id?: string | null\n          reconciled_target_type?: string | null\n          reconciled_transaction_id?: string | null\n          reconciliation_type?: string | null\n          reference_number?: string\n          source_ledger_id?: string | null\n          status?: string | null\n          transaction_date?: string\n          updated_at?: string | null\n          value_date?: string | null\n        }\n        Relationships: []\n      }\n      business_contacts: {\n        Row: {\n          auth_user_id: string\n          contact_info: string | null\n          created_at: string\n          created_by: string\n          email: string | null\n          id: string\n          name: string\n          notes: string | null\n          updated_at: string\n        }\n        Insert: {\n          auth_user_id: string\n          contact_info?: string | null\n          created_at?: string\n          created_by: string\n          email?: string | null\n          id?: string\n          name: string\n          notes?: string | null\n          updated_at?: string\n        }\n        Update: {\n          auth_user_id?: string\n          contact_info?: string | null\n          created_at?: string\n          created_by?: string\n          email?: string | null\n          id?: string\n          name?: string\n          notes?: string | null\n          updated_at?: string\n        }\n        Relationships: []\n      }\n      cashbook_transactions: {\n        Row: {\n          amount: number\n          attachment_urls: string[] | null\n          created_at: string | null\n          currency: string\n          custom_fields: Json | null\n          event_id: string\n          event_type: string\n          expense_category: string | null\n          id: string\n          location_lat: number | null\n          location_lng: number | null\n          merchant_mcc: string | null\n          merchant_name: string | null\n          merchant_upi_id: string | null\n          note: string | null\n          phone_number: string | null\n          reconciled_txn_id: string | null\n          transaction_time: string\n          txn_id: string\n          txn_type: string | null\n          upi_remark: string | null\n        }\n        Insert: {\n          amount: number\n          attachment_urls?: string[] | null\n          created_at?: string | null\n          currency?: string\n          custom_fields?: Json | null\n          event_id: string\n          event_type: string\n          expense_category?: string | null\n          id?: string\n          location_lat?: number | null\n          location_lng?: number | null\n          merchant_mcc?: string | null\n          merchant_name?: string | null\n          merchant_upi_id?: string | null\n          note?: string | null\n          phone_number?: string | null\n          reconciled_txn_id?: string | null\n          transaction_time: string\n          txn_id: string\n          txn_type?: string | null\n          upi_remark?: string | null\n        }\n        Update: {\n          amount?: number\n          attachment_urls?: string[] | null\n          created_at?: string | null\n          currency?: string\n          custom_fields?: Json | null\n          event_id?: string\n          event_type?: string\n          expense_category?: string | null\n          id?: string\n          location_lat?: number | null\n          location_lng?: number | null\n          merchant_mcc?: string | null\n          merchant_name?: string | null\n          merchant_upi_id?: string | null\n          note?: string | null\n          phone_number?: string | null\n          reconciled_txn_id?: string | null\n          transaction_time?: string\n          txn_id?: string\n          txn_type?: string | null\n          upi_remark?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"cashbook_transactions_event_id_fkey\"\n            columns: [\"event_id\"]\n            isOneToOne: true\n            referencedRelation: \"cashbook_webhook_events\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"cashbook_transactions_reconciled_txn_id_fkey\"\n            columns: [\"reconciled_txn_id\"]\n            isOneToOne: false\n            referencedRelation: \"transactions\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      cashbook_webhook_events: {\n        Row: {\n          created_at: string | null\n          event_type: string\n          id: string\n          payload: Json\n          processed: boolean | null\n          processed_at: string | null\n          version: string\n        }\n        Insert: {\n          created_at?: string | null\n          event_type: string\n          id: string\n          payload: Json\n          processed?: boolean | null\n          processed_at?: string | null\n          version: string\n        }\n        Update: {\n          created_at?: string | null\n          event_type?: string\n          id?: string\n          payload?: Json\n          processed?: boolean | null\n          processed_at?: string | null\n          version?: string\n        }\n        Relationships: []\n      }\n      company_settings: {\n        Row: {\n          address_line1: string\n          address_line2: string | null\n          bank_account_no: string | null\n          bank_branch: string | null\n          bank_ifsc: string | null\n          bank_name: string | null\n          bill_digits: number | null\n          bill_prefix: string | null\n          company_name: string\n          created_at: string\n          credit_note_digits: number | null\n          credit_note_financial_year_in_serial: boolean | null\n          credit_note_prefix: string | null\n          debit_note_digits: number | null\n          debit_note_financial_year_in_serial: boolean | null\n          debit_note_prefix: string | null\n          email: string | null\n          financial_year_in_serial: boolean\n          gstin: string\n          id: string\n          is_active: boolean\n          locality: string\n          location_code: string\n          location_name: string\n          phone: string | null\n          pin_code: number\n          start_bill_no: number | null\n          start_credit_note_no: number | null\n          start_debit_note_no: number | null\n          state_code: string\n          updated_at: string\n        }\n        Insert: {\n          address_line1: string\n          address_line2?: string | null\n          bank_account_no?: string | null\n          bank_branch?: string | null\n          bank_ifsc?: string | null\n          bank_name?: string | null\n          bill_digits?: number | null\n          bill_prefix?: string | null\n          company_name: string\n          created_at?: string\n          credit_note_digits?: number | null\n          credit_note_financial_year_in_serial?: boolean | null\n          credit_note_prefix?: string | null\n          debit_note_digits?: number | null\n          debit_note_financial_year_in_serial?: boolean | null\n          debit_note_prefix?: string | null\n          email?: string | null\n          financial_year_in_serial?: boolean\n          gstin: string\n          id?: string\n          is_active?: boolean\n          locality: string\n          location_code: string\n          location_name: string\n          phone?: string | null\n          pin_code: number\n          start_bill_no?: number | null\n          start_credit_note_no?: number | null\n          start_debit_note_no?: number | null\n          state_code?: string\n          updated_at?: string\n        }\n        Update: {\n          address_line1?: string\n          address_line2?: string | null\n          bank_account_no?: string | null\n          bank_branch?: string | null\n          bank_ifsc?: string | null\n          bank_name?: string | null\n          bill_digits?: number | null\n          bill_prefix?: string | null\n          company_name?: string\n          created_at?: string\n          credit_note_digits?: number | null\n          credit_note_financial_year_in_serial?: boolean | null\n          credit_note_prefix?: string | null\n          debit_note_digits?: number | null\n          debit_note_financial_year_in_serial?: boolean | null\n          debit_note_prefix?: string | null\n          email?: string | null\n          financial_year_in_serial?: boolean\n          gstin?: string\n          id?: string\n          is_active?: boolean\n          locality?: string\n          location_code?: string\n          location_name?: string\n          phone?: string | null\n          pin_code?: number\n          start_bill_no?: number | null\n          start_credit_note_no?: number | null\n          start_debit_note_no?: number | null\n          state_code?: string\n          updated_at?: string\n        }\n        Relationships: []\n      }\n      complaint_types: {\n        Row: {\n          active: boolean | null\n          created_at: string | null\n          id: string\n          name: string\n        }\n        Insert: {\n          active?: boolean | null\n          created_at?: string | null\n          id?: string\n          name: string\n        }\n        Update: {\n          active?: boolean | null\n          created_at?: string | null\n          id?: string\n          name?: string\n        }\n        Relationships: []\n      }\n      complaints: {\n        Row: {\n          complaint_text: string | null\n          complaint_type_id: string | null\n          complaint_voice_url: string | null\n          created_at: string | null\n          created_by: string | null\n          id: string\n          lorry_id: string | null\n          resolution_notes: string | null\n          resolution_voice_url: string | null\n          resolved_at: string | null\n          resolved_by: string | null\n          status: string | null\n          urgency: string | null\n        }\n        Insert: {\n          complaint_text?: string | null\n          complaint_type_id?: string | null\n          complaint_voice_url?: string | null\n          created_at?: string | null\n          created_by?: string | null\n          id?: string\n          lorry_id?: string | null\n          resolution_notes?: string | null\n          resolution_voice_url?: string | null\n          resolved_at?: string | null\n          resolved_by?: string | null\n          status?: string | null\n          urgency?: string | null\n        }\n        Update: {\n          complaint_text?: string | null\n          complaint_type_id?: string | null\n          complaint_voice_url?: string | null\n          created_at?: string | null\n          created_by?: string | null\n          id?: string\n          lorry_id?: string | null\n          resolution_notes?: string | null\n          resolution_voice_url?: string | null\n          resolved_at?: string | null\n          resolved_by?: string | null\n          status?: string | null\n          urgency?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"complaints_complaint_type_id_fkey\"\n            columns: [\"complaint_type_id\"]\n            isOneToOne: false\n            referencedRelation: \"complaint_types\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"complaints_lorry_id_fkey\"\n            columns: [\"lorry_id\"]\n            isOneToOne: false\n            referencedRelation: \"lorries\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      credit_notes: {\n        Row: {\n          amount: number\n          created_at: string\n          created_by: string | null\n          customer_id: string\n          gst_percentage: number | null\n          id: string\n          item_id: string | null\n          mill: string\n          note_date: string\n          note_no: string\n          reason: string\n          reference_bill_no: string | null\n          updated_at: string\n        }\n        Insert: {\n          amount: number\n          created_at?: string\n          created_by?: string | null\n          customer_id: string\n          gst_percentage?: number | null\n          id?: string\n          item_id?: string | null\n          mill?: string\n          note_date?: string\n          note_no: string\n          reason: string\n          reference_bill_no?: string | null\n          updated_at?: string\n        }\n        Update: {\n          amount?: number\n          created_at?: string\n          created_by?: string | null\n          customer_id?: string\n          gst_percentage?: number | null\n          id?: string\n          item_id?: string | null\n          mill?: string\n          note_date?: string\n          note_no?: string\n          reason?: string\n          reference_bill_no?: string | null\n          updated_at?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"credit_notes_customer_id_fkey\"\n            columns: [\"customer_id\"]\n            isOneToOne: false\n            referencedRelation: \"customers\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"credit_notes_item_id_fkey\"\n            columns: [\"item_id\"]\n            isOneToOne: false\n            referencedRelation: \"items\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      customer_ledger: {\n        Row: {\n          balance: number\n          created_at: string\n          credit_amount: number\n          customer_id: string\n          debit_amount: number\n          description: string | null\n          id: string\n          reference_id: string\n          transaction_date: string\n          transaction_type: string\n          updated_at: string\n        }\n        Insert: {\n          balance?: number\n          created_at?: string\n          credit_amount?: number\n          customer_id: string\n          debit_amount?: number\n          description?: string | null\n          id?: string\n          reference_id: string\n          transaction_date?: string\n          transaction_type: string\n          updated_at?: string\n        }\n        Update: {\n          balance?: number\n          created_at?: string\n          credit_amount?: number\n          customer_id?: string\n          debit_amount?: number\n          description?: string | null\n          id?: string\n          reference_id?: string\n          transaction_date?: string\n          transaction_type?: string\n          updated_at?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"customer_ledger_customer_id_fkey\"\n            columns: [\"customer_id\"]\n            isOneToOne: false\n            referencedRelation: \"customers\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      customer_ledger_mapping: {\n        Row: {\n          created_at: string\n          created_by: string\n          customer_id: string\n          id: string\n          ledger_id: string\n          updated_at: string\n        }\n        Insert: {\n          created_at?: string\n          created_by: string\n          customer_id: string\n          id?: string\n          ledger_id: string\n          updated_at?: string\n        }\n        Update: {\n          created_at?: string\n          created_by?: string\n          customer_id?: string\n          id?: string\n          ledger_id?: string\n          updated_at?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"customer_ledger_mapping_customer_id_fkey\"\n            columns: [\"customer_id\"]\n            isOneToOne: false\n            referencedRelation: \"customers\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"customer_ledger_mapping_ledger_id_fkey\"\n            columns: [\"ledger_id\"]\n            isOneToOne: false\n            referencedRelation: \"ledgers\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      customers: {\n        Row: {\n          address_english: string | null\n          address_tamil: string | null\n          code: string\n          contact_person: string | null\n          created_at: string\n          email: string | null\n          gstin: string | null\n          id: string\n          is_active: boolean\n          name_english: string\n          name_tamil: string | null\n          opening_balance: number | null\n          phone: string | null\n          pin_code: string | null\n          place_of_supply: string | null\n          state_code: string | null\n          updated_at: string\n        }\n        Insert: {\n          address_english?: string | null\n          address_tamil?: string | null\n          code: string\n          contact_person?: string | null\n          created_at?: string\n          email?: string | null\n          gstin?: string | null\n          id?: string\n          is_active?: boolean\n          name_english: string\n          name_tamil?: string | null\n          opening_balance?: number | null\n          phone?: string | null\n          pin_code?: string | null\n          place_of_supply?: string | null\n          state_code?: string | null\n          updated_at?: string\n        }\n        Update: {\n          address_english?: string | null\n          address_tamil?: string | null\n          code?: string\n          contact_person?: string | null\n          created_at?: string\n          email?: string | null\n          gstin?: string | null\n          id?: string\n          is_active?: boolean\n          name_english?: string\n          name_tamil?: string | null\n          opening_balance?: number | null\n          phone?: string | null\n          pin_code?: string | null\n          place_of_supply?: string | null\n          state_code?: string | null\n          updated_at?: string\n        }\n        Relationships: []\n      }\n      debit_notes: {\n        Row: {\n          amount: number\n          created_at: string\n          created_by: string | null\n          customer_id: string\n          gst_percentage: number | null\n          id: string\n          item_id: string | null\n          mill: string\n          note_date: string\n          note_no: string\n          reason: string\n          reference_bill_no: string | null\n          updated_at: string\n        }\n        Insert: {\n          amount: number\n          created_at?: string\n          created_by?: string | null\n          customer_id: string\n          gst_percentage?: number | null\n          id?: string\n          item_id?: string | null\n          mill?: string\n          note_date?: string\n          note_no: string\n          reason: string\n          reference_bill_no?: string | null\n          updated_at?: string\n        }\n        Update: {\n          amount?: number\n          created_at?: string\n          created_by?: string | null\n          customer_id?: string\n          gst_percentage?: number | null\n          id?: string\n          item_id?: string | null\n          mill?: string\n          note_date?: string\n          note_no?: string\n          reason?: string\n          reference_bill_no?: string | null\n          updated_at?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"debit_notes_customer_id_fkey\"\n            columns: [\"customer_id\"]\n            isOneToOne: false\n            referencedRelation: \"customers\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"debit_notes_item_id_fkey\"\n            columns: [\"item_id\"]\n            isOneToOne: false\n            referencedRelation: \"items\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      duty_status: {\n        Row: {\n          action: string\n          created_at: string | null\n          device_info: string | null\n          id: string\n          latitude: number | null\n          location_accuracy: number | null\n          longitude: number | null\n          user_id: string\n        }\n        Insert: {\n          action: string\n          created_at?: string | null\n          device_info?: string | null\n          id?: string\n          latitude?: number | null\n          location_accuracy?: number | null\n          longitude?: number | null\n          user_id: string\n        }\n        Update: {\n          action?: string\n          created_at?: string | null\n          device_info?: string | null\n          id?: string\n          latitude?: number | null\n          location_accuracy?: number | null\n          longitude?: number | null\n          user_id?: string\n        }\n        Relationships: []\n      }\n      employee_salary_ledgers: {\n        Row: {\n          created_at: string | null\n          department: string | null\n          employee_id: string\n          employee_name: string\n          id: string\n          ledger_id: string\n          updated_at: string | null\n        }\n        Insert: {\n          created_at?: string | null\n          department?: string | null\n          employee_id: string\n          employee_name: string\n          id?: string\n          ledger_id: string\n          updated_at?: string | null\n        }\n        Update: {\n          created_at?: string | null\n          department?: string | null\n          employee_id?: string\n          employee_name?: string\n          id?: string\n          ledger_id?: string\n          updated_at?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"employee_salary_ledgers_ledger_id_fkey\"\n            columns: [\"ledger_id\"]\n            isOneToOne: false\n            referencedRelation: \"ledgers\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      employees: {\n        Row: {\n          address: string | null\n          base_salary: number\n          created_at: string | null\n          department: string | null\n          email: string\n          employee_id: string\n          id: string\n          is_active: boolean | null\n          joining_date: string\n          name: string\n          phone: string | null\n          position: string | null\n          updated_at: string | null\n          user_id: string | null\n        }\n        Insert: {\n          address?: string | null\n          base_salary?: number\n          created_at?: string | null\n          department?: string | null\n          email: string\n          employee_id: string\n          id?: string\n          is_active?: boolean | null\n          joining_date?: string\n          name: string\n          phone?: string | null\n          position?: string | null\n          updated_at?: string | null\n          user_id?: string | null\n        }\n        Update: {\n          address?: string | null\n          base_salary?: number\n          created_at?: string | null\n          department?: string | null\n          email?: string\n          employee_id?: string\n          id?: string\n          is_active?: boolean | null\n          joining_date?: string\n          name?: string\n          phone?: string | null\n          position?: string | null\n          updated_at?: string | null\n          user_id?: string | null\n        }\n        Relationships: []\n      }\n      failed_transactions: {\n        Row: {\n          attempted_data: Json\n          created_at: string | null\n          error_code: string | null\n          error_message: string\n          id: string\n          last_retry_at: string | null\n          retry_count: number | null\n          status: string | null\n          transaction_type: string\n          updated_at: string | null\n          user_id: string\n        }\n        Insert: {\n          attempted_data: Json\n          created_at?: string | null\n          error_code?: string | null\n          error_message: string\n          id?: string\n          last_retry_at?: string | null\n          retry_count?: number | null\n          status?: string | null\n          transaction_type: string\n          updated_at?: string | null\n          user_id: string\n        }\n        Update: {\n          attempted_data?: Json\n          created_at?: string | null\n          error_code?: string | null\n          error_message?: string\n          id?: string\n          last_retry_at?: string | null\n          retry_count?: number | null\n          status?: string | null\n          transaction_type?: string\n          updated_at?: string | null\n          user_id?: string\n        }\n        Relationships: []\n      }\n      fcm_tokens: {\n        Row: {\n          app_id: string | null\n          created_at: string\n          device_info: string | null\n          id: string\n          last_used_at: string\n          platform: string\n          token: string\n          updated_at: string\n          user_id: string\n        }\n        Insert: {\n          app_id?: string | null\n          created_at?: string\n          device_info?: string | null\n          id?: string\n          last_used_at?: string\n          platform: string\n          token: string\n          updated_at?: string\n          user_id: string\n        }\n        Update: {\n          app_id?: string | null\n          created_at?: string\n          device_info?: string | null\n          id?: string\n          last_used_at?: string\n          platform?: string\n          token?: string\n          updated_at?: string\n          user_id?: string\n        }\n        Relationships: []\n      }\n      financial_audit_log: {\n        Row: {\n          id: string\n          new_data: Json | null\n          old_data: Json | null\n          operation: string\n          record_id: string\n          table_name: string\n          timestamp: string | null\n          user_id: string | null\n        }\n        Insert: {\n          id?: string\n          new_data?: Json | null\n          old_data?: Json | null\n          operation: string\n          record_id: string\n          table_name: string\n          timestamp?: string | null\n          user_id?: string | null\n        }\n        Update: {\n          id?: string\n          new_data?: Json | null\n          old_data?: Json | null\n          operation?: string\n          record_id?: string\n          table_name?: string\n          timestamp?: string | null\n          user_id?: string | null\n        }\n        Relationships: []\n      }\n      frk_inward_entries: {\n        Row: {\n          batch_no: string\n          bill_no: string\n          created_at: string\n          created_by: string | null\n          entry_date: string\n          id: string\n          mill: string\n          quantity: number\n          serial_no: string\n          updated_at: string\n        }\n        Insert: {\n          batch_no: string\n          bill_no: string\n          created_at?: string\n          created_by?: string | null\n          entry_date?: string\n          id?: string\n          mill: string\n          quantity: number\n          serial_no: string\n          updated_at?: string\n        }\n        Update: {\n          batch_no?: string\n          bill_no?: string\n          created_at?: string\n          created_by?: string | null\n          entry_date?: string\n          id?: string\n          mill?: string\n          quantity?: number\n          serial_no?: string\n          updated_at?: string\n        }\n        Relationships: []\n      }\n      frk_outward_entries: {\n        Row: {\n          created_at: string\n          created_by: string | null\n          entry_date: string\n          id: string\n          mill: string\n          quantity: number\n          rice_loading_bill_no: string\n          rice_loading_entry_id: string | null\n          updated_at: string\n        }\n        Insert: {\n          created_at?: string\n          created_by?: string | null\n          entry_date?: string\n          id?: string\n          mill: string\n          quantity: number\n          rice_loading_bill_no: string\n          rice_loading_entry_id?: string | null\n          updated_at?: string\n        }\n        Update: {\n          created_at?: string\n          created_by?: string | null\n          entry_date?: string\n          id?: string\n          mill?: string\n          quantity?: number\n          rice_loading_bill_no?: string\n          rice_loading_entry_id?: string | null\n          updated_at?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"frk_outward_entries_rice_loading_entry_id_fkey\"\n            columns: [\"rice_loading_entry_id\"]\n            isOneToOne: false\n            referencedRelation: \"rice_loading_entries\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      godown_expense_references: {\n        Row: {\n          bill_no: string\n          created_at: string\n          created_by: string\n          expense_amount: number\n          id: string\n          lorry_no: string\n          rice_loading_entry_id: string | null\n          transaction_id: string | null\n          updated_at: string\n        }\n        Insert: {\n          bill_no: string\n          created_at?: string\n          created_by: string\n          expense_amount: number\n          id?: string\n          lorry_no: string\n          rice_loading_entry_id?: string | null\n          transaction_id?: string | null\n          updated_at?: string\n        }\n        Update: {\n          bill_no?: string\n          created_at?: string\n          created_by?: string\n          expense_amount?: number\n          id?: string\n          lorry_no?: string\n          rice_loading_entry_id?: string | null\n          transaction_id?: string | null\n          updated_at?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"godown_expense_references_rice_loading_entry_id_fkey\"\n            columns: [\"rice_loading_entry_id\"]\n            isOneToOne: false\n            referencedRelation: \"rice_loading_entries\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"godown_expense_references_transaction_id_fkey\"\n            columns: [\"transaction_id\"]\n            isOneToOne: false\n            referencedRelation: \"transactions\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      google_sheets_configs: {\n        Row: {\n          column_letter: string\n          config_key: string\n          created_at: string\n          created_by: string\n          display_name: string\n          id: string\n          is_active: boolean\n          sheet_ids: Json\n          sheet_name: string\n          updated_at: string\n        }\n        Insert: {\n          column_letter: string\n          config_key: string\n          created_at?: string\n          created_by: string\n          display_name: string\n          id?: string\n          is_active?: boolean\n          sheet_ids?: Json\n          sheet_name: string\n          updated_at?: string\n        }\n        Update: {\n          column_letter?: string\n          config_key?: string\n          created_at?: string\n          created_by?: string\n          display_name?: string\n          id?: string\n          is_active?: boolean\n          sheet_ids?: Json\n          sheet_name?: string\n          updated_at?: string\n        }\n        Relationships: []\n      }\n      google_sheets_sync_log: {\n        Row: {\n          action: string\n          attempt_count: number | null\n          created_at: string | null\n          created_by: string | null\n          entry_id: string | null\n          entry_type: string\n          error_details: Json | null\n          error_message: string | null\n          id: string\n          identifier: Json\n          last_attempt_at: string | null\n          operation_type: string\n          status: string\n          sync_data: Json\n          synced_at: string | null\n        }\n        Insert: {\n          action: string\n          attempt_count?: number | null\n          created_at?: string | null\n          created_by?: string | null\n          entry_id?: string | null\n          entry_type: string\n          error_details?: Json | null\n          error_message?: string | null\n          id?: string\n          identifier: Json\n          last_attempt_at?: string | null\n          operation_type: string\n          status?: string\n          sync_data: Json\n          synced_at?: string | null\n        }\n        Update: {\n          action?: string\n          attempt_count?: number | null\n          created_at?: string | null\n          created_by?: string | null\n          entry_id?: string | null\n          entry_type?: string\n          error_details?: Json | null\n          error_message?: string | null\n          id?: string\n          identifier?: Json\n          last_attempt_at?: string | null\n          operation_type?: string\n          status?: string\n          sync_data?: Json\n          synced_at?: string | null\n        }\n        Relationships: []\n      }\n      gps_historical_trips: {\n        Row: {\n          compressed_path: Json\n          created_at: string\n          date: string\n          id: string\n          total_distance_km: number | null\n          user_id: string\n        }\n        Insert: {\n          compressed_path?: Json\n          created_at?: string\n          date: string\n          id?: string\n          total_distance_km?: number | null\n          user_id: string\n        }\n        Update: {\n          compressed_path?: Json\n          created_at?: string\n          date?: string\n          id?: string\n          total_distance_km?: number | null\n          user_id?: string\n        }\n        Relationships: []\n      }\n      gps_status_logs: {\n        Row: {\n          created_at: string\n          event_timestamp: string\n          id: string\n          metadata: Json | null\n          status: string\n          user_id: string\n        }\n        Insert: {\n          created_at?: string\n          event_timestamp?: string\n          id?: string\n          metadata?: Json | null\n          status: string\n          user_id: string\n        }\n        Update: {\n          created_at?: string\n          event_timestamp?: string\n          id?: string\n          metadata?: Json | null\n          status?: string\n          user_id?: string\n        }\n        Relationships: []\n      }\n      gps_task_group_assignments: {\n        Row: {\n          created_at: string | null\n          gps_task_id: string\n          id: string\n          user_id: string\n        }\n        Insert: {\n          created_at?: string | null\n          gps_task_id: string\n          id?: string\n          user_id: string\n        }\n        Update: {\n          created_at?: string | null\n          gps_task_id?: string\n          id?: string\n          user_id?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"gps_task_group_assignments_gps_task_id_fkey\"\n            columns: [\"gps_task_id\"]\n            isOneToOne: false\n            referencedRelation: \"gps_tasks\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"gps_task_group_assignments_user_id_fkey\"\n            columns: [\"user_id\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      gps_task_transfers: {\n        Row: {\n          from_user: string\n          gps_task_id: string\n          id: string\n          reason: string | null\n          to_user: string\n          transferred_at: string | null\n        }\n        Insert: {\n          from_user: string\n          gps_task_id: string\n          id?: string\n          reason?: string | null\n          to_user: string\n          transferred_at?: string | null\n        }\n        Update: {\n          from_user?: string\n          gps_task_id?: string\n          id?: string\n          reason?: string | null\n          to_user?: string\n          transferred_at?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"gps_task_transfers_from_user_fkey\"\n            columns: [\"from_user\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"gps_task_transfers_gps_task_id_fkey\"\n            columns: [\"gps_task_id\"]\n            isOneToOne: false\n            referencedRelation: \"gps_tasks\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"gps_task_transfers_to_user_fkey\"\n            columns: [\"to_user\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      gps_task_updates: {\n        Row: {\n          created_at: string | null\n          gps_task_id: string\n          id: string\n          photo_url: string | null\n          remarks: string | null\n          status: string\n          user_id: string\n          voice_url: string | null\n        }\n        Insert: {\n          created_at?: string | null\n          gps_task_id: string\n          id?: string\n          photo_url?: string | null\n          remarks?: string | null\n          status: string\n          user_id: string\n          voice_url?: string | null\n        }\n        Update: {\n          created_at?: string | null\n          gps_task_id?: string\n          id?: string\n          photo_url?: string | null\n          remarks?: string | null\n          status?: string\n          user_id?: string\n          voice_url?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"gps_task_updates_gps_task_id_fkey\"\n            columns: [\"gps_task_id\"]\n            isOneToOne: false\n            referencedRelation: \"gps_tasks\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"gps_task_updates_user_id_fkey\"\n            columns: [\"user_id\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      gps_tasks: {\n        Row: {\n          assigned_by: string\n          assigned_to: string\n          assigned_to_group_id: string | null\n          created_at: string | null\n          description: string | null\n          id: string\n          latitude: number\n          longitude: number\n          paused_until: string | null\n          radius: number\n          status: string | null\n          target_time: string | null\n          title: string\n          updated_at: string | null\n          voice_recording_url: string | null\n        }\n        Insert: {\n          assigned_by: string\n          assigned_to: string\n          assigned_to_group_id?: string | null\n          created_at?: string | null\n          description?: string | null\n          id?: string\n          latitude: number\n          longitude: number\n          paused_until?: string | null\n          radius?: number\n          status?: string | null\n          target_time?: string | null\n          title: string\n          updated_at?: string | null\n          voice_recording_url?: string | null\n        }\n        Update: {\n          assigned_by?: string\n          assigned_to?: string\n          assigned_to_group_id?: string | null\n          created_at?: string | null\n          description?: string | null\n          id?: string\n          latitude?: number\n          longitude?: number\n          paused_until?: string | null\n          radius?: number\n          status?: string | null\n          target_time?: string | null\n          title?: string\n          updated_at?: string | null\n          voice_recording_url?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"gps_tasks_assigned_by_fkey\"\n            columns: [\"assigned_by\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"gps_tasks_assigned_to_fkey\"\n            columns: [\"assigned_to\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"gps_tasks_assigned_to_group_id_fkey\"\n            columns: [\"assigned_to_group_id\"]\n            isOneToOne: false\n            referencedRelation: \"user_groups\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      gps_zone_entries: {\n        Row: {\n          acknowledged: boolean\n          created_at: string\n          entered_at: string\n          exited_at: string | null\n          gps_task_id: string\n          id: string\n          user_id: string\n        }\n        Insert: {\n          acknowledged?: boolean\n          created_at?: string\n          entered_at?: string\n          exited_at?: string | null\n          gps_task_id: string\n          id?: string\n          user_id: string\n        }\n        Update: {\n          acknowledged?: boolean\n          created_at?: string\n          entered_at?: string\n          exited_at?: string | null\n          gps_task_id?: string\n          id?: string\n          user_id?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"gps_zone_entries_gps_task_id_fkey\"\n            columns: [\"gps_task_id\"]\n            isOneToOne: false\n            referencedRelation: \"gps_tasks\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"gps_zone_entries_user_id_fkey\"\n            columns: [\"user_id\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      instruction_acceptance: {\n        Row: {\n          accepted_at: string | null\n          id: string\n          instruction_id: string\n          remarks: string | null\n          user_id: string\n        }\n        Insert: {\n          accepted_at?: string | null\n          id?: string\n          instruction_id: string\n          remarks?: string | null\n          user_id: string\n        }\n        Update: {\n          accepted_at?: string | null\n          id?: string\n          instruction_id?: string\n          remarks?: string | null\n          user_id?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"instruction_acceptance_instruction_id_fkey\"\n            columns: [\"instruction_id\"]\n            isOneToOne: false\n            referencedRelation: \"instructions\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      instruction_group_assignments: {\n        Row: {\n          created_at: string | null\n          id: string\n          instruction_id: string\n          user_id: string\n        }\n        Insert: {\n          created_at?: string | null\n          id?: string\n          instruction_id: string\n          user_id: string\n        }\n        Update: {\n          created_at?: string | null\n          id?: string\n          instruction_id?: string\n          user_id?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"instruction_group_assignments_instruction_id_fkey\"\n            columns: [\"instruction_id\"]\n            isOneToOne: false\n            referencedRelation: \"instructions\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"instruction_group_assignments_user_id_fkey\"\n            columns: [\"user_id\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      instructions: {\n        Row: {\n          assigned_by: string\n          assigned_to: string\n          assigned_to_group_id: string | null\n          created_at: string | null\n          description: string | null\n          id: string\n          notification_sent: boolean | null\n          scheduled_for: string | null\n          status: string | null\n          title: string\n          updated_at: string | null\n          voice_recording_url: string | null\n        }\n        Insert: {\n          assigned_by: string\n          assigned_to: string\n          assigned_to_group_id?: string | null\n          created_at?: string | null\n          description?: string | null\n          id?: string\n          notification_sent?: boolean | null\n          scheduled_for?: string | null\n          status?: string | null\n          title: string\n          updated_at?: string | null\n          voice_recording_url?: string | null\n        }\n        Update: {\n          assigned_by?: string\n          assigned_to?: string\n          assigned_to_group_id?: string | null\n          created_at?: string | null\n          description?: string | null\n          id?: string\n          notification_sent?: boolean | null\n          scheduled_for?: string | null\n          status?: string | null\n          title?: string\n          updated_at?: string | null\n          voice_recording_url?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"instructions_assigned_by_fkey\"\n            columns: [\"assigned_by\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"instructions_assigned_to_fkey\"\n            columns: [\"assigned_to\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"instructions_assigned_to_group_id_fkey\"\n            columns: [\"assigned_to_group_id\"]\n            isOneToOne: false\n            referencedRelation: \"user_groups\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      items: {\n        Row: {\n          code: string\n          created_at: string\n          description_english: string | null\n          description_tamil: string | null\n          gst_percentage: number | null\n          hsn_no: string | null\n          id: string\n          is_active: boolean\n          kooli: number | null\n          kooli_mill_mattaparai: number | null\n          kooli_mill_pulivanthi: number | null\n          kooli_out_mattaparai: number | null\n          kooli_out_pulivanthi: number | null\n          name_english: string\n          name_tamil: string | null\n          opening_stock: number | null\n          unit: string\n          unit_weight: number\n          updated_at: string\n        }\n        Insert: {\n          code: string\n          created_at?: string\n          description_english?: string | null\n          description_tamil?: string | null\n          gst_percentage?: number | null\n          hsn_no?: string | null\n          id?: string\n          is_active?: boolean\n          kooli?: number | null\n          kooli_mill_mattaparai?: number | null\n          kooli_mill_pulivanthi?: number | null\n          kooli_out_mattaparai?: number | null\n          kooli_out_pulivanthi?: number | null\n          name_english: string\n          name_tamil?: string | null\n          opening_stock?: number | null\n          unit?: string\n          unit_weight?: number\n          updated_at?: string\n        }\n        Update: {\n          code?: string\n          created_at?: string\n          description_english?: string | null\n          description_tamil?: string | null\n          gst_percentage?: number | null\n          hsn_no?: string | null\n          id?: string\n          is_active?: boolean\n          kooli?: number | null\n          kooli_mill_mattaparai?: number | null\n          kooli_mill_pulivanthi?: number | null\n          kooli_out_mattaparai?: number | null\n          kooli_out_pulivanthi?: number | null\n          name_english?: string\n          name_tamil?: string | null\n          opening_stock?: number | null\n          unit?: string\n          unit_weight?: number\n          updated_at?: string\n        }\n        Relationships: []\n      }\n      kooli_ledger_config: {\n        Row: {\n          created_at: string | null\n          id: string\n          labour: string\n          ledger_id: string\n          mill: string\n          updated_at: string | null\n        }\n        Insert: {\n          created_at?: string | null\n          id?: string\n          labour: string\n          ledger_id: string\n          mill: string\n          updated_at?: string | null\n        }\n        Update: {\n          created_at?: string | null\n          id?: string\n          labour?: string\n          ledger_id?: string\n          mill?: string\n          updated_at?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"kooli_ledger_config_ledger_id_fkey\"\n            columns: [\"ledger_id\"]\n            isOneToOne: false\n            referencedRelation: \"ledgers\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      kooli_rates: {\n        Row: {\n          created_at: string | null\n          created_by: string | null\n          id: string\n          rate_mill_mattaparai: number | null\n          rate_mill_pulivanthi: number | null\n          rate_out_mattaparai: number | null\n          rate_out_pulivanthi: number | null\n          rate_type: string\n          rate_value: number\n          updated_at: string | null\n          updated_by: string | null\n        }\n        Insert: {\n          created_at?: string | null\n          created_by?: string | null\n          id?: string\n          rate_mill_mattaparai?: number | null\n          rate_mill_pulivanthi?: number | null\n          rate_out_mattaparai?: number | null\n          rate_out_pulivanthi?: number | null\n          rate_type: string\n          rate_value?: number\n          updated_at?: string | null\n          updated_by?: string | null\n        }\n        Update: {\n          created_at?: string | null\n          created_by?: string | null\n          id?: string\n          rate_mill_mattaparai?: number | null\n          rate_mill_pulivanthi?: number | null\n          rate_out_mattaparai?: number | null\n          rate_out_pulivanthi?: number | null\n          rate_type?: string\n          rate_value?: number\n          updated_at?: string | null\n          updated_by?: string | null\n        }\n        Relationships: []\n      }\n      kooli_work_date_overrides: {\n        Row: {\n          created_at: string | null\n          created_by: string | null\n          id: string\n          is_removed: boolean | null\n          mill_override: string | null\n          quantity_override: number | null\n          record_id: string\n          table_name: string\n          updated_at: string | null\n          work_date: string\n        }\n        Insert: {\n          created_at?: string | null\n          created_by?: string | null\n          id?: string\n          is_removed?: boolean | null\n          mill_override?: string | null\n          quantity_override?: number | null\n          record_id: string\n          table_name: string\n          updated_at?: string | null\n          work_date: string\n        }\n        Update: {\n          created_at?: string | null\n          created_by?: string | null\n          id?: string\n          is_removed?: boolean | null\n          mill_override?: string | null\n          quantity_override?: number | null\n          record_id?: string\n          table_name?: string\n          updated_at?: string | null\n          work_date?: string\n        }\n        Relationships: []\n      }\n      ledger_groups: {\n        Row: {\n          created_at: string\n          created_by: string\n          description: string | null\n          description_tamil: string | null\n          id: string\n          name: string\n          name_tamil: string | null\n        }\n        Insert: {\n          created_at?: string\n          created_by: string\n          description?: string | null\n          description_tamil?: string | null\n          id?: string\n          name: string\n          name_tamil?: string | null\n        }\n        Update: {\n          created_at?: string\n          created_by?: string\n          description?: string | null\n          description_tamil?: string | null\n          id?: string\n          name?: string\n          name_tamil?: string | null\n        }\n        Relationships: []\n      }\n      ledgers: {\n        Row: {\n          archive_reason: string | null\n          archived_at: string | null\n          archived_by: string | null\n          created_at: string\n          created_by: string\n          description: string | null\n          description_tamil: string | null\n          group_id: string | null\n          id: string\n          is_archived: boolean\n          name: string\n          name_tamil: string | null\n          opening_balance: number | null\n          updated_at: string | null\n        }\n        Insert: {\n          archive_reason?: string | null\n          archived_at?: string | null\n          archived_by?: string | null\n          created_at?: string\n          created_by: string\n          description?: string | null\n          description_tamil?: string | null\n          group_id?: string | null\n          id?: string\n          is_archived?: boolean\n          name: string\n          name_tamil?: string | null\n          opening_balance?: number | null\n          updated_at?: string | null\n        }\n        Update: {\n          archive_reason?: string | null\n          archived_at?: string | null\n          archived_by?: string | null\n          created_at?: string\n          created_by?: string\n          description?: string | null\n          description_tamil?: string | null\n          group_id?: string | null\n          id?: string\n          is_archived?: boolean\n          name?: string\n          name_tamil?: string | null\n          opening_balance?: number | null\n          updated_at?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"ledgers_group_id_fkey\"\n            columns: [\"group_id\"]\n            isOneToOne: false\n            referencedRelation: \"ledger_groups\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      loading_places: {\n        Row: {\n          active: boolean | null\n          created_at: string | null\n          id: string\n          name: string\n        }\n        Insert: {\n          active?: boolean | null\n          created_at?: string | null\n          id?: string\n          name: string\n        }\n        Update: {\n          active?: boolean | null\n          created_at?: string | null\n          id?: string\n          name?: string\n        }\n        Relationships: []\n      }\n      location_tracking: {\n        Row: {\n          accuracy: number | null\n          bearing: number | null\n          bearing_accuracy: number | null\n          created_at: string | null\n          heading: number | null\n          id: string\n          latitude: number\n          longitude: number\n          provider: string | null\n          recorded_at: string\n          satellite_count: number | null\n          source: string | null\n          speed: number | null\n          user_id: string\n        }\n        Insert: {\n          accuracy?: number | null\n          bearing?: number | null\n          bearing_accuracy?: number | null\n          created_at?: string | null\n          heading?: number | null\n          id?: string\n          latitude: number\n          longitude: number\n          provider?: string | null\n          recorded_at?: string\n          satellite_count?: number | null\n          source?: string | null\n          speed?: number | null\n          user_id: string\n        }\n        Update: {\n          accuracy?: number | null\n          bearing?: number | null\n          bearing_accuracy?: number | null\n          created_at?: string | null\n          heading?: number | null\n          id?: string\n          latitude?: number\n          longitude?: number\n          provider?: string | null\n          recorded_at?: string\n          satellite_count?: number | null\n          source?: string | null\n          speed?: number | null\n          user_id?: string\n        }\n        Relationships: []\n      }\n      location_verifications: {\n        Row: {\n          action_type: string\n          created_at: string | null\n          distance_meters: number | null\n          expected_lat: number | null\n          expected_lng: number | null\n          id: string\n          task_id: string\n          user_id: string\n          verified_lat: number | null\n          verified_lng: number | null\n          within_radius: boolean | null\n        }\n        Insert: {\n          action_type: string\n          created_at?: string | null\n          distance_meters?: number | null\n          expected_lat?: number | null\n          expected_lng?: number | null\n          id?: string\n          task_id: string\n          user_id: string\n          verified_lat?: number | null\n          verified_lng?: number | null\n          within_radius?: boolean | null\n        }\n        Update: {\n          action_type?: string\n          created_at?: string | null\n          distance_meters?: number | null\n          expected_lat?: number | null\n          expected_lng?: number | null\n          id?: string\n          task_id?: string\n          user_id?: string\n          verified_lat?: number | null\n          verified_lng?: number | null\n          within_radius?: boolean | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"location_verifications_task_id_fkey\"\n            columns: [\"task_id\"]\n            isOneToOne: false\n            referencedRelation: \"tasks\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      locations: {\n        Row: {\n          created_at: string | null\n          created_by: string\n          description: string | null\n          id: string\n          latitude: number\n          longitude: number\n          name: string\n          updated_at: string | null\n        }\n        Insert: {\n          created_at?: string | null\n          created_by: string\n          description?: string | null\n          id?: string\n          latitude: number\n          longitude: number\n          name: string\n          updated_at?: string | null\n        }\n        Update: {\n          created_at?: string | null\n          created_by?: string\n          description?: string | null\n          id?: string\n          latitude?: number\n          longitude?: number\n          name?: string\n          updated_at?: string | null\n        }\n        Relationships: []\n      }\n      lorries: {\n        Row: {\n          created_at: string | null\n          engine_oil_change_date: string | null\n          fc_expiry: string | null\n          gearbox_oil_change_date: string | null\n          id: string\n          insurance_expiry: string | null\n          pollution_expiry: string | null\n          status: string | null\n          tax_expiry: string | null\n          tyre_service_date: string | null\n          vehicle_number: string\n        }\n        Insert: {\n          created_at?: string | null\n          engine_oil_change_date?: string | null\n          fc_expiry?: string | null\n          gearbox_oil_change_date?: string | null\n          id?: string\n          insurance_expiry?: string | null\n          pollution_expiry?: string | null\n          status?: string | null\n          tax_expiry?: string | null\n          tyre_service_date?: string | null\n          vehicle_number: string\n        }\n        Update: {\n          created_at?: string | null\n          engine_oil_change_date?: string | null\n          fc_expiry?: string | null\n          gearbox_oil_change_date?: string | null\n          id?: string\n          insurance_expiry?: string | null\n          pollution_expiry?: string | null\n          status?: string | null\n          tax_expiry?: string | null\n          tyre_service_date?: string | null\n          vehicle_number?: string\n        }\n        Relationships: []\n      }\n      manual_kooli_entries: {\n        Row: {\n          amount: number | null\n          created_at: string | null\n          created_by: string | null\n          description: string\n          entry_date: string\n          id: string\n          is_posted: boolean | null\n          labour: string | null\n          ledger_transaction_id: string | null\n          mill: string\n          qty: number\n          rate: number\n          updated_at: string | null\n          updated_by: string | null\n        }\n        Insert: {\n          amount?: number | null\n          created_at?: string | null\n          created_by?: string | null\n          description: string\n          entry_date: string\n          id?: string\n          is_posted?: boolean | null\n          labour?: string | null\n          ledger_transaction_id?: string | null\n          mill?: string\n          qty?: number\n          rate?: number\n          updated_at?: string | null\n          updated_by?: string | null\n        }\n        Update: {\n          amount?: number | null\n          created_at?: string | null\n          created_by?: string | null\n          description?: string\n          entry_date?: string\n          id?: string\n          is_posted?: boolean | null\n          labour?: string | null\n          ledger_transaction_id?: string | null\n          mill?: string\n          qty?: number\n          rate?: number\n          updated_at?: string | null\n          updated_by?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"manual_kooli_entries_ledger_transaction_id_fkey\"\n            columns: [\"ledger_transaction_id\"]\n            isOneToOne: false\n            referencedRelation: \"transactions\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      mechanic_logs: {\n        Row: {\n          cost: number | null\n          created_at: string | null\n          id: string\n          lorry_id: string | null\n          mechanic_name: string | null\n          problem: string | null\n          repair_date: string | null\n          repair_done: string | null\n        }\n        Insert: {\n          cost?: number | null\n          created_at?: string | null\n          id?: string\n          lorry_id?: string | null\n          mechanic_name?: string | null\n          problem?: string | null\n          repair_date?: string | null\n          repair_done?: string | null\n        }\n        Update: {\n          cost?: number | null\n          created_at?: string | null\n          id?: string\n          lorry_id?: string | null\n          mechanic_name?: string | null\n          problem?: string | null\n          repair_date?: string | null\n          repair_done?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"mechanic_logs_lorry_id_fkey\"\n            columns: [\"lorry_id\"]\n            isOneToOne: false\n            referencedRelation: \"lorries\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      mobile_sms_messages: {\n        Row: {\n          body: string | null\n          id: string\n          received_at: string | null\n          sender: string | null\n          uploader_email: string | null\n          user_id: string | null\n        }\n        Insert: {\n          body?: string | null\n          id?: string\n          received_at?: string | null\n          sender?: string | null\n          uploader_email?: string | null\n          user_id?: string | null\n        }\n        Update: {\n          body?: string | null\n          id?: string\n          received_at?: string | null\n          sender?: string | null\n          uploader_email?: string | null\n          user_id?: string | null\n        }\n        Relationships: []\n      }\n      motor_compliance_log: {\n        Row: {\n          created_at: string | null\n          duration_sec: number\n          fault_code: number | null\n          id: string\n          mismatch_type: string\n          motor_id: string\n          relay_state: string\n          vfd_state: string\n        }\n        Insert: {\n          created_at?: string | null\n          duration_sec: number\n          fault_code?: number | null\n          id?: string\n          mismatch_type: string\n          motor_id: string\n          relay_state: string\n          vfd_state: string\n        }\n        Update: {\n          created_at?: string | null\n          duration_sec?: number\n          fault_code?: number | null\n          id?: string\n          mismatch_type?: string\n          motor_id?: string\n          relay_state?: string\n          vfd_state?: string\n        }\n        Relationships: []\n      }\n      motor_mismatch_log: {\n        Row: {\n          created_at: string | null\n          fault_code: number | null\n          id: string\n          mismatch_duration_sec: number\n          motor_no: number\n          relay_state: boolean\n          vfd_running: boolean\n        }\n        Insert: {\n          created_at?: string | null\n          fault_code?: number | null\n          id?: string\n          mismatch_duration_sec: number\n          motor_no: number\n          relay_state: boolean\n          vfd_running: boolean\n        }\n        Update: {\n          created_at?: string | null\n          fault_code?: number | null\n          id?: string\n          mismatch_duration_sec?: number\n          motor_no?: number\n          relay_state?: boolean\n          vfd_running?: boolean\n        }\n        Relationships: []\n      }\n      notifications: {\n        Row: {\n          acknowledged_at: string | null\n          app_id: string | null\n          created_at: string | null\n          id: string\n          is_read: boolean | null\n          message: string\n          related_job_id: string | null\n          title: string\n          type: string\n          user_id: string\n        }\n        Insert: {\n          acknowledged_at?: string | null\n          app_id?: string | null\n          created_at?: string | null\n          id?: string\n          is_read?: boolean | null\n          message: string\n          related_job_id?: string | null\n          title: string\n          type: string\n          user_id: string\n        }\n        Update: {\n          acknowledged_at?: string | null\n          app_id?: string | null\n          created_at?: string | null\n          id?: string\n          is_read?: boolean | null\n          message?: string\n          related_job_id?: string | null\n          title?: string\n          type?: string\n          user_id?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"notifications_user_id_fkey\"\n            columns: [\"user_id\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      outward_entries: {\n        Row: {\n          created_at: string\n          customer_id: string\n          driver_mobile: string\n          empty_weight: number\n          entry_date: string\n          id: string\n          is_completed: boolean\n          is_posted: boolean | null\n          item_id: string\n          labour: string | null\n          ledger_transaction_id: string | null\n          load_weight: number | null\n          load_weight_photo_url: string | null\n          load_weight_updated_at: string | null\n          load_weight_updated_by: string | null\n          loading_place: string\n          lorry_no: string\n          net_weight: number | null\n          remarks: string | null\n          serial_no: number\n          updated_at: string\n          weighment_photo_url: string | null\n        }\n        Insert: {\n          created_at?: string\n          customer_id: string\n          driver_mobile: string\n          empty_weight: number\n          entry_date?: string\n          id?: string\n          is_completed?: boolean\n          is_posted?: boolean | null\n          item_id: string\n          labour?: string | null\n          ledger_transaction_id?: string | null\n          load_weight?: number | null\n          load_weight_photo_url?: string | null\n          load_weight_updated_at?: string | null\n          load_weight_updated_by?: string | null\n          loading_place?: string\n          lorry_no: string\n          net_weight?: number | null\n          remarks?: string | null\n          serial_no?: number\n          updated_at?: string\n          weighment_photo_url?: string | null\n        }\n        Update: {\n          created_at?: string\n          customer_id?: string\n          driver_mobile?: string\n          empty_weight?: number\n          entry_date?: string\n          id?: string\n          is_completed?: boolean\n          is_posted?: boolean | null\n          item_id?: string\n          labour?: string | null\n          ledger_transaction_id?: string | null\n          load_weight?: number | null\n          load_weight_photo_url?: string | null\n          load_weight_updated_at?: string | null\n          load_weight_updated_by?: string | null\n          loading_place?: string\n          lorry_no?: string\n          net_weight?: number | null\n          remarks?: string | null\n          serial_no?: number\n          updated_at?: string\n          weighment_photo_url?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"outward_entries_customer_id_fkey\"\n            columns: [\"customer_id\"]\n            isOneToOne: false\n            referencedRelation: \"customers\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"outward_entries_item_id_fkey\"\n            columns: [\"item_id\"]\n            isOneToOne: false\n            referencedRelation: \"items\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"outward_entries_ledger_transaction_id_fkey\"\n            columns: [\"ledger_transaction_id\"]\n            isOneToOne: false\n            referencedRelation: \"transactions\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      pa_actions: {\n        Row: {\n          action_taken: string\n          confidence_score: number | null\n          created_at: string | null\n          final_outcome: string | null\n          id: string\n          insight_id: string | null\n          owner_response: string | null\n        }\n        Insert: {\n          action_taken: string\n          confidence_score?: number | null\n          created_at?: string | null\n          final_outcome?: string | null\n          id?: string\n          insight_id?: string | null\n          owner_response?: string | null\n        }\n        Update: {\n          action_taken?: string\n          confidence_score?: number | null\n          created_at?: string | null\n          final_outcome?: string | null\n          id?: string\n          insight_id?: string | null\n          owner_response?: string | null\n        }\n        Relationships: []\n      }\n      pa_authority_rules: {\n        Row: {\n          action_type: string\n          allowed_time_window: Json | null\n          created_at: string | null\n          enabled: boolean | null\n          id: string\n          max_risk_level: string | null\n          requires_approval: boolean | null\n          updated_at: string | null\n        }\n        Insert: {\n          action_type: string\n          allowed_time_window?: Json | null\n          created_at?: string | null\n          enabled?: boolean | null\n          id?: string\n          max_risk_level?: string | null\n          requires_approval?: boolean | null\n          updated_at?: string | null\n        }\n        Update: {\n          action_type?: string\n          allowed_time_window?: Json | null\n          created_at?: string | null\n          enabled?: boolean | null\n          id?: string\n          max_risk_level?: string | null\n          requires_approval?: boolean | null\n          updated_at?: string | null\n        }\n        Relationships: []\n      }\n      pa_insights: {\n        Row: {\n          category: string\n          confidence: number | null\n          created_at: string | null\n          evidence: Json | null\n          id: string\n          is_risk: boolean | null\n          message: string\n          owner_id: string\n          priority: number\n          severity: string | null\n          title: string\n          type: string\n          viewed_at: string | null\n        }\n        Insert: {\n          category: string\n          confidence?: number | null\n          created_at?: string | null\n          evidence?: Json | null\n          id?: string\n          is_risk?: boolean | null\n          message: string\n          owner_id: string\n          priority: number\n          severity?: string | null\n          title: string\n          type: string\n          viewed_at?: string | null\n        }\n        Update: {\n          category?: string\n          confidence?: number | null\n          created_at?: string | null\n          evidence?: Json | null\n          id?: string\n          is_risk?: boolean | null\n          message?: string\n          owner_id?: string\n          priority?: number\n          severity?: string | null\n          title?: string\n          type?: string\n          viewed_at?: string | null\n        }\n        Relationships: []\n      }\n      pa_owner_profile: {\n        Row: {\n          created_at: string | null\n          owner_id: string\n          preferred_alert_times: Json | null\n          preferred_language: string | null\n          risk_tolerance: string | null\n          updated_at: string | null\n          verbosity_level: string | null\n        }\n        Insert: {\n          created_at?: string | null\n          owner_id: string\n          preferred_alert_times?: Json | null\n          preferred_language?: string | null\n          risk_tolerance?: string | null\n          updated_at?: string | null\n          verbosity_level?: string | null\n        }\n        Update: {\n          created_at?: string | null\n          owner_id?: string\n          preferred_alert_times?: Json | null\n          preferred_language?: string | null\n          risk_tolerance?: string | null\n          updated_at?: string | null\n          verbosity_level?: string | null\n        }\n        Relationships: []\n      }\n      paddy_inward_issue_memos: {\n        Row: {\n          additional_bag_grade: string | null\n          additional_bag_grade_2: string | null\n          additional_quantity: number | null\n          additional_quantity_2: number | null\n          bag_grade: string | null\n          bags: number | null\n          created_at: string | null\n          created_by: string | null\n          entry_unique_id: string | null\n          grade: string | null\n          id: string\n          issue_memo_date: string\n          issue_memo_no: string\n          paddy_inward_entry_id: string\n          quantity: number | null\n          updated_at: string | null\n        }\n        Insert: {\n          additional_bag_grade?: string | null\n          additional_bag_grade_2?: string | null\n          additional_quantity?: number | null\n          additional_quantity_2?: number | null\n          bag_grade?: string | null\n          bags?: number | null\n          created_at?: string | null\n          created_by?: string | null\n          entry_unique_id?: string | null\n          grade?: string | null\n          id?: string\n          issue_memo_date: string\n          issue_memo_no: string\n          paddy_inward_entry_id: string\n          quantity?: number | null\n          updated_at?: string | null\n        }\n        Update: {\n          additional_bag_grade?: string | null\n          additional_bag_grade_2?: string | null\n          additional_quantity?: number | null\n          additional_quantity_2?: number | null\n          bag_grade?: string | null\n          bags?: number | null\n          created_at?: string | null\n          created_by?: string | null\n          entry_unique_id?: string | null\n          grade?: string | null\n          id?: string\n          issue_memo_date?: string\n          issue_memo_no?: string\n          paddy_inward_entry_id?: string\n          quantity?: number | null\n          updated_at?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"paddy_inward_issue_memos_paddy_inward_entry_id_fkey\"\n            columns: [\"paddy_inward_entry_id\"]\n            isOneToOne: false\n            referencedRelation: \"rice_mill_inward_entries\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      page_permissions: {\n        Row: {\n          created_at: string | null\n          description: string | null\n          id: string\n          is_active: boolean | null\n          page_name: string\n          page_route: string\n          updated_at: string | null\n        }\n        Insert: {\n          created_at?: string | null\n          description?: string | null\n          id?: string\n          is_active?: boolean | null\n          page_name: string\n          page_route: string\n          updated_at?: string | null\n        }\n        Update: {\n          created_at?: string | null\n          description?: string | null\n          id?: string\n          is_active?: boolean | null\n          page_name?: string\n          page_route?: string\n          updated_at?: string | null\n        }\n        Relationships: []\n      }\n      payment_requests: {\n        Row: {\n          amount: number\n          created_at: string\n          created_by: string | null\n          id: string\n          note: string | null\n          payee_name: string | null\n          status: string\n          updated_at: string\n          upi_id: string\n          user_id: string | null\n        }\n        Insert: {\n          amount: number\n          created_at?: string\n          created_by?: string | null\n          id?: string\n          note?: string | null\n          payee_name?: string | null\n          status?: string\n          updated_at?: string\n          upi_id: string\n          user_id?: string | null\n        }\n        Update: {\n          amount?: number\n          created_at?: string\n          created_by?: string | null\n          id?: string\n          note?: string | null\n          payee_name?: string | null\n          status?: string\n          updated_at?: string\n          upi_id?: string\n          user_id?: string | null\n        }\n        Relationships: []\n      }\n      payroll: {\n        Row: {\n          bonuses: number | null\n          created_at: string | null\n          days_worked: number | null\n          deductions: number | null\n          employee_id: string\n          gross_salary: number | null\n          id: string\n          month: number\n          net_salary: number | null\n          processed_at: string | null\n          processed_by: string | null\n          status: string | null\n          total_hours: number | null\n          updated_at: string | null\n          year: number\n        }\n        Insert: {\n          bonuses?: number | null\n          created_at?: string | null\n          days_worked?: number | null\n          deductions?: number | null\n          employee_id: string\n          gross_salary?: number | null\n          id?: string\n          month: number\n          net_salary?: number | null\n          processed_at?: string | null\n          processed_by?: string | null\n          status?: string | null\n          total_hours?: number | null\n          updated_at?: string | null\n          year: number\n        }\n        Update: {\n          bonuses?: number | null\n          created_at?: string | null\n          days_worked?: number | null\n          deductions?: number | null\n          employee_id?: string\n          gross_salary?: number | null\n          id?: string\n          month?: number\n          net_salary?: number | null\n          processed_at?: string | null\n          processed_by?: string | null\n          status?: string | null\n          total_hours?: number | null\n          updated_at?: string | null\n          year?: number\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"payroll_employee_id_fkey\"\n            columns: [\"employee_id\"]\n            isOneToOne: false\n            referencedRelation: \"employees\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      performance_metrics: {\n        Row: {\n          id: string\n          metadata: Json | null\n          metric_name: string\n          metric_value: number\n          page_route: string | null\n          timestamp: string\n          user_id: string | null\n        }\n        Insert: {\n          id?: string\n          metadata?: Json | null\n          metric_name: string\n          metric_value: number\n          page_route?: string | null\n          timestamp?: string\n          user_id?: string | null\n        }\n        Update: {\n          id?: string\n          metadata?: Json | null\n          metric_name?: string\n          metric_value?: number\n          page_route?: string | null\n          timestamp?: string\n          user_id?: string | null\n        }\n        Relationships: []\n      }\n      profiles: {\n        Row: {\n          approved_at: string | null\n          approved_by: string | null\n          cashbook_phone: string | null\n          created_at: string\n          fcm_token: string | null\n          id: string\n          is_auto_reconcile_enabled: boolean | null\n          opening_balance: number\n          status: string | null\n          updated_at: string\n          username: string\n          username_tamil: string | null\n        }\n        Insert: {\n          approved_at?: string | null\n          approved_by?: string | null\n          cashbook_phone?: string | null\n          created_at?: string\n          fcm_token?: string | null\n          id: string\n          is_auto_reconcile_enabled?: boolean | null\n          opening_balance?: number\n          status?: string | null\n          updated_at?: string\n          username: string\n          username_tamil?: string | null\n        }\n        Update: {\n          approved_at?: string | null\n          approved_by?: string | null\n          cashbook_phone?: string | null\n          created_at?: string\n          fcm_token?: string | null\n          id?: string\n          is_auto_reconcile_enabled?: boolean | null\n          opening_balance?: number\n          status?: string | null\n          updated_at?: string\n          username?: string\n          username_tamil?: string | null\n        }\n        Relationships: []\n      }\n      projects: {\n        Row: {\n          created_at: string\n          description: string | null\n          generated_code: Json\n          id: string\n          name: string\n          updated_at: string\n          user_id: string\n        }\n        Insert: {\n          created_at?: string\n          description?: string | null\n          generated_code: Json\n          id?: string\n          name: string\n          updated_at?: string\n          user_id: string\n        }\n        Update: {\n          created_at?: string\n          description?: string | null\n          generated_code?: Json\n          id?: string\n          name?: string\n          updated_at?: string\n          user_id?: string\n        }\n        Relationships: []\n      }\n      purchases: {\n        Row: {\n          bill_serial_no: string | null\n          created_at: string\n          created_by: string | null\n          id: string\n          item_id: string\n          mill: string\n          purchase_date: string\n          quantity: number\n          rate: number\n          supplier_id: string\n          total_amount: number\n          updated_at: string\n        }\n        Insert: {\n          bill_serial_no?: string | null\n          created_at?: string\n          created_by?: string | null\n          id?: string\n          item_id: string\n          mill?: string\n          purchase_date?: string\n          quantity: number\n          rate: number\n          supplier_id: string\n          total_amount: number\n          updated_at?: string\n        }\n        Update: {\n          bill_serial_no?: string | null\n          created_at?: string\n          created_by?: string | null\n          id?: string\n          item_id?: string\n          mill?: string\n          purchase_date?: string\n          quantity?: number\n          rate?: number\n          supplier_id?: string\n          total_amount?: number\n          updated_at?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"purchases_item_id_fkey\"\n            columns: [\"item_id\"]\n            isOneToOne: false\n            referencedRelation: \"items\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"purchases_supplier_id_fkey\"\n            columns: [\"supplier_id\"]\n            isOneToOne: false\n            referencedRelation: \"suppliers\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      push_logs: {\n        Row: {\n          created_at: string | null\n          id: string\n          notification_id: string | null\n          response: string | null\n          status: string | null\n          token_prefix: string | null\n          user_id: string | null\n        }\n        Insert: {\n          created_at?: string | null\n          id?: string\n          notification_id?: string | null\n          response?: string | null\n          status?: string | null\n          token_prefix?: string | null\n          user_id?: string | null\n        }\n        Update: {\n          created_at?: string | null\n          id?: string\n          notification_id?: string | null\n          response?: string | null\n          status?: string | null\n          token_prefix?: string | null\n          user_id?: string | null\n        }\n        Relationships: []\n      }\n      receipts: {\n        Row: {\n          amount: number\n          created_at: string\n          created_by: string | null\n          customer_id: string\n          id: string\n          payment_method: string\n          receipt_date: string\n          receipt_no: string\n          remarks: string | null\n          updated_at: string\n        }\n        Insert: {\n          amount: number\n          created_at?: string\n          created_by?: string | null\n          customer_id: string\n          id?: string\n          payment_method?: string\n          receipt_date?: string\n          receipt_no: string\n          remarks?: string | null\n          updated_at?: string\n        }\n        Update: {\n          amount?: number\n          created_at?: string\n          created_by?: string | null\n          customer_id?: string\n          id?: string\n          payment_method?: string\n          receipt_date?: string\n          receipt_no?: string\n          remarks?: string | null\n          updated_at?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"receipts_customer_id_fkey\"\n            columns: [\"customer_id\"]\n            isOneToOne: false\n            referencedRelation: \"customers\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      rice_bag_deposit_entries: {\n        Row: {\n          allotment_month: string\n          bag_grade: string\n          created_at: string\n          created_by: string | null\n          entry_date: string\n          godown: string\n          id: string\n          mill: string\n          notes: string | null\n          photo_url: string | null\n          quantity: number\n          updated_at: string\n        }\n        Insert: {\n          allotment_month: string\n          bag_grade: string\n          created_at?: string\n          created_by?: string | null\n          entry_date: string\n          godown: string\n          id?: string\n          mill: string\n          notes?: string | null\n          photo_url?: string | null\n          quantity?: number\n          updated_at?: string\n        }\n        Update: {\n          allotment_month?: string\n          bag_grade?: string\n          created_at?: string\n          created_by?: string | null\n          entry_date?: string\n          godown?: string\n          id?: string\n          mill?: string\n          notes?: string | null\n          photo_url?: string | null\n          quantity?: number\n          updated_at?: string\n        }\n        Relationships: []\n      }\n      rice_form_submissions: {\n        Row: {\n          bags: number | null\n          date: string | null\n          driver: string | null\n          email: string | null\n          grade: string | null\n          id: number\n          lorry_no: string | null\n          serial_no: number | null\n          timestamp: string\n          token: string | null\n          token_link: string | null\n          wayment_link: string | null\n          wayment_nett_weight: number | null\n        }\n        Insert: {\n          bags?: number | null\n          date?: string | null\n          driver?: string | null\n          email?: string | null\n          grade?: string | null\n          id?: never\n          lorry_no?: string | null\n          serial_no?: number | null\n          timestamp: string\n          token?: string | null\n          token_link?: string | null\n          wayment_link?: string | null\n          wayment_nett_weight?: number | null\n        }\n        Update: {\n          bags?: number | null\n          date?: string | null\n          driver?: string | null\n          email?: string | null\n          grade?: string | null\n          id?: never\n          lorry_no?: string | null\n          serial_no?: number | null\n          timestamp?: string\n          token?: string | null\n          token_link?: string | null\n          wayment_link?: string | null\n          wayment_nett_weight?: number | null\n        }\n        Relationships: []\n      }\n      rice_loading_batch_usage: {\n        Row: {\n          batch_id: string | null\n          created_at: string | null\n          grade: string | null\n          id: string\n          rice_loading_entry_id: string | null\n          synced: boolean | null\n          weight_deducted: number\n        }\n        Insert: {\n          batch_id?: string | null\n          created_at?: string | null\n          grade?: string | null\n          id?: string\n          rice_loading_entry_id?: string | null\n          synced?: boolean | null\n          weight_deducted: number\n        }\n        Update: {\n          batch_id?: string | null\n          created_at?: string | null\n          grade?: string | null\n          id?: string\n          rice_loading_entry_id?: string | null\n          synced?: boolean | null\n          weight_deducted?: number\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"rice_loading_batch_usage_batch_id_fkey\"\n            columns: [\"batch_id\"]\n            isOneToOne: false\n            referencedRelation: \"rice_mill_batches\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"rice_loading_batch_usage_rice_loading_entry_id_fkey\"\n            columns: [\"rice_loading_entry_id\"]\n            isOneToOne: false\n            referencedRelation: \"rice_loading_entries\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      rice_loading_entries: {\n        Row: {\n          accounting_mill: string | null\n          allotment_month: string\n          bag_grade: string\n          bags: number\n          bill_no: string\n          bill_photo_url: string | null\n          created_at: string\n          created_by: string | null\n          driver: string\n          entry_date: string\n          godown: string\n          grade: string\n          gs_sync_timestamp: string | null\n          hint: string | null\n          id: string\n          is_frk: boolean\n          is_posted: boolean | null\n          labour: string | null\n          ledger_transaction_id: string | null\n          lorry_no: string\n          mill: string\n          rice_storage: string\n          status: string\n          unloading_date: string | null\n          updated_at: string\n          weight: number\n        }\n        Insert: {\n          accounting_mill?: string | null\n          allotment_month: string\n          bag_grade?: string\n          bags: number\n          bill_no: string\n          bill_photo_url?: string | null\n          created_at?: string\n          created_by?: string | null\n          driver: string\n          entry_date?: string\n          godown: string\n          grade: string\n          gs_sync_timestamp?: string | null\n          hint?: string | null\n          id?: string\n          is_frk?: boolean\n          is_posted?: boolean | null\n          labour?: string | null\n          ledger_transaction_id?: string | null\n          lorry_no: string\n          mill: string\n          rice_storage: string\n          status?: string\n          unloading_date?: string | null\n          updated_at?: string\n          weight: number\n        }\n        Update: {\n          accounting_mill?: string | null\n          allotment_month?: string\n          bag_grade?: string\n          bags?: number\n          bill_no?: string\n          bill_photo_url?: string | null\n          created_at?: string\n          created_by?: string | null\n          driver?: string\n          entry_date?: string\n          godown?: string\n          grade?: string\n          gs_sync_timestamp?: string | null\n          hint?: string | null\n          id?: string\n          is_frk?: boolean\n          is_posted?: boolean | null\n          labour?: string | null\n          ledger_transaction_id?: string | null\n          lorry_no?: string\n          mill?: string\n          rice_storage?: string\n          status?: string\n          unloading_date?: string | null\n          updated_at?: string\n          weight?: number\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"rice_loading_entries_ledger_transaction_id_fkey\"\n            columns: [\"ledger_transaction_id\"]\n            isOneToOne: false\n            referencedRelation: \"transactions\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      rice_loading_status_history: {\n        Row: {\n          batch_id: string | null\n          bill_no: string | null\n          change_reason: string | null\n          changed_at: string\n          changed_by: string | null\n          entry_id: string\n          entry_type: string\n          id: string\n          lorry_no: string | null\n          new_status: string\n          old_status: string | null\n        }\n        Insert: {\n          batch_id?: string | null\n          bill_no?: string | null\n          change_reason?: string | null\n          changed_at?: string\n          changed_by?: string | null\n          entry_id: string\n          entry_type: string\n          id?: string\n          lorry_no?: string | null\n          new_status: string\n          old_status?: string | null\n        }\n        Update: {\n          batch_id?: string | null\n          bill_no?: string | null\n          change_reason?: string | null\n          changed_at?: string\n          changed_by?: string | null\n          entry_id?: string\n          entry_type?: string\n          id?: string\n          lorry_no?: string | null\n          new_status?: string\n          old_status?: string | null\n        }\n        Relationships: []\n      }\n      rice_mill_batches: {\n        Row: {\n          bags: number | null\n          batch_no: string\n          created_at: string\n          created_by: string | null\n          current_location: string\n          current_location_type: string\n          current_weight: number\n          grade: string\n          id: string\n          initial_weight: number\n          inward_entry_id: string | null\n          mill: string\n          thotti_no: string | null\n          updated_at: string\n        }\n        Insert: {\n          bags?: number | null\n          batch_no: string\n          created_at?: string\n          created_by?: string | null\n          current_location: string\n          current_location_type: string\n          current_weight: number\n          grade: string\n          id?: string\n          initial_weight: number\n          inward_entry_id?: string | null\n          mill?: string\n          thotti_no?: string | null\n          updated_at?: string\n        }\n        Update: {\n          bags?: number | null\n          batch_no?: string\n          created_at?: string\n          created_by?: string | null\n          current_location?: string\n          current_location_type?: string\n          current_weight?: number\n          grade?: string\n          id?: string\n          initial_weight?: number\n          inward_entry_id?: string | null\n          mill?: string\n          thotti_no?: string | null\n          updated_at?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"rice_mill_batches_inward_entry_id_fkey\"\n            columns: [\"inward_entry_id\"]\n            isOneToOne: false\n            referencedRelation: \"rice_mill_inward_entries\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      rice_mill_container_contents: {\n        Row: {\n          bags: number | null\n          batch_id: string\n          created_at: string\n          created_by: string | null\n          expected_completion_time: string | null\n          grade: string\n          id: string\n          location: string\n          location_type: string\n          mill: string\n          process_start_time: string | null\n          thotti_no: string | null\n          updated_at: string\n          weight: number\n        }\n        Insert: {\n          bags?: number | null\n          batch_id: string\n          created_at?: string\n          created_by?: string | null\n          expected_completion_time?: string | null\n          grade: string\n          id?: string\n          location: string\n          location_type: string\n          mill: string\n          process_start_time?: string | null\n          thotti_no?: string | null\n          updated_at?: string\n          weight: number\n        }\n        Update: {\n          bags?: number | null\n          batch_id?: string\n          created_at?: string\n          created_by?: string | null\n          expected_completion_time?: string | null\n          grade?: string\n          id?: string\n          location?: string\n          location_type?: string\n          mill?: string\n          process_start_time?: string | null\n          thotti_no?: string | null\n          updated_at?: string\n          weight?: number\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"rice_mill_container_contents_batch_id_fkey\"\n            columns: [\"batch_id\"]\n            isOneToOne: false\n            referencedRelation: \"rice_mill_batches\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      rice_mill_container_state_history: {\n        Row: {\n          batch_ids_after: Json | null\n          batch_ids_before: Json | null\n          created_at: string\n          id: string\n          location: string\n          location_type: string\n          mill: string\n          operation_timestamp: string\n          operation_type: string\n          related_transfer_id: string | null\n          weight_after: number\n          weight_before: number\n        }\n        Insert: {\n          batch_ids_after?: Json | null\n          batch_ids_before?: Json | null\n          created_at?: string\n          id?: string\n          location: string\n          location_type: string\n          mill: string\n          operation_timestamp?: string\n          operation_type: string\n          related_transfer_id?: string | null\n          weight_after?: number\n          weight_before?: number\n        }\n        Update: {\n          batch_ids_after?: Json | null\n          batch_ids_before?: Json | null\n          created_at?: string\n          id?: string\n          location?: string\n          location_type?: string\n          mill?: string\n          operation_timestamp?: string\n          operation_type?: string\n          related_transfer_id?: string | null\n          weight_after?: number\n          weight_before?: number\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"rice_mill_container_state_history_related_transfer_id_fkey\"\n            columns: [\"related_transfer_id\"]\n            isOneToOne: false\n            referencedRelation: \"rice_mill_transfers\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      rice_mill_container_transactions: {\n        Row: {\n          bags: number | null\n          batch_id: string | null\n          created_at: string\n          created_by: string | null\n          form_name: string | null\n          id: string\n          location: string\n          location_type: string\n          mill: string\n          notes: string | null\n          reference_id: string | null\n          reference_type: string | null\n          related_info: string | null\n          thotti_no: string | null\n          transaction_date: string\n          transaction_type: string\n          weight: number\n        }\n        Insert: {\n          bags?: number | null\n          batch_id?: string | null\n          created_at?: string\n          created_by?: string | null\n          form_name?: string | null\n          id?: string\n          location: string\n          location_type: string\n          mill: string\n          notes?: string | null\n          reference_id?: string | null\n          reference_type?: string | null\n          related_info?: string | null\n          thotti_no?: string | null\n          transaction_date?: string\n          transaction_type: string\n          weight: number\n        }\n        Update: {\n          bags?: number | null\n          batch_id?: string | null\n          created_at?: string\n          created_by?: string | null\n          form_name?: string | null\n          id?: string\n          location?: string\n          location_type?: string\n          mill?: string\n          notes?: string | null\n          reference_id?: string | null\n          reference_type?: string | null\n          related_info?: string | null\n          thotti_no?: string | null\n          transaction_date?: string\n          transaction_type?: string\n          weight?: number\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"rice_mill_container_transactions_batch_id_fkey\"\n            columns: [\"batch_id\"]\n            isOneToOne: false\n            referencedRelation: \"rice_mill_batches\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      rice_mill_global_variables: {\n        Row: {\n          category: string\n          created_at: string\n          created_by: string | null\n          display_text: string\n          distance: number | null\n          distance_to_mattaparai: number | null\n          distance_to_pulivanthi: number | null\n          http_link_1: string | null\n          http_link_1_description: string | null\n          http_link_2: string | null\n          http_link_2_description: string | null\n          id: string\n          is_active: boolean\n          storage_type: string | null\n          updated_at: string\n          value: string\n        }\n        Insert: {\n          category: string\n          created_at?: string\n          created_by?: string | null\n          display_text: string\n          distance?: number | null\n          distance_to_mattaparai?: number | null\n          distance_to_pulivanthi?: number | null\n          http_link_1?: string | null\n          http_link_1_description?: string | null\n          http_link_2?: string | null\n          http_link_2_description?: string | null\n          id?: string\n          is_active?: boolean\n          storage_type?: string | null\n          updated_at?: string\n          value: string\n        }\n        Update: {\n          category?: string\n          created_at?: string\n          created_by?: string | null\n          display_text?: string\n          distance?: number | null\n          distance_to_mattaparai?: number | null\n          distance_to_pulivanthi?: number | null\n          http_link_1?: string | null\n          http_link_1_description?: string | null\n          http_link_2?: string | null\n          http_link_2_description?: string | null\n          id?: string\n          is_active?: boolean\n          storage_type?: string | null\n          updated_at?: string\n          value?: string\n        }\n        Relationships: []\n      }\n      rice_mill_inward_blocks: {\n        Row: {\n          bags_count: number\n          block_number: number\n          created_at: string | null\n          id: string\n          inward_entry_id: string | null\n        }\n        Insert: {\n          bags_count: number\n          block_number: number\n          created_at?: string | null\n          id?: string\n          inward_entry_id?: string | null\n        }\n        Update: {\n          bags_count?: number\n          block_number?: number\n          created_at?: string | null\n          id?: string\n          inward_entry_id?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"rice_mill_inward_blocks_inward_entry_id_fkey\"\n            columns: [\"inward_entry_id\"]\n            isOneToOne: false\n            referencedRelation: \"rice_mill_inward_entries\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      rice_mill_inward_entries: {\n        Row: {\n          accounting_mill: string | null\n          bags: number\n          challan_photo_url: string | null\n          created_at: string\n          created_by: string | null\n          dpc_amount: number | null\n          driver: string\n          empty_time: string | null\n          empty_weight: number | null\n          entry_date: string\n          entry_unique_id: string\n          grade: string\n          id: string\n          is_unloaded: boolean\n          load_time: string | null\n          loading_point: string | null\n          lorry_number: string\n          mill: string\n          serial_no: string\n          token_id: string | null\n          updated_at: string\n          wayment_photo_url: string | null\n          wayment_weight: number\n        }\n        Insert: {\n          accounting_mill?: string | null\n          bags: number\n          challan_photo_url?: string | null\n          created_at?: string\n          created_by?: string | null\n          dpc_amount?: number | null\n          driver: string\n          empty_time?: string | null\n          empty_weight?: number | null\n          entry_date?: string\n          entry_unique_id: string\n          grade: string\n          id?: string\n          is_unloaded?: boolean\n          load_time?: string | null\n          loading_point?: string | null\n          lorry_number: string\n          mill?: string\n          serial_no: string\n          token_id?: string | null\n          updated_at?: string\n          wayment_photo_url?: string | null\n          wayment_weight: number\n        }\n        Update: {\n          accounting_mill?: string | null\n          bags?: number\n          challan_photo_url?: string | null\n          created_at?: string\n          created_by?: string | null\n          dpc_amount?: number | null\n          driver?: string\n          empty_time?: string | null\n          empty_weight?: number | null\n          entry_date?: string\n          entry_unique_id?: string\n          grade?: string\n          id?: string\n          is_unloaded?: boolean\n          load_time?: string | null\n          loading_point?: string | null\n          lorry_number?: string\n          mill?: string\n          serial_no?: string\n          token_id?: string | null\n          updated_at?: string\n          wayment_photo_url?: string | null\n          wayment_weight?: number\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"rice_mill_inward_entries_token_id_fkey\"\n            columns: [\"token_id\"]\n            isOneToOne: false\n            referencedRelation: \"rice_mill_tokens\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      rice_mill_tokens: {\n        Row: {\n          created_at: string\n          created_by: string | null\n          id: string\n          is_used: boolean\n          loading_point: string\n          lorry: string\n          serial_no: string\n          token_value: string\n          updated_at: string\n        }\n        Insert: {\n          created_at?: string\n          created_by?: string | null\n          id?: string\n          is_used?: boolean\n          loading_point: string\n          lorry: string\n          serial_no: string\n          token_value: string\n          updated_at?: string\n        }\n        Update: {\n          created_at?: string\n          created_by?: string | null\n          id?: string\n          is_used?: boolean\n          loading_point?: string\n          lorry?: string\n          serial_no?: string\n          token_value?: string\n          updated_at?: string\n        }\n        Relationships: []\n      }\n      rice_mill_transfers: {\n        Row: {\n          bags: number | null\n          batch_id: string\n          created_at: string\n          expected_duration_minutes: number | null\n          from_location: string\n          from_location_type: string\n          id: string\n          is_overdue: boolean | null\n          is_posted: boolean | null\n          labour: string | null\n          ledger_transaction_id: string | null\n          mill: string | null\n          notes: string | null\n          process_duration_minutes: number | null\n          process_end_time: string | null\n          process_start_time: string | null\n          status: string | null\n          thotti_no: string | null\n          to_location: string\n          to_location_type: string\n          transfer_date: string\n          transferred_by: string | null\n          updated_at: string\n          weight_transferred: number\n        }\n        Insert: {\n          bags?: number | null\n          batch_id: string\n          created_at?: string\n          expected_duration_minutes?: number | null\n          from_location: string\n          from_location_type: string\n          id?: string\n          is_overdue?: boolean | null\n          is_posted?: boolean | null\n          labour?: string | null\n          ledger_transaction_id?: string | null\n          mill?: string | null\n          notes?: string | null\n          process_duration_minutes?: number | null\n          process_end_time?: string | null\n          process_start_time?: string | null\n          status?: string | null\n          thotti_no?: string | null\n          to_location: string\n          to_location_type: string\n          transfer_date?: string\n          transferred_by?: string | null\n          updated_at?: string\n          weight_transferred: number\n        }\n        Update: {\n          bags?: number | null\n          batch_id?: string\n          created_at?: string\n          expected_duration_minutes?: number | null\n          from_location?: string\n          from_location_type?: string\n          id?: string\n          is_overdue?: boolean | null\n          is_posted?: boolean | null\n          labour?: string | null\n          ledger_transaction_id?: string | null\n          mill?: string | null\n          notes?: string | null\n          process_duration_minutes?: number | null\n          process_end_time?: string | null\n          process_start_time?: string | null\n          status?: string | null\n          thotti_no?: string | null\n          to_location?: string\n          to_location_type?: string\n          transfer_date?: string\n          transferred_by?: string | null\n          updated_at?: string\n          weight_transferred?: number\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"rice_mill_transfers_batch_id_fkey\"\n            columns: [\"batch_id\"]\n            isOneToOne: false\n            referencedRelation: \"rice_mill_batches\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"rice_mill_transfers_ledger_transaction_id_fkey\"\n            columns: [\"ledger_transaction_id\"]\n            isOneToOne: false\n            referencedRelation: \"transactions\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      rice_mill_unloading_entries: {\n        Row: {\n          bags: number\n          batch_no: string | null\n          created_at: string\n          created_by: string | null\n          id: string\n          inward_entry_id: string | null\n          is_batch_completed: boolean | null\n          is_posted: boolean | null\n          labour: string | null\n          ledger_transaction_id: string | null\n          mill: string\n          unloading_point: string\n          updated_at: string\n        }\n        Insert: {\n          bags: number\n          batch_no?: string | null\n          created_at?: string\n          created_by?: string | null\n          id?: string\n          inward_entry_id?: string | null\n          is_batch_completed?: boolean | null\n          is_posted?: boolean | null\n          labour?: string | null\n          ledger_transaction_id?: string | null\n          mill?: string\n          unloading_point: string\n          updated_at?: string\n        }\n        Update: {\n          bags?: number\n          batch_no?: string | null\n          created_at?: string\n          created_by?: string | null\n          id?: string\n          inward_entry_id?: string | null\n          is_batch_completed?: boolean | null\n          is_posted?: boolean | null\n          labour?: string | null\n          ledger_transaction_id?: string | null\n          mill?: string\n          unloading_point?: string\n          updated_at?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"rice_mill_unloading_entries_inward_entry_id_fkey\"\n            columns: [\"inward_entry_id\"]\n            isOneToOne: false\n            referencedRelation: \"rice_mill_inward_entries\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"rice_mill_unloading_entries_ledger_transaction_id_fkey\"\n            columns: [\"ledger_transaction_id\"]\n            isOneToOne: false\n            referencedRelation: \"transactions\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      rice_outward_acknowledgements: {\n        Row: {\n          ack_bags: number | null\n          ack_date: string | null\n          ack_godown: string | null\n          ack_number: string | null\n          ack_weight: number | null\n          created_at: string | null\n          created_by: string | null\n          grade: string | null\n          id: string\n          rice_loading_entry_id: string | null\n        }\n        Insert: {\n          ack_bags?: number | null\n          ack_date?: string | null\n          ack_godown?: string | null\n          ack_number?: string | null\n          ack_weight?: number | null\n          created_at?: string | null\n          created_by?: string | null\n          grade?: string | null\n          id?: string\n          rice_loading_entry_id?: string | null\n        }\n        Update: {\n          ack_bags?: number | null\n          ack_date?: string | null\n          ack_godown?: string | null\n          ack_number?: string | null\n          ack_weight?: number | null\n          created_at?: string | null\n          created_by?: string | null\n          grade?: string | null\n          id?: string\n          rice_loading_entry_id?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"rice_outward_acknowledgements_rice_loading_entry_id_fkey\"\n            columns: [\"rice_loading_entry_id\"]\n            isOneToOne: false\n            referencedRelation: \"rice_loading_entries\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      route_summaries: {\n        Row: {\n          check_in_id: string\n          clean_path: Json | null\n          processed_at: string | null\n          stats: Json | null\n          user_id: string\n        }\n        Insert: {\n          check_in_id: string\n          clean_path?: Json | null\n          processed_at?: string | null\n          stats?: Json | null\n          user_id: string\n        }\n        Update: {\n          check_in_id?: string\n          clean_path?: Json | null\n          processed_at?: string | null\n          stats?: Json | null\n          user_id?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"route_summaries_check_in_id_fkey\"\n            columns: [\"check_in_id\"]\n            isOneToOne: true\n            referencedRelation: \"duty_status\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      sales: {\n        Row: {\n          base_amount: number | null\n          bill_serial_no: string | null\n          created_at: string\n          created_by: string | null\n          customer_id: string\n          gst_amount: number | null\n          id: string\n          irn: string | null\n          item_id: string\n          loading_place: string\n          lorry_no: string | null\n          outward_entry_id: string | null\n          quantity: number\n          rate: number\n          sale_date: string\n          total_amount: number\n          updated_at: string\n        }\n        Insert: {\n          base_amount?: number | null\n          bill_serial_no?: string | null\n          created_at?: string\n          created_by?: string | null\n          customer_id: string\n          gst_amount?: number | null\n          id?: string\n          irn?: string | null\n          item_id: string\n          loading_place?: string\n          lorry_no?: string | null\n          outward_entry_id?: string | null\n          quantity: number\n          rate: number\n          sale_date?: string\n          total_amount: number\n          updated_at?: string\n        }\n        Update: {\n          base_amount?: number | null\n          bill_serial_no?: string | null\n          created_at?: string\n          created_by?: string | null\n          customer_id?: string\n          gst_amount?: number | null\n          id?: string\n          irn?: string | null\n          item_id?: string\n          loading_place?: string\n          lorry_no?: string | null\n          outward_entry_id?: string | null\n          quantity?: number\n          rate?: number\n          sale_date?: string\n          total_amount?: number\n          updated_at?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"sales_customer_id_fkey\"\n            columns: [\"customer_id\"]\n            isOneToOne: false\n            referencedRelation: \"customers\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"sales_item_id_fkey\"\n            columns: [\"item_id\"]\n            isOneToOne: false\n            referencedRelation: \"items\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"sales_outward_entry_id_fkey\"\n            columns: [\"outward_entry_id\"]\n            isOneToOne: false\n            referencedRelation: \"outward_entries\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      sms_vault: {\n        Row: {\n          created_at: string | null\n          device_id: string | null\n          encrypted_payload: string\n          id: string\n          iv: string\n          received_at: string | null\n          sender_number: string | null\n          user_id: string\n        }\n        Insert: {\n          created_at?: string | null\n          device_id?: string | null\n          encrypted_payload: string\n          id?: string\n          iv: string\n          received_at?: string | null\n          sender_number?: string | null\n          user_id: string\n        }\n        Update: {\n          created_at?: string | null\n          device_id?: string | null\n          encrypted_payload?: string\n          id?: string\n          iv?: string\n          received_at?: string | null\n          sender_number?: string | null\n          user_id?: string\n        }\n        Relationships: []\n      }\n      stock_ledger: {\n        Row: {\n          created_at: string\n          description: string | null\n          id: string\n          item_id: string\n          mill: string\n          quantity_in: number\n          quantity_out: number\n          reference_id: string | null\n          running_stock: number\n          transaction_date: string\n          transaction_type: string\n          updated_at: string\n        }\n        Insert: {\n          created_at?: string\n          description?: string | null\n          id?: string\n          item_id: string\n          mill?: string\n          quantity_in?: number\n          quantity_out?: number\n          reference_id?: string | null\n          running_stock?: number\n          transaction_date?: string\n          transaction_type: string\n          updated_at?: string\n        }\n        Update: {\n          created_at?: string\n          description?: string | null\n          id?: string\n          item_id?: string\n          mill?: string\n          quantity_in?: number\n          quantity_out?: number\n          reference_id?: string | null\n          running_stock?: number\n          transaction_date?: string\n          transaction_type?: string\n          updated_at?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"stock_ledger_item_id_fkey\"\n            columns: [\"item_id\"]\n            isOneToOne: false\n            referencedRelation: \"items\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      strategy_config: {\n        Row: {\n          atr_period: number | null\n          id: string\n          is_auto_trade_enabled: boolean | null\n          mult_bear: number | null\n          mult_bull: number | null\n          stoploss_pct: number | null\n          target1_pct: number | null\n          target2_pct: number | null\n          timeframe: string | null\n          updated_at: string | null\n          user_id: string | null\n        }\n        Insert: {\n          atr_period?: number | null\n          id?: string\n          is_auto_trade_enabled?: boolean | null\n          mult_bear?: number | null\n          mult_bull?: number | null\n          stoploss_pct?: number | null\n          target1_pct?: number | null\n          target2_pct?: number | null\n          timeframe?: string | null\n          updated_at?: string | null\n          user_id?: string | null\n        }\n        Update: {\n          atr_period?: number | null\n          id?: string\n          is_auto_trade_enabled?: boolean | null\n          mult_bear?: number | null\n          mult_bull?: number | null\n          stoploss_pct?: number | null\n          target1_pct?: number | null\n          target2_pct?: number | null\n          timeframe?: string | null\n          updated_at?: string | null\n          user_id?: string | null\n        }\n        Relationships: []\n      }\n      supplier_ledger: {\n        Row: {\n          balance: number\n          created_at: string\n          credit_amount: number\n          debit_amount: number\n          description: string | null\n          id: string\n          reference_id: string\n          supplier_id: string\n          transaction_date: string\n          transaction_type: string\n          updated_at: string\n        }\n        Insert: {\n          balance?: number\n          created_at?: string\n          credit_amount?: number\n          debit_amount?: number\n          description?: string | null\n          id?: string\n          reference_id: string\n          supplier_id: string\n          transaction_date?: string\n          transaction_type: string\n          updated_at?: string\n        }\n        Update: {\n          balance?: number\n          created_at?: string\n          credit_amount?: number\n          debit_amount?: number\n          description?: string | null\n          id?: string\n          reference_id?: string\n          supplier_id?: string\n          transaction_date?: string\n          transaction_type?: string\n          updated_at?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"supplier_ledger_supplier_id_fkey\"\n            columns: [\"supplier_id\"]\n            isOneToOne: false\n            referencedRelation: \"suppliers\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      supplier_payments: {\n        Row: {\n          amount: number\n          created_at: string\n          created_by: string | null\n          id: string\n          payment_date: string\n          payment_method: string\n          payment_no: string\n          remarks: string | null\n          supplier_id: string\n          updated_at: string\n        }\n        Insert: {\n          amount: number\n          created_at?: string\n          created_by?: string | null\n          id?: string\n          payment_date?: string\n          payment_method: string\n          payment_no: string\n          remarks?: string | null\n          supplier_id: string\n          updated_at?: string\n        }\n        Update: {\n          amount?: number\n          created_at?: string\n          created_by?: string | null\n          id?: string\n          payment_date?: string\n          payment_method?: string\n          payment_no?: string\n          remarks?: string | null\n          supplier_id?: string\n          updated_at?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"supplier_payments_supplier_id_fkey\"\n            columns: [\"supplier_id\"]\n            isOneToOne: false\n            referencedRelation: \"suppliers\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      suppliers: {\n        Row: {\n          address_english: string | null\n          address_tamil: string | null\n          code: string\n          contact_person: string | null\n          created_at: string\n          email: string | null\n          gstin: string | null\n          id: string\n          is_active: boolean\n          name_english: string\n          name_tamil: string | null\n          opening_balance: number | null\n          phone: string | null\n          pin_code: string | null\n          place_of_supply: string | null\n          state_code: string | null\n          updated_at: string\n        }\n        Insert: {\n          address_english?: string | null\n          address_tamil?: string | null\n          code: string\n          contact_person?: string | null\n          created_at?: string\n          email?: string | null\n          gstin?: string | null\n          id?: string\n          is_active?: boolean\n          name_english: string\n          name_tamil?: string | null\n          opening_balance?: number | null\n          phone?: string | null\n          pin_code?: string | null\n          place_of_supply?: string | null\n          state_code?: string | null\n          updated_at?: string\n        }\n        Update: {\n          address_english?: string | null\n          address_tamil?: string | null\n          code?: string\n          contact_person?: string | null\n          created_at?: string\n          email?: string | null\n          gstin?: string | null\n          id?: string\n          is_active?: boolean\n          name_english?: string\n          name_tamil?: string | null\n          opening_balance?: number | null\n          phone?: string | null\n          pin_code?: string | null\n          place_of_supply?: string | null\n          state_code?: string | null\n          updated_at?: string\n        }\n        Relationships: []\n      }\n      symbols: {\n        Row: {\n          created_at: string | null\n          exchange: string\n          id: string\n          is_active: boolean | null\n          symbol_name: string\n          token: string\n        }\n        Insert: {\n          created_at?: string | null\n          exchange: string\n          id?: string\n          is_active?: boolean | null\n          symbol_name: string\n          token: string\n        }\n        Update: {\n          created_at?: string | null\n          exchange?: string\n          id?: string\n          is_active?: boolean | null\n          symbol_name?: string\n          token?: string\n        }\n        Relationships: []\n      }\n      system_config: {\n        Row: {\n          description: string | null\n          key: string\n          updated_at: string | null\n          value: string\n        }\n        Insert: {\n          description?: string | null\n          key: string\n          updated_at?: string | null\n          value: string\n        }\n        Update: {\n          description?: string | null\n          key?: string\n          updated_at?: string | null\n          value?: string\n        }\n        Relationships: []\n      }\n      task_alerts: {\n        Row: {\n          created_at: string | null\n          id: string\n          message: string\n          seen: boolean | null\n          task_id: string | null\n          type: Database[\"public\"][\"Enums\"][\"alert_type\"]\n          user_id: string | null\n        }\n        Insert: {\n          created_at?: string | null\n          id?: string\n          message: string\n          seen?: boolean | null\n          task_id?: string | null\n          type: Database[\"public\"][\"Enums\"][\"alert_type\"]\n          user_id?: string | null\n        }\n        Update: {\n          created_at?: string | null\n          id?: string\n          message?: string\n          seen?: boolean | null\n          task_id?: string | null\n          type?: Database[\"public\"][\"Enums\"][\"alert_type\"]\n          user_id?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"task_alerts_task_id_fkey\"\n            columns: [\"task_id\"]\n            isOneToOne: false\n            referencedRelation: \"tasks\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"task_alerts_user_id_fkey\"\n            columns: [\"user_id\"]\n            isOneToOne: false\n            referencedRelation: \"app_users\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      task_comments: {\n        Row: {\n          attachment_id: string | null\n          created_at: string | null\n          id: string\n          message: string\n          task_id: string | null\n          user_id: string | null\n        }\n        Insert: {\n          attachment_id?: string | null\n          created_at?: string | null\n          id?: string\n          message: string\n          task_id?: string | null\n          user_id?: string | null\n        }\n        Update: {\n          attachment_id?: string | null\n          created_at?: string | null\n          id?: string\n          message?: string\n          task_id?: string | null\n          user_id?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"task_comments_attachment_id_fkey\"\n            columns: [\"attachment_id\"]\n            isOneToOne: false\n            referencedRelation: \"attachments\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"task_comments_task_id_fkey\"\n            columns: [\"task_id\"]\n            isOneToOne: false\n            referencedRelation: \"tasks\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"task_comments_user_id_fkey\"\n            columns: [\"user_id\"]\n            isOneToOne: false\n            referencedRelation: \"app_users\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      task_group_assignments: {\n        Row: {\n          created_at: string | null\n          id: string\n          task_id: string\n          user_id: string\n        }\n        Insert: {\n          created_at?: string | null\n          id?: string\n          task_id: string\n          user_id: string\n        }\n        Update: {\n          created_at?: string | null\n          id?: string\n          task_id?: string\n          user_id?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"task_group_assignments_task_id_fkey\"\n            columns: [\"task_id\"]\n            isOneToOne: false\n            referencedRelation: \"tasks\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"task_group_assignments_user_id_fkey\"\n            columns: [\"user_id\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      task_logs: {\n        Row: {\n          event: string\n          id: string\n          remarks: string | null\n          task_id: string | null\n          timestamp: string | null\n          user_id: string | null\n        }\n        Insert: {\n          event: string\n          id?: string\n          remarks?: string | null\n          task_id?: string | null\n          timestamp?: string | null\n          user_id?: string | null\n        }\n        Update: {\n          event?: string\n          id?: string\n          remarks?: string | null\n          task_id?: string | null\n          timestamp?: string | null\n          user_id?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"task_logs_task_id_fkey\"\n            columns: [\"task_id\"]\n            isOneToOne: false\n            referencedRelation: \"tasks\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"task_logs_user_id_fkey\"\n            columns: [\"user_id\"]\n            isOneToOne: false\n            referencedRelation: \"app_users\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      task_routine_instances: {\n        Row: {\n          id: string\n          routine_id: string\n          task_id: string\n          triggered_at: string | null\n          triggered_for_date: string\n        }\n        Insert: {\n          id?: string\n          routine_id: string\n          task_id: string\n          triggered_at?: string | null\n          triggered_for_date: string\n        }\n        Update: {\n          id?: string\n          routine_id?: string\n          task_id?: string\n          triggered_at?: string | null\n          triggered_for_date?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"task_routine_instances_routine_id_fkey\"\n            columns: [\"routine_id\"]\n            isOneToOne: false\n            referencedRelation: \"task_routines\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"task_routine_instances_task_id_fkey\"\n            columns: [\"task_id\"]\n            isOneToOne: false\n            referencedRelation: \"tasks\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      task_routines: {\n        Row: {\n          assigned_by: string\n          assigned_to: string | null\n          assigned_to_group_id: string | null\n          created_at: string | null\n          description: string | null\n          end_date: string | null\n          id: string\n          is_active: boolean | null\n          last_triggered_at: string | null\n          monthly_dates: number[] | null\n          next_trigger_at: string | null\n          priority: string | null\n          recurrence_type: string\n          start_date: string | null\n          target_time: string | null\n          title: string\n          updated_at: string | null\n          weekdays: number[] | null\n        }\n        Insert: {\n          assigned_by: string\n          assigned_to?: string | null\n          assigned_to_group_id?: string | null\n          created_at?: string | null\n          description?: string | null\n          end_date?: string | null\n          id?: string\n          is_active?: boolean | null\n          last_triggered_at?: string | null\n          monthly_dates?: number[] | null\n          next_trigger_at?: string | null\n          priority?: string | null\n          recurrence_type: string\n          start_date?: string | null\n          target_time?: string | null\n          title: string\n          updated_at?: string | null\n          weekdays?: number[] | null\n        }\n        Update: {\n          assigned_by?: string\n          assigned_to?: string | null\n          assigned_to_group_id?: string | null\n          created_at?: string | null\n          description?: string | null\n          end_date?: string | null\n          id?: string\n          is_active?: boolean | null\n          last_triggered_at?: string | null\n          monthly_dates?: number[] | null\n          next_trigger_at?: string | null\n          priority?: string | null\n          recurrence_type?: string\n          start_date?: string | null\n          target_time?: string | null\n          title?: string\n          updated_at?: string | null\n          weekdays?: number[] | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"task_routines_assigned_by_fkey\"\n            columns: [\"assigned_by\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"task_routines_assigned_to_fkey\"\n            columns: [\"assigned_to\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"task_routines_assigned_to_group_id_fkey\"\n            columns: [\"assigned_to_group_id\"]\n            isOneToOne: false\n            referencedRelation: \"user_groups\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      task_transfers: {\n        Row: {\n          from_user: string | null\n          id: string\n          reason: string | null\n          task_id: string | null\n          to_user: string | null\n          transferred_at: string | null\n        }\n        Insert: {\n          from_user?: string | null\n          id?: string\n          reason?: string | null\n          task_id?: string | null\n          to_user?: string | null\n          transferred_at?: string | null\n        }\n        Update: {\n          from_user?: string | null\n          id?: string\n          reason?: string | null\n          task_id?: string | null\n          to_user?: string | null\n          transferred_at?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"task_transfers_from_user_fkey\"\n            columns: [\"from_user\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"task_transfers_task_id_fkey\"\n            columns: [\"task_id\"]\n            isOneToOne: false\n            referencedRelation: \"tasks\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"task_transfers_to_user_fkey\"\n            columns: [\"to_user\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      task_updates: {\n        Row: {\n          created_at: string | null\n          id: string\n          photo_url: string | null\n          remarks: string | null\n          status: string | null\n          task_id: string\n          updated_at: string | null\n          user_id: string\n          voice_recording_url: string | null\n          voice_url: string | null\n        }\n        Insert: {\n          created_at?: string | null\n          id?: string\n          photo_url?: string | null\n          remarks?: string | null\n          status?: string | null\n          task_id: string\n          updated_at?: string | null\n          user_id: string\n          voice_recording_url?: string | null\n          voice_url?: string | null\n        }\n        Update: {\n          created_at?: string | null\n          id?: string\n          photo_url?: string | null\n          remarks?: string | null\n          status?: string | null\n          task_id?: string\n          updated_at?: string | null\n          user_id?: string\n          voice_recording_url?: string | null\n          voice_url?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"task_updates_task_id_fkey\"\n            columns: [\"task_id\"]\n            isOneToOne: false\n            referencedRelation: \"tasks\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"task_updates_user_id_fkey\"\n            columns: [\"user_id\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      tasks: {\n        Row: {\n          arrival_at: string | null\n          assigned_by: string | null\n          assigned_to: string | null\n          assigned_to_group_id: string | null\n          completed_at: string | null\n          completion_audio_url: string | null\n          completion_image_urls: string[] | null\n          completion_notes: string | null\n          created_at: string | null\n          description: string | null\n          due_date: string | null\n          id: string\n          leave_at: string | null\n          location_lat: number | null\n          location_lng: number | null\n          location_name: string | null\n          location_radius: number | null\n          notification_sent: boolean | null\n          priority: Database[\"public\"][\"Enums\"][\"task_priority_type\"] | null\n          scheduled_for: string | null\n          status: Database[\"public\"][\"Enums\"][\"task_status_type\"] | null\n          title: string\n          updated_at: string | null\n          voice_recording_url: string | null\n        }\n        Insert: {\n          arrival_at?: string | null\n          assigned_by?: string | null\n          assigned_to?: string | null\n          assigned_to_group_id?: string | null\n          completed_at?: string | null\n          completion_audio_url?: string | null\n          completion_image_urls?: string[] | null\n          completion_notes?: string | null\n          created_at?: string | null\n          description?: string | null\n          due_date?: string | null\n          id?: string\n          leave_at?: string | null\n          location_lat?: number | null\n          location_lng?: number | null\n          location_name?: string | null\n          location_radius?: number | null\n          notification_sent?: boolean | null\n          priority?: Database[\"public\"][\"Enums\"][\"task_priority_type\"] | null\n          scheduled_for?: string | null\n          status?: Database[\"public\"][\"Enums\"][\"task_status_type\"] | null\n          title: string\n          updated_at?: string | null\n          voice_recording_url?: string | null\n        }\n        Update: {\n          arrival_at?: string | null\n          assigned_by?: string | null\n          assigned_to?: string | null\n          assigned_to_group_id?: string | null\n          completed_at?: string | null\n          completion_audio_url?: string | null\n          completion_image_urls?: string[] | null\n          completion_notes?: string | null\n          created_at?: string | null\n          description?: string | null\n          due_date?: string | null\n          id?: string\n          leave_at?: string | null\n          location_lat?: number | null\n          location_lng?: number | null\n          location_name?: string | null\n          location_radius?: number | null\n          notification_sent?: boolean | null\n          priority?: Database[\"public\"][\"Enums\"][\"task_priority_type\"] | null\n          scheduled_for?: string | null\n          status?: Database[\"public\"][\"Enums\"][\"task_status_type\"] | null\n          title?: string\n          updated_at?: string | null\n          voice_recording_url?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"tasks_assigned_by_fkey\"\n            columns: [\"assigned_by\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"tasks_assigned_to_fkey\"\n            columns: [\"assigned_to\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"tasks_assigned_to_group_id_fkey\"\n            columns: [\"assigned_to_group_id\"]\n            isOneToOne: false\n            referencedRelation: \"user_groups\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      thotti_audit_log: {\n        Row: {\n          batch_id: string | null\n          change_reason: string\n          change_timestamp: string\n          changed_by: string | null\n          id: string\n          new_thotti_no: string | null\n          old_thotti_no: string | null\n          sync_session_id: string | null\n          transfer_id: string | null\n        }\n        Insert: {\n          batch_id?: string | null\n          change_reason: string\n          change_timestamp?: string\n          changed_by?: string | null\n          id?: string\n          new_thotti_no?: string | null\n          old_thotti_no?: string | null\n          sync_session_id?: string | null\n          transfer_id?: string | null\n        }\n        Update: {\n          batch_id?: string | null\n          change_reason?: string\n          change_timestamp?: string\n          changed_by?: string | null\n          id?: string\n          new_thotti_no?: string | null\n          old_thotti_no?: string | null\n          sync_session_id?: string | null\n          transfer_id?: string | null\n        }\n        Relationships: []\n      }\n      trade_history: {\n        Row: {\n          created_at: string | null\n          entry_price: number | null\n          exit_price: number | null\n          id: string\n          order_id: string | null\n          pnl: number | null\n          signal_type: string\n          status: string | null\n          stop_loss: number | null\n          symbol: string\n          target1: number | null\n          target2: number | null\n        }\n        Insert: {\n          created_at?: string | null\n          entry_price?: number | null\n          exit_price?: number | null\n          id?: string\n          order_id?: string | null\n          pnl?: number | null\n          signal_type: string\n          status?: string | null\n          stop_loss?: number | null\n          symbol: string\n          target1?: number | null\n          target2?: number | null\n        }\n        Update: {\n          created_at?: string | null\n          entry_price?: number | null\n          exit_price?: number | null\n          id?: string\n          order_id?: string | null\n          pnl?: number | null\n          signal_type?: string\n          status?: string | null\n          stop_loss?: number | null\n          symbol?: string\n          target1?: number | null\n          target2?: number | null\n        }\n        Relationships: []\n      }\n      transaction_cache: {\n        Row: {\n          closing_balance: number\n          created_at: string\n          date: string\n          id: string\n          last_updated: string\n          opening_balance: number\n          total_expense: number\n          total_income: number\n          transaction_count: number\n          user_id: string\n        }\n        Insert: {\n          closing_balance?: number\n          created_at?: string\n          date: string\n          id?: string\n          last_updated?: string\n          opening_balance?: number\n          total_expense?: number\n          total_income?: number\n          transaction_count?: number\n          user_id: string\n        }\n        Update: {\n          closing_balance?: number\n          created_at?: string\n          date?: string\n          id?: string\n          last_updated?: string\n          opening_balance?: number\n          total_expense?: number\n          total_income?: number\n          transaction_count?: number\n          user_id?: string\n        }\n        Relationships: []\n      }\n      transactions: {\n        Row: {\n          amount: number\n          attached_bill: string | null\n          created_at: string\n          created_by: string\n          date: string\n          description: string\n          external_reference: string | null\n          id: string\n          ledger_id: string | null\n          ledger_running_balance_after: number | null\n          ledger_running_balance_before: number | null\n          running_balance_after: number | null\n          running_balance_before: number | null\n          sequence_number: number\n          source_ledger_id: string | null\n          transfer_to_running_balance_after: number | null\n          transfer_to_running_balance_before: number | null\n          transfer_to_user_id: string | null\n          type: string\n          user_id: string\n        }\n        Insert: {\n          amount: number\n          attached_bill?: string | null\n          created_at?: string\n          created_by: string\n          date: string\n          description: string\n          external_reference?: string | null\n          id?: string\n          ledger_id?: string | null\n          ledger_running_balance_after?: number | null\n          ledger_running_balance_before?: number | null\n          running_balance_after?: number | null\n          running_balance_before?: number | null\n          sequence_number?: number\n          source_ledger_id?: string | null\n          transfer_to_running_balance_after?: number | null\n          transfer_to_running_balance_before?: number | null\n          transfer_to_user_id?: string | null\n          type: string\n          user_id: string\n        }\n        Update: {\n          amount?: number\n          attached_bill?: string | null\n          created_at?: string\n          created_by?: string\n          date?: string\n          description?: string\n          external_reference?: string | null\n          id?: string\n          ledger_id?: string | null\n          ledger_running_balance_after?: number | null\n          ledger_running_balance_before?: number | null\n          running_balance_after?: number | null\n          running_balance_before?: number | null\n          sequence_number?: number\n          source_ledger_id?: string | null\n          transfer_to_running_balance_after?: number | null\n          transfer_to_running_balance_before?: number | null\n          transfer_to_user_id?: string | null\n          type?: string\n          user_id?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"transactions_ledger_id_fkey\"\n            columns: [\"ledger_id\"]\n            isOneToOne: false\n            referencedRelation: \"ledgers\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      transport_items: {\n        Row: {\n          code: string\n          created_at: string | null\n          id: string\n          is_active: boolean | null\n          name: string\n          updated_at: string | null\n        }\n        Insert: {\n          code: string\n          created_at?: string | null\n          id?: string\n          is_active?: boolean | null\n          name: string\n          updated_at?: string | null\n        }\n        Update: {\n          code?: string\n          created_at?: string | null\n          id?: string\n          is_active?: boolean | null\n          name?: string\n          updated_at?: string | null\n        }\n        Relationships: []\n      }\n      trips: {\n        Row: {\n          bill_collected: boolean | null\n          bill_number: string | null\n          bill_photo_url: string | null\n          confirmation_date: string | null\n          created_at: string | null\n          created_by: string | null\n          hint: string | null\n          id: string\n          item_id: string | null\n          item_name: string | null\n          loading_photo_url: string | null\n          loading_place_id: string | null\n          lorry_id: string | null\n          status: string | null\n          token_date: string | null\n          token_no: number\n          unloading_date: string | null\n          unloading_photo_url: string | null\n          unloading_place_id: string | null\n          updated_at: string | null\n          weight: number | null\n        }\n        Insert: {\n          bill_collected?: boolean | null\n          bill_number?: string | null\n          bill_photo_url?: string | null\n          confirmation_date?: string | null\n          created_at?: string | null\n          created_by?: string | null\n          hint?: string | null\n          id?: string\n          item_id?: string | null\n          item_name?: string | null\n          loading_photo_url?: string | null\n          loading_place_id?: string | null\n          lorry_id?: string | null\n          status?: string | null\n          token_date?: string | null\n          token_no?: number\n          unloading_date?: string | null\n          unloading_photo_url?: string | null\n          unloading_place_id?: string | null\n          updated_at?: string | null\n          weight?: number | null\n        }\n        Update: {\n          bill_collected?: boolean | null\n          bill_number?: string | null\n          bill_photo_url?: string | null\n          confirmation_date?: string | null\n          created_at?: string | null\n          created_by?: string | null\n          hint?: string | null\n          id?: string\n          item_id?: string | null\n          item_name?: string | null\n          loading_photo_url?: string | null\n          loading_place_id?: string | null\n          lorry_id?: string | null\n          status?: string | null\n          token_date?: string | null\n          token_no?: number\n          unloading_date?: string | null\n          unloading_photo_url?: string | null\n          unloading_place_id?: string | null\n          updated_at?: string | null\n          weight?: number | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"trips_item_id_fkey\"\n            columns: [\"item_id\"]\n            isOneToOne: false\n            referencedRelation: \"items\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"trips_loading_place_id_fkey\"\n            columns: [\"loading_place_id\"]\n            isOneToOne: false\n            referencedRelation: \"loading_places\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"trips_lorry_id_fkey\"\n            columns: [\"lorry_id\"]\n            isOneToOne: false\n            referencedRelation: \"lorries\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"trips_unloading_place_id_fkey\"\n            columns: [\"unloading_place_id\"]\n            isOneToOne: false\n            referencedRelation: \"unloading_places\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      unified_offline_batches: {\n        Row: {\n          batch_no: string\n          created_at: string\n          current_location: string\n          current_location_type: string\n          current_weight: number\n          device_id: string\n          grade: string\n          id: string\n          mill: string\n          synced: boolean | null\n          updated_at: string\n        }\n        Insert: {\n          batch_no: string\n          created_at?: string\n          current_location: string\n          current_location_type: string\n          current_weight: number\n          device_id: string\n          grade: string\n          id: string\n          mill: string\n          synced?: boolean | null\n          updated_at?: string\n        }\n        Update: {\n          batch_no?: string\n          created_at?: string\n          current_location?: string\n          current_location_type?: string\n          current_weight?: number\n          device_id?: string\n          grade?: string\n          id?: string\n          mill?: string\n          synced?: boolean | null\n          updated_at?: string\n        }\n        Relationships: []\n      }\n      unified_offline_container_contents: {\n        Row: {\n          batch_id: string\n          created_at: string\n          device_id: string\n          expected_completion_time: string | null\n          grade: string\n          id: string\n          location: string\n          location_type: string\n          mill: string\n          process_start_time: string | null\n          synced: boolean | null\n          updated_at: string\n          weight: number\n        }\n        Insert: {\n          batch_id: string\n          created_at?: string\n          device_id: string\n          expected_completion_time?: string | null\n          grade: string\n          id: string\n          location: string\n          location_type: string\n          mill: string\n          process_start_time?: string | null\n          synced?: boolean | null\n          updated_at?: string\n          weight: number\n        }\n        Update: {\n          batch_id?: string\n          created_at?: string\n          device_id?: string\n          expected_completion_time?: string | null\n          grade?: string\n          id?: string\n          location?: string\n          location_type?: string\n          mill?: string\n          process_start_time?: string | null\n          synced?: boolean | null\n          updated_at?: string\n          weight?: number\n        }\n        Relationships: []\n      }\n      unified_offline_frk_inward_entries: {\n        Row: {\n          batch_no: string\n          bill_no: string\n          created_at: string\n          created_by: string | null\n          device_id: string\n          entry_date: string\n          id: string\n          mill: string\n          quantity: number\n          serial_no: string\n          synced: boolean | null\n          updated_at: string\n        }\n        Insert: {\n          batch_no: string\n          bill_no: string\n          created_at?: string\n          created_by?: string | null\n          device_id: string\n          entry_date?: string\n          id: string\n          mill: string\n          quantity: number\n          serial_no: string\n          synced?: boolean | null\n          updated_at?: string\n        }\n        Update: {\n          batch_no?: string\n          bill_no?: string\n          created_at?: string\n          created_by?: string | null\n          device_id?: string\n          entry_date?: string\n          id?: string\n          mill?: string\n          quantity?: number\n          serial_no?: string\n          synced?: boolean | null\n          updated_at?: string\n        }\n        Relationships: []\n      }\n      unified_offline_frk_outward_entries: {\n        Row: {\n          created_at: string\n          created_by: string | null\n          device_id: string\n          entry_date: string\n          id: string\n          mill: string\n          quantity: number\n          rice_loading_bill_no: string\n          rice_loading_entry_id: string | null\n          synced: boolean | null\n          updated_at: string\n        }\n        Insert: {\n          created_at?: string\n          created_by?: string | null\n          device_id: string\n          entry_date?: string\n          id: string\n          mill: string\n          quantity: number\n          rice_loading_bill_no: string\n          rice_loading_entry_id?: string | null\n          synced?: boolean | null\n          updated_at?: string\n        }\n        Update: {\n          created_at?: string\n          created_by?: string | null\n          device_id?: string\n          entry_date?: string\n          id?: string\n          mill?: string\n          quantity?: number\n          rice_loading_bill_no?: string\n          rice_loading_entry_id?: string | null\n          synced?: boolean | null\n          updated_at?: string\n        }\n        Relationships: []\n      }\n      unified_offline_global_variables: {\n        Row: {\n          category: string\n          created_at: string | null\n          device_id: string\n          display_text: string\n          distance: number | null\n          http_link_1: string | null\n          http_link_1_description: string | null\n          http_link_2: string | null\n          http_link_2_description: string | null\n          id: string\n          is_active: boolean | null\n          synced: boolean | null\n          synced_at: string | null\n          updated_at: string | null\n          value: string\n        }\n        Insert: {\n          category: string\n          created_at?: string | null\n          device_id: string\n          display_text: string\n          distance?: number | null\n          http_link_1?: string | null\n          http_link_1_description?: string | null\n          http_link_2?: string | null\n          http_link_2_description?: string | null\n          id: string\n          is_active?: boolean | null\n          synced?: boolean | null\n          synced_at?: string | null\n          updated_at?: string | null\n          value: string\n        }\n        Update: {\n          category?: string\n          created_at?: string | null\n          device_id?: string\n          display_text?: string\n          distance?: number | null\n          http_link_1?: string | null\n          http_link_1_description?: string | null\n          http_link_2?: string | null\n          http_link_2_description?: string | null\n          id?: string\n          is_active?: boolean | null\n          synced?: boolean | null\n          synced_at?: string | null\n          updated_at?: string | null\n          value?: string\n        }\n        Relationships: []\n      }\n      unified_offline_inward_entries: {\n        Row: {\n          bags: number\n          challan_photo_url: string | null\n          created_at: string | null\n          device_id: string\n          driver: string\n          entry_date: string\n          grade: string\n          id: string\n          is_unloaded: boolean | null\n          lorry_number: string\n          mill: string\n          serial_no: string\n          synced: boolean | null\n          synced_at: string | null\n          token_id: string | null\n          updated_at: string | null\n          wayment_photo_url: string | null\n          wayment_weight: number\n        }\n        Insert: {\n          bags: number\n          challan_photo_url?: string | null\n          created_at?: string | null\n          device_id: string\n          driver: string\n          entry_date: string\n          grade: string\n          id: string\n          is_unloaded?: boolean | null\n          lorry_number: string\n          mill?: string\n          serial_no: string\n          synced?: boolean | null\n          synced_at?: string | null\n          token_id?: string | null\n          updated_at?: string | null\n          wayment_photo_url?: string | null\n          wayment_weight: number\n        }\n        Update: {\n          bags?: number\n          challan_photo_url?: string | null\n          created_at?: string | null\n          device_id?: string\n          driver?: string\n          entry_date?: string\n          grade?: string\n          id?: string\n          is_unloaded?: boolean | null\n          lorry_number?: string\n          mill?: string\n          serial_no?: string\n          synced?: boolean | null\n          synced_at?: string | null\n          token_id?: string | null\n          updated_at?: string | null\n          wayment_photo_url?: string | null\n          wayment_weight?: number\n        }\n        Relationships: []\n      }\n      unified_offline_rice_loading_entries: {\n        Row: {\n          allotment_month: string\n          bags: number\n          bill_no: string\n          bill_photo_url: string | null\n          created_at: string\n          device_id: string\n          driver: string\n          entry_date: string\n          godown: string\n          grade: string\n          gs_sync_timestamp: string | null\n          hint: string | null\n          id: string\n          lorry_no: string\n          mill: string\n          rice_storage: string\n          synced: boolean | null\n          updated_at: string\n          weight: number\n        }\n        Insert: {\n          allotment_month: string\n          bags: number\n          bill_no: string\n          bill_photo_url?: string | null\n          created_at?: string\n          device_id: string\n          driver: string\n          entry_date?: string\n          godown: string\n          grade: string\n          gs_sync_timestamp?: string | null\n          hint?: string | null\n          id: string\n          lorry_no: string\n          mill: string\n          rice_storage: string\n          synced?: boolean | null\n          updated_at?: string\n          weight: number\n        }\n        Update: {\n          allotment_month?: string\n          bags?: number\n          bill_no?: string\n          bill_photo_url?: string | null\n          created_at?: string\n          device_id?: string\n          driver?: string\n          entry_date?: string\n          godown?: string\n          grade?: string\n          gs_sync_timestamp?: string | null\n          hint?: string | null\n          id?: string\n          lorry_no?: string\n          mill?: string\n          rice_storage?: string\n          synced?: boolean | null\n          updated_at?: string\n          weight?: number\n        }\n        Relationships: []\n      }\n      unified_offline_tokens: {\n        Row: {\n          created_at: string | null\n          device_id: string\n          id: string\n          is_used: boolean | null\n          loading_point: string\n          lorry: string\n          serial_no: string\n          synced: boolean | null\n          synced_at: string | null\n          token_value: string\n          updated_at: string | null\n        }\n        Insert: {\n          created_at?: string | null\n          device_id: string\n          id: string\n          is_used?: boolean | null\n          loading_point: string\n          lorry: string\n          serial_no: string\n          synced?: boolean | null\n          synced_at?: string | null\n          token_value: string\n          updated_at?: string | null\n        }\n        Update: {\n          created_at?: string | null\n          device_id?: string\n          id?: string\n          is_used?: boolean | null\n          loading_point?: string\n          lorry?: string\n          serial_no?: string\n          synced?: boolean | null\n          synced_at?: string | null\n          token_value?: string\n          updated_at?: string | null\n        }\n        Relationships: []\n      }\n      unified_offline_transfers: {\n        Row: {\n          batch_id: string\n          created_at: string\n          device_id: string\n          expected_duration_minutes: number | null\n          from_location: string\n          from_location_type: string\n          id: string\n          mill: string\n          status: string | null\n          synced: boolean | null\n          synced_at: string | null\n          thotti_no: string | null\n          to_location: string\n          to_location_type: string\n          transfer_date: string\n          user_intent: string | null\n          weight_transferred: number\n        }\n        Insert: {\n          batch_id: string\n          created_at?: string\n          device_id: string\n          expected_duration_minutes?: number | null\n          from_location: string\n          from_location_type: string\n          id: string\n          mill: string\n          status?: string | null\n          synced?: boolean | null\n          synced_at?: string | null\n          thotti_no?: string | null\n          to_location: string\n          to_location_type: string\n          transfer_date: string\n          user_intent?: string | null\n          weight_transferred: number\n        }\n        Update: {\n          batch_id?: string\n          created_at?: string\n          device_id?: string\n          expected_duration_minutes?: number | null\n          from_location?: string\n          from_location_type?: string\n          id?: string\n          mill?: string\n          status?: string | null\n          synced?: boolean | null\n          synced_at?: string | null\n          thotti_no?: string | null\n          to_location?: string\n          to_location_type?: string\n          transfer_date?: string\n          user_intent?: string | null\n          weight_transferred?: number\n        }\n        Relationships: []\n      }\n      unified_offline_unloading_entries: {\n        Row: {\n          bags: number\n          batch_no: string | null\n          created_at: string | null\n          device_id: string\n          id: string\n          inward_entry_id: string | null\n          is_batch_completed: boolean | null\n          mill: string\n          synced: boolean | null\n          synced_at: string | null\n          unloading_point: string\n          updated_at: string | null\n        }\n        Insert: {\n          bags: number\n          batch_no?: string | null\n          created_at?: string | null\n          device_id: string\n          id: string\n          inward_entry_id?: string | null\n          is_batch_completed?: boolean | null\n          mill?: string\n          synced?: boolean | null\n          synced_at?: string | null\n          unloading_point: string\n          updated_at?: string | null\n        }\n        Update: {\n          bags?: number\n          batch_no?: string | null\n          created_at?: string | null\n          device_id?: string\n          id?: string\n          inward_entry_id?: string | null\n          is_batch_completed?: boolean | null\n          mill?: string\n          synced?: boolean | null\n          synced_at?: string | null\n          unloading_point?: string\n          updated_at?: string | null\n        }\n        Relationships: []\n      }\n      unified_sync_conflicts: {\n        Row: {\n          conflict_reason: string\n          conflict_type: string\n          created_at: string\n          detected_at: string\n          device_id: string\n          id: string\n          resolution_details: string | null\n          resolved: boolean | null\n          resolved_at: string | null\n          resolved_by: string | null\n          transfer_id: string\n        }\n        Insert: {\n          conflict_reason: string\n          conflict_type: string\n          created_at?: string\n          detected_at: string\n          device_id: string\n          id: string\n          resolution_details?: string | null\n          resolved?: boolean | null\n          resolved_at?: string | null\n          resolved_by?: string | null\n          transfer_id: string\n        }\n        Update: {\n          conflict_reason?: string\n          conflict_type?: string\n          created_at?: string\n          detected_at?: string\n          device_id?: string\n          id?: string\n          resolution_details?: string | null\n          resolved?: boolean | null\n          resolved_at?: string | null\n          resolved_by?: string | null\n          transfer_id?: string\n        }\n        Relationships: []\n      }\n      unloading_places: {\n        Row: {\n          active: boolean | null\n          created_at: string | null\n          id: string\n          name: string\n        }\n        Insert: {\n          active?: boolean | null\n          created_at?: string | null\n          id?: string\n          name: string\n        }\n        Update: {\n          active?: boolean | null\n          created_at?: string | null\n          id?: string\n          name?: string\n        }\n        Relationships: []\n      }\n      upi_mappings: {\n        Row: {\n          created_at: string | null\n          created_by: string | null\n          description: string | null\n          id: string\n          target_id: string\n          target_type: string\n          updated_at: string | null\n          upi_id: string\n        }\n        Insert: {\n          created_at?: string | null\n          created_by?: string | null\n          description?: string | null\n          id?: string\n          target_id: string\n          target_type: string\n          updated_at?: string | null\n          upi_id: string\n        }\n        Update: {\n          created_at?: string | null\n          created_by?: string | null\n          description?: string | null\n          id?: string\n          target_id?: string\n          target_type?: string\n          updated_at?: string | null\n          upi_id?: string\n        }\n        Relationships: []\n      }\n      user_balance_cache: {\n        Row: {\n          balance_type: string\n          cache_timestamp: string\n          cached_balance: number\n          created_at: string\n          date: string | null\n          expires_at: string\n          id: string\n          user_id: string\n        }\n        Insert: {\n          balance_type: string\n          cache_timestamp?: string\n          cached_balance: number\n          created_at?: string\n          date?: string | null\n          expires_at?: string\n          id?: string\n          user_id: string\n        }\n        Update: {\n          balance_type?: string\n          cache_timestamp?: string\n          cached_balance?: number\n          created_at?: string\n          date?: string | null\n          expires_at?: string\n          id?: string\n          user_id?: string\n        }\n        Relationships: []\n      }\n      user_daily_balances: {\n        Row: {\n          closing_balance: number\n          created_at: string\n          date: string\n          expense_total: number\n          id: string\n          income_total: number\n          opening_balance: number\n          updated_at: string\n          user_id: string\n        }\n        Insert: {\n          closing_balance?: number\n          created_at?: string\n          date: string\n          expense_total?: number\n          id?: string\n          income_total?: number\n          opening_balance?: number\n          updated_at?: string\n          user_id: string\n        }\n        Update: {\n          closing_balance?: number\n          created_at?: string\n          date?: string\n          expense_total?: number\n          id?: string\n          income_total?: number\n          opening_balance?: number\n          updated_at?: string\n          user_id?: string\n        }\n        Relationships: []\n      }\n      user_device_state: {\n        Row: {\n          battery_level: number | null\n          is_data_enabled: boolean | null\n          is_gps_enabled: boolean | null\n          is_on_duty: boolean | null\n          last_ping: string | null\n          metadata: Json | null\n          user_id: string\n        }\n        Insert: {\n          battery_level?: number | null\n          is_data_enabled?: boolean | null\n          is_gps_enabled?: boolean | null\n          is_on_duty?: boolean | null\n          last_ping?: string | null\n          metadata?: Json | null\n          user_id: string\n        }\n        Update: {\n          battery_level?: number | null\n          is_data_enabled?: boolean | null\n          is_gps_enabled?: boolean | null\n          is_on_duty?: boolean | null\n          last_ping?: string | null\n          metadata?: Json | null\n          user_id?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"user_device_state_user_id_fkey\"\n            columns: [\"user_id\"]\n            isOneToOne: true\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      user_gps_positions: {\n        Row: {\n          accuracy: number | null\n          heading: number | null\n          id: string\n          last_updated: string | null\n          latitude: number\n          longitude: number\n          speed: number | null\n          user_id: string\n        }\n        Insert: {\n          accuracy?: number | null\n          heading?: number | null\n          id?: string\n          last_updated?: string | null\n          latitude: number\n          longitude: number\n          speed?: number | null\n          user_id: string\n        }\n        Update: {\n          accuracy?: number | null\n          heading?: number | null\n          id?: string\n          last_updated?: string | null\n          latitude?: number\n          longitude?: number\n          speed?: number | null\n          user_id?: string\n        }\n        Relationships: []\n      }\n      user_group_members: {\n        Row: {\n          added_at: string | null\n          group_id: string\n          id: string\n          user_id: string\n        }\n        Insert: {\n          added_at?: string | null\n          group_id: string\n          id?: string\n          user_id: string\n        }\n        Update: {\n          added_at?: string | null\n          group_id?: string\n          id?: string\n          user_id?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"user_group_members_group_id_fkey\"\n            columns: [\"group_id\"]\n            isOneToOne: false\n            referencedRelation: \"user_groups\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"user_group_members_user_id_fkey\"\n            columns: [\"user_id\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      user_groups: {\n        Row: {\n          created_at: string | null\n          created_by: string\n          description: string | null\n          id: string\n          name: string\n          updated_at: string | null\n        }\n        Insert: {\n          created_at?: string | null\n          created_by: string\n          description?: string | null\n          id?: string\n          name: string\n          updated_at?: string | null\n        }\n        Update: {\n          created_at?: string | null\n          created_by?: string\n          description?: string | null\n          id?: string\n          name?: string\n          updated_at?: string | null\n        }\n        Relationships: []\n      }\n      user_ledger_access: {\n        Row: {\n          business_contact_id: string | null\n          can_use_ledger: boolean\n          can_view_statement: boolean\n          created_at: string\n          created_by: string\n          id: string\n          ledger_id: string\n          updated_at: string\n          user_id: string\n        }\n        Insert: {\n          business_contact_id?: string | null\n          can_use_ledger?: boolean\n          can_view_statement?: boolean\n          created_at?: string\n          created_by: string\n          id?: string\n          ledger_id: string\n          updated_at?: string\n          user_id: string\n        }\n        Update: {\n          business_contact_id?: string | null\n          can_use_ledger?: boolean\n          can_view_statement?: boolean\n          created_at?: string\n          created_by?: string\n          id?: string\n          ledger_id?: string\n          updated_at?: string\n          user_id?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"user_ledger_access_business_contact_id_fkey\"\n            columns: [\"business_contact_id\"]\n            isOneToOne: false\n            referencedRelation: \"business_contacts\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"user_ledger_access_ledger_id_fkey\"\n            columns: [\"ledger_id\"]\n            isOneToOne: false\n            referencedRelation: \"ledgers\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      user_page_access: {\n        Row: {\n          can_access: boolean | null\n          created_at: string | null\n          id: string\n          page_id: string\n          updated_at: string | null\n          user_id: string\n        }\n        Insert: {\n          can_access?: boolean | null\n          created_at?: string | null\n          id?: string\n          page_id: string\n          updated_at?: string | null\n          user_id: string\n        }\n        Update: {\n          can_access?: boolean | null\n          created_at?: string | null\n          id?: string\n          page_id?: string\n          updated_at?: string | null\n          user_id?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"user_page_access_page_id_fkey\"\n            columns: [\"page_id\"]\n            isOneToOne: false\n            referencedRelation: \"app_pages\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      user_preferences: {\n        Row: {\n          created_at: string | null\n          dark_mode: boolean | null\n          email_notifications: boolean | null\n          id: string\n          job_transfer_alerts: boolean | null\n          location_alerts: boolean | null\n          push_notifications: boolean | null\n          updated_at: string | null\n          user_id: string\n        }\n        Insert: {\n          created_at?: string | null\n          dark_mode?: boolean | null\n          email_notifications?: boolean | null\n          id?: string\n          job_transfer_alerts?: boolean | null\n          location_alerts?: boolean | null\n          push_notifications?: boolean | null\n          updated_at?: string | null\n          user_id: string\n        }\n        Update: {\n          created_at?: string | null\n          dark_mode?: boolean | null\n          email_notifications?: boolean | null\n          id?: string\n          job_transfer_alerts?: boolean | null\n          location_alerts?: boolean | null\n          push_notifications?: boolean | null\n          updated_at?: string | null\n          user_id?: string\n        }\n        Relationships: []\n      }\n      user_profiles: {\n        Row: {\n          avatar_url: string | null\n          created_at: string | null\n          email: string\n          id: string\n          updated_at: string | null\n          username: string | null\n        }\n        Insert: {\n          avatar_url?: string | null\n          created_at?: string | null\n          email: string\n          id: string\n          updated_at?: string | null\n          username?: string | null\n        }\n        Update: {\n          avatar_url?: string | null\n          created_at?: string | null\n          email?: string\n          id?: string\n          updated_at?: string | null\n          username?: string | null\n        }\n        Relationships: []\n      }\n      user_roles: {\n        Row: {\n          created_at: string | null\n          id: string\n          role: Database[\"public\"][\"Enums\"][\"app_role\"]\n          user_id: string\n        }\n        Insert: {\n          created_at?: string | null\n          id?: string\n          role?: Database[\"public\"][\"Enums\"][\"app_role\"]\n          user_id: string\n        }\n        Update: {\n          created_at?: string | null\n          id?: string\n          role?: Database[\"public\"][\"Enums\"][\"app_role\"]\n          user_id?: string\n        }\n        Relationships: []\n      }\n      user_sessions: {\n        Row: {\n          created_at: string\n          device_info: string | null\n          id: string\n          login_time: string\n          logout_time: string | null\n          updated_at: string\n          user_id: string\n        }\n        Insert: {\n          created_at?: string\n          device_info?: string | null\n          id?: string\n          login_time?: string\n          logout_time?: string | null\n          updated_at?: string\n          user_id: string\n        }\n        Update: {\n          created_at?: string\n          device_info?: string | null\n          id?: string\n          login_time?: string\n          logout_time?: string | null\n          updated_at?: string\n          user_id?: string\n        }\n        Relationships: []\n      }\n      vehicle_alerts: {\n        Row: {\n          alert_type: string | null\n          due_date: string | null\n          generated_at: string | null\n          id: string\n          lorry_id: string | null\n          status: string | null\n        }\n        Insert: {\n          alert_type?: string | null\n          due_date?: string | null\n          generated_at?: string | null\n          id?: string\n          lorry_id?: string | null\n          status?: string | null\n        }\n        Update: {\n          alert_type?: string | null\n          due_date?: string | null\n          generated_at?: string | null\n          id?: string\n          lorry_id?: string | null\n          status?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"vehicle_alerts_lorry_id_fkey\"\n            columns: [\"lorry_id\"]\n            isOneToOne: false\n            referencedRelation: \"lorries\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n    }\n    Views: {\n      analytics_bottlenecks: {\n        Row: {\n          avg_duration_minutes: number | null\n          from_location: string | null\n          to_location: string | null\n          total_transfers: number | null\n          transfer_date: string | null\n        }\n        Relationships: []\n      }\n      analytics_cash_runway: {\n        Row: {\n          avg_daily_burn: number | null\n          current_cash_balance: number | null\n          estimated_runway_days: number | null\n        }\n        Relationships: []\n      }\n      analytics_employee_cash_holding: {\n        Row: {\n          avg_closing_balance: number | null\n          days_holding_cash: number | null\n          last_date: string | null\n          user_id: string | null\n        }\n        Relationships: []\n      }\n      analytics_production_daily: {\n        Row: {\n          entry_date: string | null\n          inward_quantity: number | null\n          mill: string | null\n          outward_quantity: number | null\n        }\n        Relationships: []\n      }\n      analytics_stock_efficiency: {\n        Row: {\n          day: string | null\n          kg_per_machine_hour: number | null\n          total_machine_hours: number | null\n          total_output_kg: number | null\n        }\n        Relationships: []\n      }\n      analytics_task_performance: {\n        Row: {\n          completed_tasks: number | null\n          overdue_tasks: number | null\n          total_tasks: number | null\n          user_id: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"tasks_assigned_to_fkey\"\n            columns: [\"user_id\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      container_reconciliation_anomalies_v1: {\n        Row: {\n          anomaly_type: string | null\n          batch_id: string | null\n          created_at: string | null\n          grade: string | null\n          location: string | null\n          location_type: string | null\n          mill: string | null\n          weight: number | null\n        }\n        Relationships: []\n      }\n    }\n    Functions: {\n      __codex_plpgsql_smoke: { Args: never; Returns: string }\n      __ctx_check: { Args: never; Returns: string }\n      admin_cleanup_salary_data: {\n        Args: never\n        Returns: {\n          attendance_deleted: number\n          ledgers_deleted: number\n          salary_ledgers_deleted: number\n          transactions_deleted: number\n        }[]\n      }\n      calculate_audit_opening_balance: {\n        Args: { p_date: string; p_user_id: string }\n        Returns: number\n      }\n      calculate_distance: {\n        Args: { end_time: string; start_time: string; target_user_id: string }\n        Returns: number\n      }\n      change_user_role: {\n        Args: {\n          p_admin_user_id: string\n          p_new_role: Database[\"public\"][\"Enums\"][\"app_role\"]\n          p_user_id: string\n        }\n        Returns: Json\n      }\n      check_and_fix_receipt_ledger_integrity: { Args: never; Returns: Json }\n      check_ledger_integrity: {\n        Args: never\n        Returns: {\n          credit_amount: number\n          debit_amount: number\n          issue: string\n          ledger_id: string\n          reference_id: string\n          transaction_date: string\n          transaction_type: string\n        }[]\n      }\n      cleanup_duplicate_container_contents: { Args: never; Returns: undefined }\n      cleanup_old_data: { Args: never; Returns: undefined }\n      cleanup_old_offline_data: { Args: never; Returns: Json }\n      clear_all_task_data: { Args: never; Returns: Json }\n      clear_source_container: {\n        Args: {\n          p_batch_id: string\n          p_location: string\n          p_location_type: string\n          p_mill?: string\n        }\n        Returns: undefined\n      }\n      complete_unloading_batch: {\n        Args: { p_mill: string; p_unloading_point: string }\n        Returns: undefined\n      }\n      create_business_contact_auth_user: {\n        Args: {\n          contact_email: string\n          contact_password: string\n          contact_username?: string\n        }\n        Returns: string\n      }\n      create_credit_note_with_ledger: {\n        Args: { p_ledger_data: Json; p_note_data: Json }\n        Returns: Json\n      }\n      create_debit_note_with_ledger: {\n        Args: { p_ledger_data: Json; p_note_data: Json }\n        Returns: Json\n      }\n      create_notification:\n        | {\n            Args: {\n              p_message: string\n              p_related_job_id?: string\n              p_title: string\n              p_type: string\n              p_user_id: string\n            }\n            Returns: undefined\n          }\n        | {\n            Args: {\n              p_app_id?: string\n              p_message: string\n              p_related_job_id: string\n              p_title: string\n              p_type: string\n              p_user_id: string\n            }\n            Returns: undefined\n          }\n      create_receipt_with_ledger: {\n        Args: { p_ledger_data: Json; p_receipt_data: Json }\n        Returns: Json\n      }\n      create_sale_with_ledger: {\n        Args: { p_ledger_data: Json; p_sale_data: Json }\n        Returns: Json\n      }\n      delete_multi_entry_transaction: {\n        Args: { transaction_id: string }\n        Returns: undefined\n      }\n      delete_transaction_with_balance_fix: {\n        Args: { p_transaction_id: string }\n        Returns: Json\n      }\n      ensure_daily_balance_exists: {\n        Args: { p_date: string; p_user_id: string }\n        Returns: undefined\n      }\n      ensure_employee_salary_ledger: {\n        Args: {\n          p_department?: string\n          p_employee_id: string\n          p_employee_name?: string\n        }\n        Returns: string\n      }\n      execute_process_transfer: {\n        Args: {\n          p_batch_id: string\n          p_complete_unloading?: boolean\n          p_created_by: string\n          p_expected_completion_time: string\n          p_expected_duration_minutes: number\n          p_from_location: string\n          p_from_location_type: string\n          p_grade: string\n          p_mill: string\n          p_process_start_time: string\n          p_thotti_no: string\n          p_to_location: string\n          p_to_location_type: string\n          p_weight: number\n        }\n        Returns: Json\n      }\n      execute_readonly_sql: { Args: { sql_query: string }; Returns: Json }\n      execute_rice_loading_delete: {\n        Args: {\n          p_deleted_by?: string\n          p_entry_id: string\n          p_target_storage?: string\n        }\n        Returns: Json\n      }\n      execute_rice_loading_entry: {\n        Args: {\n          p_allotment_month: string\n          p_bag_grade: string\n          p_bags: number\n          p_bill_no: string\n          p_bill_photo_url: string\n          p_created_by: string\n          p_driver: string\n          p_godown: string\n          p_grade: string\n          p_hint?: string\n          p_is_frk?: boolean\n          p_labour: string\n          p_lorry_no: string\n          p_mill: string\n          p_rice_storage: string\n          p_weight: number\n        }\n        Returns: Json\n      }\n      execute_rice_loading_update: {\n        Args: {\n          p_entry_id: string\n          p_is_frk?: boolean\n          p_new_bags: number\n          p_new_grade?: string\n          p_new_hint?: string\n          p_new_weight: number\n          p_reason: string\n          p_updated_by: string\n        }\n        Returns: Json\n      }\n      execute_rice_return: {\n        Args: {\n          p_bags: number\n          p_bill_no: string\n          p_created_by: string\n          p_frk_weight: number\n          p_grade: string\n          p_location: string\n          p_location_type: string\n          p_mill: string\n          p_rice_weight: number\n        }\n        Returns: Json\n      }\n      execute_unloading_item: {\n        Args: {\n          p_actual_weight: number\n          p_bags: number\n          p_created_by: string\n          p_grade: string\n          p_inward_entry_id: string\n          p_labour: string\n          p_location_type: string\n          p_mill: string\n          p_unloading_point: string\n        }\n        Returns: Json\n      }\n      execute_visual_transfer:\n        | {\n            Args: {\n              p_batch_id: string\n              p_batch_update_id?: string\n              p_destination_bags?: number\n              p_from_location: string\n              p_from_location_type: string\n              p_grade: string\n              p_labour: string\n              p_mill: string\n              p_notes: string\n              p_source_deductions: Json\n              p_thotti_no: string\n              p_to_location: string\n              p_to_location_type: string\n              p_total_bags: number\n              p_total_weight: number\n              p_transferred_by: string\n              p_update_batch_location?: boolean\n            }\n            Returns: Json\n          }\n        | {\n            Args: {\n              p_batch_id: string\n              p_batch_update_id?: string\n              p_destination_bags?: number\n              p_destination_entries?: Json\n              p_from_location: string\n              p_from_location_type: string\n              p_grade: string\n              p_labour: string\n              p_mill: string\n              p_notes: string\n              p_source_deductions: Json\n              p_thotti_no: string\n              p_to_location: string\n              p_to_location_type: string\n              p_total_bags: number\n              p_total_weight: number\n              p_transferred_by: string\n              p_update_batch_location?: boolean\n            }\n            Returns: Json\n          }\n      fix_running_balances: { Args: never; Returns: undefined }\n      generate_and_reserve_thotti_no: { Args: never; Returns: string }\n      generate_batch_no: { Args: never; Returns: string }\n      generate_credit_note_no:\n        | { Args: never; Returns: string }\n        | { Args: { p_mill: string }; Returns: string }\n      generate_debit_note_no:\n        | { Args: never; Returns: string }\n        | { Args: { p_mill: string }; Returns: string }\n      generate_payment_no: { Args: never; Returns: string }\n      generate_receipt_no: { Args: never; Returns: string }\n      generate_thotti_no:\n        | { Args: never; Returns: string }\n        | { Args: { p_location: string; p_mill: string }; Returns: string }\n      get_available_source_containers: {\n        Args: { p_mill?: string }\n        Returns: {\n          batch_details: Json\n          location: string\n          location_type: string\n          mill: string\n          total_weight: number\n        }[]\n      }\n      get_batch_history_v2: { Args: { p_batch_id: string }; Returns: Json }\n      get_batch_list_v2: {\n        Args: never\n        Returns: {\n          batch_no: string\n          created_at: string\n          current_location: string\n          current_location_type: string\n          current_weight: number\n          grade: string\n          id: string\n          initial_weight: number\n          mill: string\n        }[]\n      }\n      get_cached_balance: {\n        Args: { p_balance_type: string; p_date?: string; p_user_id: string }\n        Returns: number\n      }\n      get_closing_balance_for_date: {\n        Args: { p_date: string; p_user_id: string }\n        Returns: number\n      }\n      get_container_ledger_v3: {\n        Args: {\n          p_end_date: string\n          p_location: string\n          p_mill: string\n          p_start_date: string\n        }\n        Returns: {\n          batch_no: string\n          form_name: string\n          id: string\n          lorry_number: string\n          notes: string\n          reference_id: string\n          reference_type: string\n          related_info: string\n          running_balance: number\n          transaction_date: string\n          transaction_type: string\n          weight_in: number\n          weight_out: number\n        }[]\n      }\n      get_current_container_status_v1: {\n        Args: { p_mill: string }\n        Returns: {\n          batch_id: string\n          batch_no: string\n          expected_completion_time: string\n          grade: string\n          is_overdue: boolean\n          location: string\n          location_type: string\n          process_start_time: string\n          thotti_no: string\n          timing: string\n          weight: number\n        }[]\n      }\n      get_daily_context: { Args: never; Returns: Json }\n      get_email_from_username: { Args: { p_username: string }; Returns: string }\n      get_employee_salary_details: {\n        Args: { p_date_from: string; p_date_to: string; p_employee_id: string }\n        Returns: {\n          daily_records: Json\n          total_days: number\n          total_salary: number\n        }[]\n      }\n      get_failed_transactions_summary: {\n        Args: { p_user_id?: string }\n        Returns: {\n          permanently_failed_count: number\n          resolved_count: number\n          retrying_count: number\n          total_count: number\n          transaction_type: string\n        }[]\n      }\n      get_frk_ledger_v2: {\n        Args: { p_from_date?: string; p_mill: string; p_to_date?: string }\n        Returns: {\n          bill_no: string\n          created_at: string\n          entry_date: string\n          inward: number\n          mill: string\n          outward: number\n          type: string\n        }[]\n      }\n      get_inward_report_v2: {\n        Args: {\n          p_from_date: string\n          p_grade: string\n          p_loading_point: string\n          p_mill: string\n          p_to_date: string\n        }\n        Returns: {\n          accounting_mill: string | null\n          bags: number\n          challan_photo_url: string | null\n          created_at: string\n          created_by: string | null\n          dpc_amount: number | null\n          driver: string\n          empty_time: string | null\n          empty_weight: number | null\n          entry_date: string\n          entry_unique_id: string\n          grade: string\n          id: string\n          is_unloaded: boolean\n          load_time: string | null\n          loading_point: string | null\n          lorry_number: string\n          mill: string\n          serial_no: string\n          token_id: string | null\n          updated_at: string\n          wayment_photo_url: string | null\n          wayment_weight: number\n        }[]\n        SetofOptions: {\n          from: \"*\"\n          to: \"rice_mill_inward_entries\"\n          isOneToOne: false\n          isSetofReturn: true\n        }\n      }\n      get_issue_memo_report_v2: {\n        Args: never\n        Returns: {\n          additional_bag_grade_1: string\n          additional_bag_grade_2: string\n          additional_quantity_1: number\n          additional_quantity_2: number\n          bag_grade: string\n          bags: number\n          created_at: string\n          entry_unique_id: string\n          id: string\n          issue_memo_date: string\n          issue_memo_no: string\n          paddy_inward_entry_id: string\n          rice_mill_inward_entries: Json\n          weight: number\n        }[]\n      }\n      get_labour_kooli_report_v2: {\n        Args: {\n          p_from_date: string\n          p_labour: string\n          p_mill: string\n          p_to_date: string\n          p_type: string\n        }\n        Returns: {\n          bags: number\n          created_at: string\n          created_by: string\n          details: string\n          entry_date: string\n          id: string\n          labour: string\n          mill: string\n          source_type: string\n          weight: number\n        }[]\n      }\n      get_ledger_opening_balance_v2: {\n        Args: { p_date: string; p_ledger_id: string }\n        Returns: number\n      }\n      get_live_lorry_status_v2: { Args: never; Returns: Json }\n      get_live_rent_lorry_status_v2: { Args: never; Returns: Json }\n      get_live_stock_levels_v2: { Args: { p_mill: string }; Returns: Json }\n      get_lorry_movement_history_v2: {\n        Args: { p_days?: number; p_lorry_no: string }\n        Returns: {\n          bags: number\n          details: string\n          driver: string\n          mill: string\n          movement_date: string\n          movement_type: string\n          place: string\n          weight: number\n        }[]\n      }\n      get_opening_balance_for_date: {\n        Args: { p_date: string; p_user_id: string }\n        Returns: number\n      }\n      get_or_create_batch_for_unloading_point:\n        | { Args: { p_mill: string; p_unloading_point: string }; Returns: Json }\n        | {\n            Args: { p_grade: string; p_mill: string; p_unloading_point: string }\n            Returns: Json\n          }\n      get_pending_bills_v2: { Args: never; Returns: Json }\n      get_pending_paddy_inwards_v2: {\n        Args: never\n        Returns: {\n          bags: number\n          entry_date: string\n          entry_unique_id: string\n          grade: string\n          id: string\n          loading_point: string\n          lorry_number: string\n          serial_no: string\n          wayment_weight: number\n        }[]\n      }\n      get_rice_loading_report_v2:\n        | {\n            Args: {\n              p_allotment_month: string\n              p_from_date: string\n              p_godown: string\n              p_grade: string\n              p_to_date: string\n            }\n            Returns: {\n              allotment_month: string\n              bags: number\n              bill_no: string\n              bill_photo_url: string\n              driver: string\n              entry_date: string\n              godown: string\n              grade: string\n              hint: string\n              id: string\n              lorry_no: string\n              mill: string\n              rice_outward_acknowledgements: Json\n              rice_storage: string\n              status: string\n              weight: number\n            }[]\n          }\n        | {\n            Args: {\n              p_allotment_month: string\n              p_from_date: string\n              p_godown: string\n              p_grade: string\n              p_mill?: string\n              p_to_date: string\n            }\n            Returns: {\n              allotment_month: string\n              bags: number\n              bill_no: string\n              bill_photo_url: string\n              driver: string\n              entry_date: string\n              godown: string\n              grade: string\n              gs_sync_timestamp: string\n              hint: string\n              id: string\n              lorry_no: string\n              mill: string\n              rice_outward_acknowledgements: Json\n              rice_storage: string\n              status: string\n              weight: number\n            }[]\n          }\n      get_rice_outward_ack_report_v2:\n        | {\n            Args: never\n            Returns: {\n              ack_bags: number\n              ack_date: string\n              ack_godown: string\n              ack_number: string\n              ack_weight: number\n              created_at: string\n              grade: string\n              id: string\n              rice_loading_entries: Json\n              rice_loading_entry_id: string\n            }[]\n          }\n        | {\n            Args: {\n              p_from_date?: string\n              p_godown?: string\n              p_grade?: string\n              p_mill?: string\n              p_to_date?: string\n            }\n            Returns: {\n              ack_bags: number\n              ack_date: string\n              ack_godown: string\n              ack_number: string\n              ack_weight: number\n              created_at: string\n              grade: string\n              id: string\n              rice_loading_entries: Json\n              rice_loading_entry_id: string\n            }[]\n          }\n      get_rice_outward_acknowledgement_report_v2: {\n        Args: never\n        Returns: {\n          ack_bags: number\n          ack_date: string\n          ack_godown: string\n          ack_number: string\n          ack_weight: number\n          created_at: string\n          grade: string\n          id: string\n          rice_loading_entries: Json\n          rice_loading_entry_id: string\n        }[]\n      }\n      get_thotti_batch_history_v2:\n        | { Args: { p_mill: string }; Returns: Json }\n        | {\n            Args: { p_from_date?: string; p_mill: string; p_to_date?: string }\n            Returns: Json\n          }\n      get_transfer_container_stock_v2: {\n        Args: { p_mill: string }\n        Returns: Json\n      }\n      get_user_accessible_pages: {\n        Args: { _user_id: string }\n        Returns: {\n          description: string\n          page_id: string\n          page_name: string\n          page_route: string\n        }[]\n      }\n      get_user_role: {\n        Args: { _user_id: string }\n        Returns: Database[\"public\"][\"Enums\"][\"app_role\"]\n      }\n      get_waiting_lorry_list_v2: {\n        Args: { status_filter: string }\n        Returns: Json\n      }\n      handle_rice_storage_transfer: {\n        Args: {\n          p_batch_id: string\n          p_mill: string\n          p_to_location: string\n          p_weight_transferred: number\n        }\n        Returns: undefined\n      }\n      has_role: {\n        Args: {\n          _role: Database[\"public\"][\"Enums\"][\"app_role\"]\n          _user_id: string\n        }\n        Returns: boolean\n      }\n      is_container_empty_at_timestamp: {\n        Args: {\n          p_location: string\n          p_location_type: string\n          p_mill: string\n          p_timestamp: string\n        }\n        Returns: boolean\n      }\n      is_container_empty_now: {\n        Args: { p_location: string; p_location_type: string; p_mill?: string }\n        Returns: boolean\n      }\n      log_failed_transaction: {\n        Args: {\n          p_attempted_data: Json\n          p_error_code?: string\n          p_error_message: string\n          p_transaction_type: string\n          p_user_id: string\n        }\n        Returns: string\n      }\n      populate_missing_daily_balances: { Args: never; Returns: undefined }\n      post_kooli_to_ledger: { Args: { entries: Json }; Returns: undefined }\n      process_bulk_transactions: {\n        Args: { p_transactions: Json }\n        Returns: Json\n      }\n      process_scheduled_assignments: { Args: never; Returns: undefined }\n      process_transaction: {\n        Args: {\n          p_amount: number\n          p_attached_bill?: string\n          p_created_by: string\n          p_date: string\n          p_description: string\n          p_external_reference?: string\n          p_ledger_id?: string\n          p_source_ledger_id?: string\n          p_transfer_to_user_id?: string\n          p_type: string\n          p_user_id: string\n        }\n        Returns: Json\n      }\n      raise_exception: { Args: { msg: string }; Returns: undefined }\n      reassign_thotti_numbers_chronologically: {\n        Args: { p_sync_session_id?: string }\n        Returns: Json\n      }\n      rebuild_all_daily_balances: { Args: never; Returns: undefined }\n      rebuild_daily_balances_after_date: {\n        Args: { p_cutoff_date: string }\n        Returns: Json\n      }\n      recalculate_all_running_balances: { Args: never; Returns: undefined }\n      recalculate_customer_ledger_balances: {\n        Args: { p_customer_id: string; p_from_date: string }\n        Returns: undefined\n      }\n      recalculate_daily_balances_from_date:\n        | {\n            Args: { p_from_date: string; p_user_id: string }\n            Returns: undefined\n          }\n        | {\n            Args: { p_from_date: string; p_user_ids: string[] }\n            Returns: undefined\n          }\n      recalculate_ledger_balances:\n        | { Args: { p_ledger_id: string }; Returns: undefined }\n        | {\n            Args: { p_from_date?: string; p_ledger_id: string }\n            Returns: undefined\n          }\n      recalculate_running_balances_from_date: {\n        Args: { p_from_date: string; p_user_ids: string[] }\n        Returns: undefined\n      }\n      recalculate_user_balances: {\n        Args: { p_user_id: string }\n        Returns: undefined\n      }\n      recompute_daily_balance:\n        | { Args: { p_date: string; p_user_id: string }; Returns: undefined }\n        | { Args: { p_date: string; p_user_id: string }; Returns: undefined }\n      reconcile_cashbook_transaction:\n        | {\n            Args: {\n              p_amount: number\n              p_created_by: string\n              p_date: string\n              p_description: string\n              p_ledger_id?: string\n              p_source_ledger_id?: string\n              p_transfer_to_user_id?: string\n              p_txn_id: string\n              p_type: string\n              p_user_id: string\n            }\n            Returns: Json\n          }\n        | {\n            Args: {\n              p_amount: number\n              p_created_by: string\n              p_date: string\n              p_description: string\n              p_ledger_id?: string\n              p_source_ledger_id?: string\n              p_transfer_to_user_id?: string\n              p_txn_id: string\n              p_type: string\n              p_user_id: string\n            }\n            Returns: Json\n          }\n        | {\n            Args: {\n              p_amount: number\n              p_created_by: string\n              p_date: string\n              p_description: string\n              p_ledger_id: string\n              p_transfer_to_user_id: string\n              p_txn_id: string\n              p_type: string\n              p_user_id: string\n            }\n            Returns: Json\n          }\n      reconcile_customer_receipt_v2: {\n        Args: {\n          p_amount: number\n          p_bank_recon_data: Json\n          p_created_by: string\n          p_customer_id: string\n          p_customer_name: string\n          p_payment_method: string\n          p_receipt_date: string\n          p_remarks: string\n          p_source_ledger_id: string\n        }\n        Returns: Json\n      }\n      reconcile_supplier_payment_v2: {\n        Args: {\n          p_amount: number\n          p_bank_recon_data: Json\n          p_created_by: string\n          p_payment_date: string\n          p_payment_method: string\n          p_remarks: string\n          p_source_ledger_id: string\n          p_supplier_id: string\n          p_supplier_name: string\n        }\n        Returns: Json\n      }\n      reconcile_transaction_v1: {\n        Args: {\n          p_amount: number\n          p_attached_bill?: string\n          p_bank_cleaned_narration?: string\n          p_bank_closing_balance?: number\n          p_bank_credit_amount?: number\n          p_bank_debit_amount?: number\n          p_bank_orig_narration?: string\n          p_bank_ref_num?: string\n          p_bank_source_ledger_id?: string\n          p_created_by: string\n          p_date: string\n          p_description: string\n          p_ledger_id?: string\n          p_reconciliation_type?: string\n          p_source_ledger_id?: string\n          p_transfer_to_user_id?: string\n          p_type: string\n          p_user_id: string\n        }\n        Returns: Json\n      }\n      refresh_transaction_cache: {\n        Args: { p_date: string; p_user_id: string }\n        Returns: undefined\n      }\n      tm_accept_instruction: {\n        Args: { p_instruction_id: string; p_remarks: string; p_user_id: string }\n        Returns: Json\n      }\n      tm_add_gps_task_update: {\n        Args: {\n          p_gps_task_id: string\n          p_photo_url?: string\n          p_remarks: string\n          p_status: string\n          p_user_id: string\n          p_voice_url?: string\n        }\n        Returns: Json\n      }\n      tm_add_task_update: {\n        Args: {\n          p_photo_url: string\n          p_remarks: string\n          p_status: string\n          p_task_id: string\n          p_user_id: string\n          p_voice_url: string\n        }\n        Returns: Json\n      }\n      tm_check_pending_tasks: { Args: { p_user_id: string }; Returns: Json }\n      tm_complete_gps_task: {\n        Args: { p_gps_task_id: string; p_user_id: string }\n        Returns: Json\n      }\n      tm_create_group_gps_task:\n        | {\n            Args: {\n              p_assigned_by: string\n              p_description: string\n              p_group_id: string\n              p_latitude: number\n              p_longitude: number\n              p_radius: number\n              p_target_time: string\n              p_title: string\n              p_voice_recording_url: string\n            }\n            Returns: Json\n          }\n        | {\n            Args: {\n              p_assigned_by: string\n              p_description: string\n              p_group_id: string\n              p_latitude: number\n              p_longitude: number\n              p_radius: number\n              p_target_time: string\n              p_title: string\n            }\n            Returns: Json\n          }\n      tm_create_group_instruction:\n        | {\n            Args: {\n              p_assigned_by: string\n              p_description: string\n              p_group_id: string\n              p_title: string\n              p_voice_recording_url: string\n            }\n            Returns: Json\n          }\n        | {\n            Args: {\n              p_assigned_by: string\n              p_description: string\n              p_group_id: string\n              p_title: string\n              p_voice_recording_url: string\n            }\n            Returns: Json\n          }\n      tm_create_group_task: {\n        Args: {\n          p_assigned_by: string\n          p_description: string\n          p_group_id: string\n          p_priority: string\n          p_target_time: string\n          p_title: string\n          p_voice_recording_url: string\n        }\n        Returns: Json\n      }\n      tm_postpone_task: {\n        Args: { p_reason?: string; p_task_id: string; p_user_id: string }\n        Returns: Json\n      }\n      tm_register_fcm_token:\n        | {\n            Args: {\n              p_device_info: string\n              p_platform: string\n              p_token: string\n              p_user_id: string\n            }\n            Returns: undefined\n          }\n        | {\n            Args: {\n              p_app_id?: string\n              p_device_info: string\n              p_platform: string\n              p_token: string\n              p_user_id: string\n            }\n            Returns: undefined\n          }\n      tm_transfer_gps_task: {\n        Args: {\n          p_from_user: string\n          p_reason: string\n          p_task_id: string\n          p_to_user: string\n        }\n        Returns: Json\n      }\n      tm_transfer_task: {\n        Args: {\n          p_from_user: string\n          p_reason: string\n          p_task_id: string\n          p_to_user: string\n        }\n        Returns: Json\n      }\n      toggle_task_routine_status: {\n        Args: { p_routine_id: string; p_status: boolean }\n        Returns: undefined\n      }\n      undo_transfer: { Args: { transfer_id: string }; Returns: Json }\n      undo_unloading_entry: { Args: { p_unloading_id: string }; Returns: Json }\n      unpost_kooli_ledger_transaction: {\n        Args: { p_transaction_id: string }\n        Returns: undefined\n      }\n      update_overdue_status: { Args: never; Returns: undefined }\n      update_retry_attempt: {\n        Args: { p_success?: boolean; p_transaction_id: string }\n        Returns: undefined\n      }\n      update_sale_with_ledger: {\n        Args: {\n          p_outward_entry_data: Json\n          p_sale_data: Json\n          p_sale_id: string\n          p_user_id: string\n        }\n        Returns: Json\n      }\n      update_supplier_balance: {\n        Args: { p_supplier_id: string }\n        Returns: undefined\n      }\n      update_user_device_status: {\n        Args: {\n          p_battery: number\n          p_data: boolean\n          p_duty: boolean\n          p_gps: boolean\n          p_metadata?: Json\n          p_user_id: string\n        }\n        Returns: undefined\n      }\n      user_has_page_access:\n        | { Args: { _page_route: string; _user_id: string }; Returns: boolean }\n        | { Args: { _page_route: string; _user_id: string }; Returns: boolean }\n      validate_balance_consistency: {\n        Args: { p_user_id?: string }\n        Returns: Json\n      }\n      validate_container_empty_at_timestamp: {\n        Args: {\n          p_location: string\n          p_location_type: string\n          p_mill: string\n          p_timestamp: string\n        }\n        Returns: Json\n      }\n      validate_transfer_sequence: {\n        Args: { p_from_location_type: string; p_to_location_type: string }\n        Returns: boolean\n      }\n      validate_undo_operation: { Args: { transfer_id: string }; Returns: Json }\n      verify_daily_balance_chain: { Args: never; Returns: Json }\n    }\n    Enums: {\n      alert_type:\n        | \"task_assigned\"\n        | \"task_reminder\"\n        | \"task_completed\"\n        | \"arrived\"\n        | \"left_without_completion\"\n        | \"task_transferred\"\n      app_role: \"admin\" | \"moderator\" | \"user\" | \"manager\" | \"employee\"\n      task_priority_type: \"low\" | \"medium\" | \"high\" | \"urgent\"\n      task_status_type:\n        | \"assigned\"\n        | \"in_progress\"\n        | \"completed\"\n        | \"transferred\"\n        | \"missed\"\n        | \"postponed\"\n      user_role_type: \"manager\" | \"supervisor\" | \"operator\"\n    }\n    CompositeTypes: {\n      [_ in never]: never\n    }\n  }\n}\n\ntype DatabaseWithoutInternals = Omit<Database, \"__InternalSupabase\">\n\ntype DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, \"public\">]\n\nexport type Tables<\n  DefaultSchemaTableNameOrOptions extends\n    | keyof (DefaultSchema[\"Tables\"] & DefaultSchema[\"Views\"])\n    | { schema: keyof DatabaseWithoutInternals },\n  TableName extends DefaultSchemaTableNameOrOptions extends {\n    schema: keyof DatabaseWithoutInternals\n  }\n    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions[\"schema\"]][\"Tables\"] &\n        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions[\"schema\"]][\"Views\"])\n    : never = never,\n> = DefaultSchemaTableNameOrOptions extends {\n  schema: keyof DatabaseWithoutInternals\n}\n  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions[\"schema\"]][\"Tables\"] &\n      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions[\"schema\"]][\"Views\"])[TableName] extends {\n      Row: infer R\n    }\n    ? R\n    : never\n  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema[\"Tables\"] &\n        DefaultSchema[\"Views\"])\n    ? (DefaultSchema[\"Tables\"] &\n        DefaultSchema[\"Views\"])[DefaultSchemaTableNameOrOptions] extends {\n        Row: infer R\n      }\n      ? R\n      : never\n    : never\n\nexport type TablesInsert<\n  DefaultSchemaTableNameOrOptions extends\n    | keyof DefaultSchema[\"Tables\"]\n    | { schema: keyof DatabaseWithoutInternals },\n  TableName extends DefaultSchemaTableNameOrOptions extends {\n    schema: keyof DatabaseWithoutInternals\n  }\n    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions[\"schema\"]][\"Tables\"]\n    : never = never,\n> = DefaultSchemaTableNameOrOptions extends {\n  schema: keyof DatabaseWithoutInternals\n}\n  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions[\"schema\"]][\"Tables\"][TableName] extends {\n      Insert: infer I\n    }\n    ? I\n    : never\n  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema[\"Tables\"]\n    ? DefaultSchema[\"Tables\"][DefaultSchemaTableNameOrOptions] extends {\n        Insert: infer I\n      }\n      ? I\n      : never\n    : never\n\nexport type TablesUpdate<\n  DefaultSchemaTableNameOrOptions extends\n    | keyof DefaultSchema[\"Tables\"]\n    | { schema: keyof DatabaseWithoutInternals },\n  TableName extends DefaultSchemaTableNameOrOptions extends {\n    schema: keyof DatabaseWithoutInternals\n  }\n    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions[\"schema\"]][\"Tables\"]\n    : never = never,\n> = DefaultSchemaTableNameOrOptions extends {\n  schema: keyof DatabaseWithoutInternals\n}\n  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions[\"schema\"]][\"Tables\"][TableName] extends {\n      Update: infer U\n    }\n    ? U\n    : never\n  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema[\"Tables\"]\n    ? DefaultSchema[\"Tables\"][DefaultSchemaTableNameOrOptions] extends {\n        Update: infer U\n      }\n      ? U\n      : never\n    : never\n\nexport type Enums<\n  DefaultSchemaEnumNameOrOptions extends\n    | keyof DefaultSchema[\"Enums\"]\n    | { schema: keyof DatabaseWithoutInternals },\n  EnumName extends DefaultSchemaEnumNameOrOptions extends {\n    schema: keyof DatabaseWithoutInternals\n  }\n    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions[\"schema\"]][\"Enums\"]\n    : never = never,\n> = DefaultSchemaEnumNameOrOptions extends {\n  schema: keyof DatabaseWithoutInternals\n}\n  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions[\"schema\"]][\"Enums\"][EnumName]\n  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema[\"Enums\"]\n    ? DefaultSchema[\"Enums\"][DefaultSchemaEnumNameOrOptions]\n    : never\n\nexport type CompositeTypes<\n  PublicCompositeTypeNameOrOptions extends\n    | keyof DefaultSchema[\"CompositeTypes\"]\n    | { schema: keyof DatabaseWithoutInternals },\n  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {\n    schema: keyof DatabaseWithoutInternals\n  }\n    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions[\"schema\"]][\"CompositeTypes\"]\n    : never = never,\n> = PublicCompositeTypeNameOrOptions extends {\n  schema: keyof DatabaseWithoutInternals\n}\n  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions[\"schema\"]][\"CompositeTypes\"][CompositeTypeName]\n  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema[\"CompositeTypes\"]\n    ? DefaultSchema[\"CompositeTypes\"][PublicCompositeTypeNameOrOptions]\n    : never\n\nexport const Constants = {\n  public: {\n    Enums: {\n      alert_type: [\n        \"task_assigned\",\n        \"task_reminder\",\n        \"task_completed\",\n        \"arrived\",\n        \"left_without_completion\",\n        \"task_transferred\",\n      ],\n      app_role: [\"admin\", \"moderator\", \"user\", \"manager\", \"employee\"],\n      task_priority_type: [\"low\", \"medium\", \"high\", \"urgent\"],\n      task_status_type: [\n        \"assigned\",\n        \"in_progress\",\n        \"completed\",\n        \"transferred\",\n        \"missed\",\n        \"postponed\",\n      ],\n      user_role_type: [\"manager\", \"supervisor\", \"operator\"],\n    },\n  },\n} as const\n"}
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.3 (519615d)"
+  }
+  public: {
+    Tables: {
+      activity_logs: {
+        Row: {
+          activity_type: string
+          created_at: string | null
+          description: string
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string | null
+          description: string
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_activity_logs_user_id"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_credentials: {
+        Row: {
+          api_key: string
+          client_code: string
+          created_at: string | null
+          id: string
+          password: string
+          totp_secret: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          api_key: string
+          client_code: string
+          created_at?: string | null
+          id?: string
+          password: string
+          totp_secret: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          api_key?: string
+          client_code?: string
+          created_at?: string | null
+          id?: string
+          password?: string
+          totp_secret?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      app_pages: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          route: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          route: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          route?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      app_users: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          location_permission: boolean | null
+          name: string
+          phone: string | null
+          role: Database["public"]["Enums"]["user_role_type"]
+          status: string | null
+          task_role: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id: string
+          location_permission?: boolean | null
+          name: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role_type"]
+          status?: string | null
+          task_role?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          location_permission?: boolean | null
+          name?: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role_type"]
+          status?: string | null
+          task_role?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      attachments: {
+        Row: {
+          drive_file_id: string | null
+          file_type: string
+          file_url: string | null
+          id: string
+          task_id: string | null
+          transaction_id: string | null
+          uploaded_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          drive_file_id?: string | null
+          file_type: string
+          file_url?: string | null
+          id?: string
+          task_id?: string | null
+          transaction_id?: string | null
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          drive_file_id?: string | null
+          file_type?: string
+          file_url?: string | null
+          id?: string
+          task_id?: string | null
+          transaction_id?: string | null
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attachments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attachments_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attachments_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attendance: {
+        Row: {
+          absent_duration: string | null
+          attendance_percentage: number | null
+          attendance_status: string | null
+          clock_in_time: string | null
+          clock_out_time: string | null
+          created_at: string | null
+          daily_salary: number | null
+          date: string
+          department: string | null
+          duty_minutes: number | null
+          employee_id: string
+          final_salary: number | null
+          full_name: string | null
+          half_salary_applied: boolean | null
+          id: number
+          is_processed: boolean | null
+          late_duration: string | null
+          original_salary: number | null
+          overtime_duration: string | null
+          required_percentage: number | null
+          salary_missing: boolean | null
+          worked_hours: string | null
+          worked_minutes: number | null
+        }
+        Insert: {
+          absent_duration?: string | null
+          attendance_percentage?: number | null
+          attendance_status?: string | null
+          clock_in_time?: string | null
+          clock_out_time?: string | null
+          created_at?: string | null
+          daily_salary?: number | null
+          date: string
+          department?: string | null
+          duty_minutes?: number | null
+          employee_id: string
+          final_salary?: number | null
+          full_name?: string | null
+          half_salary_applied?: boolean | null
+          id?: never
+          is_processed?: boolean | null
+          late_duration?: string | null
+          original_salary?: number | null
+          overtime_duration?: string | null
+          required_percentage?: number | null
+          salary_missing?: boolean | null
+          worked_hours?: string | null
+          worked_minutes?: number | null
+        }
+        Update: {
+          absent_duration?: string | null
+          attendance_percentage?: number | null
+          attendance_status?: string | null
+          clock_in_time?: string | null
+          clock_out_time?: string | null
+          created_at?: string | null
+          daily_salary?: number | null
+          date?: string
+          department?: string | null
+          duty_minutes?: number | null
+          employee_id?: string
+          final_salary?: number | null
+          full_name?: string | null
+          half_salary_applied?: boolean | null
+          id?: never
+          is_processed?: boolean | null
+          late_duration?: string | null
+          original_salary?: number | null
+          overtime_duration?: string | null
+          required_percentage?: number | null
+          salary_missing?: boolean | null
+          worked_hours?: string | null
+          worked_minutes?: number | null
+        }
+        Relationships: []
+      }
+      bank_narration_mappings: {
+        Row: {
+          cleaned_narration: string
+          created_at: string | null
+          id: string
+          reconciliation_type: string | null
+          target_id: string
+          target_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          cleaned_narration: string
+          created_at?: string | null
+          id?: string
+          reconciliation_type?: string | null
+          target_id: string
+          target_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          cleaned_narration?: string
+          created_at?: string | null
+          id?: string
+          reconciliation_type?: string | null
+          target_id?: string
+          target_type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      bank_recon_configs: {
+        Row: {
+          amount_col: number | null
+          amount_mode: string | null
+          balance_col: number | null
+          bank_name: string
+          cleaning_rules: Json | null
+          cr_dr_col: number | null
+          created_at: string | null
+          credit_col: number | null
+          date_col: number | null
+          debit_col: number | null
+          id: string
+          narration_col: number | null
+          ref_col: number | null
+          skip_rows: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount_col?: number | null
+          amount_mode?: string | null
+          balance_col?: number | null
+          bank_name: string
+          cleaning_rules?: Json | null
+          cr_dr_col?: number | null
+          created_at?: string | null
+          credit_col?: number | null
+          date_col?: number | null
+          debit_col?: number | null
+          id?: string
+          narration_col?: number | null
+          ref_col?: number | null
+          skip_rows?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount_col?: number | null
+          amount_mode?: string | null
+          balance_col?: number | null
+          bank_name?: string
+          cleaning_rules?: Json | null
+          cr_dr_col?: number | null
+          created_at?: string | null
+          credit_col?: number | null
+          date_col?: number | null
+          debit_col?: number | null
+          id?: string
+          narration_col?: number | null
+          ref_col?: number | null
+          skip_rows?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      bank_reconciliations: {
+        Row: {
+          cleaned_narration: string
+          closing_balance: number | null
+          created_at: string | null
+          credit_amount: number | null
+          debit_amount: number | null
+          id: string
+          original_narration: string
+          reconciled_target_id: string | null
+          reconciled_target_type: string | null
+          reconciled_transaction_id: string | null
+          reconciliation_type: string | null
+          reference_number: string
+          source_ledger_id: string | null
+          status: string | null
+          transaction_date: string
+          updated_at: string | null
+          value_date: string | null
+        }
+        Insert: {
+          cleaned_narration: string
+          closing_balance?: number | null
+          created_at?: string | null
+          credit_amount?: number | null
+          debit_amount?: number | null
+          id?: string
+          original_narration: string
+          reconciled_target_id?: string | null
+          reconciled_target_type?: string | null
+          reconciled_transaction_id?: string | null
+          reconciliation_type?: string | null
+          reference_number: string
+          source_ledger_id?: string | null
+          status?: string | null
+          transaction_date: string
+          updated_at?: string | null
+          value_date?: string | null
+        }
+        Update: {
+          cleaned_narration?: string
+          closing_balance?: number | null
+          created_at?: string | null
+          credit_amount?: number | null
+          debit_amount?: number | null
+          id?: string
+          original_narration?: string
+          reconciled_target_id?: string | null
+          reconciled_target_type?: string | null
+          reconciled_transaction_id?: string | null
+          reconciliation_type?: string | null
+          reference_number?: string
+          source_ledger_id?: string | null
+          status?: string | null
+          transaction_date?: string
+          updated_at?: string | null
+          value_date?: string | null
+        }
+        Relationships: []
+      }
+      business_contacts: {
+        Row: {
+          auth_user_id: string
+          contact_info: string | null
+          created_at: string
+          created_by: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          auth_user_id: string
+          contact_info?: string | null
+          created_at?: string
+          created_by: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          auth_user_id?: string
+          contact_info?: string | null
+          created_at?: string
+          created_by?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      cashbook_transactions: {
+        Row: {
+          amount: number
+          attachment_urls: string[] | null
+          created_at: string | null
+          currency: string
+          custom_fields: Json | null
+          event_id: string
+          event_type: string
+          expense_category: string | null
+          id: string
+          location_lat: number | null
+          location_lng: number | null
+          merchant_mcc: string | null
+          merchant_name: string | null
+          merchant_upi_id: string | null
+          note: string | null
+          phone_number: string | null
+          reconciled_txn_id: string | null
+          transaction_time: string
+          txn_id: string
+          txn_type: string | null
+          upi_remark: string | null
+        }
+        Insert: {
+          amount: number
+          attachment_urls?: string[] | null
+          created_at?: string | null
+          currency?: string
+          custom_fields?: Json | null
+          event_id: string
+          event_type: string
+          expense_category?: string | null
+          id?: string
+          location_lat?: number | null
+          location_lng?: number | null
+          merchant_mcc?: string | null
+          merchant_name?: string | null
+          merchant_upi_id?: string | null
+          note?: string | null
+          phone_number?: string | null
+          reconciled_txn_id?: string | null
+          transaction_time: string
+          txn_id: string
+          txn_type?: string | null
+          upi_remark?: string | null
+        }
+        Update: {
+          amount?: number
+          attachment_urls?: string[] | null
+          created_at?: string | null
+          currency?: string
+          custom_fields?: Json | null
+          event_id?: string
+          event_type?: string
+          expense_category?: string | null
+          id?: string
+          location_lat?: number | null
+          location_lng?: number | null
+          merchant_mcc?: string | null
+          merchant_name?: string | null
+          merchant_upi_id?: string | null
+          note?: string | null
+          phone_number?: string | null
+          reconciled_txn_id?: string | null
+          transaction_time?: string
+          txn_id?: string
+          txn_type?: string | null
+          upi_remark?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cashbook_transactions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "cashbook_webhook_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cashbook_transactions_reconciled_txn_id_fkey"
+            columns: ["reconciled_txn_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cashbook_webhook_events: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: string
+          payload: Json
+          processed: boolean | null
+          processed_at: string | null
+          version: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          id: string
+          payload: Json
+          processed?: boolean | null
+          processed_at?: string | null
+          version: string
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed?: boolean | null
+          processed_at?: string | null
+          version?: string
+        }
+        Relationships: []
+      }
+      company_settings: {
+        Row: {
+          address_line1: string
+          address_line2: string | null
+          bank_account_no: string | null
+          bank_branch: string | null
+          bank_ifsc: string | null
+          bank_name: string | null
+          bill_digits: number | null
+          bill_prefix: string | null
+          company_name: string
+          created_at: string
+          credit_note_digits: number | null
+          credit_note_financial_year_in_serial: boolean | null
+          credit_note_prefix: string | null
+          debit_note_digits: number | null
+          debit_note_financial_year_in_serial: boolean | null
+          debit_note_prefix: string | null
+          einvoice_aspid: string | null
+          einvoice_asppassword: string | null
+          einvoice_enabled: boolean | null
+          einvoice_password: string | null
+          einvoice_sandbox: boolean | null
+          einvoice_username: string | null
+          ewaybill_enabled: boolean | null
+          ewaybill_password: string | null
+          email: string | null
+          financial_year_in_serial: boolean
+          gstin: string
+          id: string
+          is_active: boolean
+          locality: string
+          location_code: string
+          location_name: string
+          phone: string | null
+          pin_code: number
+          start_bill_no: number | null
+          start_credit_note_no: number | null
+          start_debit_note_no: number | null
+          state_code: string
+          updated_at: string
+        }
+        Insert: {
+          address_line1: string
+          address_line2?: string | null
+          bank_account_no?: string | null
+          bank_branch?: string | null
+          bank_ifsc?: string | null
+          bank_name?: string | null
+          bill_digits?: number | null
+          bill_prefix?: string | null
+          company_name: string
+          created_at?: string
+          credit_note_digits?: number | null
+          credit_note_financial_year_in_serial?: boolean | null
+          credit_note_prefix?: string | null
+          debit_note_digits?: number | null
+          debit_note_financial_year_in_serial?: boolean | null
+          debit_note_prefix?: string | null
+          einvoice_aspid?: string | null
+          einvoice_asppassword?: string | null
+          einvoice_enabled?: boolean | null
+          einvoice_password?: string | null
+          einvoice_sandbox?: boolean | null
+          einvoice_username?: string | null
+          ewaybill_enabled?: boolean | null
+          ewaybill_password?: string | null
+          email?: string | null
+          financial_year_in_serial?: boolean
+          gstin: string
+          id?: string
+          is_active?: boolean
+          locality: string
+          location_code: string
+          location_name: string
+          phone?: string | null
+          pin_code: number
+          start_bill_no?: number | null
+          start_credit_note_no?: number | null
+          start_debit_note_no?: number | null
+          state_code?: string
+          updated_at?: string
+        }
+        Update: {
+          address_line1?: string
+          address_line2?: string | null
+          bank_account_no?: string | null
+          bank_branch?: string | null
+          bank_ifsc?: string | null
+          bank_name?: string | null
+          bill_digits?: number | null
+          bill_prefix?: string | null
+          company_name?: string
+          created_at?: string
+          credit_note_digits?: number | null
+          credit_note_financial_year_in_serial?: boolean | null
+          credit_note_prefix?: string | null
+          debit_note_digits?: number | null
+          debit_note_financial_year_in_serial?: boolean | null
+          debit_note_prefix?: string | null
+          einvoice_aspid?: string | null
+          einvoice_asppassword?: string | null
+          einvoice_enabled?: boolean | null
+          einvoice_password?: string | null
+          einvoice_sandbox?: boolean | null
+          einvoice_username?: string | null
+          ewaybill_enabled?: boolean | null
+          ewaybill_password?: string | null
+          email?: string | null
+          financial_year_in_serial?: boolean
+          gstin?: string
+          id?: string
+          is_active?: boolean
+          locality?: string
+          location_code?: string
+          location_name?: string
+          phone?: string | null
+          pin_code?: number
+          start_bill_no?: number | null
+          start_credit_note_no?: number | null
+          start_debit_note_no?: number | null
+          state_code?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      complaint_types: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      complaints: {
+        Row: {
+          complaint_text: string | null
+          complaint_type_id: string | null
+          complaint_voice_url: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          lorry_id: string | null
+          resolution_notes: string | null
+          resolution_voice_url: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string | null
+          urgency: string | null
+        }
+        Insert: {
+          complaint_text?: string | null
+          complaint_type_id?: string | null
+          complaint_voice_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          lorry_id?: string | null
+          resolution_notes?: string | null
+          resolution_voice_url?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+          urgency?: string | null
+        }
+        Update: {
+          complaint_text?: string | null
+          complaint_type_id?: string | null
+          complaint_voice_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          lorry_id?: string | null
+          resolution_notes?: string | null
+          resolution_voice_url?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+          urgency?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "complaints_complaint_type_id_fkey"
+            columns: ["complaint_type_id"]
+            isOneToOne: false
+            referencedRelation: "complaint_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "complaints_lorry_id_fkey"
+            columns: ["lorry_id"]
+            isOneToOne: false
+            referencedRelation: "lorries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_notes: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          gst_percentage: number | null
+          id: string
+          item_id: string | null
+          mill: string
+          note_date: string
+          note_no: string
+          reason: string
+          reference_bill_no: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          gst_percentage?: number | null
+          id?: string
+          item_id?: string | null
+          mill?: string
+          note_date?: string
+          note_no: string
+          reason: string
+          reference_bill_no?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          gst_percentage?: number | null
+          id?: string
+          item_id?: string | null
+          mill?: string
+          note_date?: string
+          note_no?: string
+          reason?: string
+          reference_bill_no?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_notes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_notes_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_ledger: {
+        Row: {
+          balance: number
+          created_at: string
+          credit_amount: number
+          customer_id: string
+          debit_amount: number
+          description: string | null
+          id: string
+          reference_id: string
+          transaction_date: string
+          transaction_type: string
+          updated_at: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          credit_amount?: number
+          customer_id: string
+          debit_amount?: number
+          description?: string | null
+          id?: string
+          reference_id: string
+          transaction_date?: string
+          transaction_type: string
+          updated_at?: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          credit_amount?: number
+          customer_id?: string
+          debit_amount?: number
+          description?: string | null
+          id?: string
+          reference_id?: string
+          transaction_date?: string
+          transaction_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_ledger_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_ledger_mapping: {
+        Row: {
+          created_at: string
+          created_by: string
+          customer_id: string
+          id: string
+          ledger_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          customer_id: string
+          id?: string
+          ledger_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          customer_id?: string
+          id?: string
+          ledger_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_ledger_mapping_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_ledger_mapping_ledger_id_fkey"
+            columns: ["ledger_id"]
+            isOneToOne: false
+            referencedRelation: "ledgers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customers: {
+        Row: {
+          address_english: string | null
+          address_tamil: string | null
+          code: string
+          contact_person: string | null
+          created_at: string
+          email: string | null
+          gstin: string | null
+          id: string
+          is_active: boolean
+          name_english: string
+          name_tamil: string | null
+          opening_balance: number | null
+          phone: string | null
+          pin_code: string | null
+          place_of_supply: string | null
+          state_code: string | null
+          updated_at: string
+        }
+        Insert: {
+          address_english?: string | null
+          address_tamil?: string | null
+          code: string
+          contact_person?: string | null
+          created_at?: string
+          email?: string | null
+          gstin?: string | null
+          id?: string
+          is_active?: boolean
+          name_english: string
+          name_tamil?: string | null
+          opening_balance?: number | null
+          phone?: string | null
+          pin_code?: string | null
+          place_of_supply?: string | null
+          state_code?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address_english?: string | null
+          address_tamil?: string | null
+          code?: string
+          contact_person?: string | null
+          created_at?: string
+          email?: string | null
+          gstin?: string | null
+          id?: string
+          is_active?: boolean
+          name_english?: string
+          name_tamil?: string | null
+          opening_balance?: number | null
+          phone?: string | null
+          pin_code?: string | null
+          place_of_supply?: string | null
+          state_code?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      debit_notes: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          gst_percentage: number | null
+          id: string
+          item_id: string | null
+          mill: string
+          note_date: string
+          note_no: string
+          reason: string
+          reference_bill_no: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          gst_percentage?: number | null
+          id?: string
+          item_id?: string | null
+          mill?: string
+          note_date?: string
+          note_no: string
+          reason: string
+          reference_bill_no?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          gst_percentage?: number | null
+          id?: string
+          item_id?: string | null
+          mill?: string
+          note_date?: string
+          note_no?: string
+          reason?: string
+          reference_bill_no?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "debit_notes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "debit_notes_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      duty_status: {
+        Row: {
+          action: string
+          created_at: string | null
+          device_info: string | null
+          id: string
+          latitude: number | null
+          location_accuracy: number | null
+          longitude: number | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          device_info?: string | null
+          id?: string
+          latitude?: number | null
+          location_accuracy?: number | null
+          longitude?: number | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          device_info?: string | null
+          id?: string
+          latitude?: number | null
+          location_accuracy?: number | null
+          longitude?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      employee_salary_ledgers: {
+        Row: {
+          created_at: string | null
+          crosses_midnight: boolean | null
+          department: string | null
+          employee_id: string
+          employee_name: string
+          half_day_working_hours: number | null
+          id: string
+          is_enabled: boolean | null
+          ledger_id: string
+          monthly_salary: number | null
+          updated_at: string | null
+          working_hours: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          crosses_midnight?: boolean | null
+          department?: string | null
+          employee_id: string
+          employee_name: string
+          half_day_working_hours?: number | null
+          id?: string
+          is_enabled?: boolean | null
+          ledger_id: string
+          monthly_salary?: number | null
+          updated_at?: string | null
+          working_hours?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          crosses_midnight?: boolean | null
+          department?: string | null
+          employee_id?: string
+          employee_name?: string
+          half_day_working_hours?: number | null
+          id?: string
+          is_enabled?: boolean | null
+          ledger_id?: string
+          monthly_salary?: number | null
+          updated_at?: string | null
+          working_hours?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_salary_ledgers_ledger_id_fkey"
+            columns: ["ledger_id"]
+            isOneToOne: false
+            referencedRelation: "ledgers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          address: string | null
+          base_salary: number
+          created_at: string | null
+          department: string | null
+          email: string
+          employee_id: string
+          id: string
+          is_active: boolean | null
+          joining_date: string
+          name: string
+          phone: string | null
+          position: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          address?: string | null
+          base_salary?: number
+          created_at?: string | null
+          department?: string | null
+          email: string
+          employee_id: string
+          id?: string
+          is_active?: boolean | null
+          joining_date?: string
+          name: string
+          phone?: string | null
+          position?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          address?: string | null
+          base_salary?: number
+          created_at?: string | null
+          department?: string | null
+          email?: string
+          employee_id?: string
+          id?: string
+          is_active?: boolean | null
+          joining_date?: string
+          name?: string
+          phone?: string | null
+          position?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      failed_transactions: {
+        Row: {
+          attempted_data: Json
+          created_at: string | null
+          error_code: string | null
+          error_message: string
+          id: string
+          last_retry_at: string | null
+          retry_count: number | null
+          status: string | null
+          transaction_type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          attempted_data: Json
+          created_at?: string | null
+          error_code?: string | null
+          error_message: string
+          id?: string
+          last_retry_at?: string | null
+          retry_count?: number | null
+          status?: string | null
+          transaction_type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          attempted_data?: Json
+          created_at?: string | null
+          error_code?: string | null
+          error_message?: string
+          id?: string
+          last_retry_at?: string | null
+          retry_count?: number | null
+          status?: string | null
+          transaction_type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      fcm_tokens: {
+        Row: {
+          app_id: string | null
+          created_at: string
+          device_info: string | null
+          id: string
+          last_used_at: string
+          platform: string
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          app_id?: string | null
+          created_at?: string
+          device_info?: string | null
+          id?: string
+          last_used_at?: string
+          platform: string
+          token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          app_id?: string | null
+          created_at?: string
+          device_info?: string | null
+          id?: string
+          last_used_at?: string
+          platform?: string
+          token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      financial_audit_log: {
+        Row: {
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          operation: string
+          record_id: string
+          table_name: string
+          timestamp: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          operation: string
+          record_id: string
+          table_name: string
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          operation?: string
+          record_id?: string
+          table_name?: string
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      frk_inward_entries: {
+        Row: {
+          batch_no: string
+          bill_no: string
+          created_at: string
+          created_by: string | null
+          entry_date: string
+          id: string
+          mill: string
+          quantity: number
+          serial_no: string
+          updated_at: string
+        }
+        Insert: {
+          batch_no: string
+          bill_no: string
+          created_at?: string
+          created_by?: string | null
+          entry_date?: string
+          id?: string
+          mill: string
+          quantity: number
+          serial_no: string
+          updated_at?: string
+        }
+        Update: {
+          batch_no?: string
+          bill_no?: string
+          created_at?: string
+          created_by?: string | null
+          entry_date?: string
+          id?: string
+          mill?: string
+          quantity?: number
+          serial_no?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      frk_outward_entries: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          entry_date: string
+          id: string
+          mill: string
+          quantity: number
+          rice_loading_bill_no: string
+          rice_loading_entry_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          entry_date?: string
+          id?: string
+          mill: string
+          quantity: number
+          rice_loading_bill_no: string
+          rice_loading_entry_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          entry_date?: string
+          id?: string
+          mill?: string
+          quantity?: number
+          rice_loading_bill_no?: string
+          rice_loading_entry_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "frk_outward_entries_rice_loading_entry_id_fkey"
+            columns: ["rice_loading_entry_id"]
+            isOneToOne: false
+            referencedRelation: "rice_loading_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      godown_expense_references: {
+        Row: {
+          bill_no: string
+          created_at: string
+          created_by: string
+          expense_amount: number
+          id: string
+          lorry_no: string
+          rice_loading_entry_id: string | null
+          transaction_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          bill_no: string
+          created_at?: string
+          created_by: string
+          expense_amount: number
+          id?: string
+          lorry_no: string
+          rice_loading_entry_id?: string | null
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bill_no?: string
+          created_at?: string
+          created_by?: string
+          expense_amount?: number
+          id?: string
+          lorry_no?: string
+          rice_loading_entry_id?: string | null
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "godown_expense_references_rice_loading_entry_id_fkey"
+            columns: ["rice_loading_entry_id"]
+            isOneToOne: false
+            referencedRelation: "rice_loading_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "godown_expense_references_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      google_sheets_configs: {
+        Row: {
+          column_letter: string
+          config_key: string
+          created_at: string
+          created_by: string
+          display_name: string
+          id: string
+          is_active: boolean
+          sheet_ids: Json
+          sheet_name: string
+          updated_at: string
+        }
+        Insert: {
+          column_letter: string
+          config_key: string
+          created_at?: string
+          created_by: string
+          display_name: string
+          id?: string
+          is_active?: boolean
+          sheet_ids?: Json
+          sheet_name: string
+          updated_at?: string
+        }
+        Update: {
+          column_letter?: string
+          config_key?: string
+          created_at?: string
+          created_by?: string
+          display_name?: string
+          id?: string
+          is_active?: boolean
+          sheet_ids?: Json
+          sheet_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      google_sheets_sync_log: {
+        Row: {
+          action: string
+          attempt_count: number | null
+          created_at: string | null
+          created_by: string | null
+          entry_id: string | null
+          entry_type: string
+          error_details: Json | null
+          error_message: string | null
+          id: string
+          identifier: Json
+          last_attempt_at: string | null
+          operation_type: string
+          status: string
+          sync_data: Json
+          synced_at: string | null
+        }
+        Insert: {
+          action: string
+          attempt_count?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          entry_id?: string | null
+          entry_type: string
+          error_details?: Json | null
+          error_message?: string | null
+          id?: string
+          identifier: Json
+          last_attempt_at?: string | null
+          operation_type: string
+          status?: string
+          sync_data: Json
+          synced_at?: string | null
+        }
+        Update: {
+          action?: string
+          attempt_count?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          entry_id?: string | null
+          entry_type?: string
+          error_details?: Json | null
+          error_message?: string | null
+          id?: string
+          identifier?: Json
+          last_attempt_at?: string | null
+          operation_type?: string
+          status?: string
+          sync_data?: Json
+          synced_at?: string | null
+        }
+        Relationships: []
+      }
+      gps_historical_trips: {
+        Row: {
+          compressed_path: Json
+          created_at: string
+          date: string
+          id: string
+          total_distance_km: number | null
+          user_id: string
+        }
+        Insert: {
+          compressed_path?: Json
+          created_at?: string
+          date: string
+          id?: string
+          total_distance_km?: number | null
+          user_id: string
+        }
+        Update: {
+          compressed_path?: Json
+          created_at?: string
+          date?: string
+          id?: string
+          total_distance_km?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      gps_status_logs: {
+        Row: {
+          created_at: string
+          event_timestamp: string
+          id: string
+          metadata: Json | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_timestamp?: string
+          id?: string
+          metadata?: Json | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_timestamp?: string
+          id?: string
+          metadata?: Json | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      gps_task_group_assignments: {
+        Row: {
+          created_at: string | null
+          gps_task_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          gps_task_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          gps_task_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gps_task_group_assignments_gps_task_id_fkey"
+            columns: ["gps_task_id"]
+            isOneToOne: false
+            referencedRelation: "gps_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gps_task_group_assignments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gps_task_transfers: {
+        Row: {
+          from_user: string
+          gps_task_id: string
+          id: string
+          reason: string | null
+          to_user: string
+          transferred_at: string | null
+        }
+        Insert: {
+          from_user: string
+          gps_task_id: string
+          id?: string
+          reason?: string | null
+          to_user: string
+          transferred_at?: string | null
+        }
+        Update: {
+          from_user?: string
+          gps_task_id?: string
+          id?: string
+          reason?: string | null
+          to_user?: string
+          transferred_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gps_task_transfers_from_user_fkey"
+            columns: ["from_user"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gps_task_transfers_gps_task_id_fkey"
+            columns: ["gps_task_id"]
+            isOneToOne: false
+            referencedRelation: "gps_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gps_task_transfers_to_user_fkey"
+            columns: ["to_user"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gps_task_updates: {
+        Row: {
+          created_at: string | null
+          gps_task_id: string
+          id: string
+          photo_url: string | null
+          remarks: string | null
+          status: string
+          user_id: string
+          voice_url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          gps_task_id: string
+          id?: string
+          photo_url?: string | null
+          remarks?: string | null
+          status: string
+          user_id: string
+          voice_url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          gps_task_id?: string
+          id?: string
+          photo_url?: string | null
+          remarks?: string | null
+          status?: string
+          user_id?: string
+          voice_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gps_task_updates_gps_task_id_fkey"
+            columns: ["gps_task_id"]
+            isOneToOne: false
+            referencedRelation: "gps_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gps_task_updates_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gps_tasks: {
+        Row: {
+          assigned_by: string
+          assigned_to: string
+          assigned_to_group_id: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          latitude: number
+          longitude: number
+          paused_until: string | null
+          radius: number
+          status: string | null
+          target_time: string | null
+          title: string
+          updated_at: string | null
+          voice_recording_url: string | null
+        }
+        Insert: {
+          assigned_by: string
+          assigned_to: string
+          assigned_to_group_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          latitude: number
+          longitude: number
+          paused_until?: string | null
+          radius?: number
+          status?: string | null
+          target_time?: string | null
+          title: string
+          updated_at?: string | null
+          voice_recording_url?: string | null
+        }
+        Update: {
+          assigned_by?: string
+          assigned_to?: string
+          assigned_to_group_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          paused_until?: string | null
+          radius?: number
+          status?: string | null
+          target_time?: string | null
+          title?: string
+          updated_at?: string | null
+          voice_recording_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gps_tasks_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gps_tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gps_tasks_assigned_to_group_id_fkey"
+            columns: ["assigned_to_group_id"]
+            isOneToOne: false
+            referencedRelation: "user_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gps_zone_entries: {
+        Row: {
+          acknowledged: boolean
+          created_at: string
+          entered_at: string
+          exited_at: string | null
+          gps_task_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          acknowledged?: boolean
+          created_at?: string
+          entered_at?: string
+          exited_at?: string | null
+          gps_task_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          acknowledged?: boolean
+          created_at?: string
+          entered_at?: string
+          exited_at?: string | null
+          gps_task_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gps_zone_entries_gps_task_id_fkey"
+            columns: ["gps_task_id"]
+            isOneToOne: false
+            referencedRelation: "gps_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gps_zone_entries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instruction_acceptance: {
+        Row: {
+          accepted_at: string | null
+          id: string
+          instruction_id: string
+          remarks: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          id?: string
+          instruction_id: string
+          remarks?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          id?: string
+          instruction_id?: string
+          remarks?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instruction_acceptance_instruction_id_fkey"
+            columns: ["instruction_id"]
+            isOneToOne: false
+            referencedRelation: "instructions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instruction_group_assignments: {
+        Row: {
+          created_at: string | null
+          id: string
+          instruction_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          instruction_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          instruction_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instruction_group_assignments_instruction_id_fkey"
+            columns: ["instruction_id"]
+            isOneToOne: false
+            referencedRelation: "instructions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instruction_group_assignments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instructions: {
+        Row: {
+          assigned_by: string
+          assigned_to: string
+          assigned_to_group_id: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          notification_sent: boolean | null
+          scheduled_for: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+          voice_recording_url: string | null
+        }
+        Insert: {
+          assigned_by: string
+          assigned_to: string
+          assigned_to_group_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          notification_sent?: boolean | null
+          scheduled_for?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          voice_recording_url?: string | null
+        }
+        Update: {
+          assigned_by?: string
+          assigned_to?: string
+          assigned_to_group_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          notification_sent?: boolean | null
+          scheduled_for?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          voice_recording_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instructions_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instructions_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instructions_assigned_to_group_id_fkey"
+            columns: ["assigned_to_group_id"]
+            isOneToOne: false
+            referencedRelation: "user_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inward_entries: {
+        Row: {
+          created_at: string
+          driver_mobile: string
+          empty_weight: number | null
+          empty_weight_photo_url: string | null
+          empty_weight_updated_at: string | null
+          empty_weight_updated_by: string | null
+          entry_date: string
+          full_weight: number
+          id: string
+          is_completed: boolean
+          item_id: string
+          labour: string | null
+          loading_place: string
+          lorry_no: string
+          net_weight: number | null
+          remarks: string | null
+          serial_no: number
+          supplier_id: string
+          updated_at: string
+          weighment_photo_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          driver_mobile: string
+          empty_weight?: number | null
+          empty_weight_photo_url?: string | null
+          empty_weight_updated_at?: string | null
+          empty_weight_updated_by?: string | null
+          entry_date?: string
+          full_weight: number
+          id?: string
+          is_completed?: boolean
+          item_id: string
+          labour?: string | null
+          loading_place?: string
+          lorry_no: string
+          net_weight?: number | null
+          remarks?: string | null
+          serial_no?: never
+          supplier_id: string
+          updated_at?: string
+          weighment_photo_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          driver_mobile?: string
+          empty_weight?: number | null
+          empty_weight_photo_url?: string | null
+          empty_weight_updated_at?: string | null
+          empty_weight_updated_by?: string | null
+          entry_date?: string
+          full_weight?: number
+          id?: string
+          is_completed?: boolean
+          item_id?: string
+          labour?: string | null
+          loading_place?: string
+          lorry_no?: string
+          net_weight?: number | null
+          remarks?: string | null
+          serial_no?: never
+          supplier_id?: string
+          updated_at?: string
+          weighment_photo_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inward_entries_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inward_entries_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      items: {
+        Row: {
+          code: string
+          created_at: string
+          default_cost_rate: number | null
+          description_english: string | null
+          description_tamil: string | null
+          gst_percentage: number | null
+          hsn_no: string | null
+          id: string
+          is_active: boolean
+          kooli: number | null
+          kooli_mill_mattaparai: number | null
+          kooli_mill_pulivanthi: number | null
+          kooli_out_mattaparai: number | null
+          kooli_out_pulivanthi: number | null
+          name_english: string
+          name_tamil: string | null
+          opening_stock: number | null
+          unit: string
+          unit_weight: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          default_cost_rate?: number | null
+          description_english?: string | null
+          description_tamil?: string | null
+          gst_percentage?: number | null
+          hsn_no?: string | null
+          id?: string
+          is_active?: boolean
+          kooli?: number | null
+          kooli_mill_mattaparai?: number | null
+          kooli_mill_pulivanthi?: number | null
+          kooli_out_mattaparai?: number | null
+          kooli_out_pulivanthi?: number | null
+          name_english: string
+          name_tamil?: string | null
+          opening_stock?: number | null
+          unit?: string
+          unit_weight?: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          default_cost_rate?: number | null
+          description_english?: string | null
+          description_tamil?: string | null
+          gst_percentage?: number | null
+          hsn_no?: string | null
+          id?: string
+          is_active?: boolean
+          kooli?: number | null
+          kooli_mill_mattaparai?: number | null
+          kooli_mill_pulivanthi?: number | null
+          kooli_out_mattaparai?: number | null
+          kooli_out_pulivanthi?: number | null
+          name_english?: string
+          name_tamil?: string | null
+          opening_stock?: number | null
+          unit?: string
+          unit_weight?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      kooli_ledger_config: {
+        Row: {
+          created_at: string | null
+          id: string
+          labour: string
+          ledger_id: string
+          mill: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          labour: string
+          ledger_id: string
+          mill: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          labour?: string
+          ledger_id?: string
+          mill?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kooli_ledger_config_ledger_id_fkey"
+            columns: ["ledger_id"]
+            isOneToOne: false
+            referencedRelation: "ledgers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kooli_rates: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          rate_mill_mattaparai: number | null
+          rate_mill_pulivanthi: number | null
+          rate_out_mattaparai: number | null
+          rate_out_pulivanthi: number | null
+          rate_type: string
+          rate_value: number
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          rate_mill_mattaparai?: number | null
+          rate_mill_pulivanthi?: number | null
+          rate_out_mattaparai?: number | null
+          rate_out_pulivanthi?: number | null
+          rate_type: string
+          rate_value?: number
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          rate_mill_mattaparai?: number | null
+          rate_mill_pulivanthi?: number | null
+          rate_out_mattaparai?: number | null
+          rate_out_pulivanthi?: number | null
+          rate_type?: string
+          rate_value?: number
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      kooli_work_date_overrides: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_removed: boolean | null
+          mill_override: string | null
+          quantity_override: number | null
+          record_id: string
+          table_name: string
+          updated_at: string | null
+          work_date: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_removed?: boolean | null
+          mill_override?: string | null
+          quantity_override?: number | null
+          record_id: string
+          table_name: string
+          updated_at?: string | null
+          work_date: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_removed?: boolean | null
+          mill_override?: string | null
+          quantity_override?: number | null
+          record_id?: string
+          table_name?: string
+          updated_at?: string | null
+          work_date?: string
+        }
+        Relationships: []
+      }
+      ledger_groups: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          description_tamil: string | null
+          id: string
+          name: string
+          name_tamil: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          description_tamil?: string | null
+          id?: string
+          name: string
+          name_tamil?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          description_tamil?: string | null
+          id?: string
+          name?: string
+          name_tamil?: string | null
+        }
+        Relationships: []
+      }
+      ledgers: {
+        Row: {
+          archive_reason: string | null
+          archived_at: string | null
+          archived_by: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          description_tamil: string | null
+          group_id: string | null
+          id: string
+          is_archived: boolean
+          name: string
+          name_tamil: string | null
+          opening_balance: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          archive_reason?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          description_tamil?: string | null
+          group_id?: string | null
+          id?: string
+          is_archived?: boolean
+          name: string
+          name_tamil?: string | null
+          opening_balance?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          archive_reason?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          description_tamil?: string | null
+          group_id?: string | null
+          id?: string
+          is_archived?: boolean
+          name?: string
+          name_tamil?: string | null
+          opening_balance?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledgers_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loading_places: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      location_tracking: {
+        Row: {
+          accuracy: number | null
+          bearing: number | null
+          bearing_accuracy: number | null
+          created_at: string | null
+          heading: number | null
+          id: string
+          latitude: number
+          longitude: number
+          provider: string | null
+          recorded_at: string
+          satellite_count: number | null
+          source: string | null
+          speed: number | null
+          user_id: string
+        }
+        Insert: {
+          accuracy?: number | null
+          bearing?: number | null
+          bearing_accuracy?: number | null
+          created_at?: string | null
+          heading?: number | null
+          id?: string
+          latitude: number
+          longitude: number
+          provider?: string | null
+          recorded_at?: string
+          satellite_count?: number | null
+          source?: string | null
+          speed?: number | null
+          user_id: string
+        }
+        Update: {
+          accuracy?: number | null
+          bearing?: number | null
+          bearing_accuracy?: number | null
+          created_at?: string | null
+          heading?: number | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          provider?: string | null
+          recorded_at?: string
+          satellite_count?: number | null
+          source?: string | null
+          speed?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      location_verifications: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          distance_meters: number | null
+          expected_lat: number | null
+          expected_lng: number | null
+          id: string
+          task_id: string
+          user_id: string
+          verified_lat: number | null
+          verified_lng: number | null
+          within_radius: boolean | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          distance_meters?: number | null
+          expected_lat?: number | null
+          expected_lng?: number | null
+          id?: string
+          task_id: string
+          user_id: string
+          verified_lat?: number | null
+          verified_lng?: number | null
+          within_radius?: boolean | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          distance_meters?: number | null
+          expected_lat?: number | null
+          expected_lng?: number | null
+          id?: string
+          task_id?: string
+          user_id?: string
+          verified_lat?: number | null
+          verified_lng?: number | null
+          within_radius?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "location_verifications_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locations: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          latitude: number
+          longitude: number
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          latitude: number
+          longitude: number
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      lorries: {
+        Row: {
+          created_at: string | null
+          engine_oil_change_date: string | null
+          fc_expiry: string | null
+          gearbox_oil_change_date: string | null
+          id: string
+          insurance_expiry: string | null
+          pollution_expiry: string | null
+          status: string | null
+          tax_expiry: string | null
+          tyre_service_date: string | null
+          vehicle_number: string
+        }
+        Insert: {
+          created_at?: string | null
+          engine_oil_change_date?: string | null
+          fc_expiry?: string | null
+          gearbox_oil_change_date?: string | null
+          id?: string
+          insurance_expiry?: string | null
+          pollution_expiry?: string | null
+          status?: string | null
+          tax_expiry?: string | null
+          tyre_service_date?: string | null
+          vehicle_number: string
+        }
+        Update: {
+          created_at?: string | null
+          engine_oil_change_date?: string | null
+          fc_expiry?: string | null
+          gearbox_oil_change_date?: string | null
+          id?: string
+          insurance_expiry?: string | null
+          pollution_expiry?: string | null
+          status?: string | null
+          tax_expiry?: string | null
+          tyre_service_date?: string | null
+          vehicle_number?: string
+        }
+        Relationships: []
+      }
+      manual_kooli_entries: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          created_by: string | null
+          description: string
+          entry_date: string
+          id: string
+          is_posted: boolean | null
+          labour: string | null
+          ledger_transaction_id: string | null
+          mill: string
+          qty: number
+          rate: number
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          description: string
+          entry_date: string
+          id?: string
+          is_posted?: boolean | null
+          labour?: string | null
+          ledger_transaction_id?: string | null
+          mill?: string
+          qty?: number
+          rate?: number
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string
+          entry_date?: string
+          id?: string
+          is_posted?: boolean | null
+          labour?: string | null
+          ledger_transaction_id?: string | null
+          mill?: string
+          qty?: number
+          rate?: number
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manual_kooli_entries_ledger_transaction_id_fkey"
+            columns: ["ledger_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mechanic_logs: {
+        Row: {
+          cost: number | null
+          created_at: string | null
+          id: string
+          lorry_id: string | null
+          mechanic_name: string | null
+          problem: string | null
+          repair_date: string | null
+          repair_done: string | null
+        }
+        Insert: {
+          cost?: number | null
+          created_at?: string | null
+          id?: string
+          lorry_id?: string | null
+          mechanic_name?: string | null
+          problem?: string | null
+          repair_date?: string | null
+          repair_done?: string | null
+        }
+        Update: {
+          cost?: number | null
+          created_at?: string | null
+          id?: string
+          lorry_id?: string | null
+          mechanic_name?: string | null
+          problem?: string | null
+          repair_date?: string | null
+          repair_done?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mechanic_logs_lorry_id_fkey"
+            columns: ["lorry_id"]
+            isOneToOne: false
+            referencedRelation: "lorries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mobile_sms_messages: {
+        Row: {
+          body: string | null
+          id: string
+          received_at: string | null
+          sender: string | null
+          uploader_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          body?: string | null
+          id?: string
+          received_at?: string | null
+          sender?: string | null
+          uploader_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          body?: string | null
+          id?: string
+          received_at?: string | null
+          sender?: string | null
+          uploader_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      motor_compliance_log: {
+        Row: {
+          created_at: string | null
+          duration_sec: number
+          fault_code: number | null
+          id: string
+          mismatch_type: string
+          motor_id: string
+          relay_state: string
+          vfd_state: string
+        }
+        Insert: {
+          created_at?: string | null
+          duration_sec: number
+          fault_code?: number | null
+          id?: string
+          mismatch_type: string
+          motor_id: string
+          relay_state: string
+          vfd_state: string
+        }
+        Update: {
+          created_at?: string | null
+          duration_sec?: number
+          fault_code?: number | null
+          id?: string
+          mismatch_type?: string
+          motor_id?: string
+          relay_state?: string
+          vfd_state?: string
+        }
+        Relationships: []
+      }
+      motor_mismatch_log: {
+        Row: {
+          created_at: string | null
+          fault_code: number | null
+          id: string
+          mismatch_duration_sec: number
+          motor_no: number
+          relay_state: boolean
+          vfd_running: boolean
+        }
+        Insert: {
+          created_at?: string | null
+          fault_code?: number | null
+          id?: string
+          mismatch_duration_sec: number
+          motor_no: number
+          relay_state: boolean
+          vfd_running: boolean
+        }
+        Update: {
+          created_at?: string | null
+          fault_code?: number | null
+          id?: string
+          mismatch_duration_sec?: number
+          motor_no?: number
+          relay_state?: boolean
+          vfd_running?: boolean
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          acknowledged_at: string | null
+          app_id: string | null
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          related_job_id: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          app_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          related_job_id?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          app_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          related_job_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outward_entries: {
+        Row: {
+          created_at: string
+          customer_id: string
+          driver_mobile: string
+          empty_weight: number
+          entry_date: string
+          id: string
+          is_completed: boolean
+          is_posted: boolean | null
+          item_id: string
+          labour: string | null
+          ledger_transaction_id: string | null
+          load_weight: number | null
+          load_weight_photo_url: string | null
+          load_weight_updated_at: string | null
+          load_weight_updated_by: string | null
+          loading_place: string
+          lorry_no: string
+          net_weight: number | null
+          remarks: string | null
+          serial_no: number
+          updated_at: string
+          weighment_photo_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          driver_mobile: string
+          empty_weight: number
+          entry_date?: string
+          id?: string
+          is_completed?: boolean
+          is_posted?: boolean | null
+          item_id: string
+          labour?: string | null
+          ledger_transaction_id?: string | null
+          load_weight?: number | null
+          load_weight_photo_url?: string | null
+          load_weight_updated_at?: string | null
+          load_weight_updated_by?: string | null
+          loading_place?: string
+          lorry_no: string
+          net_weight?: number | null
+          remarks?: string | null
+          serial_no?: number
+          updated_at?: string
+          weighment_photo_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          driver_mobile?: string
+          empty_weight?: number
+          entry_date?: string
+          id?: string
+          is_completed?: boolean
+          is_posted?: boolean | null
+          item_id?: string
+          labour?: string | null
+          ledger_transaction_id?: string | null
+          load_weight?: number | null
+          load_weight_photo_url?: string | null
+          load_weight_updated_at?: string | null
+          load_weight_updated_by?: string | null
+          loading_place?: string
+          lorry_no?: string
+          net_weight?: number | null
+          remarks?: string | null
+          serial_no?: number
+          updated_at?: string
+          weighment_photo_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outward_entries_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outward_entries_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outward_entries_ledger_transaction_id_fkey"
+            columns: ["ledger_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pa_actions: {
+        Row: {
+          action_taken: string
+          confidence_score: number | null
+          created_at: string | null
+          final_outcome: string | null
+          id: string
+          insight_id: string | null
+          owner_response: string | null
+        }
+        Insert: {
+          action_taken: string
+          confidence_score?: number | null
+          created_at?: string | null
+          final_outcome?: string | null
+          id?: string
+          insight_id?: string | null
+          owner_response?: string | null
+        }
+        Update: {
+          action_taken?: string
+          confidence_score?: number | null
+          created_at?: string | null
+          final_outcome?: string | null
+          id?: string
+          insight_id?: string | null
+          owner_response?: string | null
+        }
+        Relationships: []
+      }
+      pa_authority_rules: {
+        Row: {
+          action_type: string
+          allowed_time_window: Json | null
+          created_at: string | null
+          enabled: boolean | null
+          id: string
+          max_risk_level: string | null
+          requires_approval: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          action_type: string
+          allowed_time_window?: Json | null
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          max_risk_level?: string | null
+          requires_approval?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          action_type?: string
+          allowed_time_window?: Json | null
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          max_risk_level?: string | null
+          requires_approval?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      pa_insights: {
+        Row: {
+          category: string
+          confidence: number | null
+          created_at: string | null
+          evidence: Json | null
+          id: string
+          is_risk: boolean | null
+          message: string
+          owner_id: string
+          priority: number
+          severity: string | null
+          title: string
+          type: string
+          viewed_at: string | null
+        }
+        Insert: {
+          category: string
+          confidence?: number | null
+          created_at?: string | null
+          evidence?: Json | null
+          id?: string
+          is_risk?: boolean | null
+          message: string
+          owner_id: string
+          priority: number
+          severity?: string | null
+          title: string
+          type: string
+          viewed_at?: string | null
+        }
+        Update: {
+          category?: string
+          confidence?: number | null
+          created_at?: string | null
+          evidence?: Json | null
+          id?: string
+          is_risk?: boolean | null
+          message?: string
+          owner_id?: string
+          priority?: number
+          severity?: string | null
+          title?: string
+          type?: string
+          viewed_at?: string | null
+        }
+        Relationships: []
+      }
+      pa_owner_profile: {
+        Row: {
+          created_at: string | null
+          owner_id: string
+          preferred_alert_times: Json | null
+          preferred_language: string | null
+          risk_tolerance: string | null
+          updated_at: string | null
+          verbosity_level: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          owner_id: string
+          preferred_alert_times?: Json | null
+          preferred_language?: string | null
+          risk_tolerance?: string | null
+          updated_at?: string | null
+          verbosity_level?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          owner_id?: string
+          preferred_alert_times?: Json | null
+          preferred_language?: string | null
+          risk_tolerance?: string | null
+          updated_at?: string | null
+          verbosity_level?: string | null
+        }
+        Relationships: []
+      }
+      paddy_inward_issue_memos: {
+        Row: {
+          additional_bag_grade: string | null
+          additional_bag_grade_2: string | null
+          additional_quantity: number | null
+          additional_quantity_2: number | null
+          bag_grade: string | null
+          bags: number | null
+          created_at: string | null
+          created_by: string | null
+          entry_unique_id: string | null
+          grade: string | null
+          id: string
+          issue_memo_date: string
+          issue_memo_no: string
+          paddy_inward_entry_id: string
+          quantity: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          additional_bag_grade?: string | null
+          additional_bag_grade_2?: string | null
+          additional_quantity?: number | null
+          additional_quantity_2?: number | null
+          bag_grade?: string | null
+          bags?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          entry_unique_id?: string | null
+          grade?: string | null
+          id?: string
+          issue_memo_date: string
+          issue_memo_no: string
+          paddy_inward_entry_id: string
+          quantity?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          additional_bag_grade?: string | null
+          additional_bag_grade_2?: string | null
+          additional_quantity?: number | null
+          additional_quantity_2?: number | null
+          bag_grade?: string | null
+          bags?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          entry_unique_id?: string | null
+          grade?: string | null
+          id?: string
+          issue_memo_date?: string
+          issue_memo_no?: string
+          paddy_inward_entry_id?: string
+          quantity?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "paddy_inward_issue_memos_paddy_inward_entry_id_fkey"
+            columns: ["paddy_inward_entry_id"]
+            isOneToOne: false
+            referencedRelation: "rice_mill_inward_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      page_permissions: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          page_name: string
+          page_route: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          page_name: string
+          page_route: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          page_name?: string
+          page_route?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      payment_requests: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string | null
+          payee_name: string | null
+          status: string
+          updated_at: string
+          upi_id: string
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          payee_name?: string | null
+          status?: string
+          updated_at?: string
+          upi_id: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          payee_name?: string | null
+          status?: string
+          updated_at?: string
+          upi_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      payroll: {
+        Row: {
+          bonuses: number | null
+          created_at: string | null
+          days_worked: number | null
+          deductions: number | null
+          employee_id: string
+          gross_salary: number | null
+          id: string
+          month: number
+          net_salary: number | null
+          processed_at: string | null
+          processed_by: string | null
+          status: string | null
+          total_hours: number | null
+          updated_at: string | null
+          year: number
+        }
+        Insert: {
+          bonuses?: number | null
+          created_at?: string | null
+          days_worked?: number | null
+          deductions?: number | null
+          employee_id: string
+          gross_salary?: number | null
+          id?: string
+          month: number
+          net_salary?: number | null
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string | null
+          total_hours?: number | null
+          updated_at?: string | null
+          year: number
+        }
+        Update: {
+          bonuses?: number | null
+          created_at?: string | null
+          days_worked?: number | null
+          deductions?: number | null
+          employee_id?: string
+          gross_salary?: number | null
+          id?: string
+          month?: number
+          net_salary?: number | null
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string | null
+          total_hours?: number | null
+          updated_at?: string | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performance_metrics: {
+        Row: {
+          id: string
+          metadata: Json | null
+          metric_name: string
+          metric_value: number
+          page_route: string | null
+          timestamp: string
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          metadata?: Json | null
+          metric_name: string
+          metric_value: number
+          page_route?: string | null
+          timestamp?: string
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          metadata?: Json | null
+          metric_name?: string
+          metric_value?: number
+          page_route?: string | null
+          timestamp?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      process_button_configurations: {
+        Row: {
+          button_name: string
+          created_at: string
+          created_by: string | null
+          disable_rule: string | null
+          from_enable_rule: string | null
+          id: string
+          is_active: boolean
+          off_http_link: string | null
+          on_http_link: string | null
+          sort_order: number
+          to_enable_rule: string | null
+          updated_at: string
+        }
+        Insert: {
+          button_name: string
+          created_at?: string
+          created_by?: string | null
+          disable_rule?: string | null
+          from_enable_rule?: string | null
+          id?: string
+          is_active?: boolean
+          off_http_link?: string | null
+          on_http_link?: string | null
+          sort_order?: number
+          to_enable_rule?: string | null
+          updated_at?: string
+        }
+        Update: {
+          button_name?: string
+          created_at?: string
+          created_by?: string | null
+          disable_rule?: string | null
+          from_enable_rule?: string | null
+          id?: string
+          is_active?: boolean
+          off_http_link?: string | null
+          on_http_link?: string | null
+          sort_order?: number
+          to_enable_rule?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          cashbook_phone: string | null
+          created_at: string
+          fcm_token: string | null
+          id: string
+          is_auto_reconcile_enabled: boolean | null
+          opening_balance: number
+          status: string | null
+          updated_at: string
+          username: string
+          username_tamil: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          cashbook_phone?: string | null
+          created_at?: string
+          fcm_token?: string | null
+          id: string
+          is_auto_reconcile_enabled?: boolean | null
+          opening_balance?: number
+          status?: string | null
+          updated_at?: string
+          username: string
+          username_tamil?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          cashbook_phone?: string | null
+          created_at?: string
+          fcm_token?: string | null
+          id?: string
+          is_auto_reconcile_enabled?: boolean | null
+          opening_balance?: number
+          status?: string | null
+          updated_at?: string
+          username?: string
+          username_tamil?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          created_at: string
+          description: string | null
+          generated_code: Json
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          generated_code: Json
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          generated_code?: Json
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      purchases: {
+        Row: {
+          bill_serial_no: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          inward_entry_id: string | null
+          item_id: string
+          mill: string
+          purchase_date: string
+          quantity: number
+          rate: number
+          supplier_id: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          bill_serial_no?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          inward_entry_id?: string | null
+          item_id: string
+          mill?: string
+          purchase_date?: string
+          quantity: number
+          rate: number
+          supplier_id: string
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          bill_serial_no?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          inward_entry_id?: string | null
+          item_id?: string
+          mill?: string
+          purchase_date?: string
+          quantity?: number
+          rate?: number
+          supplier_id?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchases_inward_entry_id_fkey"
+            columns: ["inward_entry_id"]
+            isOneToOne: false
+            referencedRelation: "inward_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_logs: {
+        Row: {
+          created_at: string | null
+          id: string
+          notification_id: string | null
+          response: string | null
+          status: string | null
+          token_prefix: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          notification_id?: string | null
+          response?: string | null
+          status?: string | null
+          token_prefix?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          notification_id?: string | null
+          response?: string | null
+          status?: string | null
+          token_prefix?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      receipts: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          id: string
+          payment_method: string
+          receipt_date: string
+          receipt_no: string
+          remarks: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          id?: string
+          payment_method?: string
+          receipt_date?: string
+          receipt_no: string
+          remarks?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          id?: string
+          payment_method?: string
+          receipt_date?: string
+          receipt_no?: string
+          remarks?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receipts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rice_bag_deposit_entries: {
+        Row: {
+          allotment_month: string
+          bag_grade: string
+          created_at: string
+          created_by: string | null
+          entry_date: string
+          godown: string
+          id: string
+          mill: string
+          notes: string | null
+          photo_url: string | null
+          quantity: number
+          updated_at: string
+        }
+        Insert: {
+          allotment_month: string
+          bag_grade: string
+          created_at?: string
+          created_by?: string | null
+          entry_date: string
+          godown: string
+          id?: string
+          mill: string
+          notes?: string | null
+          photo_url?: string | null
+          quantity?: number
+          updated_at?: string
+        }
+        Update: {
+          allotment_month?: string
+          bag_grade?: string
+          created_at?: string
+          created_by?: string | null
+          entry_date?: string
+          godown?: string
+          id?: string
+          mill?: string
+          notes?: string | null
+          photo_url?: string | null
+          quantity?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      rice_form_submissions: {
+        Row: {
+          bags: number | null
+          date: string | null
+          driver: string | null
+          email: string | null
+          grade: string | null
+          id: number
+          lorry_no: string | null
+          serial_no: number | null
+          timestamp: string
+          token: string | null
+          token_link: string | null
+          wayment_link: string | null
+          wayment_nett_weight: number | null
+        }
+        Insert: {
+          bags?: number | null
+          date?: string | null
+          driver?: string | null
+          email?: string | null
+          grade?: string | null
+          id?: never
+          lorry_no?: string | null
+          serial_no?: number | null
+          timestamp: string
+          token?: string | null
+          token_link?: string | null
+          wayment_link?: string | null
+          wayment_nett_weight?: number | null
+        }
+        Update: {
+          bags?: number | null
+          date?: string | null
+          driver?: string | null
+          email?: string | null
+          grade?: string | null
+          id?: never
+          lorry_no?: string | null
+          serial_no?: number | null
+          timestamp?: string
+          token?: string | null
+          token_link?: string | null
+          wayment_link?: string | null
+          wayment_nett_weight?: number | null
+        }
+        Relationships: []
+      }
+      rice_loading_batch_usage: {
+        Row: {
+          batch_id: string | null
+          created_at: string | null
+          grade: string | null
+          id: string
+          rice_loading_entry_id: string | null
+          synced: boolean | null
+          weight_deducted: number
+        }
+        Insert: {
+          batch_id?: string | null
+          created_at?: string | null
+          grade?: string | null
+          id?: string
+          rice_loading_entry_id?: string | null
+          synced?: boolean | null
+          weight_deducted: number
+        }
+        Update: {
+          batch_id?: string | null
+          created_at?: string | null
+          grade?: string | null
+          id?: string
+          rice_loading_entry_id?: string | null
+          synced?: boolean | null
+          weight_deducted?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rice_loading_batch_usage_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "rice_mill_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rice_loading_batch_usage_rice_loading_entry_id_fkey"
+            columns: ["rice_loading_entry_id"]
+            isOneToOne: false
+            referencedRelation: "rice_loading_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rice_loading_entries: {
+        Row: {
+          accounting_mill: string | null
+          allotment_month: string
+          bag_grade: string
+          bags: number
+          bill_no: string
+          bill_photo_url: string | null
+          created_at: string
+          created_by: string | null
+          driver: string
+          entry_date: string
+          entry_datetime: string | null
+          godown: string
+          grade: string
+          gs_sync_timestamp: string | null
+          hint: string | null
+          id: string
+          is_frk: boolean
+          is_posted: boolean | null
+          labour: string | null
+          ledger_transaction_id: string | null
+          lorry_no: string
+          mill: string
+          rice_storage: string
+          status: string
+          unloading_date: string | null
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          accounting_mill?: string | null
+          allotment_month: string
+          bag_grade?: string
+          bags: number
+          bill_no: string
+          bill_photo_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          driver: string
+          entry_date?: string
+          entry_datetime?: string | null
+          godown: string
+          grade: string
+          gs_sync_timestamp?: string | null
+          hint?: string | null
+          id?: string
+          is_frk?: boolean
+          is_posted?: boolean | null
+          labour?: string | null
+          ledger_transaction_id?: string | null
+          lorry_no: string
+          mill: string
+          rice_storage: string
+          status?: string
+          unloading_date?: string | null
+          updated_at?: string
+          weight: number
+        }
+        Update: {
+          accounting_mill?: string | null
+          allotment_month?: string
+          bag_grade?: string
+          bags?: number
+          bill_no?: string
+          bill_photo_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          driver?: string
+          entry_date?: string
+          entry_datetime?: string | null
+          godown?: string
+          grade?: string
+          gs_sync_timestamp?: string | null
+          hint?: string | null
+          id?: string
+          is_frk?: boolean
+          is_posted?: boolean | null
+          labour?: string | null
+          ledger_transaction_id?: string | null
+          lorry_no?: string
+          mill?: string
+          rice_storage?: string
+          status?: string
+          unloading_date?: string | null
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rice_loading_entries_ledger_transaction_id_fkey"
+            columns: ["ledger_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rice_loading_status_history: {
+        Row: {
+          batch_id: string | null
+          bill_no: string | null
+          change_reason: string | null
+          changed_at: string
+          changed_by: string | null
+          entry_id: string
+          entry_type: string
+          id: string
+          lorry_no: string | null
+          new_status: string
+          old_status: string | null
+        }
+        Insert: {
+          batch_id?: string | null
+          bill_no?: string | null
+          change_reason?: string | null
+          changed_at?: string
+          changed_by?: string | null
+          entry_id: string
+          entry_type: string
+          id?: string
+          lorry_no?: string | null
+          new_status: string
+          old_status?: string | null
+        }
+        Update: {
+          batch_id?: string | null
+          bill_no?: string | null
+          change_reason?: string | null
+          changed_at?: string
+          changed_by?: string | null
+          entry_id?: string
+          entry_type?: string
+          id?: string
+          lorry_no?: string | null
+          new_status?: string
+          old_status?: string | null
+        }
+        Relationships: []
+      }
+      rice_mill_batches: {
+        Row: {
+          bags: number | null
+          batch_no: string
+          created_at: string
+          created_by: string | null
+          current_location: string
+          current_location_type: string
+          current_weight: number
+          grade: string
+          id: string
+          initial_weight: number
+          inward_entry_id: string | null
+          mill: string
+          thotti_no: string | null
+          updated_at: string
+        }
+        Insert: {
+          bags?: number | null
+          batch_no: string
+          created_at?: string
+          created_by?: string | null
+          current_location: string
+          current_location_type: string
+          current_weight: number
+          grade: string
+          id?: string
+          initial_weight: number
+          inward_entry_id?: string | null
+          mill?: string
+          thotti_no?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bags?: number | null
+          batch_no?: string
+          created_at?: string
+          created_by?: string | null
+          current_location?: string
+          current_location_type?: string
+          current_weight?: number
+          grade?: string
+          id?: string
+          initial_weight?: number
+          inward_entry_id?: string | null
+          mill?: string
+          thotti_no?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rice_mill_batches_inward_entry_id_fkey"
+            columns: ["inward_entry_id"]
+            isOneToOne: false
+            referencedRelation: "rice_mill_inward_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rice_mill_container_contents: {
+        Row: {
+          bags: number | null
+          batch_id: string
+          created_at: string
+          created_by: string | null
+          expected_completion_time: string | null
+          grade: string
+          id: string
+          location: string
+          location_type: string
+          mill: string
+          process_start_time: string | null
+          thotti_no: string | null
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          bags?: number | null
+          batch_id: string
+          created_at?: string
+          created_by?: string | null
+          expected_completion_time?: string | null
+          grade: string
+          id?: string
+          location: string
+          location_type: string
+          mill: string
+          process_start_time?: string | null
+          thotti_no?: string | null
+          updated_at?: string
+          weight: number
+        }
+        Update: {
+          bags?: number | null
+          batch_id?: string
+          created_at?: string
+          created_by?: string | null
+          expected_completion_time?: string | null
+          grade?: string
+          id?: string
+          location?: string
+          location_type?: string
+          mill?: string
+          process_start_time?: string | null
+          thotti_no?: string | null
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rice_mill_container_contents_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "rice_mill_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rice_mill_container_state_history: {
+        Row: {
+          batch_ids_after: Json | null
+          batch_ids_before: Json | null
+          created_at: string
+          id: string
+          location: string
+          location_type: string
+          mill: string
+          operation_timestamp: string
+          operation_type: string
+          related_transfer_id: string | null
+          weight_after: number
+          weight_before: number
+        }
+        Insert: {
+          batch_ids_after?: Json | null
+          batch_ids_before?: Json | null
+          created_at?: string
+          id?: string
+          location: string
+          location_type: string
+          mill: string
+          operation_timestamp?: string
+          operation_type: string
+          related_transfer_id?: string | null
+          weight_after?: number
+          weight_before?: number
+        }
+        Update: {
+          batch_ids_after?: Json | null
+          batch_ids_before?: Json | null
+          created_at?: string
+          id?: string
+          location?: string
+          location_type?: string
+          mill?: string
+          operation_timestamp?: string
+          operation_type?: string
+          related_transfer_id?: string | null
+          weight_after?: number
+          weight_before?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rice_mill_container_state_history_related_transfer_id_fkey"
+            columns: ["related_transfer_id"]
+            isOneToOne: false
+            referencedRelation: "rice_mill_transfers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rice_mill_container_transactions: {
+        Row: {
+          bags: number | null
+          batch_id: string | null
+          created_at: string
+          created_by: string | null
+          entry_datetime: string | null
+          form_name: string | null
+          id: string
+          location: string
+          location_type: string
+          mill: string
+          notes: string | null
+          reference_id: string | null
+          reference_type: string | null
+          related_info: string | null
+          thotti_no: string | null
+          transaction_date: string
+          transaction_type: string
+          weight: number
+        }
+        Insert: {
+          bags?: number | null
+          batch_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          entry_datetime?: string | null
+          form_name?: string | null
+          id?: string
+          location: string
+          location_type: string
+          mill: string
+          notes?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          related_info?: string | null
+          thotti_no?: string | null
+          transaction_date?: string
+          transaction_type: string
+          weight: number
+        }
+        Update: {
+          bags?: number | null
+          batch_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          entry_datetime?: string | null
+          form_name?: string | null
+          id?: string
+          location?: string
+          location_type?: string
+          mill?: string
+          notes?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          related_info?: string | null
+          thotti_no?: string | null
+          transaction_date?: string
+          transaction_type?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rice_mill_container_transactions_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "rice_mill_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rice_mill_global_variables: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          display_text: string
+          distance: number | null
+          distance_to_mattaparai: number | null
+          distance_to_pulivanthi: number | null
+          http_link_1: string | null
+          http_link_1_description: string | null
+          http_link_2: string | null
+          http_link_2_description: string | null
+          id: string
+          is_active: boolean
+          storage_type: string | null
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          created_by?: string | null
+          display_text: string
+          distance?: number | null
+          distance_to_mattaparai?: number | null
+          distance_to_pulivanthi?: number | null
+          http_link_1?: string | null
+          http_link_1_description?: string | null
+          http_link_2?: string | null
+          http_link_2_description?: string | null
+          id?: string
+          is_active?: boolean
+          storage_type?: string | null
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          display_text?: string
+          distance?: number | null
+          distance_to_mattaparai?: number | null
+          distance_to_pulivanthi?: number | null
+          http_link_1?: string | null
+          http_link_1_description?: string | null
+          http_link_2?: string | null
+          http_link_2_description?: string | null
+          id?: string
+          is_active?: boolean
+          storage_type?: string | null
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
+      rice_mill_inward_blocks: {
+        Row: {
+          bags_count: number
+          block_number: number
+          created_at: string | null
+          id: string
+          inward_entry_id: string | null
+        }
+        Insert: {
+          bags_count: number
+          block_number: number
+          created_at?: string | null
+          id?: string
+          inward_entry_id?: string | null
+        }
+        Update: {
+          bags_count?: number
+          block_number?: number
+          created_at?: string | null
+          id?: string
+          inward_entry_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rice_mill_inward_blocks_inward_entry_id_fkey"
+            columns: ["inward_entry_id"]
+            isOneToOne: false
+            referencedRelation: "rice_mill_inward_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rice_mill_inward_entries: {
+        Row: {
+          accounting_mill: string | null
+          bags: number
+          challan_photo_url: string | null
+          created_at: string
+          created_by: string | null
+          dpc_amount: number | null
+          driver: string
+          empty_time: string | null
+          empty_weight: number | null
+          entry_date: string
+          entry_unique_id: string
+          grade: string
+          gross_weight: number | null
+          id: string
+          is_unloaded: boolean
+          load_time: string | null
+          loading_point: string | null
+          lorry_number: string
+          mill: string
+          serial_no: string
+          token_id: string | null
+          updated_at: string
+          wayment_photo_url: string | null
+          wayment_type: string | null
+          wayment_weight: number
+          without_empty_excess_resolved: boolean | null
+        }
+        Insert: {
+          accounting_mill?: string | null
+          bags: number
+          challan_photo_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          dpc_amount?: number | null
+          driver: string
+          empty_time?: string | null
+          empty_weight?: number | null
+          entry_date?: string
+          entry_unique_id: string
+          grade: string
+          gross_weight?: number | null
+          id?: string
+          is_unloaded?: boolean
+          load_time?: string | null
+          loading_point?: string | null
+          lorry_number: string
+          mill?: string
+          serial_no: string
+          token_id?: string | null
+          updated_at?: string
+          wayment_photo_url?: string | null
+          wayment_type?: string | null
+          wayment_weight: number
+          without_empty_excess_resolved?: boolean | null
+        }
+        Update: {
+          accounting_mill?: string | null
+          bags?: number
+          challan_photo_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          dpc_amount?: number | null
+          driver?: string
+          empty_time?: string | null
+          empty_weight?: number | null
+          entry_date?: string
+          entry_unique_id?: string
+          grade?: string
+          gross_weight?: number | null
+          id?: string
+          is_unloaded?: boolean
+          load_time?: string | null
+          loading_point?: string | null
+          lorry_number?: string
+          mill?: string
+          serial_no?: string
+          token_id?: string | null
+          updated_at?: string
+          wayment_photo_url?: string | null
+          wayment_type?: string | null
+          wayment_weight?: number
+          without_empty_excess_resolved?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rice_mill_inward_entries_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "rice_mill_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rice_mill_tokens: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_used: boolean
+          loading_point: string
+          lorry: string
+          serial_no: string
+          token_value: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_used?: boolean
+          loading_point: string
+          lorry: string
+          serial_no: string
+          token_value: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_used?: boolean
+          loading_point?: string
+          lorry?: string
+          serial_no?: string
+          token_value?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      rice_mill_transfers: {
+        Row: {
+          bags: number | null
+          batch_id: string
+          created_at: string
+          entry_datetime: string | null
+          expected_duration_minutes: number | null
+          from_location: string
+          from_location_type: string
+          id: string
+          is_overdue: boolean | null
+          is_posted: boolean | null
+          labour: string | null
+          ledger_transaction_id: string | null
+          mill: string | null
+          notes: string | null
+          process_duration_minutes: number | null
+          process_end_time: string | null
+          process_start_time: string | null
+          status: string | null
+          thotti_no: string | null
+          to_location: string
+          to_location_type: string
+          transfer_date: string
+          transferred_by: string | null
+          updated_at: string
+          weight_transferred: number
+        }
+        Insert: {
+          bags?: number | null
+          batch_id: string
+          created_at?: string
+          entry_datetime?: string | null
+          expected_duration_minutes?: number | null
+          from_location: string
+          from_location_type: string
+          id?: string
+          is_overdue?: boolean | null
+          is_posted?: boolean | null
+          labour?: string | null
+          ledger_transaction_id?: string | null
+          mill?: string | null
+          notes?: string | null
+          process_duration_minutes?: number | null
+          process_end_time?: string | null
+          process_start_time?: string | null
+          status?: string | null
+          thotti_no?: string | null
+          to_location: string
+          to_location_type: string
+          transfer_date?: string
+          transferred_by?: string | null
+          updated_at?: string
+          weight_transferred: number
+        }
+        Update: {
+          bags?: number | null
+          batch_id?: string
+          created_at?: string
+          entry_datetime?: string | null
+          expected_duration_minutes?: number | null
+          from_location?: string
+          from_location_type?: string
+          id?: string
+          is_overdue?: boolean | null
+          is_posted?: boolean | null
+          labour?: string | null
+          ledger_transaction_id?: string | null
+          mill?: string | null
+          notes?: string | null
+          process_duration_minutes?: number | null
+          process_end_time?: string | null
+          process_start_time?: string | null
+          status?: string | null
+          thotti_no?: string | null
+          to_location?: string
+          to_location_type?: string
+          transfer_date?: string
+          transferred_by?: string | null
+          updated_at?: string
+          weight_transferred?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rice_mill_transfers_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "rice_mill_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rice_mill_transfers_ledger_transaction_id_fkey"
+            columns: ["ledger_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rice_mill_unloading_entries: {
+        Row: {
+          bags: number
+          batch_no: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          inward_entry_id: string | null
+          is_batch_completed: boolean | null
+          is_posted: boolean | null
+          labour: string | null
+          ledger_transaction_id: string | null
+          mill: string
+          unloading_point: string
+          updated_at: string
+        }
+        Insert: {
+          bags: number
+          batch_no?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          inward_entry_id?: string | null
+          is_batch_completed?: boolean | null
+          is_posted?: boolean | null
+          labour?: string | null
+          ledger_transaction_id?: string | null
+          mill?: string
+          unloading_point: string
+          updated_at?: string
+        }
+        Update: {
+          bags?: number
+          batch_no?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          inward_entry_id?: string | null
+          is_batch_completed?: boolean | null
+          is_posted?: boolean | null
+          labour?: string | null
+          ledger_transaction_id?: string | null
+          mill?: string
+          unloading_point?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rice_mill_unloading_entries_inward_entry_id_fkey"
+            columns: ["inward_entry_id"]
+            isOneToOne: false
+            referencedRelation: "rice_mill_inward_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rice_mill_unloading_entries_ledger_transaction_id_fkey"
+            columns: ["ledger_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rice_outward_acknowledgements: {
+        Row: {
+          ack_bags: number | null
+          ack_date: string | null
+          ack_godown: string | null
+          ack_number: string | null
+          ack_weight: number | null
+          created_at: string | null
+          created_by: string | null
+          grade: string | null
+          id: string
+          rice_loading_entry_id: string | null
+        }
+        Insert: {
+          ack_bags?: number | null
+          ack_date?: string | null
+          ack_godown?: string | null
+          ack_number?: string | null
+          ack_weight?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          grade?: string | null
+          id?: string
+          rice_loading_entry_id?: string | null
+        }
+        Update: {
+          ack_bags?: number | null
+          ack_date?: string | null
+          ack_godown?: string | null
+          ack_number?: string | null
+          ack_weight?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          grade?: string | null
+          id?: string
+          rice_loading_entry_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rice_outward_acknowledgements_rice_loading_entry_id_fkey"
+            columns: ["rice_loading_entry_id"]
+            isOneToOne: false
+            referencedRelation: "rice_loading_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      route_summaries: {
+        Row: {
+          check_in_id: string
+          clean_path: Json | null
+          processed_at: string | null
+          stats: Json | null
+          user_id: string
+        }
+        Insert: {
+          check_in_id: string
+          clean_path?: Json | null
+          processed_at?: string | null
+          stats?: Json | null
+          user_id: string
+        }
+        Update: {
+          check_in_id?: string
+          clean_path?: Json | null
+          processed_at?: string | null
+          stats?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "route_summaries_check_in_id_fkey"
+            columns: ["check_in_id"]
+            isOneToOne: true
+            referencedRelation: "duty_status"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales: {
+        Row: {
+          ack_date: string | null
+          ack_no: string | null
+          base_amount: number | null
+          bill_serial_no: string | null
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          einvoice_status: string | null
+          eway_bill_date: string | null
+          eway_bill_no: string | null
+          eway_bill_status: string | null
+          gst_amount: number | null
+          id: string
+          irn: string | null
+          item_id: string
+          loading_place: string
+          lorry_no: string | null
+          outward_entry_id: string | null
+          quantity: number
+          rate: number
+          sale_date: string
+          signed_invoice: string | null
+          signed_qrcode: string | null
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          ack_date?: string | null
+          ack_no?: string | null
+          base_amount?: number | null
+          bill_serial_no?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          einvoice_status?: string | null
+          eway_bill_date?: string | null
+          eway_bill_no?: string | null
+          eway_bill_status?: string | null
+          gst_amount?: number | null
+          id?: string
+          irn?: string | null
+          item_id: string
+          loading_place?: string
+          lorry_no?: string | null
+          outward_entry_id?: string | null
+          quantity: number
+          rate: number
+          sale_date?: string
+          signed_invoice?: string | null
+          signed_qrcode?: string | null
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          ack_date?: string | null
+          ack_no?: string | null
+          base_amount?: number | null
+          bill_serial_no?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          einvoice_status?: string | null
+          eway_bill_date?: string | null
+          eway_bill_no?: string | null
+          eway_bill_status?: string | null
+          gst_amount?: number | null
+          id?: string
+          irn?: string | null
+          item_id?: string
+          loading_place?: string
+          lorry_no?: string | null
+          outward_entry_id?: string | null
+          quantity?: number
+          rate?: number
+          sale_date?: string
+          signed_invoice?: string | null
+          signed_qrcode?: string | null
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_outward_entry_id_fkey"
+            columns: ["outward_entry_id"]
+            isOneToOne: false
+            referencedRelation: "outward_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sms_vault: {
+        Row: {
+          created_at: string | null
+          device_id: string | null
+          encrypted_payload: string
+          id: string
+          iv: string
+          received_at: string | null
+          sender_number: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          device_id?: string | null
+          encrypted_payload: string
+          id?: string
+          iv: string
+          received_at?: string | null
+          sender_number?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          device_id?: string | null
+          encrypted_payload?: string
+          id?: string
+          iv?: string
+          received_at?: string | null
+          sender_number?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      stock_ledger: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          item_id: string
+          mill: string
+          quantity_in: number
+          quantity_out: number
+          reference_id: string | null
+          running_stock: number
+          transaction_date: string
+          transaction_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          item_id: string
+          mill?: string
+          quantity_in?: number
+          quantity_out?: number
+          reference_id?: string | null
+          running_stock?: number
+          transaction_date?: string
+          transaction_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          item_id?: string
+          mill?: string
+          quantity_in?: number
+          quantity_out?: number
+          reference_id?: string | null
+          running_stock?: number
+          transaction_date?: string
+          transaction_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_ledger_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      strategy_config: {
+        Row: {
+          atr_period: number | null
+          id: string
+          is_auto_trade_enabled: boolean | null
+          mult_bear: number | null
+          mult_bull: number | null
+          stoploss_pct: number | null
+          target1_pct: number | null
+          target2_pct: number | null
+          timeframe: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          atr_period?: number | null
+          id?: string
+          is_auto_trade_enabled?: boolean | null
+          mult_bear?: number | null
+          mult_bull?: number | null
+          stoploss_pct?: number | null
+          target1_pct?: number | null
+          target2_pct?: number | null
+          timeframe?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          atr_period?: number | null
+          id?: string
+          is_auto_trade_enabled?: boolean | null
+          mult_bear?: number | null
+          mult_bull?: number | null
+          stoploss_pct?: number | null
+          target1_pct?: number | null
+          target2_pct?: number | null
+          timeframe?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      supplier_ledger: {
+        Row: {
+          balance: number
+          created_at: string
+          credit_amount: number
+          debit_amount: number
+          description: string | null
+          id: string
+          reference_id: string
+          supplier_id: string
+          transaction_date: string
+          transaction_type: string
+          updated_at: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          credit_amount?: number
+          debit_amount?: number
+          description?: string | null
+          id?: string
+          reference_id: string
+          supplier_id: string
+          transaction_date?: string
+          transaction_type: string
+          updated_at?: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          credit_amount?: number
+          debit_amount?: number
+          description?: string | null
+          id?: string
+          reference_id?: string
+          supplier_id?: string
+          transaction_date?: string
+          transaction_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_ledger_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          payment_date: string
+          payment_method: string
+          payment_no: string
+          remarks: string | null
+          supplier_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          payment_date?: string
+          payment_method: string
+          payment_no: string
+          remarks?: string | null
+          supplier_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          payment_date?: string
+          payment_method?: string
+          payment_no?: string
+          remarks?: string | null
+          supplier_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_payments_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suppliers: {
+        Row: {
+          address_english: string | null
+          address_tamil: string | null
+          code: string
+          contact_person: string | null
+          created_at: string
+          email: string | null
+          gstin: string | null
+          id: string
+          is_active: boolean
+          name_english: string
+          name_tamil: string | null
+          opening_balance: number | null
+          phone: string | null
+          pin_code: string | null
+          place_of_supply: string | null
+          state_code: string | null
+          updated_at: string
+        }
+        Insert: {
+          address_english?: string | null
+          address_tamil?: string | null
+          code: string
+          contact_person?: string | null
+          created_at?: string
+          email?: string | null
+          gstin?: string | null
+          id?: string
+          is_active?: boolean
+          name_english: string
+          name_tamil?: string | null
+          opening_balance?: number | null
+          phone?: string | null
+          pin_code?: string | null
+          place_of_supply?: string | null
+          state_code?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address_english?: string | null
+          address_tamil?: string | null
+          code?: string
+          contact_person?: string | null
+          created_at?: string
+          email?: string | null
+          gstin?: string | null
+          id?: string
+          is_active?: boolean
+          name_english?: string
+          name_tamil?: string | null
+          opening_balance?: number | null
+          phone?: string | null
+          pin_code?: string | null
+          place_of_supply?: string | null
+          state_code?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      symbols: {
+        Row: {
+          created_at: string | null
+          exchange: string
+          id: string
+          is_active: boolean | null
+          symbol_name: string
+          token: string
+        }
+        Insert: {
+          created_at?: string | null
+          exchange: string
+          id?: string
+          is_active?: boolean | null
+          symbol_name: string
+          token: string
+        }
+        Update: {
+          created_at?: string | null
+          exchange?: string
+          id?: string
+          is_active?: boolean | null
+          symbol_name?: string
+          token?: string
+        }
+        Relationships: []
+      }
+      system_config: {
+        Row: {
+          description: string | null
+          key: string
+          updated_at: string | null
+          value: string
+        }
+        Insert: {
+          description?: string | null
+          key: string
+          updated_at?: string | null
+          value: string
+        }
+        Update: {
+          description?: string | null
+          key?: string
+          updated_at?: string | null
+          value?: string
+        }
+        Relationships: []
+      }
+      table_metadata: {
+        Row: {
+          column_default: string | null
+          column_name: string
+          created_at: string
+          data_type: string
+          id: number
+          is_foreign_key: boolean
+          is_not_null: boolean
+          is_primary_key: boolean
+          schema_name: string
+          table_name: string
+        }
+        Insert: {
+          column_default?: string | null
+          column_name: string
+          created_at?: string
+          data_type: string
+          id?: number
+          is_foreign_key?: boolean
+          is_not_null?: boolean
+          is_primary_key?: boolean
+          schema_name: string
+          table_name: string
+        }
+        Update: {
+          column_default?: string | null
+          column_name?: string
+          created_at?: string
+          data_type?: string
+          id?: number
+          is_foreign_key?: boolean
+          is_not_null?: boolean
+          is_primary_key?: boolean
+          schema_name?: string
+          table_name?: string
+        }
+        Relationships: []
+      }
+      task_alerts: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          seen: boolean | null
+          task_id: string | null
+          type: Database["public"]["Enums"]["alert_type"]
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          seen?: boolean | null
+          task_id?: string | null
+          type: Database["public"]["Enums"]["alert_type"]
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          seen?: boolean | null
+          task_id?: string | null
+          type?: Database["public"]["Enums"]["alert_type"]
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_alerts_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_alerts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_comments: {
+        Row: {
+          attachment_id: string | null
+          created_at: string | null
+          id: string
+          message: string
+          task_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          attachment_id?: string | null
+          created_at?: string | null
+          id?: string
+          message: string
+          task_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          attachment_id?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string
+          task_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_comments_attachment_id_fkey"
+            columns: ["attachment_id"]
+            isOneToOne: false
+            referencedRelation: "attachments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_comments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_group_assignments: {
+        Row: {
+          created_at: string | null
+          id: string
+          task_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          task_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          task_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_group_assignments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_group_assignments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_logs: {
+        Row: {
+          event: string
+          id: string
+          remarks: string | null
+          task_id: string | null
+          timestamp: string | null
+          user_id: string | null
+        }
+        Insert: {
+          event: string
+          id?: string
+          remarks?: string | null
+          task_id?: string | null
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          event?: string
+          id?: string
+          remarks?: string | null
+          task_id?: string | null
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_logs_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_routine_instances: {
+        Row: {
+          id: string
+          routine_id: string
+          task_id: string
+          triggered_at: string | null
+          triggered_for_date: string
+        }
+        Insert: {
+          id?: string
+          routine_id: string
+          task_id: string
+          triggered_at?: string | null
+          triggered_for_date: string
+        }
+        Update: {
+          id?: string
+          routine_id?: string
+          task_id?: string
+          triggered_at?: string | null
+          triggered_for_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_routine_instances_routine_id_fkey"
+            columns: ["routine_id"]
+            isOneToOne: false
+            referencedRelation: "task_routines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_routine_instances_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_routines: {
+        Row: {
+          assigned_by: string
+          assigned_to: string | null
+          assigned_to_group_id: string | null
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          last_triggered_at: string | null
+          monthly_dates: number[] | null
+          next_trigger_at: string | null
+          priority: string | null
+          recurrence_type: string
+          start_date: string | null
+          target_time: string | null
+          title: string
+          updated_at: string | null
+          weekdays: number[] | null
+        }
+        Insert: {
+          assigned_by: string
+          assigned_to?: string | null
+          assigned_to_group_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_triggered_at?: string | null
+          monthly_dates?: number[] | null
+          next_trigger_at?: string | null
+          priority?: string | null
+          recurrence_type: string
+          start_date?: string | null
+          target_time?: string | null
+          title: string
+          updated_at?: string | null
+          weekdays?: number[] | null
+        }
+        Update: {
+          assigned_by?: string
+          assigned_to?: string | null
+          assigned_to_group_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_triggered_at?: string | null
+          monthly_dates?: number[] | null
+          next_trigger_at?: string | null
+          priority?: string | null
+          recurrence_type?: string
+          start_date?: string | null
+          target_time?: string | null
+          title?: string
+          updated_at?: string | null
+          weekdays?: number[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_routines_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_routines_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_routines_assigned_to_group_id_fkey"
+            columns: ["assigned_to_group_id"]
+            isOneToOne: false
+            referencedRelation: "user_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_transfers: {
+        Row: {
+          from_user: string | null
+          id: string
+          reason: string | null
+          task_id: string | null
+          to_user: string | null
+          transferred_at: string | null
+        }
+        Insert: {
+          from_user?: string | null
+          id?: string
+          reason?: string | null
+          task_id?: string | null
+          to_user?: string | null
+          transferred_at?: string | null
+        }
+        Update: {
+          from_user?: string | null
+          id?: string
+          reason?: string | null
+          task_id?: string | null
+          to_user?: string | null
+          transferred_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_transfers_from_user_fkey"
+            columns: ["from_user"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_transfers_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_transfers_to_user_fkey"
+            columns: ["to_user"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_updates: {
+        Row: {
+          created_at: string | null
+          id: string
+          photo_url: string | null
+          remarks: string | null
+          status: string | null
+          task_id: string
+          updated_at: string | null
+          user_id: string
+          voice_recording_url: string | null
+          voice_url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          photo_url?: string | null
+          remarks?: string | null
+          status?: string | null
+          task_id: string
+          updated_at?: string | null
+          user_id: string
+          voice_recording_url?: string | null
+          voice_url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          photo_url?: string | null
+          remarks?: string | null
+          status?: string | null
+          task_id?: string
+          updated_at?: string | null
+          user_id?: string
+          voice_recording_url?: string | null
+          voice_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_updates_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_updates_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          arrival_at: string | null
+          assigned_by: string | null
+          assigned_to: string | null
+          assigned_to_group_id: string | null
+          completed_at: string | null
+          completion_audio_url: string | null
+          completion_image_urls: string[] | null
+          completion_notes: string | null
+          created_at: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          leave_at: string | null
+          location_lat: number | null
+          location_lng: number | null
+          location_name: string | null
+          location_radius: number | null
+          notification_sent: boolean | null
+          priority: Database["public"]["Enums"]["task_priority_type"] | null
+          scheduled_for: string | null
+          status: Database["public"]["Enums"]["task_status_type"] | null
+          title: string
+          updated_at: string | null
+          voice_recording_url: string | null
+        }
+        Insert: {
+          arrival_at?: string | null
+          assigned_by?: string | null
+          assigned_to?: string | null
+          assigned_to_group_id?: string | null
+          completed_at?: string | null
+          completion_audio_url?: string | null
+          completion_image_urls?: string[] | null
+          completion_notes?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          leave_at?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          location_name?: string | null
+          location_radius?: number | null
+          notification_sent?: boolean | null
+          priority?: Database["public"]["Enums"]["task_priority_type"] | null
+          scheduled_for?: string | null
+          status?: Database["public"]["Enums"]["task_status_type"] | null
+          title: string
+          updated_at?: string | null
+          voice_recording_url?: string | null
+        }
+        Update: {
+          arrival_at?: string | null
+          assigned_by?: string | null
+          assigned_to?: string | null
+          assigned_to_group_id?: string | null
+          completed_at?: string | null
+          completion_audio_url?: string | null
+          completion_image_urls?: string[] | null
+          completion_notes?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          leave_at?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          location_name?: string | null
+          location_radius?: number | null
+          notification_sent?: boolean | null
+          priority?: Database["public"]["Enums"]["task_priority_type"] | null
+          scheduled_for?: string | null
+          status?: Database["public"]["Enums"]["task_status_type"] | null
+          title?: string
+          updated_at?: string | null
+          voice_recording_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_assigned_to_group_id_fkey"
+            columns: ["assigned_to_group_id"]
+            isOneToOne: false
+            referencedRelation: "user_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      thotti_audit_log: {
+        Row: {
+          batch_id: string | null
+          change_reason: string
+          change_timestamp: string
+          changed_by: string | null
+          id: string
+          new_thotti_no: string | null
+          old_thotti_no: string | null
+          sync_session_id: string | null
+          transfer_id: string | null
+        }
+        Insert: {
+          batch_id?: string | null
+          change_reason: string
+          change_timestamp?: string
+          changed_by?: string | null
+          id?: string
+          new_thotti_no?: string | null
+          old_thotti_no?: string | null
+          sync_session_id?: string | null
+          transfer_id?: string | null
+        }
+        Update: {
+          batch_id?: string | null
+          change_reason?: string
+          change_timestamp?: string
+          changed_by?: string | null
+          id?: string
+          new_thotti_no?: string | null
+          old_thotti_no?: string | null
+          sync_session_id?: string | null
+          transfer_id?: string | null
+        }
+        Relationships: []
+      }
+      trade_history: {
+        Row: {
+          created_at: string | null
+          entry_price: number | null
+          exit_price: number | null
+          id: string
+          order_id: string | null
+          pnl: number | null
+          signal_type: string
+          status: string | null
+          stop_loss: number | null
+          symbol: string
+          target1: number | null
+          target2: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          entry_price?: number | null
+          exit_price?: number | null
+          id?: string
+          order_id?: string | null
+          pnl?: number | null
+          signal_type: string
+          status?: string | null
+          stop_loss?: number | null
+          symbol: string
+          target1?: number | null
+          target2?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          entry_price?: number | null
+          exit_price?: number | null
+          id?: string
+          order_id?: string | null
+          pnl?: number | null
+          signal_type?: string
+          status?: string | null
+          stop_loss?: number | null
+          symbol?: string
+          target1?: number | null
+          target2?: number | null
+        }
+        Relationships: []
+      }
+      transaction_cache: {
+        Row: {
+          closing_balance: number
+          created_at: string
+          date: string
+          id: string
+          last_updated: string
+          opening_balance: number
+          total_expense: number
+          total_income: number
+          transaction_count: number
+          user_id: string
+        }
+        Insert: {
+          closing_balance?: number
+          created_at?: string
+          date: string
+          id?: string
+          last_updated?: string
+          opening_balance?: number
+          total_expense?: number
+          total_income?: number
+          transaction_count?: number
+          user_id: string
+        }
+        Update: {
+          closing_balance?: number
+          created_at?: string
+          date?: string
+          id?: string
+          last_updated?: string
+          opening_balance?: number
+          total_expense?: number
+          total_income?: number
+          transaction_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          attached_bill: string | null
+          created_at: string
+          created_by: string
+          date: string
+          description: string
+          external_reference: string | null
+          id: string
+          ledger_id: string | null
+          ledger_running_balance_after: number | null
+          ledger_running_balance_before: number | null
+          running_balance_after: number | null
+          running_balance_before: number | null
+          sequence_number: number
+          source_ledger_id: string | null
+          transfer_to_running_balance_after: number | null
+          transfer_to_running_balance_before: number | null
+          transfer_to_user_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          attached_bill?: string | null
+          created_at?: string
+          created_by: string
+          date: string
+          description: string
+          external_reference?: string | null
+          id?: string
+          ledger_id?: string | null
+          ledger_running_balance_after?: number | null
+          ledger_running_balance_before?: number | null
+          running_balance_after?: number | null
+          running_balance_before?: number | null
+          sequence_number?: number
+          source_ledger_id?: string | null
+          transfer_to_running_balance_after?: number | null
+          transfer_to_running_balance_before?: number | null
+          transfer_to_user_id?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          attached_bill?: string | null
+          created_at?: string
+          created_by?: string
+          date?: string
+          description?: string
+          external_reference?: string | null
+          id?: string
+          ledger_id?: string | null
+          ledger_running_balance_after?: number | null
+          ledger_running_balance_before?: number | null
+          running_balance_after?: number | null
+          running_balance_before?: number | null
+          sequence_number?: number
+          source_ledger_id?: string | null
+          transfer_to_running_balance_after?: number | null
+          transfer_to_running_balance_before?: number | null
+          transfer_to_user_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_ledger_id_fkey"
+            columns: ["ledger_id"]
+            isOneToOne: false
+            referencedRelation: "ledgers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transport_items: {
+        Row: {
+          code: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      trips: {
+        Row: {
+          bill_collected: boolean | null
+          bill_number: string | null
+          bill_photo_url: string | null
+          confirmation_date: string | null
+          created_at: string | null
+          created_by: string | null
+          hint: string | null
+          id: string
+          item_id: string | null
+          item_name: string | null
+          loading_photo_url: string | null
+          loading_place_id: string | null
+          lorry_id: string | null
+          status: string | null
+          token_date: string | null
+          token_no: number
+          unloading_date: string | null
+          unloading_photo_url: string | null
+          unloading_place_id: string | null
+          updated_at: string | null
+          weight: number | null
+        }
+        Insert: {
+          bill_collected?: boolean | null
+          bill_number?: string | null
+          bill_photo_url?: string | null
+          confirmation_date?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          hint?: string | null
+          id?: string
+          item_id?: string | null
+          item_name?: string | null
+          loading_photo_url?: string | null
+          loading_place_id?: string | null
+          lorry_id?: string | null
+          status?: string | null
+          token_date?: string | null
+          token_no?: number
+          unloading_date?: string | null
+          unloading_photo_url?: string | null
+          unloading_place_id?: string | null
+          updated_at?: string | null
+          weight?: number | null
+        }
+        Update: {
+          bill_collected?: boolean | null
+          bill_number?: string | null
+          bill_photo_url?: string | null
+          confirmation_date?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          hint?: string | null
+          id?: string
+          item_id?: string | null
+          item_name?: string | null
+          loading_photo_url?: string | null
+          loading_place_id?: string | null
+          lorry_id?: string | null
+          status?: string | null
+          token_date?: string | null
+          token_no?: number
+          unloading_date?: string | null
+          unloading_photo_url?: string | null
+          unloading_place_id?: string | null
+          updated_at?: string | null
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trips_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trips_loading_place_id_fkey"
+            columns: ["loading_place_id"]
+            isOneToOne: false
+            referencedRelation: "loading_places"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trips_lorry_id_fkey"
+            columns: ["lorry_id"]
+            isOneToOne: false
+            referencedRelation: "lorries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trips_unloading_place_id_fkey"
+            columns: ["unloading_place_id"]
+            isOneToOne: false
+            referencedRelation: "unloading_places"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      unified_offline_batches: {
+        Row: {
+          batch_no: string
+          created_at: string
+          current_location: string
+          current_location_type: string
+          current_weight: number
+          device_id: string
+          grade: string
+          id: string
+          mill: string
+          synced: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          batch_no: string
+          created_at?: string
+          current_location: string
+          current_location_type: string
+          current_weight: number
+          device_id: string
+          grade: string
+          id: string
+          mill: string
+          synced?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          batch_no?: string
+          created_at?: string
+          current_location?: string
+          current_location_type?: string
+          current_weight?: number
+          device_id?: string
+          grade?: string
+          id?: string
+          mill?: string
+          synced?: boolean | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      unified_offline_container_contents: {
+        Row: {
+          batch_id: string
+          created_at: string
+          device_id: string
+          expected_completion_time: string | null
+          grade: string
+          id: string
+          location: string
+          location_type: string
+          mill: string
+          process_start_time: string | null
+          synced: boolean | null
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          device_id: string
+          expected_completion_time?: string | null
+          grade: string
+          id: string
+          location: string
+          location_type: string
+          mill: string
+          process_start_time?: string | null
+          synced?: boolean | null
+          updated_at?: string
+          weight: number
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          device_id?: string
+          expected_completion_time?: string | null
+          grade?: string
+          id?: string
+          location?: string
+          location_type?: string
+          mill?: string
+          process_start_time?: string | null
+          synced?: boolean | null
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: []
+      }
+      unified_offline_frk_inward_entries: {
+        Row: {
+          batch_no: string
+          bill_no: string
+          created_at: string
+          created_by: string | null
+          device_id: string
+          entry_date: string
+          id: string
+          mill: string
+          quantity: number
+          serial_no: string
+          synced: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          batch_no: string
+          bill_no: string
+          created_at?: string
+          created_by?: string | null
+          device_id: string
+          entry_date?: string
+          id: string
+          mill: string
+          quantity: number
+          serial_no: string
+          synced?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          batch_no?: string
+          bill_no?: string
+          created_at?: string
+          created_by?: string | null
+          device_id?: string
+          entry_date?: string
+          id?: string
+          mill?: string
+          quantity?: number
+          serial_no?: string
+          synced?: boolean | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      unified_offline_frk_outward_entries: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          device_id: string
+          entry_date: string
+          id: string
+          mill: string
+          quantity: number
+          rice_loading_bill_no: string
+          rice_loading_entry_id: string | null
+          synced: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          device_id: string
+          entry_date?: string
+          id: string
+          mill: string
+          quantity: number
+          rice_loading_bill_no: string
+          rice_loading_entry_id?: string | null
+          synced?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          device_id?: string
+          entry_date?: string
+          id?: string
+          mill?: string
+          quantity?: number
+          rice_loading_bill_no?: string
+          rice_loading_entry_id?: string | null
+          synced?: boolean | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      unified_offline_global_variables: {
+        Row: {
+          category: string
+          created_at: string | null
+          device_id: string
+          display_text: string
+          distance: number | null
+          http_link_1: string | null
+          http_link_1_description: string | null
+          http_link_2: string | null
+          http_link_2_description: string | null
+          id: string
+          is_active: boolean | null
+          synced: boolean | null
+          synced_at: string | null
+          updated_at: string | null
+          value: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          device_id: string
+          display_text: string
+          distance?: number | null
+          http_link_1?: string | null
+          http_link_1_description?: string | null
+          http_link_2?: string | null
+          http_link_2_description?: string | null
+          id: string
+          is_active?: boolean | null
+          synced?: boolean | null
+          synced_at?: string | null
+          updated_at?: string | null
+          value: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          device_id?: string
+          display_text?: string
+          distance?: number | null
+          http_link_1?: string | null
+          http_link_1_description?: string | null
+          http_link_2?: string | null
+          http_link_2_description?: string | null
+          id?: string
+          is_active?: boolean | null
+          synced?: boolean | null
+          synced_at?: string | null
+          updated_at?: string | null
+          value?: string
+        }
+        Relationships: []
+      }
+      unified_offline_inward_entries: {
+        Row: {
+          bags: number
+          challan_photo_url: string | null
+          created_at: string | null
+          device_id: string
+          driver: string
+          entry_date: string
+          grade: string
+          gross_weight: number | null
+          id: string
+          is_unloaded: boolean | null
+          lorry_number: string
+          mill: string
+          serial_no: string
+          synced: boolean | null
+          synced_at: string | null
+          token_id: string | null
+          updated_at: string | null
+          wayment_photo_url: string | null
+          wayment_type: string | null
+          wayment_weight: number
+          without_empty_excess_resolved: boolean | null
+        }
+        Insert: {
+          bags: number
+          challan_photo_url?: string | null
+          created_at?: string | null
+          device_id: string
+          driver: string
+          entry_date: string
+          grade: string
+          gross_weight?: number | null
+          id: string
+          is_unloaded?: boolean | null
+          lorry_number: string
+          mill?: string
+          serial_no: string
+          synced?: boolean | null
+          synced_at?: string | null
+          token_id?: string | null
+          updated_at?: string | null
+          wayment_photo_url?: string | null
+          wayment_type?: string | null
+          wayment_weight: number
+          without_empty_excess_resolved?: boolean | null
+        }
+        Update: {
+          bags?: number
+          challan_photo_url?: string | null
+          created_at?: string | null
+          device_id?: string
+          driver?: string
+          entry_date?: string
+          grade?: string
+          gross_weight?: number | null
+          id?: string
+          is_unloaded?: boolean | null
+          lorry_number?: string
+          mill?: string
+          serial_no?: string
+          synced?: boolean | null
+          synced_at?: string | null
+          token_id?: string | null
+          updated_at?: string | null
+          wayment_photo_url?: string | null
+          wayment_type?: string | null
+          wayment_weight?: number
+          without_empty_excess_resolved?: boolean | null
+        }
+        Relationships: []
+      }
+      unified_offline_rice_loading_entries: {
+        Row: {
+          allotment_month: string
+          bags: number
+          bill_no: string
+          bill_photo_url: string | null
+          created_at: string
+          device_id: string
+          driver: string
+          entry_date: string
+          godown: string
+          grade: string
+          gs_sync_timestamp: string | null
+          hint: string | null
+          id: string
+          lorry_no: string
+          mill: string
+          rice_storage: string
+          synced: boolean | null
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          allotment_month: string
+          bags: number
+          bill_no: string
+          bill_photo_url?: string | null
+          created_at?: string
+          device_id: string
+          driver: string
+          entry_date?: string
+          godown: string
+          grade: string
+          gs_sync_timestamp?: string | null
+          hint?: string | null
+          id: string
+          lorry_no: string
+          mill: string
+          rice_storage: string
+          synced?: boolean | null
+          updated_at?: string
+          weight: number
+        }
+        Update: {
+          allotment_month?: string
+          bags?: number
+          bill_no?: string
+          bill_photo_url?: string | null
+          created_at?: string
+          device_id?: string
+          driver?: string
+          entry_date?: string
+          godown?: string
+          grade?: string
+          gs_sync_timestamp?: string | null
+          hint?: string | null
+          id?: string
+          lorry_no?: string
+          mill?: string
+          rice_storage?: string
+          synced?: boolean | null
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: []
+      }
+      unified_offline_tokens: {
+        Row: {
+          created_at: string | null
+          device_id: string
+          id: string
+          is_used: boolean | null
+          loading_point: string
+          lorry: string
+          serial_no: string
+          synced: boolean | null
+          synced_at: string | null
+          token_value: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          device_id: string
+          id: string
+          is_used?: boolean | null
+          loading_point: string
+          lorry: string
+          serial_no: string
+          synced?: boolean | null
+          synced_at?: string | null
+          token_value: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          device_id?: string
+          id?: string
+          is_used?: boolean | null
+          loading_point?: string
+          lorry?: string
+          serial_no?: string
+          synced?: boolean | null
+          synced_at?: string | null
+          token_value?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      unified_offline_transfers: {
+        Row: {
+          batch_id: string
+          created_at: string
+          device_id: string
+          expected_duration_minutes: number | null
+          from_location: string
+          from_location_type: string
+          id: string
+          mill: string
+          status: string | null
+          synced: boolean | null
+          synced_at: string | null
+          thotti_no: string | null
+          to_location: string
+          to_location_type: string
+          transfer_date: string
+          user_intent: string | null
+          weight_transferred: number
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          device_id: string
+          expected_duration_minutes?: number | null
+          from_location: string
+          from_location_type: string
+          id: string
+          mill: string
+          status?: string | null
+          synced?: boolean | null
+          synced_at?: string | null
+          thotti_no?: string | null
+          to_location: string
+          to_location_type: string
+          transfer_date: string
+          user_intent?: string | null
+          weight_transferred: number
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          device_id?: string
+          expected_duration_minutes?: number | null
+          from_location?: string
+          from_location_type?: string
+          id?: string
+          mill?: string
+          status?: string | null
+          synced?: boolean | null
+          synced_at?: string | null
+          thotti_no?: string | null
+          to_location?: string
+          to_location_type?: string
+          transfer_date?: string
+          user_intent?: string | null
+          weight_transferred?: number
+        }
+        Relationships: []
+      }
+      unified_offline_unloading_entries: {
+        Row: {
+          bags: number
+          batch_no: string | null
+          created_at: string | null
+          device_id: string
+          id: string
+          inward_entry_id: string | null
+          is_batch_completed: boolean | null
+          mill: string
+          synced: boolean | null
+          synced_at: string | null
+          unloading_point: string
+          updated_at: string | null
+        }
+        Insert: {
+          bags: number
+          batch_no?: string | null
+          created_at?: string | null
+          device_id: string
+          id: string
+          inward_entry_id?: string | null
+          is_batch_completed?: boolean | null
+          mill?: string
+          synced?: boolean | null
+          synced_at?: string | null
+          unloading_point: string
+          updated_at?: string | null
+        }
+        Update: {
+          bags?: number
+          batch_no?: string | null
+          created_at?: string | null
+          device_id?: string
+          id?: string
+          inward_entry_id?: string | null
+          is_batch_completed?: boolean | null
+          mill?: string
+          synced?: boolean | null
+          synced_at?: string | null
+          unloading_point?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      unified_sync_conflicts: {
+        Row: {
+          conflict_reason: string
+          conflict_type: string
+          created_at: string
+          detected_at: string
+          device_id: string
+          id: string
+          resolution_details: string | null
+          resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+          transfer_id: string
+        }
+        Insert: {
+          conflict_reason: string
+          conflict_type: string
+          created_at?: string
+          detected_at: string
+          device_id: string
+          id: string
+          resolution_details?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          transfer_id: string
+        }
+        Update: {
+          conflict_reason?: string
+          conflict_type?: string
+          created_at?: string
+          detected_at?: string
+          device_id?: string
+          id?: string
+          resolution_details?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          transfer_id?: string
+        }
+        Relationships: []
+      }
+      unloading_control_sessions: {
+        Row: {
+          completed_points: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          inward_entry_id: string | null
+          labour: string
+          mill: string | null
+          selected_points: Json
+          status: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          completed_points?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          inward_entry_id?: string | null
+          labour?: string
+          mill?: string | null
+          selected_points?: Json
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          completed_points?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          inward_entry_id?: string | null
+          labour?: string
+          mill?: string | null
+          selected_points?: Json
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unloading_control_sessions_inward_entry_id_fkey"
+            columns: ["inward_entry_id"]
+            isOneToOne: false
+            referencedRelation: "rice_mill_inward_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      unloading_places: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      upi_mappings: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          target_id: string
+          target_type: string
+          updated_at: string | null
+          upi_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          target_id: string
+          target_type: string
+          updated_at?: string | null
+          upi_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          target_id?: string
+          target_type?: string
+          updated_at?: string | null
+          upi_id?: string
+        }
+        Relationships: []
+      }
+      user_balance_cache: {
+        Row: {
+          balance_type: string
+          cache_timestamp: string
+          cached_balance: number
+          created_at: string
+          date: string | null
+          expires_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          balance_type: string
+          cache_timestamp?: string
+          cached_balance: number
+          created_at?: string
+          date?: string | null
+          expires_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          balance_type?: string
+          cache_timestamp?: string
+          cached_balance?: number
+          created_at?: string
+          date?: string | null
+          expires_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_daily_balances: {
+        Row: {
+          closing_balance: number
+          created_at: string
+          date: string
+          expense_total: number
+          id: string
+          income_total: number
+          opening_balance: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          closing_balance?: number
+          created_at?: string
+          date: string
+          expense_total?: number
+          id?: string
+          income_total?: number
+          opening_balance?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          closing_balance?: number
+          created_at?: string
+          date?: string
+          expense_total?: number
+          id?: string
+          income_total?: number
+          opening_balance?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_device_state: {
+        Row: {
+          battery_level: number | null
+          is_data_enabled: boolean | null
+          is_gps_enabled: boolean | null
+          is_on_duty: boolean | null
+          last_ping: string | null
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          battery_level?: number | null
+          is_data_enabled?: boolean | null
+          is_gps_enabled?: boolean | null
+          is_on_duty?: boolean | null
+          last_ping?: string | null
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          battery_level?: number | null
+          is_data_enabled?: boolean | null
+          is_gps_enabled?: boolean | null
+          is_on_duty?: boolean | null
+          last_ping?: string | null
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_device_state_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_gps_positions: {
+        Row: {
+          accuracy: number | null
+          heading: number | null
+          id: string
+          last_updated: string | null
+          latitude: number
+          longitude: number
+          speed: number | null
+          user_id: string
+        }
+        Insert: {
+          accuracy?: number | null
+          heading?: number | null
+          id?: string
+          last_updated?: string | null
+          latitude: number
+          longitude: number
+          speed?: number | null
+          user_id: string
+        }
+        Update: {
+          accuracy?: number | null
+          heading?: number | null
+          id?: string
+          last_updated?: string | null
+          latitude?: number
+          longitude?: number
+          speed?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_group_members: {
+        Row: {
+          added_at: string | null
+          group_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string | null
+          group_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string | null
+          group_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "user_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_group_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_groups: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_ledger_access: {
+        Row: {
+          business_contact_id: string | null
+          can_use_ledger: boolean
+          can_view_statement: boolean
+          created_at: string
+          created_by: string
+          id: string
+          ledger_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_contact_id?: string | null
+          can_use_ledger?: boolean
+          can_view_statement?: boolean
+          created_at?: string
+          created_by: string
+          id?: string
+          ledger_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_contact_id?: string | null
+          can_use_ledger?: boolean
+          can_view_statement?: boolean
+          created_at?: string
+          created_by?: string
+          id?: string
+          ledger_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_ledger_access_business_contact_id_fkey"
+            columns: ["business_contact_id"]
+            isOneToOne: false
+            referencedRelation: "business_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_ledger_access_ledger_id_fkey"
+            columns: ["ledger_id"]
+            isOneToOne: false
+            referencedRelation: "ledgers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_page_access: {
+        Row: {
+          can_access: boolean | null
+          created_at: string | null
+          id: string
+          page_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          can_access?: boolean | null
+          created_at?: string | null
+          id?: string
+          page_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          can_access?: boolean | null
+          created_at?: string | null
+          id?: string
+          page_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_page_access_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "app_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_preferences: {
+        Row: {
+          created_at: string | null
+          dark_mode: boolean | null
+          email_notifications: boolean | null
+          id: string
+          job_transfer_alerts: boolean | null
+          location_alerts: boolean | null
+          push_notifications: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          dark_mode?: boolean | null
+          email_notifications?: boolean | null
+          id?: string
+          job_transfer_alerts?: boolean | null
+          location_alerts?: boolean | null
+          push_notifications?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          dark_mode?: boolean | null
+          email_notifications?: boolean | null
+          id?: string
+          job_transfer_alerts?: boolean | null
+          location_alerts?: boolean | null
+          push_notifications?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          email: string
+          id: string
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email: string
+          id: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_sessions: {
+        Row: {
+          created_at: string
+          device_info: string | null
+          id: string
+          login_time: string
+          logout_time: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_info?: string | null
+          id?: string
+          login_time?: string
+          logout_time?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_info?: string | null
+          id?: string
+          login_time?: string
+          logout_time?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vehicle_alerts: {
+        Row: {
+          alert_type: string | null
+          due_date: string | null
+          generated_at: string | null
+          id: string
+          lorry_id: string | null
+          status: string | null
+        }
+        Insert: {
+          alert_type?: string | null
+          due_date?: string | null
+          generated_at?: string | null
+          id?: string
+          lorry_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          alert_type?: string | null
+          due_date?: string | null
+          generated_at?: string | null
+          id?: string
+          lorry_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_alerts_lorry_id_fkey"
+            columns: ["lorry_id"]
+            isOneToOne: false
+            referencedRelation: "lorries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      analytics_bottlenecks: {
+        Row: {
+          avg_duration_minutes: number | null
+          from_location: string | null
+          to_location: string | null
+          total_transfers: number | null
+          transfer_date: string | null
+        }
+        Relationships: []
+      }
+      analytics_cash_runway: {
+        Row: {
+          avg_daily_burn: number | null
+          current_cash_balance: number | null
+          estimated_runway_days: number | null
+        }
+        Relationships: []
+      }
+      analytics_employee_cash_holding: {
+        Row: {
+          avg_closing_balance: number | null
+          days_holding_cash: number | null
+          last_date: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      analytics_production_daily: {
+        Row: {
+          entry_date: string | null
+          inward_quantity: number | null
+          mill: string | null
+          outward_quantity: number | null
+        }
+        Relationships: []
+      }
+      analytics_stock_efficiency: {
+        Row: {
+          day: string | null
+          kg_per_machine_hour: number | null
+          total_machine_hours: number | null
+          total_output_kg: number | null
+        }
+        Relationships: []
+      }
+      analytics_task_performance: {
+        Row: {
+          completed_tasks: number | null
+          overdue_tasks: number | null
+          total_tasks: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_assigned_to_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      container_reconciliation_anomalies_v1: {
+        Row: {
+          anomaly_type: string | null
+          batch_id: string | null
+          created_at: string | null
+          grade: string | null
+          location: string | null
+          location_type: string | null
+          mill: string | null
+          weight: number | null
+        }
+        Relationships: []
+      }
+    }
+    Functions: {
+      __codex_plpgsql_smoke: { Args: never; Returns: string }
+      __ctx_check: { Args: never; Returns: string }
+      admin_cleanup_salary_data: {
+        Args: never
+        Returns: {
+          attendance_deleted: number
+          ledgers_deleted: number
+          salary_ledgers_deleted: number
+          transactions_deleted: number
+        }[]
+      }
+      calculate_audit_opening_balance: {
+        Args: { p_date: string; p_user_id: string }
+        Returns: number
+      }
+      calculate_distance: {
+        Args: { end_time: string; start_time: string; target_user_id: string }
+        Returns: number
+      }
+      change_user_role: {
+        Args: {
+          p_admin_user_id: string
+          p_new_role: Database["public"]["Enums"]["app_role"]
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      check_and_fix_receipt_ledger_integrity: { Args: never; Returns: Json }
+      check_ledger_integrity: {
+        Args: never
+        Returns: {
+          credit_amount: number
+          debit_amount: number
+          issue: string
+          ledger_id: string
+          reference_id: string
+          transaction_date: string
+          transaction_type: string
+        }[]
+      }
+      cleanup_duplicate_container_contents: { Args: never; Returns: undefined }
+      cleanup_old_data: { Args: never; Returns: undefined }
+      cleanup_old_offline_data: { Args: never; Returns: Json }
+      clear_all_task_data: { Args: never; Returns: Json }
+      clear_source_container: {
+        Args: {
+          p_batch_id: string
+          p_location: string
+          p_location_type: string
+          p_mill?: string
+        }
+        Returns: undefined
+      }
+      complete_unloading_batch: {
+        Args: { p_mill: string; p_unloading_point: string }
+        Returns: undefined
+      }
+      create_business_contact_auth_user: {
+        Args: {
+          contact_email: string
+          contact_password: string
+          contact_username?: string
+        }
+        Returns: string
+      }
+      create_credit_note_with_ledger: {
+        Args: { p_ledger_data: Json; p_note_data: Json }
+        Returns: Json
+      }
+      create_debit_note_with_ledger: {
+        Args: { p_ledger_data: Json; p_note_data: Json }
+        Returns: Json
+      }
+      create_notification: {
+        Args: {
+          p_app_id?: string
+          p_message: string
+          p_related_job_id: string
+          p_title: string
+          p_type: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      create_receipt_with_ledger: {
+        Args: { p_ledger_data: Json; p_receipt_data: Json }
+        Returns: Json
+      }
+      create_sale_with_ledger: {
+        Args: { p_ledger_data: Json; p_sale_data: Json }
+        Returns: Json
+      }
+      delete_multi_entry_transaction: {
+        Args: { transaction_id: string }
+        Returns: undefined
+      }
+      delete_transaction_with_balance_fix: {
+        Args: { p_transaction_id: string }
+        Returns: Json
+      }
+      ensure_daily_balance_exists: {
+        Args: { p_date: string; p_user_id: string }
+        Returns: undefined
+      }
+      ensure_employee_salary_ledger: {
+        Args: {
+          p_department?: string
+          p_employee_id: string
+          p_employee_name?: string
+        }
+        Returns: string
+      }
+      execute_process_transfer:
+        | {
+            Args: {
+              p_batch_id: string
+              p_complete_unloading?: boolean
+              p_created_by: string
+              p_expected_completion_time: string
+              p_expected_duration_minutes: number
+              p_from_location: string
+              p_from_location_type: string
+              p_grade: string
+              p_mill: string
+              p_process_start_time: string
+              p_thotti_no: string
+              p_to_location: string
+              p_to_location_type: string
+              p_weight: number
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_batch_id: string
+              p_complete_unloading?: boolean
+              p_created_by: string
+              p_entry_datetime?: string
+              p_expected_completion_time: string
+              p_expected_duration_minutes: number
+              p_from_location: string
+              p_from_location_type: string
+              p_grade: string
+              p_mill: string
+              p_process_start_time: string
+              p_thotti_no: string
+              p_to_location: string
+              p_to_location_type: string
+              p_weight: number
+            }
+            Returns: Json
+          }
+      execute_process_transfer_with_datetime: {
+        Args: {
+          p_batch_id: string
+          p_complete_unloading?: boolean
+          p_created_by: string
+          p_entry_datetime?: string
+          p_expected_completion_time: string
+          p_expected_duration_minutes: number
+          p_from_location: string
+          p_from_location_type: string
+          p_grade: string
+          p_mill: string
+          p_process_start_time: string
+          p_thotti_no: string
+          p_to_location: string
+          p_to_location_type: string
+          p_weight: number
+        }
+        Returns: Json
+      }
+      execute_readonly_sql: { Args: { sql_query: string }; Returns: Json }
+      execute_rice_loading_delete: {
+        Args: {
+          p_deleted_by?: string
+          p_entry_id: string
+          p_target_storage?: string
+        }
+        Returns: Json
+      }
+      execute_rice_loading_entry: {
+        Args: {
+          p_allotment_month: string
+          p_bag_grade: string
+          p_bags: number
+          p_bill_no: string
+          p_bill_photo_url: string
+          p_created_by: string
+          p_driver: string
+          p_godown: string
+          p_grade: string
+          p_hint?: string
+          p_is_frk?: boolean
+          p_labour: string
+          p_lorry_no: string
+          p_mill: string
+          p_rice_storage: string
+          p_weight: number
+        }
+        Returns: Json
+      }
+      execute_rice_loading_entry_with_datetime: {
+        Args: {
+          p_allotment_month: string
+          p_bag_grade: string
+          p_bags: number
+          p_bill_no: string
+          p_bill_photo_url: string
+          p_created_by: string
+          p_driver: string
+          p_entry_datetime?: string
+          p_godown: string
+          p_grade: string
+          p_hint?: string
+          p_is_frk?: boolean
+          p_labour: string
+          p_lorry_no: string
+          p_mill: string
+          p_rice_storage: string
+          p_weight: number
+        }
+        Returns: Json
+      }
+      execute_rice_loading_update: {
+        Args: {
+          p_entry_id: string
+          p_is_frk?: boolean
+          p_new_bags: number
+          p_new_grade?: string
+          p_new_hint?: string
+          p_new_weight: number
+          p_reason: string
+          p_updated_by: string
+        }
+        Returns: Json
+      }
+      execute_rice_return: {
+        Args: {
+          p_bags: number
+          p_bill_no: string
+          p_created_by: string
+          p_frk_weight: number
+          p_grade: string
+          p_location: string
+          p_location_type: string
+          p_mill: string
+          p_rice_weight: number
+        }
+        Returns: Json
+      }
+      execute_unloading_item: {
+        Args: {
+          p_actual_weight: number
+          p_bags: number
+          p_created_by: string
+          p_grade: string
+          p_inward_entry_id: string
+          p_labour: string
+          p_location_type: string
+          p_mill: string
+          p_unloading_point: string
+        }
+        Returns: Json
+      }
+      execute_visual_transfer:
+        | {
+            Args: {
+              p_batch_id: string
+              p_batch_update_id?: string
+              p_destination_bags?: number
+              p_from_location: string
+              p_from_location_type: string
+              p_grade: string
+              p_labour: string
+              p_mill: string
+              p_notes: string
+              p_source_deductions: Json
+              p_thotti_no: string
+              p_to_location: string
+              p_to_location_type: string
+              p_total_bags: number
+              p_total_weight: number
+              p_transferred_by: string
+              p_update_batch_location?: boolean
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_batch_id: string
+              p_batch_update_id?: string
+              p_destination_bags?: number
+              p_destination_entries?: Json
+              p_from_location: string
+              p_from_location_type: string
+              p_grade: string
+              p_labour: string
+              p_mill: string
+              p_notes: string
+              p_source_deductions: Json
+              p_thotti_no: string
+              p_to_location: string
+              p_to_location_type: string
+              p_total_bags: number
+              p_total_weight: number
+              p_transferred_by: string
+              p_update_batch_location?: boolean
+            }
+            Returns: Json
+          }
+      fix_running_balances: { Args: never; Returns: undefined }
+      generate_and_reserve_thotti_no: { Args: never; Returns: string }
+      generate_batch_no: { Args: never; Returns: string }
+      generate_credit_note_no:
+        | { Args: never; Returns: string }
+        | { Args: { p_mill: string }; Returns: string }
+      generate_debit_note_no:
+        | { Args: never; Returns: string }
+        | { Args: { p_mill: string }; Returns: string }
+      generate_payment_no: { Args: never; Returns: string }
+      generate_receipt_no: { Args: never; Returns: string }
+      generate_thotti_no:
+        | { Args: never; Returns: string }
+        | { Args: { p_location: string; p_mill: string }; Returns: string }
+      get_available_source_containers: {
+        Args: { p_mill?: string }
+        Returns: {
+          batch_details: Json
+          location: string
+          location_type: string
+          mill: string
+          total_weight: number
+        }[]
+      }
+      get_balance_sheet: {
+        Args: { p_as_of_date: string }
+        Returns: {
+          amount: number
+          category: string
+          particulars: string
+        }[]
+      }
+      get_batch_history_v2: { Args: { p_batch_id: string }; Returns: Json }
+      get_batch_list_v2: {
+        Args: never
+        Returns: {
+          batch_no: string
+          created_at: string
+          current_location: string
+          current_location_type: string
+          current_weight: number
+          grade: string
+          id: string
+          initial_weight: number
+          mill: string
+        }[]
+      }
+      get_cached_balance: {
+        Args: { p_balance_type: string; p_date?: string; p_user_id: string }
+        Returns: number
+      }
+      get_closing_balance_for_date: {
+        Args: { p_date: string; p_user_id: string }
+        Returns: number
+      }
+      get_container_ledger_v3: {
+        Args: {
+          p_end_date: string
+          p_location: string
+          p_mill: string
+          p_start_date: string
+        }
+        Returns: {
+          batch_no: string
+          form_name: string
+          id: string
+          lorry_number: string
+          notes: string
+          reference_id: string
+          reference_type: string
+          related_info: string
+          running_balance: number
+          transaction_date: string
+          transaction_type: string
+          weight_in: number
+          weight_out: number
+        }[]
+      }
+      get_current_container_status_v1: {
+        Args: { p_mill: string }
+        Returns: {
+          batch_id: string
+          batch_no: string
+          expected_completion_time: string
+          grade: string
+          is_overdue: boolean
+          location: string
+          location_type: string
+          process_start_time: string
+          thotti_no: string
+          timing: string
+          weight: number
+        }[]
+      }
+      get_daily_context: { Args: never; Returns: Json }
+      get_email_from_username: { Args: { p_username: string }; Returns: string }
+      get_employee_salary_details: {
+        Args: { p_date_from: string; p_date_to: string; p_employee_id: string }
+        Returns: {
+          daily_records: Json
+          total_days: number
+          total_salary: number
+        }[]
+      }
+      get_failed_transactions_summary: {
+        Args: { p_user_id?: string }
+        Returns: {
+          permanently_failed_count: number
+          resolved_count: number
+          retrying_count: number
+          total_count: number
+          transaction_type: string
+        }[]
+      }
+      get_frk_ledger_v2: {
+        Args: { p_from_date?: string; p_mill: string; p_to_date?: string }
+        Returns: {
+          bill_no: string
+          created_at: string
+          entry_date: string
+          inward: number
+          mill: string
+          outward: number
+          type: string
+        }[]
+      }
+      get_inward_report_v2: {
+        Args: {
+          p_from_date: string
+          p_grade: string
+          p_loading_point: string
+          p_mill: string
+          p_to_date: string
+        }
+        Returns: {
+          accounting_mill: string | null
+          bags: number
+          challan_photo_url: string | null
+          created_at: string
+          created_by: string | null
+          dpc_amount: number | null
+          driver: string
+          empty_time: string | null
+          empty_weight: number | null
+          entry_date: string
+          entry_unique_id: string
+          grade: string
+          gross_weight: number | null
+          id: string
+          is_unloaded: boolean
+          load_time: string | null
+          loading_point: string | null
+          lorry_number: string
+          mill: string
+          serial_no: string
+          token_id: string | null
+          updated_at: string
+          wayment_photo_url: string | null
+          wayment_type: string | null
+          wayment_weight: number
+          without_empty_excess_resolved: boolean | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "rice_mill_inward_entries"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_issue_memo_report_v2: {
+        Args: never
+        Returns: {
+          additional_bag_grade_1: string
+          additional_bag_grade_2: string
+          additional_quantity_1: number
+          additional_quantity_2: number
+          bag_grade: string
+          bags: number
+          created_at: string
+          entry_unique_id: string
+          id: string
+          issue_memo_date: string
+          issue_memo_no: string
+          paddy_inward_entry_id: string
+          rice_mill_inward_entries: Json
+          weight: number
+        }[]
+      }
+      get_labour_kooli_report_v2: {
+        Args: {
+          p_from_date: string
+          p_labour: string
+          p_mill: string
+          p_to_date: string
+          p_type: string
+        }
+        Returns: {
+          bags: number
+          created_at: string
+          created_by: string
+          details: string
+          entry_date: string
+          id: string
+          labour: string
+          mill: string
+          source_type: string
+          weight: number
+        }[]
+      }
+      get_ledger_opening_balance_v2: {
+        Args: { p_date: string; p_ledger_id: string }
+        Returns: number
+      }
+      get_live_lorry_status_v2: { Args: never; Returns: Json }
+      get_live_rent_lorry_status_v2: { Args: never; Returns: Json }
+      get_live_stock_levels_v2: { Args: { p_mill: string }; Returns: Json }
+      get_lorry_movement_history_v2: {
+        Args: { p_days?: number; p_lorry_no: string }
+        Returns: {
+          bags: number
+          details: string
+          driver: string
+          mill: string
+          movement_date: string
+          movement_type: string
+          place: string
+          weight: number
+        }[]
+      }
+      get_next_inward_serial: {
+        Args: { p_entry_date: string; p_mill: string }
+        Returns: number
+      }
+      get_opening_balance_for_date: {
+        Args: { p_date: string; p_user_id: string }
+        Returns: number
+      }
+      get_or_create_batch_for_unloading_point:
+        | { Args: { p_mill: string; p_unloading_point: string }; Returns: Json }
+        | {
+            Args: { p_grade: string; p_mill: string; p_unloading_point: string }
+            Returns: Json
+          }
+      get_pending_bills_v2: { Args: never; Returns: Json }
+      get_pending_paddy_inwards_v2: {
+        Args: never
+        Returns: {
+          bags: number
+          entry_date: string
+          entry_unique_id: string
+          grade: string
+          id: string
+          loading_point: string
+          lorry_number: string
+          serial_no: string
+          wayment_weight: number
+        }[]
+      }
+      get_profit_and_loss: {
+        Args: { p_from_date: string; p_to_date: string }
+        Returns: {
+          amount: number
+          category: string
+          particulars: string
+        }[]
+      }
+      get_rice_loading_report_v2:
+        | {
+            Args: {
+              p_allotment_month: string
+              p_from_date: string
+              p_godown: string
+              p_grade: string
+              p_to_date: string
+            }
+            Returns: {
+              allotment_month: string
+              bags: number
+              bill_no: string
+              bill_photo_url: string
+              driver: string
+              entry_date: string
+              godown: string
+              grade: string
+              hint: string
+              id: string
+              lorry_no: string
+              mill: string
+              rice_outward_acknowledgements: Json
+              rice_storage: string
+              status: string
+              weight: number
+            }[]
+          }
+        | {
+            Args: {
+              p_allotment_month: string
+              p_from_date: string
+              p_godown: string
+              p_grade: string
+              p_mill?: string
+              p_to_date: string
+            }
+            Returns: {
+              allotment_month: string
+              bags: number
+              bill_no: string
+              bill_photo_url: string
+              driver: string
+              entry_date: string
+              godown: string
+              grade: string
+              gs_sync_timestamp: string
+              hint: string
+              id: string
+              lorry_no: string
+              mill: string
+              rice_outward_acknowledgements: Json
+              rice_storage: string
+              status: string
+              weight: number
+            }[]
+          }
+      get_rice_outward_ack_report_v2:
+        | {
+            Args: never
+            Returns: {
+              ack_bags: number
+              ack_date: string
+              ack_godown: string
+              ack_number: string
+              ack_weight: number
+              created_at: string
+              grade: string
+              id: string
+              rice_loading_entries: Json
+              rice_loading_entry_id: string
+            }[]
+          }
+        | {
+            Args: {
+              p_from_date?: string
+              p_godown?: string
+              p_grade?: string
+              p_mill?: string
+              p_to_date?: string
+            }
+            Returns: {
+              ack_bags: number
+              ack_date: string
+              ack_godown: string
+              ack_number: string
+              ack_weight: number
+              created_at: string
+              grade: string
+              id: string
+              rice_loading_entries: Json
+              rice_loading_entry_id: string
+            }[]
+          }
+      get_rice_outward_acknowledgement_report_v2: {
+        Args: never
+        Returns: {
+          ack_bags: number
+          ack_date: string
+          ack_godown: string
+          ack_number: string
+          ack_weight: number
+          created_at: string
+          grade: string
+          id: string
+          rice_loading_entries: Json
+          rice_loading_entry_id: string
+        }[]
+      }
+      get_thotti_batch_history_v2:
+        | { Args: { p_mill: string }; Returns: Json }
+        | {
+            Args: { p_from_date?: string; p_mill: string; p_to_date?: string }
+            Returns: Json
+          }
+      get_total_ledgers_closing_balance: {
+        Args: { p_date: string }
+        Returns: number
+      }
+      get_total_users_closing_balance: {
+        Args: { p_date: string }
+        Returns: number
+      }
+      get_transfer_container_stock_v2: {
+        Args: { p_mill: string }
+        Returns: Json
+      }
+      get_user_accessible_pages: {
+        Args: { _user_id: string }
+        Returns: {
+          description: string
+          page_id: string
+          page_name: string
+          page_route: string
+        }[]
+      }
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      get_waiting_lorry_list_v2: {
+        Args: { status_filter: string }
+        Returns: Json
+      }
+      handle_rice_storage_transfer: {
+        Args: {
+          p_batch_id: string
+          p_mill: string
+          p_to_location: string
+          p_weight_transferred: number
+        }
+        Returns: undefined
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_container_empty_at_timestamp: {
+        Args: {
+          p_location: string
+          p_location_type: string
+          p_mill: string
+          p_timestamp: string
+        }
+        Returns: boolean
+      }
+      is_container_empty_now: {
+        Args: { p_location: string; p_location_type: string; p_mill?: string }
+        Returns: boolean
+      }
+      log_failed_transaction: {
+        Args: {
+          p_attempted_data: Json
+          p_error_code?: string
+          p_error_message: string
+          p_transaction_type: string
+          p_user_id: string
+        }
+        Returns: string
+      }
+      populate_missing_daily_balances: { Args: never; Returns: undefined }
+      post_kooli_to_ledger: { Args: { entries: Json }; Returns: undefined }
+      process_bulk_transactions: {
+        Args: { p_transactions: Json }
+        Returns: Json
+      }
+      process_scheduled_assignments: { Args: never; Returns: undefined }
+      process_transaction: {
+        Args: {
+          p_amount: number
+          p_attached_bill?: string
+          p_created_by: string
+          p_date: string
+          p_description: string
+          p_external_reference?: string
+          p_ledger_id?: string
+          p_source_ledger_id?: string
+          p_transfer_to_user_id?: string
+          p_type: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      raise_exception: { Args: { msg: string }; Returns: undefined }
+      reassign_thotti_numbers_chronologically: {
+        Args: { p_sync_session_id?: string }
+        Returns: Json
+      }
+      rebuild_all_daily_balances: { Args: never; Returns: undefined }
+      rebuild_daily_balances_after_date: {
+        Args: { p_cutoff_date: string }
+        Returns: Json
+      }
+      recalculate_all_running_balances: { Args: never; Returns: undefined }
+      recalculate_customer_ledger_balances: {
+        Args: { p_customer_id: string; p_from_date: string }
+        Returns: undefined
+      }
+      recalculate_daily_balances_from_date:
+        | {
+            Args: { p_from_date: string; p_user_id: string }
+            Returns: undefined
+          }
+        | {
+            Args: { p_from_date: string; p_user_ids: string[] }
+            Returns: undefined
+          }
+      recalculate_ledger_balances: {
+        Args: { p_from_date?: string; p_ledger_id: string }
+        Returns: undefined
+      }
+      recalculate_running_balances_from_date: {
+        Args: { p_from_date: string; p_user_ids: string[] }
+        Returns: undefined
+      }
+      recalculate_user_balances: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
+      recompute_daily_balance:
+        | { Args: { p_date: string; p_user_id: string }; Returns: undefined }
+        | { Args: { p_date: string; p_user_id: string }; Returns: undefined }
+      reconcile_cashbook_transaction:
+        | {
+            Args: {
+              p_amount: number
+              p_created_by: string
+              p_date: string
+              p_description: string
+              p_ledger_id?: string
+              p_source_ledger_id?: string
+              p_transfer_to_user_id?: string
+              p_txn_id: string
+              p_type: string
+              p_user_id: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_amount: number
+              p_created_by: string
+              p_date: string
+              p_description: string
+              p_ledger_id?: string
+              p_source_ledger_id?: string
+              p_transfer_to_user_id?: string
+              p_txn_id: string
+              p_type: string
+              p_user_id: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_amount: number
+              p_created_by: string
+              p_date: string
+              p_description: string
+              p_ledger_id: string
+              p_transfer_to_user_id: string
+              p_txn_id: string
+              p_type: string
+              p_user_id: string
+            }
+            Returns: Json
+          }
+      reconcile_customer_receipt_v2: {
+        Args: {
+          p_amount: number
+          p_bank_recon_data: Json
+          p_created_by: string
+          p_customer_id: string
+          p_customer_name: string
+          p_payment_method: string
+          p_receipt_date: string
+          p_remarks: string
+          p_source_ledger_id: string
+        }
+        Returns: Json
+      }
+      reconcile_supplier_payment_v2: {
+        Args: {
+          p_amount: number
+          p_bank_recon_data: Json
+          p_created_by: string
+          p_payment_date: string
+          p_payment_method: string
+          p_remarks: string
+          p_source_ledger_id: string
+          p_supplier_id: string
+          p_supplier_name: string
+        }
+        Returns: Json
+      }
+      reconcile_transaction_v1: {
+        Args: {
+          p_amount: number
+          p_attached_bill?: string
+          p_bank_cleaned_narration?: string
+          p_bank_closing_balance?: number
+          p_bank_credit_amount?: number
+          p_bank_debit_amount?: number
+          p_bank_orig_narration?: string
+          p_bank_ref_num?: string
+          p_bank_source_ledger_id?: string
+          p_created_by: string
+          p_date: string
+          p_description: string
+          p_ledger_id?: string
+          p_reconciliation_type?: string
+          p_source_ledger_id?: string
+          p_transfer_to_user_id?: string
+          p_type: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      refresh_transaction_cache: {
+        Args: { p_date: string; p_user_id: string }
+        Returns: undefined
+      }
+      tm_accept_instruction: {
+        Args: { p_instruction_id: string; p_remarks: string; p_user_id: string }
+        Returns: Json
+      }
+      tm_add_gps_task_update: {
+        Args: {
+          p_gps_task_id: string
+          p_photo_url?: string
+          p_remarks: string
+          p_status: string
+          p_user_id: string
+          p_voice_url?: string
+        }
+        Returns: Json
+      }
+      tm_add_task_update: {
+        Args: {
+          p_photo_url: string
+          p_remarks: string
+          p_status: string
+          p_task_id: string
+          p_user_id: string
+          p_voice_url: string
+        }
+        Returns: Json
+      }
+      tm_check_pending_tasks: { Args: { p_user_id: string }; Returns: Json }
+      tm_complete_gps_task: {
+        Args: { p_gps_task_id: string; p_user_id: string }
+        Returns: Json
+      }
+      tm_create_group_gps_task:
+        | {
+            Args: {
+              p_assigned_by: string
+              p_description: string
+              p_group_id: string
+              p_latitude: number
+              p_longitude: number
+              p_radius: number
+              p_target_time: string
+              p_title: string
+              p_voice_recording_url: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_assigned_by: string
+              p_description: string
+              p_group_id: string
+              p_latitude: number
+              p_longitude: number
+              p_radius: number
+              p_target_time: string
+              p_title: string
+            }
+            Returns: Json
+          }
+      tm_create_group_instruction:
+        | {
+            Args: {
+              p_assigned_by: string
+              p_description: string
+              p_group_id: string
+              p_title: string
+              p_voice_recording_url: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_assigned_by: string
+              p_description: string
+              p_group_id: string
+              p_title: string
+              p_voice_recording_url: string
+            }
+            Returns: Json
+          }
+      tm_create_group_task: {
+        Args: {
+          p_assigned_by: string
+          p_description: string
+          p_group_id: string
+          p_priority: string
+          p_target_time: string
+          p_title: string
+          p_voice_recording_url: string
+        }
+        Returns: Json
+      }
+      tm_postpone_task: {
+        Args: { p_reason?: string; p_task_id: string; p_user_id: string }
+        Returns: Json
+      }
+      tm_register_fcm_token:
+        | {
+            Args: {
+              p_device_info: string
+              p_platform: string
+              p_token: string
+              p_user_id: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_app_id?: string
+              p_device_info: string
+              p_platform: string
+              p_token: string
+              p_user_id: string
+            }
+            Returns: undefined
+          }
+      tm_transfer_gps_task: {
+        Args: {
+          p_from_user: string
+          p_reason: string
+          p_task_id: string
+          p_to_user: string
+        }
+        Returns: Json
+      }
+      tm_transfer_task: {
+        Args: {
+          p_from_user: string
+          p_reason: string
+          p_task_id: string
+          p_to_user: string
+        }
+        Returns: Json
+      }
+      toggle_task_routine_status: {
+        Args: { p_routine_id: string; p_status: boolean }
+        Returns: undefined
+      }
+      undo_transfer: { Args: { transfer_id: string }; Returns: Json }
+      undo_unloading_entry: { Args: { p_unloading_id: string }; Returns: Json }
+      unpost_kooli_ledger_transaction: {
+        Args: { p_transaction_id: string }
+        Returns: undefined
+      }
+      update_overdue_status: { Args: never; Returns: undefined }
+      update_retry_attempt: {
+        Args: { p_success?: boolean; p_transaction_id: string }
+        Returns: undefined
+      }
+      update_sale_with_ledger: {
+        Args: {
+          p_outward_entry_data: Json
+          p_sale_data: Json
+          p_sale_id: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      update_supplier_balance: {
+        Args: { p_supplier_id: string }
+        Returns: undefined
+      }
+      update_user_device_status: {
+        Args: {
+          p_battery: number
+          p_data: boolean
+          p_duty: boolean
+          p_gps: boolean
+          p_metadata?: Json
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      user_has_page_access:
+        | { Args: { _page_route: string; _user_id: string }; Returns: boolean }
+        | { Args: { _page_route: string; _user_id: string }; Returns: boolean }
+      validate_balance_consistency: {
+        Args: { p_user_id?: string }
+        Returns: Json
+      }
+      validate_container_empty_at_timestamp: {
+        Args: {
+          p_location: string
+          p_location_type: string
+          p_mill: string
+          p_timestamp: string
+        }
+        Returns: Json
+      }
+      validate_transfer_sequence: {
+        Args: { p_from_location_type: string; p_to_location_type: string }
+        Returns: boolean
+      }
+      validate_undo_operation: { Args: { transfer_id: string }; Returns: Json }
+      verify_daily_balance_chain: { Args: never; Returns: Json }
+    }
+    Enums: {
+      alert_type:
+        | "task_assigned"
+        | "task_reminder"
+        | "task_completed"
+        | "arrived"
+        | "left_without_completion"
+        | "task_transferred"
+      app_role: "admin" | "moderator" | "user" | "manager" | "employee"
+      task_priority_type: "low" | "medium" | "high" | "urgent"
+      task_status_type:
+        | "assigned"
+        | "in_progress"
+        | "completed"
+        | "transferred"
+        | "missed"
+        | "postponed"
+      user_role_type: "manager" | "supervisor" | "operator"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      alert_type: [
+        "task_assigned",
+        "task_reminder",
+        "task_completed",
+        "arrived",
+        "left_without_completion",
+        "task_transferred",
+      ],
+      app_role: ["admin", "moderator", "user", "manager", "employee"],
+      task_priority_type: ["low", "medium", "high", "urgent"],
+      task_status_type: [
+        "assigned",
+        "in_progress",
+        "completed",
+        "transferred",
+        "missed",
+        "postponed",
+      ],
+      user_role_type: ["manager", "supervisor", "operator"],
+    },
+  },
+} as const

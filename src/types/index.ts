@@ -76,6 +76,14 @@ export interface Sale {
   created_by?: string;
   created_at: string;
   updated_at: string;
+  eway_bill_no?: string;
+  eway_bill_date?: string;
+  eway_bill_status?: string;
+  einvoice_status?: string;
+  ack_no?: string;
+  ack_date?: string;
+  signed_invoice?: string;
+  signed_qrcode?: string;
   customers?: Customer;
   items?: Item;
   outward_entries?: OutwardEntry;
@@ -233,4 +241,12 @@ export interface CreateSaleData {
   loading_place: string; // Required!
   lorry_no?: string;
   irn?: string;
+  eway_bill_no?: string;
+  eway_bill_date?: string;
+  eway_bill_status?: string;
+  einvoice_status?: string;
+  ack_no?: string;
+  ack_date?: string;
+  signed_invoice?: string;
+  signed_qrcode?: string;
 }

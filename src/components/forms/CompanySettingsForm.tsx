@@ -54,6 +54,14 @@ const CompanySettingsForm: React.FC<CompanySettingsFormProps> = ({
     credit_note_prefix: setting?.credit_note_prefix || '',
     credit_note_digits: setting?.credit_note_digits?.toString() || '3',
     credit_note_financial_year_in_serial: setting?.credit_note_financial_year_in_serial ?? false,
+    einvoice_enabled: setting?.einvoice_enabled ?? false,
+    einvoice_aspid: setting?.einvoice_aspid || '',
+    einvoice_asppassword: setting?.einvoice_asppassword || '',
+    einvoice_username: setting?.einvoice_username || '',
+    einvoice_password: setting?.einvoice_password || '',
+    einvoice_sandbox: setting?.einvoice_sandbox ?? true,
+    ewaybill_enabled: setting?.ewaybill_enabled ?? false,
+    ewaybill_password: setting?.ewaybill_password || '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -76,6 +84,14 @@ const CompanySettingsForm: React.FC<CompanySettingsFormProps> = ({
         credit_note_prefix: formData.credit_note_prefix || null,
         credit_note_digits: parseInt(formData.credit_note_digits) || 3,
         credit_note_financial_year_in_serial: formData.credit_note_financial_year_in_serial,
+        einvoice_enabled: formData.einvoice_enabled,
+        einvoice_aspid: formData.einvoice_aspid || null,
+        einvoice_asppassword: formData.einvoice_asppassword || null,
+        einvoice_username: formData.einvoice_username || null,
+        einvoice_password: formData.einvoice_password || null,
+        einvoice_sandbox: formData.einvoice_sandbox,
+        ewaybill_enabled: formData.ewaybill_enabled,
+        ewaybill_password: formData.ewaybill_password || null,
         is_active: true,
       };
 
@@ -525,6 +541,143 @@ const CompanySettingsForm: React.FC<CompanySettingsFormProps> = ({
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* E-Invoice & E-Way Bill Configuration */}
+          <div className="border p-4 rounded-md space-y-4">
+            <h3 className="font-semibold text-base mb-2">
+              {language === 'english' ? 'E-Invoice & E-Way Bill Configuration' : 'ஈ-இன்வாய்ஸ் & ஈ-வே பில் வரியமைப்பு'}
+            </h3>
+            
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-3 pt-2">
+                <input
+                  id="einvoice_enabled"
+                  type="checkbox"
+                  checked={formData.einvoice_enabled}
+                  onChange={(e) => setFormData({ ...formData, einvoice_enabled: e.target.checked })}
+                  className="h-4 w-4 cursor-pointer accent-primary"
+                />
+                <div>
+                  <Label htmlFor="einvoice_enabled" className="cursor-pointer font-medium">
+                    {language === 'english' ? 'Enable Automated E-Invoice & Combined E-Way Bill' : 'தானியங்கி ஈ-இன்வாய்ஸ் & ஒருங்கிணைந்த ஈ-வே பில் செயல்படுத்தவும்'}
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {language === 'english' 
+                      ? 'Enable direct API integration with GSP for automated e-invoice and combined e-way bill generation.'
+                      : 'விற்பனையில் தானியங்கி ஈ-இன்வாய்ஸ் மற்றும் ஒருங்கிணைந்த ஈ-வே பில் உருவாக்க ஜிஎஸ்டிஎன் நேரடி ஒருங்கிணைப்பை செயல்படுத்தவும்.'
+                    }
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <input
+                  id="ewaybill_enabled"
+                  type="checkbox"
+                  checked={formData.ewaybill_enabled}
+                  onChange={(e) => setFormData({ ...formData, ewaybill_enabled: e.target.checked })}
+                  className="h-4 w-4 cursor-pointer accent-primary"
+                />
+                <div>
+                  <Label htmlFor="ewaybill_enabled" className="cursor-pointer font-medium">
+                    {language === 'english' ? 'Enable Standalone E-Way Bill API' : 'தனியான ஈ-வே பில் ஏபிஐ செயல்படுத்தவும்'}
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {language === 'english' 
+                      ? 'Enable standalone E-Way Bill generation directly via TaxPro E-Way Bill API.'
+                      : 'தானியங்கி தனியான ஈ-வே பில் உருவாக்க நேரடி ஈ-வே பில் ஏபிஐ ஒருங்கிணைப்பை செயல்படுத்தவும்.'
+                    }
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {(formData.einvoice_enabled || formData.ewaybill_enabled) && (
+              <div className="space-y-4 pt-4 border-t mt-2">
+                <div className="flex items-center gap-3">
+                  <input
+                    id="einvoice_sandbox"
+                    type="checkbox"
+                    checked={formData.einvoice_sandbox}
+                    onChange={(e) => setFormData({ ...formData, einvoice_sandbox: e.target.checked })}
+                    className="h-4 w-4 cursor-pointer accent-primary"
+                  />
+                  <div>
+                    <Label htmlFor="einvoice_sandbox" className="cursor-pointer font-medium">
+                      {language === 'english' ? 'Use Sandbox (Testing) Mode' : 'சாண்ட்பாக்ஸ் (சோதனை) பயன்முறையைப் பயன்படுத்தவும்'}
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {language === 'english' ? 'Uses GSP sandbox endpoints for testing instead of production.' : 'தயாரிப்புக்கு பதிலாக சோதனைக்கான ஜிஎஸ்டிஎன் சாண்ட்பாக்ஸ் முனைகளைப் பயன்படுத்துகிறது.'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="einvoice_aspid">GSP ASP ID</Label>
+                    <Input
+                      id="einvoice_aspid"
+                      value={formData.einvoice_aspid}
+                      onChange={(e) => setFormData({ ...formData, einvoice_aspid: e.target.value })}
+                      placeholder="e.g. 16******18"
+                      required={formData.einvoice_enabled || formData.ewaybill_enabled}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="einvoice_asppassword">GSP ASP Password</Label>
+                    <Input
+                      id="einvoice_asppassword"
+                      type="password"
+                      value={formData.einvoice_asppassword}
+                      onChange={(e) => setFormData({ ...formData, einvoice_asppassword: e.target.value })}
+                      placeholder="Enter ASP password"
+                      required={formData.einvoice_enabled || formData.ewaybill_enabled}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="einvoice_username">NIC Portal API User Name</Label>
+                    <Input
+                      id="einvoice_username"
+                      value={formData.einvoice_username}
+                      onChange={(e) => setFormData({ ...formData, einvoice_username: e.target.value })}
+                      placeholder="e.g. TaxProEnvPON"
+                      required={formData.einvoice_enabled || formData.ewaybill_enabled}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="einvoice_password">E-Invoice API Password (eInvPwd)</Label>
+                    <Input
+                      id="einvoice_password"
+                      type="password"
+                      value={formData.einvoice_password}
+                      onChange={(e) => setFormData({ ...formData, einvoice_password: e.target.value })}
+                      placeholder="Enter e-invoice API password"
+                      required={formData.einvoice_enabled}
+                      disabled={!formData.einvoice_enabled}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="ewaybill_password">E-Way Bill API Password (ewbpwd)</Label>
+                    <Input
+                      id="ewaybill_password"
+                      type="password"
+                      value={formData.ewaybill_password}
+                      onChange={(e) => setFormData({ ...formData, ewaybill_password: e.target.value })}
+                      placeholder="Enter e-way bill API password"
+                      required={formData.ewaybill_enabled}
+                      disabled={!formData.ewaybill_enabled}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-4 pt-4">

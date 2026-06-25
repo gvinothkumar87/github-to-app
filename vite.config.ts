@@ -27,6 +27,28 @@ export default defineConfig(({ mode }) => {
     server: {
       host: "::",
       port: 8080,
+      proxy: {
+        '/api-gsp-sandbox': {
+          target: 'https://gstsandbox.charteredinfo.com',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api-gsp-sandbox/, '')
+        },
+        '/api-gsp-prod-primary': {
+          target: 'https://einvapi.charteredinfo.com',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api-gsp-prod-primary/, '')
+        },
+        '/api-gsp-prod-backup1': {
+          target: 'https://einvapimum1.charteredinfo.com',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api-gsp-prod-backup1/, '')
+        },
+        '/api-gsp-prod-backup2': {
+          target: 'https://einvapidel2.charteredinfo.com',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api-gsp-prod-backup2/, '')
+        }
+      }
     },
     plugins: [
       react(),

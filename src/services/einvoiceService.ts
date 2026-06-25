@@ -245,14 +245,12 @@ export const einvoiceService = {
         ];
 
     const isBrowser = typeof window !== 'undefined';
-    const isLocalDev = isBrowser && (
-      window.location.hostname === 'localhost' || 
-      window.location.hostname === '127.0.0.1' || 
-      window.location.hostname.startsWith('10.') || 
-      window.location.hostname.startsWith('192.168.')
-    );
+    const isMobile = typeof __IS_MOBILE__ !== 'undefined' && __IS_MOBILE__;
+    const isElectron = isBrowser && window.navigator.userAgent.includes('Electron');
+    const isNativeContainer = isMobile || isElectron;
+    const useProxy = isBrowser && !isNativeContainer && window.location.protocol.startsWith('http');
 
-    if (isLocalDev) {
+    if (useProxy) {
       servers = servers.map(s => {
         if (s.includes('gstsandbox.charteredinfo.com')) return '/api-gsp-sandbox';
         if (s.includes('einvapi.charteredinfo.com')) return '/api-gsp-prod-primary';
@@ -1863,14 +1861,12 @@ export const einvoiceService = {
       const gstin = companySettings.gstin || '';
 
       const isBrowser = typeof window !== 'undefined';
-      const isLocalDev = isBrowser && (
-        window.location.hostname === 'localhost' ||
-        window.location.hostname === '127.0.0.1' ||
-        window.location.hostname.startsWith('10.') ||
-        window.location.hostname.startsWith('192.168.')
-      );
+      const isMobile = typeof __IS_MOBILE__ !== 'undefined' && __IS_MOBILE__;
+      const isElectron = isBrowser && window.navigator.userAgent.includes('Electron');
+      const isNativeContainer = isMobile || isElectron;
+      const useProxy = isBrowser && !isNativeContainer && window.location.protocol.startsWith('http');
 
-      const prodServer = isLocalDev ? '/api-gsp-prod-primary' : 'https://einvapi.charteredinfo.com';
+      const prodServer = useProxy ? '/api-gsp-prod-primary' : 'https://einvapi.charteredinfo.com';
       const printUrl = `${prodServer}/aspapi/v1.0/${printAction}?aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}`;
 
       console.log(`Sending EWB details to production print engine [${printAction}]: ${printUrl}`);

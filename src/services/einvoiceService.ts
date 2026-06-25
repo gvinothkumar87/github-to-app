@@ -236,68 +236,117 @@ export const einvoiceService = {
     pathAndQuery: string, 
     options: RequestInit
   ): Promise<Response> {
-    let servers = sandbox 
-      ? ['https://gstsandbox.charteredinfo.com', 'https://gstsandbox.charteredinfo.com']
-      : [
-          'https://einvapi.charteredinfo.com',
-          'https://einvapimum1.charteredinfo.com',
-          'https://einvapidel2.charteredinfo.com'
-        ];
-
     const isBrowser = typeof window !== 'undefined';
-    const isMobile = typeof __IS_MOBILE__ !== 'undefined' && __IS_MOBILE__;
-    const isElectron = isBrowser && window.navigator.userAgent.includes('Electron');
-    const isNativeContainer = isMobile || isElectron;
-    const useProxy = isBrowser && !isNativeContainer && window.location.protocol.startsWith('http');
-
-    if (useProxy) {
-      servers = servers.map(s => {
-        if (s.includes('gstsandbox.charteredinfo.com')) return '/api-gsp-sandbox';
-        if (s.includes('einvapi.charteredinfo.com')) return '/api-gsp-prod-primary';
-        if (s.includes('einvapimum1.charteredinfo.com')) return '/api-gsp-prod-backup1';
-        if (s.includes('einvapidel2.charteredinfo.com')) return '/api-gsp-prod-backup2';
-        return s;
-      });
+    if (!isBrowser) {
+      throw new Error('GSP API requests can only be executed in a browser context.');
     }
 
-    let lastError: any = null;
+    // Parse path, query parameters, and secrets from pathAndQuery
+    const urlObj = new URL(pathAndQuery, 'http://localhost');
+    const cleanPath = urlObj.pathname;
+    const gstin = urlObj.searchParams.get('Gstin') || urlObj.searchParams.get('gstin') || '';
+    const authToken = urlObj.searchParams.get('AuthToken') || urlObj.searchParams.get('authtoken') || '';
 
-    for (let i = 0; i < servers.length; i++) {
-      const server = servers[i];
-      const url = `${server}${pathAndQuery}`;
-      console.log(`E-Invoice API request: ${url} (Attempt ${i + 1}/${servers.length})`);
-      
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds timeout per server (more resilient for slow NIC servers)
+    // Deduce serviceType based on path
+    let serviceType = 'einvoice';
+    if (cleanPath.includes('/auth')) {
+      if (cleanPath.includes('/eivital') || cleanPath.includes('/eicore') || cleanPath.includes('/eivapi')) {
+        serviceType = 'einvoice-auth';
+      } else {
+        serviceType = 'ewaybill-auth';
+      }
+    } else if (cleanPath.includes('/ewaybillapi')) {
+      serviceType = 'ewaybill';
+    } else if (cleanPath.includes('/aspapi')) {
+      serviceType = 'print';
+    }
 
-        const response = await fetch(url, {
-          ...options,
-          signal: controller.signal
+    // Strip secrets from queryParams to prevent logging or transmitting them
+    const queryParams: Record<string, string> = {};
+    urlObj.searchParams.forEach((val, key) => {
+      const lowerKey = key.toLowerCase();
+      if (
+        lowerKey !== 'aspid' &&
+        lowerKey !== 'password' &&
+        lowerKey !== 'gstin' &&
+        lowerKey !== 'user_name' &&
+        lowerKey !== 'username' &&
+        lowerKey !== 'authtoken' &&
+        lowerKey !== 'einvpwd' &&
+        lowerKey !== 'ewbpwd'
+      ) {
+        queryParams[key] = val;
+      }
+    });
+
+    // Clean headers to remove plain-text secrets
+    const cleanHeaders: Record<string, string> = {};
+    if (options.headers) {
+      if (options.headers instanceof Headers) {
+        options.headers.forEach((val, key) => {
+          const lowerKey = key.toLowerCase();
+          if (lowerKey !== 'aspid' && lowerKey !== 'password' && lowerKey !== 'gstin') {
+            cleanHeaders[key] = val;
+          }
         });
-
-        clearTimeout(timeoutId);
-
-        // Failover if server returns a gateway timeout, service unavailable, or internal server error (status >= 500)
-        if (response.status >= 500) {
-          console.warn(`Server returned error status ${response.status} from ${server}. Trying backup server...`);
-          lastError = new Error(`Server returned error status ${response.status}`);
-          // Wait 1.5 seconds before retrying to allow temporary gateways to clear
-          await new Promise(resolve => setTimeout(resolve, 1500));
-          continue;
+      } else if (Array.isArray(options.headers)) {
+        options.headers.forEach(([key, val]) => {
+          const lowerKey = key.toLowerCase();
+          if (lowerKey !== 'aspid' && lowerKey !== 'password' && lowerKey !== 'gstin') {
+            cleanHeaders[key] = val;
+          }
+        });
+      } else {
+        for (const [key, val] of Object.entries(options.headers)) {
+          const lowerKey = key.toLowerCase();
+          if (lowerKey !== 'aspid' && lowerKey !== 'password' && lowerKey !== 'gstin') {
+            cleanHeaders[key] = val;
+          }
         }
-
-        return response;
-      } catch (err: any) {
-        console.error(`Request to ${server} failed:`, err);
-        lastError = err;
-        // Wait 1.5 seconds before retrying
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        // Proceed to next backup server
       }
     }
 
-    throw new Error(`All E-Invoice GSP servers failed. Last error: ${lastError?.message || lastError || 'Unknown network error'}`);
+    let requestBody: any = null;
+    if (options.body) {
+      try {
+        requestBody = JSON.parse(options.body as string);
+      } catch {
+        requestBody = options.body;
+      }
+    }
+
+    console.log(`[Proxy] Invoking taxpro-gsp edge function for path: ${cleanPath}`);
+
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://swxbydfypyojcerentsz.supabase.co';
+    const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || '';
+    
+    // Get caller user session token for secure authorization
+    const { data: { session } } = await supabase.auth.getSession();
+    const userToken = session?.access_token || '';
+
+    const edgeFunctionUrl = `${supabaseUrl}/functions/v1/taxpro-gsp`;
+
+    const response = await fetch(edgeFunctionUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${userToken}`,
+        'apikey': supabaseKey
+      },
+      body: JSON.stringify({
+        sandbox,
+        serviceType,
+        path: cleanPath,
+        method: options.method || 'GET',
+        queryParams,
+        headers: cleanHeaders,
+        body: requestBody,
+        authToken,
+        gstin
+      })
+    });
+
+    return response;
   },
 
   /**
@@ -1860,24 +1909,14 @@ export const einvoiceService = {
       const password = companySettings.einvoice_asppassword || '';
       const gstin = companySettings.gstin || '';
 
-      const isBrowser = typeof window !== 'undefined';
-      const isMobile = typeof __IS_MOBILE__ !== 'undefined' && __IS_MOBILE__;
-      const isElectron = isBrowser && window.navigator.userAgent.includes('Electron');
-      const isNativeContainer = isMobile || isElectron;
-      const useProxy = isBrowser && !isNativeContainer && window.location.protocol.startsWith('http');
+      const pathAndQuery = `/aspapi/v1.0/${printAction}?gstin=${encodeURIComponent(gstin)}`;
 
-      const prodServer = useProxy ? '/api-gsp-prod-primary' : 'https://einvapi.charteredinfo.com';
-      const printUrl = `${prodServer}/aspapi/v1.0/${printAction}?aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}`;
+      console.log(`Sending EWB details to production print engine [${printAction}] via secure backend proxy...`);
 
-      console.log(`Sending EWB details to production print engine [${printAction}]: ${printUrl}`);
-
-      const response = await fetch(printUrl, {
+      const response = await this.executeRequest(false, pathAndQuery, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'aspid': aspid,
-          'password': password,
-          'Gstin': gstin,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(details)
       });

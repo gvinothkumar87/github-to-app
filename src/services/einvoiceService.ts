@@ -1453,7 +1453,7 @@ export const einvoiceService = {
     const username = companySettings.einvoice_username || '';
 
     const makeRequest = async (tokenVal: string) => {
-      const pathAndQuery = `/eicore/dec/v1.03/Invoice/Ewb/Cancel?aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}&User_name=${encodeURIComponent(username)}&AuthToken=${encodeURIComponent(tokenVal)}`;
+      const pathAndQuery = `/eivapi/v1.04/ewbcancel?aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}&User_name=${encodeURIComponent(username)}&AuthToken=${encodeURIComponent(tokenVal)}`;
       return await this.executeRequest(sandbox, pathAndQuery, {
         method: 'POST',
         headers: {
@@ -1546,7 +1546,7 @@ export const einvoiceService = {
       throw new Error('E-Way Bill has not been generated for this sale.');
     }
 
-    const token = await this.authenticate(companySettings);
+    const token = await this.authenticateEWayBill(companySettings);
     const sandbox = companySettings.einvoice_sandbox ?? true;
 
     const supplierState = getStateCodeFromGstin(companySettings.gstin, companySettings.state_code);
@@ -1575,7 +1575,7 @@ export const einvoiceService = {
     const username = companySettings.einvoice_username || '';
 
     const makeRequest = async (tokenVal: string) => {
-      const pathAndQuery = `/eicore/dec/v1.03/Invoice/Ewb/Vehicle?aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}&User_name=${encodeURIComponent(username)}&AuthToken=${encodeURIComponent(tokenVal)}`;
+      const pathAndQuery = `/ewaybillapi/dec/v1.03/ewayapi?action=VEHEWB&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&username=${encodeURIComponent(username)}&authtoken=${encodeURIComponent(tokenVal)}`;
       return await this.executeRequest(sandbox, pathAndQuery, {
         method: 'POST',
         headers: {
@@ -1596,7 +1596,7 @@ export const einvoiceService = {
     } catch (err: any) {
       if (err.message && (err.message.includes('GSP752') || err.message.includes('AuthToken not found') || err.message.includes('expired'))) {
         console.warn('AuthToken expired. Retrying Vehicle update with a fresh token...');
-        const freshToken = await this.authenticate(companySettings, true);
+        const freshToken = await this.authenticateEWayBill(companySettings, true);
         response = await makeRequest(freshToken);
         if (!response.ok) {
           await handleNonOkResponse(response, 'Vehicle update server error');

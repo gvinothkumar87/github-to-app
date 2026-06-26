@@ -39,8 +39,12 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
 
   // E-Invoice & E-Way Bill States
   const [generating, setGenerating] = useState(false);
-  const [cancelReason, setCancelReason] = useState('2'); // default to Data Entry Mistake
+  // E-Invoice cancel state
+  const [cancelReason, setCancelReason] = useState('2'); // default to Data Entry Mistake (E-Invoice code)
   const [cancelRemark, setCancelRemark] = useState('Data entry mistake');
+  // E-Way Bill cancel state (separate — reason codes differ from E-Invoice)
+  const [ewbCancelReason, setEwbCancelReason] = useState('2'); // default: 2 = Order Cancelled (EWB code)
+  const [ewbCancelRemark, setEwbCancelRemark] = useState('Order cancelled');
   const [showCancelIrnDialog, setShowCancelIrnDialog] = useState(false);
   const [showCancelEwbDialog, setShowCancelEwbDialog] = useState(false);
 
@@ -261,6 +265,19 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
       });
     } catch (err: any) {
       console.error(err);
+      // If the IRN is not active (cancelled on portal), sync local UI state immediately
+      const errMsg: string = err.message || '';
+      if (
+        errMsg.includes('2302') ||
+        errMsg.includes('IRN is not active') ||
+        errMsg.includes('not active') ||
+        errMsg.includes('CANCELLED')
+      ) {
+        setCurrentSale(prev => ({
+          ...prev,
+          einvoice_status: 'CANCELLED'
+        }));
+      }
       toast({
         title: 'E-Way Bill Error',
         description: err.message || 'Failed to generate E-Way Bill',
@@ -481,12 +498,15 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
     if (!companySettings) return;
     setGenerating(true);
     try {
-      await einvoiceService.cancelEWayBill(currentSale, companySettings, parseInt(cancelReason, 10), cancelRemark);
+      await einvoiceService.cancelEWayBill(currentSale, companySettings, parseInt(ewbCancelReason, 10), ewbCancelRemark);
       setCurrentSale(prev => ({
         ...prev,
         eway_bill_status: 'CANCELLED'
       }));
       setShowCancelEwbDialog(false);
+      // Reset EWB cancel fields for next use
+      setEwbCancelReason('2');
+      setEwbCancelRemark('Order cancelled');
       toast({
         title: 'Cancelled',
         description: 'E-Way Bill cancelled successfully!',
@@ -1863,7 +1883,14 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
       </Dialog>
 
       {/* Cancel E-Way Bill Dialog */}
-      <Dialog open={showCancelEwbDialog} onOpenChange={setShowCancelEwbDialog}>
+      <Dialog open={showCancelEwbDialog} onOpenChange={(open) => {
+        if (!open) {
+          // Reset fields when dialog is closed/cancelled
+          setEwbCancelReason('2');
+          setEwbCancelRemark('Order cancelled');
+        }
+        setShowCancelEwbDialog(open);
+      }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Cancel E-Way Bill</DialogTitle>
@@ -1877,8 +1904,8 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
               <select
                 id="cancel_ewb_reason"
                 className="w-full h-10 px-3 border rounded-md bg-background"
-                value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
+                value={ewbCancelReason}
+                onChange={(e) => setEwbCancelReason(e.target.value)}
               >
                 <option value="1">1 - Duplicate</option>
                 <option value="2">2 - Order Cancelled</option>
@@ -1887,12 +1914,13 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
               </select>
             </div>
             <div className="space-y-1">
-              <Label htmlFor="cancel_ewb_remark">Remarks</Label>
+              <Label htmlFor="cancel_ewb_remark">Remarks <span className="text-muted-foreground text-xs">({ewbCancelRemark.length}/50)</span></Label>
               <Input
                 id="cancel_ewb_remark"
-                value={cancelRemark}
-                onChange={(e) => setCancelRemark(e.target.value)}
+                value={ewbCancelRemark}
+                onChange={(e) => setEwbCancelRemark(e.target.value.slice(0, 50))}
                 placeholder="Enter cancellation remarks..."
+                maxLength={50}
               />
             </div>
           </div>
@@ -1900,7 +1928,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
             <Button variant="outline" onClick={() => setShowCancelEwbDialog(false)} disabled={generating}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleCancelEWayBill} disabled={generating || !cancelRemark.trim()}>
+            <Button variant="destructive" onClick={handleCancelEWayBill} disabled={generating || !ewbCancelRemark.trim()}>
               {generating ? 'Cancelling...' : 'Confirm Cancel E-Way Bill'}
             </Button>
           </DialogFooter>

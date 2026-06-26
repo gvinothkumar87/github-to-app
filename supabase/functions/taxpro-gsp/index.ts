@@ -83,8 +83,14 @@ serve(async (req) => {
       console.error('Error fetching settings from DB:', settingsError)
     }
 
-    // If multiple settings exist for the same GSTIN, choose the one that has GSP credentials filled in
-    const settings = settingsList?.find(s => s.einvoice_aspid && s.einvoice_username)
+    const hasBaseCredentials = (s: any) => s.einvoice_aspid && s.einvoice_asppassword && s.einvoice_username
+    const settings = serviceType === 'ewaybill-auth'
+      ? settingsList?.find(s => hasBaseCredentials(s) && s.ewaybill_password) ?? settingsList?.find(hasBaseCredentials)
+      : serviceType === 'einvoice-auth'
+        ? settingsList?.find(s => hasBaseCredentials(s) && s.einvoice_password) ?? settingsList?.find(hasBaseCredentials)
+        : serviceType === 'ewaybill'
+          ? settingsList?.find(s => hasBaseCredentials(s) && s.ewaybill_password) ?? settingsList?.find(hasBaseCredentials)
+          : settingsList?.find(hasBaseCredentials)
 
     if (settings) {
       aspid = settings.einvoice_aspid
@@ -103,6 +109,20 @@ serve(async (req) => {
 
     if (!aspid || !password) {
       return new Response(JSON.stringify({ error: 'GSP credentials are not configured.' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    if (serviceType === 'ewaybill-auth' && (!username || !ewbpwd)) {
+      return new Response(JSON.stringify({ error: 'E-Way Bill credentials are not configured for this GSTIN. Check NIC Portal API User Name and E-Way Bill API Password in Company Settings.' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    if (serviceType === 'einvoice-auth' && (!username || !eInvPwd)) {
+      return new Response(JSON.stringify({ error: 'E-Invoice credentials are not configured for this GSTIN. Check NIC Portal API User Name and E-Invoice API Password in Company Settings.' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
@@ -170,7 +190,7 @@ serve(async (req) => {
 
     // 4. Resolve servers & initiate HTTP failover loop
     const servers = sandbox 
-      ? ['https://gstsandbox.charteredinfo.com', 'https://gstsandbox.charteredinfo.com']
+      ? ['https://gstsandbox.charteredinfo.com']
       : [
           'https://einvapi.charteredinfo.com',
           'https://einvapimum1.charteredinfo.com',

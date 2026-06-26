@@ -160,6 +160,47 @@ const handleNonOkResponse = async (response: Response, defaultErrorPrefix: strin
   throw new Error(`${defaultErrorPrefix} (Status Code: ${response.status})`);
 };
 
+const isEWayBillAuthUnavailableError = (err: any): boolean => {
+  const message = err?.message || String(err || '');
+  return message.includes('NIC404') || message.includes('Upstream Server Error: Not Found');
+};
+
+const parseMaybeJson = (value: any): any => {
+  if (typeof value !== 'string' || !value.trim()) {
+    return value;
+  }
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+};
+
+const findEWayBillDetailsInObject = (value: any, expectedEwbNo?: string, depth = 0): any | null => {
+  if (!value || depth > 6) {
+    return null;
+  }
+
+  const parsed = parseMaybeJson(value);
+  if (!parsed || typeof parsed !== 'object') {
+    return null;
+  }
+
+  const directEwbNo = (parsed.EwbNo || parsed.ewbNo || parsed.EwayBillNo || parsed.ewayBillNo)?.toString();
+  if (directEwbNo && (!expectedEwbNo || directEwbNo === expectedEwbNo)) {
+    return parsed;
+  }
+
+  for (const child of Object.values(parsed)) {
+    const found = findEWayBillDetailsInObject(child, expectedEwbNo, depth + 1);
+    if (found) {
+      return found;
+    }
+  }
+
+  return null;
+};
+
 // Helper to extract error message from dynamic GSP JSON response objects
 const extractErrorMessage = (result: any, defaultMsg: string): string => {
   if (!result) return defaultMsg;
@@ -876,136 +917,104 @@ export const einvoiceService = {
       throw new Error('Vehicle number (Lorry No) is required to generate E-Way Bill.');
     }
 
-    const payload = {
-      Irn: sale.irn,
-      Distance: distance,
-      TransMode: transMode,
-      TransId: transporterId || null,
-      TransName: transporterName || null,
-      TransDocDt: transDocDt ? formatDateDDMMYYYY(transDocDt) : null,
-      TransDocNo: transDocNo || null,
-      VehNo: vehicleNo.replace(/\s+/g, '').toUpperCase(),
-      VehType: vehType,
-    };
-
-    console.log('Sending payload to TaxPro E-Way Bill Generation:', payload);
-
-    const aspid = companySettings.einvoice_aspid || '';
-    const password = companySettings.einvoice_asppassword || '';
-    const gstin = companySettings.gstin || '';
-    const username = companySettings.einvoice_username || '';
-
-    let finalToken = token;
-    let finalDistance = distance;
-
-    const makeRequest = async (tokenVal: string, distVal: number) => {
-      payload.Distance = distVal;
-      const pathAndQuery = `/eiewb/dec/v1.03/ewaybill?aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}&User_name=${encodeURIComponent(username)}&AuthToken=${encodeURIComponent(tokenVal)}`;
-      return await this.executeRequest(sandbox, pathAndQuery, {
-        method: 'POST',
-        headers: {
-          'aspid': aspid,
-          'password': password,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
-      });
-    };
-
-    const isDuplicateEwbError = (errMsg: string) => {
-      return errMsg && (errMsg.includes('4002') || errMsg.includes('already generated') || errMsg.includes('Already generated'));
-    };
-
-    const handleAlreadyGenerated = async (errMsg: string) => {
-      console.warn('E-Way Bill already generated for this IRN. Fetching existing E-Way Bill details...');
-      let ewayBillNo = '';
-      let ewayBillDate = '';
-      if (sale.irn) {
-        try {
-          const invDetails = await this.getEInvoiceDetails(sale.irn, companySettings);
-          let invData = invDetails.Data || invDetails.data || invDetails;
-          if (typeof invData === 'string' && invData) {
-            try { invData = JSON.parse(invData); } catch (e) {}
-          }
-          ewayBillNo = (invData?.EwbNo || invData?.ewbNo || invData?.EwayBillNo || invData?.ewayBillNo)?.toString() || '';
-          ewayBillDate = invData?.EwbDt || invData?.EwbDate || invData?.ewayBillDate || '';
-        } catch (fetchErr) {
-          console.error('Failed to fetch existing E-Invoice details:', fetchErr);
-        }
-
-        if (!ewayBillNo && sandbox) {
-          console.warn('Sandbox mode fallback: Generating mock E-Way Bill details...');
-          ewayBillNo = '88' + Math.floor(1000000000 + Math.random() * 9000000000).toString();
-          ewayBillDate = new Date().toISOString().replace('T', ' ').substring(0, 19);
-        }
-
-        if (ewayBillNo) {
-          const { error } = await supabase
-            .from('sales')
-            .update({
-              eway_bill_no: ewayBillNo,
-              eway_bill_date: ewayBillDate,
-              eway_bill_status: 'GENERATED'
-            })
-            .eq('bill_serial_no', sale.bill_serial_no);
-
-          if (error) {
-            console.error('Error updating existing E-Way Bill in DB:', error);
-          }
-
-          return { ewayBillNo, ewayBillDate, correctedDistance: finalDistance };
-        }
-      }
-      throw new Error(errMsg);
-    };
-
-    let response: Response;
     try {
-      response = await makeRequest(finalToken, finalDistance);
-      if (!response.ok) {
-        await handleNonOkResponse(response, 'E-Way Bill generation server error');
-      }
-    } catch (err: any) {
-      if (isDuplicateEwbError(err.message)) {
-        return await handleAlreadyGenerated(err.message);
-      }
-      // 1. Check if token expired
-      else if (err.message && (err.message.includes('GSP752') || err.message.includes('AuthToken not found') || err.message.includes('expired'))) {
-        console.warn('AuthToken expired. Retrying E-Way Bill with a fresh token...');
-        finalToken = await this.authenticate(companySettings, true);
-        try {
-          response = await makeRequest(finalToken, finalDistance);
-          if (!response.ok) {
-            await handleNonOkResponse(response, 'E-Way Bill generation server error');
-          }
-        } catch (innerErr: any) {
-          if (isDuplicateEwbError(innerErr.message)) {
-            return await handleAlreadyGenerated(innerErr.message);
-          }
-          // If the second attempt failed due to distance mismatch
-          if (innerErr.message && (innerErr.message.includes('702') || innerErr.message.includes('4013') || innerErr.message.includes('distance'))) {
-            const correctDist = parseDistanceLimit(innerErr.message);
-            if (correctDist) {
-              console.warn(`Distance mismatch after token refresh. Retrying E-Way Bill with corrected distance: ${correctDist} km`);
-              finalDistance = correctDist;
-              response = await makeRequest(finalToken, finalDistance);
-              if (!response.ok) {
-                await handleNonOkResponse(response, 'E-Way Bill generation server error');
-              }
-            } else {
-              throw innerErr;
+      const payload = {
+        Irn: sale.irn,
+        Distance: distance,
+        TransMode: transMode,
+        TransId: transporterId || null,
+        TransName: transporterName || null,
+        TransDocDt: transDocDt ? formatDateDDMMYYYY(transDocDt) : null,
+        TransDocNo: transDocNo || null,
+        VehNo: vehicleNo.replace(/\s+/g, '').toUpperCase(),
+        VehType: vehType,
+      };
+
+      console.log('Sending payload to TaxPro E-Way Bill Generation:', payload);
+
+      const aspid = companySettings.einvoice_aspid || '';
+      const password = companySettings.einvoice_asppassword || '';
+      const gstin = companySettings.gstin || '';
+      const username = companySettings.einvoice_username || '';
+
+      let finalToken = token;
+      let finalDistance = distance;
+
+      const makeRequest = async (tokenVal: string, distVal: number) => {
+        payload.Distance = distVal;
+        const pathAndQuery = `/eiewb/dec/v1.03/ewaybill?aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}&User_name=${encodeURIComponent(username)}&AuthToken=${encodeURIComponent(tokenVal)}`;
+        return await this.executeRequest(sandbox, pathAndQuery, {
+          method: 'POST',
+          headers: {
+            'aspid': aspid,
+            'password': password,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload)
+        });
+      };
+
+      const isDuplicateEwbError = (errMsg: string) => {
+        return errMsg && (errMsg.includes('4002') || errMsg.includes('already generated') || errMsg.includes('Already generated'));
+      };
+
+      const handleAlreadyGenerated = async (errMsg: string) => {
+        console.warn('E-Way Bill already generated for this IRN. Fetching existing E-Way Bill details...');
+        let ewayBillNo = '';
+        let ewayBillDate = '';
+        if (sale.irn) {
+          try {
+            const invDetails = await this.getEInvoiceDetails(sale.irn, companySettings);
+            let invData = invDetails.Data || invDetails.data || invDetails;
+            if (typeof invData === 'string' && invData) {
+              try { invData = JSON.parse(invData); } catch (e) {}
             }
-          } else {
-            throw innerErr;
+            ewayBillNo = (invData?.EwbNo || invData?.ewbNo || invData?.EwayBillNo || invData?.ewayBillNo)?.toString() || '';
+            ewayBillDate = invData?.EwbDt || invData?.EwbDate || invData?.ewayBillDate || '';
+          } catch (fetchErr) {
+            console.error('Failed to fetch existing E-Invoice details:', fetchErr);
+          }
+
+          if (!ewayBillNo && sandbox) {
+            console.warn('Sandbox mode fallback: Generating mock E-Way Bill details...');
+            ewayBillNo = '88' + Math.floor(1000000000 + Math.random() * 9000000000).toString();
+            ewayBillDate = new Date().toISOString().replace('T', ' ').substring(0, 19);
+          }
+
+          if (ewayBillNo) {
+            const { error } = await supabase
+              .from('sales')
+              .update({
+                eway_bill_no: ewayBillNo,
+                eway_bill_date: ewayBillDate,
+                eway_bill_status: 'GENERATED'
+              })
+              .eq('bill_serial_no', sale.bill_serial_no);
+
+            if (error) {
+              console.error('Error updating existing E-Way Bill in DB:', error);
+            }
+
+            return { ewayBillNo, ewayBillDate, correctedDistance: finalDistance };
           }
         }
-      } 
-      // 2. Check if distance mismatch on first attempt
-      else if (err.message && (err.message.includes('702') || err.message.includes('4013') || err.message.includes('distance'))) {
-        const correctDist = parseDistanceLimit(err.message);
-        if (correctDist) {
-          console.warn(`Distance mismatch. Retrying E-Way Bill with corrected distance: ${correctDist} km`);
-          finalDistance = correctDist;
+        throw new Error(errMsg);
+      };
+
+      let response: Response;
+      try {
+        response = await makeRequest(finalToken, finalDistance);
+        if (!response.ok) {
+          await handleNonOkResponse(response, 'E-Way Bill generation server error');
+        }
+      } catch (err: any) {
+        if (isDuplicateEwbError(err.message)) {
+          return await handleAlreadyGenerated(err.message);
+        }
+        // 1. Check if token expired
+        else if (err.message && (err.message.includes('GSP752') || err.message.includes('AuthToken not found') || err.message.includes('expired'))) {
+          console.warn('AuthToken expired. Retrying E-Way Bill with a fresh token...');
+          finalToken = await this.authenticate(companySettings, true);
           try {
             response = await makeRequest(finalToken, finalDistance);
             if (!response.ok) {
@@ -1015,65 +1024,113 @@ export const einvoiceService = {
             if (isDuplicateEwbError(innerErr.message)) {
               return await handleAlreadyGenerated(innerErr.message);
             }
-            // What if the second attempt fails with expired token?
-            if (innerErr.message && (innerErr.message.includes('GSP752') || innerErr.message.includes('AuthToken not found') || innerErr.message.includes('expired'))) {
-              console.warn('AuthToken expired on retry. Retrying E-Way Bill with a fresh token...');
-              finalToken = await this.authenticate(companySettings, true);
-              response = await makeRequest(finalToken, finalDistance);
-              if (!response.ok) {
-                await handleNonOkResponse(response, 'E-Way Bill generation server error');
+            // If the second attempt failed due to distance mismatch
+            if (innerErr.message && (innerErr.message.includes('702') || innerErr.message.includes('4013') || innerErr.message.includes('distance'))) {
+              const correctDist = parseDistanceLimit(innerErr.message);
+              if (correctDist) {
+                console.warn(`Distance mismatch after token refresh. Retrying E-Way Bill with corrected distance: ${correctDist} km`);
+                finalDistance = correctDist;
+                response = await makeRequest(finalToken, finalDistance);
+                if (!response.ok) {
+                  await handleNonOkResponse(response, 'E-Way Bill generation server error');
+                }
+              } else {
+                throw innerErr;
               }
             } else {
               throw innerErr;
             }
           }
+        } 
+        // 2. Check if distance mismatch on first attempt
+        else if (err.message && (err.message.includes('702') || err.message.includes('4013') || err.message.includes('distance'))) {
+          const correctDist = parseDistanceLimit(err.message);
+          if (correctDist) {
+            console.warn(`Distance mismatch. Retrying E-Way Bill with corrected distance: ${correctDist} km`);
+            finalDistance = correctDist;
+            try {
+              response = await makeRequest(finalToken, finalDistance);
+              if (!response.ok) {
+                await handleNonOkResponse(response, 'E-Way Bill generation server error');
+              }
+            } catch (innerErr: any) {
+              if (isDuplicateEwbError(innerErr.message)) {
+                return await handleAlreadyGenerated(innerErr.message);
+              }
+              // What if the second attempt fails with expired token?
+              if (innerErr.message && (innerErr.message.includes('GSP752') || innerErr.message.includes('AuthToken not found') || innerErr.message.includes('expired'))) {
+                console.warn('AuthToken expired on retry. Retrying E-Way Bill with a fresh token...');
+                finalToken = await this.authenticate(companySettings, true);
+                response = await makeRequest(finalToken, finalDistance);
+                if (!response.ok) {
+                  await handleNonOkResponse(response, 'E-Way Bill generation server error');
+                }
+              } else {
+                throw innerErr;
+              }
+            }
+          } else {
+            throw err;
+          }
         } else {
           throw err;
         }
+      }
+
+      const result = await response.json();
+      console.log('E-Way Bill Generation Response:', result);
+
+      const isSuccess = result.Status === 1 || result.Status === '1' || result.status_cd === '1' || result.status === 1 || result.status === '1';
+      
+      let parsedData = result.Data || result.data;
+      if (typeof parsedData === 'string' && parsedData) {
+        try {
+          parsedData = JSON.parse(parsedData);
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      const ewayBillNo = (parsedData?.EwbNo || parsedData?.ewbNo || result.EwbNo || result.ewbNo)?.toString();
+      const ewayBillDate = parsedData?.EwbDt || parsedData?.EwbDate || parsedData?.ewayBillDate || result.EwbDt || '';
+
+      if (isSuccess && ewayBillNo) {
+        const { error } = await supabase
+          .from('sales')
+          .update({
+            eway_bill_no: ewayBillNo,
+            eway_bill_date: ewayBillDate,
+            eway_bill_status: 'GENERATED'
+          })
+          .eq('bill_serial_no', sale.bill_serial_no);
+
+        if (error) {
+          console.error('Error updating sale E-Way Bill in DB:', error);
+        }
+
+        return { ewayBillNo, ewayBillDate, correctedDistance: finalDistance };
       } else {
-        throw err;
+        console.error('E-Way Bill generation error result:', JSON.stringify(result));
+        const fullError = extractErrorMessage(result, 'Failed to generate E-Way Bill');
+        if (isDuplicateEwbError(fullError)) {
+          return await handleAlreadyGenerated(fullError);
+        }
+        throw new Error(`E-Way Bill Generation Failed: ${fullError}`);
       }
-    }
-
-    const result = await response.json();
-    console.log('E-Way Bill Generation Response:', result);
-
-    const isSuccess = result.Status === 1 || result.Status === '1' || result.status_cd === '1' || result.status === 1 || result.status === '1';
-    
-    let parsedData = result.Data || result.data;
-    if (typeof parsedData === 'string' && parsedData) {
-      try {
-        parsedData = JSON.parse(parsedData);
-      } catch (e) {
-        // ignore
+    } catch (err: any) {
+      const errMsg = err.message || '';
+      if (errMsg.includes('2302') || errMsg.includes('IRN is not active') || errMsg.includes('9999') || errMsg.includes('Invoice is not active')) {
+        console.warn('IRN is not active. Updating local einvoice_status to CANCELLED...');
+        const { error } = await supabase
+          .from('sales')
+          .update({ einvoice_status: 'CANCELLED' })
+          .eq('bill_serial_no', sale.bill_serial_no);
+        if (error) {
+          console.error('Error updating cancelled E-Invoice status in DB:', error);
+        }
+        throw new Error(`E-Way Bill Generation Failed: The linked E-Invoice (IRN) is not active (cancelled on the portal). Local E-Invoice status has been updated to CANCELLED.`);
       }
-    }
-
-    const ewayBillNo = (parsedData?.EwbNo || parsedData?.ewbNo || result.EwbNo || result.ewbNo)?.toString();
-    const ewayBillDate = parsedData?.EwbDt || parsedData?.EwbDate || parsedData?.ewayBillDate || result.EwbDt || '';
-
-    if (isSuccess && ewayBillNo) {
-      const { error } = await supabase
-        .from('sales')
-        .update({
-          eway_bill_no: ewayBillNo,
-          eway_bill_date: ewayBillDate,
-          eway_bill_status: 'GENERATED'
-        })
-        .eq('bill_serial_no', sale.bill_serial_no);
-
-      if (error) {
-        console.error('Error updating sale E-Way Bill in DB:', error);
-      }
-
-      return { ewayBillNo, ewayBillDate, correctedDistance: finalDistance };
-    } else {
-      console.error('E-Way Bill generation error result:', JSON.stringify(result));
-      const fullError = extractErrorMessage(result, 'Failed to generate E-Way Bill');
-      if (isDuplicateEwbError(fullError)) {
-        return await handleAlreadyGenerated(fullError);
-      }
-      throw new Error(`E-Way Bill Generation Failed: ${fullError}`);
+      throw err;
     }
   },
 
@@ -1360,13 +1417,315 @@ export const einvoiceService = {
     const token = await this.authenticate(companySettings);
     const sandbox = companySettings.einvoice_sandbox ?? true;
 
+    try {
+      const payload = {
+        Irn: sale.irn,
+        CnlRsn: reasonCode, // "1": Duplicate, "2": Data Entry Mistake, "3": Order Cancelled, "4": Others
+        CnlRem: remark || 'Cancelled'
+      };
+
+      console.log('Sending payload to Cancel E-Invoice:', payload);
+
+      const aspid = companySettings.einvoice_aspid || '';
+      const password = companySettings.einvoice_asppassword || '';
+      const gstin = companySettings.gstin || '';
+      const username = companySettings.einvoice_username || '';
+
+      const makeRequest = async (tokenVal: string) => {
+        const pathAndQuery = `/eicore/dec/v1.03/Invoice/Cancel?aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}&User_name=${encodeURIComponent(username)}&AuthToken=${encodeURIComponent(tokenVal)}`;
+        return await this.executeRequest(sandbox, pathAndQuery, {
+          method: 'POST',
+          headers: {
+            'aspid': aspid,
+            'password': password,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload)
+        });
+      };
+
+      let response: Response;
+      try {
+        response = await makeRequest(token);
+        if (!response.ok) {
+          await handleNonOkResponse(response, 'Cancel E-Invoice server error');
+        }
+      } catch (err: any) {
+        if (err.message && (err.message.includes('GSP752') || err.message.includes('AuthToken not found') || err.message.includes('expired'))) {
+          console.warn('AuthToken expired. Retrying Cancel E-Invoice with a fresh token...');
+          const freshToken = await this.authenticate(companySettings, true);
+          response = await makeRequest(freshToken);
+          if (!response.ok) {
+            await handleNonOkResponse(response, 'Cancel E-Invoice server error');
+          }
+        } else {
+          throw err;
+        }
+      }
+
+      const result = await response.json();
+      console.log('Cancel E-Invoice Response:', result);
+
+      if (result.Status === 1 || result.Status === '1') {
+        const { error } = await supabase
+          .from('sales')
+          .update({
+            einvoice_status: 'CANCELLED',
+          })
+          .eq('bill_serial_no', sale.bill_serial_no);
+
+        if (error) {
+          console.error('Error updating cancelled IRN in DB:', error);
+        }
+
+        return true;
+      } else {
+        const errorMsg = result.ErrorDetails?.[0]?.ErrorMessage || 'Failed to cancel E-Invoice';
+        const errorCode = result.ErrorDetails?.[0]?.ErrorCode || '';
+        throw new Error(`Cancel E-Invoice Failed: ${errorMsg} (${errorCode})`);
+      }
+    } catch (err: any) {
+      const errMsg = err.message || '';
+      if (errMsg.includes('9999') || errMsg.includes('Invoice is not active') || errMsg.includes('already cancelled') || errMsg.includes('already been cancelled')) {
+        console.warn('E-Invoice is already inactive/cancelled on the portal. Updating local status...');
+        const { error } = await supabase
+          .from('sales')
+          .update({
+            einvoice_status: 'CANCELLED',
+          })
+          .eq('bill_serial_no', sale.bill_serial_no);
+
+        if (error) {
+          console.error('Error updating cancelled IRN status in DB:', error);
+        }
+        return true;
+      }
+      if (errMsg.includes('2270') || errMsg.includes('time limit is crossed') || errMsg.includes('time limit crossed')) {
+        throw new Error(`Cancel E-Invoice Failed: The allowed cancellation time limit (24 hours) has passed. You cannot cancel this IRN via API. Please issue a Credit Note in the system instead.`);
+      }
+      throw err;
+    }
+  },
+
+  /**
+   * Generate E-Invoice for Credit Note (CRN) or Debit Note (DBN)
+   */
+  async generateNoteEInvoice(params: {
+    note: { id: string; note_no: string; note_date: string; amount: number; gst_percentage?: number; reason: string; reference_bill_no?: string | null; irn?: string | null };
+    noteType: 'CRN' | 'DBN';
+    table: 'credit_notes' | 'debit_notes';
+    companySettings: CompanySetting;
+    customer: { id: string; name_english: string; name_tamil?: string; code: string; address_english?: string; address_tamil?: string; gstin?: string; phone?: string; email?: string; pin_code?: string; state_code?: string; place_of_supply?: string };
+    item: { id: string; name_english: string; name_tamil?: string; code: string; hsn_no?: string; gst_percentage: number; unit: string };
+  }): Promise<{ irn: string; signedQrcode: string }> {
+    const { note, noteType, table, companySettings, customer, item } = params;
+
+    const token = await this.authenticate(companySettings);
+    const sandbox = companySettings.einvoice_sandbox ?? true;
+
+    // Calculate amounts
+    const gstPct = note.gst_percentage ?? item.gst_percentage ?? 5;
+    const baseAmount = Math.round((note.amount / (1 + gstPct / 100)) * 100) / 100;
+    const gstAmount = Math.round((note.amount - baseAmount) * 100) / 100;
+    const cgstAmount = Math.round((gstAmount / 2) * 100) / 100;
+    const sgstAmount = Math.round((gstAmount / 2) * 100) / 100;
+    const totalAmount = Math.round((baseAmount + cgstAmount + sgstAmount) * 100) / 100;
+
+    const customerAddress = customer.address_english || customer.address_tamil || '';
+    const buyerAddr1 = customerAddress.substring(0, 100);
+    const buyerAddr2 = customerAddress.length > 100 ? customerAddress.substring(100, 200) : '';
+    const addressParts = customerAddress.split(',');
+    let buyerLoc = addressParts.length > 0 ? addressParts[addressParts.length - 1].trim() : '';
+    buyerLoc = buyerLoc.replace(/\d{6}/g, '').replace(/[^\w\s]/g, '').trim() || 'Tamil Nadu';
+
+    const noteDate = new Date(note.note_date);
+    const dd = String(noteDate.getDate()).padStart(2, '0');
+    const mm = String(noteDate.getMonth() + 1).padStart(2, '0');
+    const yyyy = noteDate.getFullYear();
+    const formattedDate = `${dd}/${mm}/${yyyy}`;
+
     const payload = {
-      Irn: sale.irn,
-      CnlRsn: reasonCode, // "1": Duplicate, "2": Data Entry Mistake, "3": Order Cancelled, "4": Others
+      Version: '1.1',
+      TranDtls: {
+        TaxSch: 'GST',
+        SupTyp: 'B2B',
+        IgstOnIntra: 'N',
+        RegRev: 'N',
+        EcmGstin: null
+      },
+      DocDtls: {
+        Typ: noteType,
+        No: note.note_no,
+        Dt: formattedDate
+      },
+      SellerDtls: {
+        Gstin: companySettings.gstin,
+        LglNm: companySettings.company_name,
+        Addr1: companySettings.address_line1,
+        Addr2: (companySettings as any).address_line2 || null,
+        Loc: companySettings.locality,
+        Pin: companySettings.pin_code ? parseInt(companySettings.pin_code.toString()) : 600001,
+        Stcd: companySettings.state_code || '33',
+        Ph: companySettings.phone || null,
+        Em: companySettings.email || null
+      },
+      BuyerDtls: {
+        Gstin: customer.gstin || 'URP',
+        LglNm: customer.name_english || customer.name_tamil || 'UNKNOWN',
+        TrdNm: customer.name_english || customer.name_tamil || 'UNKNOWN',
+        Addr1: buyerAddr1 || 'NA',
+        Addr2: buyerAddr2 || null,
+        Loc: buyerLoc,
+        Pin: customer.pin_code ? parseInt(customer.pin_code.toString()) : 600001,
+        Pos: customer.place_of_supply || customer.state_code || '33',
+        Stcd: customer.state_code || '33',
+        Ph: customer.phone || null,
+        Em: customer.email || null
+      },
+      ValDtls: {
+        AssVal: baseAmount,
+        IgstVal: 0,
+        CgstVal: cgstAmount,
+        SgstVal: sgstAmount,
+        CesVal: 0,
+        StCesVal: 0,
+        Discount: 0,
+        OthChrg: 0,
+        RndOffAmt: 0,
+        TotInvVal: totalAmount
+      },
+      RefDtls: {
+        InvRm: 'NICGEPP',
+        ...(note.reference_bill_no ? { PrecDocDtls: [{ InvNo: note.reference_bill_no, InvDt: formattedDate, OthrRefNo: '' }] } : {})
+      },
+      ItemList: [
+        {
+          SlNo: '1',
+          PrdDesc: item.name_english || 'Product',
+          IsServc: 'N',
+          HsnCd: formatHsnCode(item.hsn_no),
+          Qty: 1,
+          FreeQty: 0,
+          Unit: formatUnitCode(item.unit),
+          UnitPrice: baseAmount,
+          TotAmt: baseAmount,
+          Discount: 0,
+          PreTaxVal: 0,
+          AssAmt: baseAmount,
+          GstRt: gstPct,
+          IgstAmt: 0,
+          CgstAmt: cgstAmount,
+          SgstAmt: sgstAmount,
+          CesRt: 0,
+          CesAmt: 0,
+          CesNonAdvlAmt: 0,
+          StateCesRt: 0,
+          StateCesAmt: 0,
+          StateCesNonAdvlAmt: 0,
+          OthChrg: 0,
+          TotItemVal: totalAmount
+        }
+      ]
+    };
+
+    console.log(`Sending ${noteType} E-Invoice payload to TaxPro:`, payload);
+
+    const aspid = companySettings.einvoice_aspid || '';
+    const password = companySettings.einvoice_asppassword || '';
+    const gstin = companySettings.gstin || '';
+    const username = companySettings.einvoice_username || '';
+
+    const makeRequest = async (tokenVal: string) => {
+      const pathAndQuery = `/eicore/dec/v1.03/Invoice?aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}&AuthToken=${encodeURIComponent(tokenVal)}&QrCodeSize=250&User_name=${encodeURIComponent(username)}`;
+      return await this.executeRequest(sandbox, pathAndQuery, {
+        method: 'POST',
+        headers: { 'aspid': aspid, 'password': password, 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    };
+
+    let response: Response;
+    try {
+      response = await makeRequest(token);
+      if (!response.ok) {
+        await handleNonOkResponse(response, `${noteType} E-Invoice generation server error`);
+      }
+    } catch (err: any) {
+      if (err.message && (err.message.includes('GSP752') || err.message.includes('AuthToken not found') || err.message.includes('expired'))) {
+        console.warn(`AuthToken expired. Retrying ${noteType} E-Invoice generation with fresh token...`);
+        const freshToken = await this.authenticate(companySettings, true);
+        response = await makeRequest(freshToken);
+        if (!response.ok) {
+          await handleNonOkResponse(response, `${noteType} E-Invoice generation server error`);
+        }
+      } else {
+        throw err;
+      }
+    }
+
+    const result = await response.json();
+    console.log(`${noteType} E-Invoice Generation Response:`, result);
+
+    const isSuccess = result.Status === 1 || result.Status === '1' || result.status_cd === '1';
+    let parsedData = result.Data || result.data;
+    if (typeof parsedData === 'string' && parsedData) {
+      try { parsedData = JSON.parse(parsedData); } catch (e) { /* ignore */ }
+    }
+
+    const isDuplicate = result.ErrorDetails?.[0]?.ErrorCode === '2150' ||
+                        result.ErrorDetails?.[0]?.ErrorMessage?.toLowerCase().includes('duplicate');
+    const dupInfo = result.InfoDtls?.find((info: any) => info.InfCd === 'DUPIRN' || info.Desc?.Irn);
+
+    if ((isSuccess && parsedData?.Irn) || (isDuplicate && dupInfo)) {
+      const data = parsedData || {};
+      const irn = data.Irn || dupInfo?.Desc?.Irn;
+      const ackNo = (data.AckNo || dupInfo?.Desc?.AckNo)?.toString() || '';
+      const ackDate = data.AckDt || dupInfo?.Desc?.AckDt || '';
+      const signedQrcode = data.SignedQRCode || '';
+
+      const { error } = await supabase
+        .from(table as any)
+        .update({ irn, ack_no: ackNo, ack_date: ackDate, einvoice_status: 'GENERATED' })
+        .eq('id', note.id);
+
+      if (error) {
+        console.error(`Error updating ${noteType} E-Invoice in DB:`, error);
+      }
+
+      return { irn, signedQrcode };
+    } else {
+      const fullError = extractErrorMessage(result, `Failed to generate ${noteType} E-Invoice`);
+      throw new Error(`E-Invoice Generation Failed: ${fullError}`);
+    }
+  },
+
+  /**
+   * Cancel E-Invoice for Credit Note (CRN) or Debit Note (DBN)
+   */
+  async cancelNoteEInvoice(params: {
+    note: { id: string; irn?: string | null };
+    noteType: 'CRN' | 'DBN';
+    table: 'credit_notes' | 'debit_notes';
+    companySettings: CompanySetting;
+    reasonCode: string;
+    remark: string;
+  }): Promise<boolean> {
+    const { note, noteType, table, companySettings, reasonCode, remark } = params;
+
+    if (!note.irn) {
+      throw new Error(`No IRN found for this ${noteType === 'CRN' ? 'Credit Note' : 'Debit Note'}.`);
+    }
+
+    const token = await this.authenticate(companySettings);
+    const sandbox = companySettings.einvoice_sandbox ?? true;
+
+    const payload = {
+      Irn: note.irn,
+      CnlRsn: reasonCode,
       CnlRem: remark || 'Cancelled'
     };
 
-    console.log('Sending payload to Cancel E-Invoice:', payload);
+    console.log(`Sending ${noteType} Cancel E-Invoice payload:`, payload);
 
     const aspid = companySettings.einvoice_aspid || '';
     const password = companySettings.einvoice_asppassword || '';
@@ -1377,138 +1736,278 @@ export const einvoiceService = {
       const pathAndQuery = `/eicore/dec/v1.03/Invoice/Cancel?aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}&User_name=${encodeURIComponent(username)}&AuthToken=${encodeURIComponent(tokenVal)}`;
       return await this.executeRequest(sandbox, pathAndQuery, {
         method: 'POST',
-        headers: {
-          'aspid': aspid,
-          'password': password,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'aspid': aspid, 'password': password, 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
     };
 
-    let response: Response;
     try {
-      response = await makeRequest(token);
-      if (!response.ok) {
-        await handleNonOkResponse(response, 'Cancel E-Invoice server error');
+      let response: Response;
+      try {
+        response = await makeRequest(token);
+        if (!response.ok) {
+          await handleNonOkResponse(response, `Cancel ${noteType} E-Invoice server error`);
+        }
+      } catch (err: any) {
+        if (err.message && (err.message.includes('GSP752') || err.message.includes('AuthToken not found') || err.message.includes('expired'))) {
+          console.warn(`AuthToken expired. Retrying Cancel ${noteType} E-Invoice with fresh token...`);
+          const freshToken = await this.authenticate(companySettings, true);
+          response = await makeRequest(freshToken);
+          if (!response.ok) {
+            await handleNonOkResponse(response, `Cancel ${noteType} E-Invoice server error`);
+          }
+        } else {
+          throw err;
+        }
+      }
+
+      const result = await response.json();
+      console.log(`Cancel ${noteType} E-Invoice Response:`, result);
+
+      if (result.Status === 1 || result.Status === '1') {
+        const { error } = await supabase
+          .from(table as any)
+          .update({ einvoice_status: 'CANCELLED' })
+          .eq('id', note.id);
+
+        if (error) {
+          console.error(`Error updating cancelled ${noteType} E-Invoice in DB:`, error);
+        }
+        return true;
+      } else {
+        const errorMsg = result.ErrorDetails?.[0]?.ErrorMessage || 'Failed to cancel E-Invoice';
+        const errorCode = result.ErrorDetails?.[0]?.ErrorCode || '';
+        throw new Error(`Cancel E-Invoice Failed: ${errorMsg}${errorCode ? ` (${errorCode})` : ''}`);
       }
     } catch (err: any) {
-      if (err.message && (err.message.includes('GSP752') || err.message.includes('AuthToken not found') || err.message.includes('expired'))) {
-        console.warn('AuthToken expired. Retrying Cancel E-Invoice with a fresh token...');
-        const freshToken = await this.authenticate(companySettings, true);
-        response = await makeRequest(freshToken);
-        if (!response.ok) {
-          await handleNonOkResponse(response, 'Cancel E-Invoice server error');
-        }
-      } else {
-        throw err;
+      const errMsg = err.message || '';
+      if (errMsg.includes('9999') || errMsg.includes('Invoice is not active') || errMsg.includes('already cancelled')) {
+        console.warn(`${noteType} E-Invoice already cancelled on portal. Updating local status...`);
+        await supabase.from(table as any).update({ einvoice_status: 'CANCELLED' }).eq('id', note.id);
+        return true;
       }
-    }
-
-    const result = await response.json();
-    console.log('Cancel E-Invoice Response:', result);
-
-    if (result.Status === 1 || result.Status === '1') {
-      const { error } = await supabase
-        .from('sales')
-        .update({
-          einvoice_status: 'CANCELLED',
-        })
-        .eq('bill_serial_no', sale.bill_serial_no);
-
-      if (error) {
-        console.error('Error updating cancelled IRN in DB:', error);
+      if (errMsg.includes('2270') || errMsg.includes('time limit is crossed')) {
+        throw new Error(`Cancel E-Invoice Failed: The 24-hour cancellation window has passed. Please issue a counter ${noteType === 'CRN' ? 'Debit Note' : 'Credit Note'} instead.`);
       }
-
-      return true;
-    } else {
-      const errorMsg = result.ErrorDetails?.[0]?.ErrorMessage || 'Failed to cancel E-Invoice';
-      const errorCode = result.ErrorDetails?.[0]?.ErrorCode || '';
-      throw new Error(`Cancel E-Invoice Failed: ${errorMsg} (${errorCode})`);
+      throw err;
     }
   },
 
   /**
    * Cancel E-Way Bill
    */
+
   async cancelEWayBill(sale: Sale, companySettings: CompanySetting, reasonCode: number, remark: string): Promise<boolean> {
     if (!sale.eway_bill_no) {
       throw new Error('No E-Way Bill Number found for this sale.');
     }
 
-    const token = await this.authenticateEWayBill(companySettings);
-    const sandbox = companySettings.einvoice_sandbox ?? true;
-
-    const payload = {
-      ewbNo: parseInt(sale.eway_bill_no, 10),
-      cancelRsnCode: reasonCode, // E-Way Bill portal expects number reason code
-      cancelRmrk: remark || 'Cancelled'
-    };
-
-    console.log('Sending payload to Cancel E-Way Bill:', payload);
-
-    const aspid = companySettings.einvoice_aspid || '';
-    const password = companySettings.einvoice_asppassword || '';
-    const gstin = companySettings.gstin || '';
-    const username = companySettings.einvoice_username || '';
-
-    const makeRequest = async (tokenVal: string) => {
-      const pathAndQuery = `/ewaybillapi/dec/v1.03/ewayapi?action=CANEWB&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&username=${encodeURIComponent(username)}&authtoken=${encodeURIComponent(tokenVal)}`;
-      return await this.executeRequest(sandbox, pathAndQuery, {
-        method: 'POST',
-        headers: {
-          'aspid': aspid,
-          'password': password,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
-      });
-    };
-
-    let response: Response;
     try {
-      response = await makeRequest(token);
-      if (!response.ok) {
-        await handleNonOkResponse(response, 'Cancel E-Way Bill server error');
+      let token: string;
+      try {
+        token = await this.authenticateEWayBill(companySettings);
+      } catch (err: any) {
+        if (sale.irn && isEWayBillAuthUnavailableError(err)) {
+          console.warn('Dedicated E-Way Bill auth returned NIC404. Falling back to e-invoice AuthToken for IRN-linked E-Way Bill cancellation...');
+          token = await this.authenticate(companySettings);
+        } else {
+          throw err;
+        }
       }
-    } catch (err: any) {
-      if (err.message && (err.message.includes('GSP752') || err.message.includes('authtoken not found') || err.message.includes('expired'))) {
-        console.warn('AuthToken expired. Retrying Cancel E-Way Bill with a fresh token...');
-        const freshToken = await this.authenticateEWayBill(companySettings, true);
-        response = await makeRequest(freshToken);
+      const sandbox = companySettings.einvoice_sandbox ?? true;
+
+      const payload = {
+        ewbNo: parseInt(sale.eway_bill_no, 10),
+        cancelRsnCode: reasonCode, // E-Way Bill portal expects number reason code
+        cancelRmrk: remark || 'Cancelled'
+      };
+
+      console.log('Sending payload to Cancel E-Way Bill:', payload);
+
+      const aspid = companySettings.einvoice_aspid || '';
+      const password = companySettings.einvoice_asppassword || '';
+      const gstin = companySettings.gstin || '';
+      const username = companySettings.einvoice_username || '';
+
+      const makeRequest = async (tokenVal: string) => {
+        const pathAndQuery = `/ewaybillapi/dec/v1.03/ewayapi?action=CANEWB&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&username=${encodeURIComponent(username)}&authtoken=${encodeURIComponent(tokenVal)}`;
+        return await this.executeRequest(sandbox, pathAndQuery, {
+          method: 'POST',
+          headers: {
+            'aspid': aspid,
+            'password': password,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload)
+        });
+      };
+
+      const makeIrnLinkedCancelRequest = async (tokenVal: string) => {
+        if (!sale.irn) {
+          throw new Error('IRN is required for IRN-linked E-Way Bill cancellation fallback.');
+        }
+        const ewbNo = parseInt(sale.eway_bill_no!, 10);
+        const pathSuffixes = [
+          '/eiewb/dec/v1.03/ewaybill/cancel',
+          '/eiewb/dec/v1.03/ewaybill/Cancel'
+        ];
+        const payloadVariants = [
+          { Irn: sale.irn, EwbNo: ewbNo, CnlRsn: reasonCode, CnlRem: remark || 'Cancelled' },
+          { Irn: sale.irn, ewbNo, cancelRsnCode: reasonCode, cancelRmrk: remark || 'Cancelled' },
+          { Irn: sale.irn, CnlRsn: reasonCode, CnlRem: remark || 'Cancelled' }
+        ];
+
+        for (const pathSuffix of pathSuffixes) {
+          for (const irnPayload of payloadVariants) {
+            const separator = pathSuffix.includes('?') ? '&' : '?';
+            const pathAndQuery = `${pathSuffix}${separator}aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}&User_name=${encodeURIComponent(username)}&AuthToken=${encodeURIComponent(tokenVal)}`;
+            const response = await this.executeRequest(sandbox, pathAndQuery, {
+              method: 'POST',
+              headers: {
+                'aspid': aspid,
+                'password': password,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(irnPayload)
+            });
+
+            if (response.ok) {
+              return response;
+            }
+
+            const responseText = await response.clone().text().catch(() => '');
+            const canTryNextVariant = response.status === 404 || responseText.includes('NIC404') || responseText.toLowerCase().includes('not found');
+            if (!canTryNextVariant) {
+              return response;
+            }
+            if (response.status === 404 || responseText.toLowerCase().includes('not found')) {
+              break;
+            }
+          }
+        }
+
+        return new Response(JSON.stringify({
+          error: {
+            message: 'TaxPro/NIC returned Not Found for all E-Way Bill cancellation endpoints. This E-Way Bill may need to be cancelled on the NIC E-Way Bill portal, or the TaxPro account may not have E-Way Bill cancellation enabled for this GSTIN.'
+          }
+        }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      };
+
+      let response: Response;
+      try {
+        response = await makeRequest(token);
         if (!response.ok) {
           await handleNonOkResponse(response, 'Cancel E-Way Bill server error');
         }
+      } catch (err: any) {
+        if (sale.irn && isEWayBillAuthUnavailableError(err)) {
+          console.warn('Direct E-Way Bill cancel returned NIC404. Retrying through IRN-linked /eiewb cancel endpoint...');
+          const einvoiceToken = await this.authenticate(companySettings);
+          response = await makeIrnLinkedCancelRequest(einvoiceToken);
+          if (!response.ok) {
+            await handleNonOkResponse(response, 'IRN-linked Cancel E-Way Bill server error');
+          }
+        } else if (err.message && (err.message.includes('GSP752') || err.message.includes('authtoken not found') || err.message.includes('expired'))) {
+          console.warn('AuthToken expired. Retrying Cancel E-Way Bill with a fresh token...');
+          let freshToken: string;
+          try {
+            freshToken = await this.authenticateEWayBill(companySettings, true);
+          } catch (authErr: any) {
+            if (sale.irn && isEWayBillAuthUnavailableError(authErr)) {
+              freshToken = await this.authenticate(companySettings, true);
+            } else {
+              throw authErr;
+            }
+          }
+          response = await makeRequest(freshToken);
+          if (!response.ok) {
+            try {
+              await handleNonOkResponse(response, 'Cancel E-Way Bill server error');
+            } catch (retryErr: any) {
+              if (sale.irn && isEWayBillAuthUnavailableError(retryErr)) {
+                const einvoiceToken = await this.authenticate(companySettings, true);
+                response = await makeIrnLinkedCancelRequest(einvoiceToken);
+                if (!response.ok) {
+                  await handleNonOkResponse(response, 'IRN-linked Cancel E-Way Bill server error');
+                }
+              } else {
+                throw retryErr;
+              }
+            }
+          }
+        } else {
+          throw err;
+        }
+      }
+
+      const result = await response.json();
+      console.log('Cancel E-Way Bill Response:', result);
+
+      // TaxPro wraps the response in a Data field (may be a JSON string or object)
+      // RespCancelEwbPl: { ewayBillNo, cancelDate }
+      let parsedData = result.Data || result.data;
+      if (typeof parsedData === 'string' && parsedData) {
+        try {
+          parsedData = JSON.parse(parsedData);
+        } catch (e) {
+          // ignore — may already be a plain string in some error cases
+        }
+      }
+
+      // TaxPro RespCancelEwbPl success fields (per TaxPro SDK + charteredinfo docs)
+      const ewayBillNo = parsedData?.ewayBillNo ?? parsedData?.EwayBillNo ?? result.ewayBillNo ?? result.EwayBillNo;
+      const cancelDate = parsedData?.cancelDate ?? parsedData?.CancelDate ?? parsedData?.CancelDt
+                      ?? result.cancelDate ?? result.CancelDate;
+
+      // Success: Status=1 (TaxPro wrapper) OR ewayBillNo present in RespCancelEwbPl
+      const isSuccess =
+        result.Status === 1 || result.Status === '1' ||
+        result.status === 1 || result.status === '1' ||
+        result.status_cd === '1' ||
+        !!(ewayBillNo && cancelDate); // TaxPro RespCancelEwbPl direct response
+
+      if (isSuccess) {
+        const { error } = await supabase
+          .from('sales')
+          .update({
+            eway_bill_status: 'CANCELLED',
+          })
+          .eq('bill_serial_no', sale.bill_serial_no);
+
+        if (error) {
+          console.error('Error updating cancelled E-Way Bill in DB:', error);
+        }
+
+        return true;
       } else {
-        throw err;
+        const errorMsg = result.ErrorDetails?.[0]?.ErrorMessage
+                      || result.error?.message
+                      || result.TxnOutcome  // TaxPro SDK TxnOutcome on failure
+                      || 'Failed to cancel E-Way Bill';
+        const errorCode = result.ErrorDetails?.[0]?.ErrorCode || result.error?.error_cd || '';
+        throw new Error(`Cancel E-Way Bill Failed: ${errorMsg}${errorCode ? ` (${errorCode})` : ''}`);
       }
-    }
+    } catch (err: any) {
+      const errMsg = err.message || '';
+      // Check if already cancelled
+      if (errMsg.includes('312') || errMsg.includes('already cancelled') || errMsg.includes('not generated by you or cancelled') || errMsg.includes('312,')) {
+        console.warn('E-Way Bill is already cancelled on the portal. Updating local status...');
+        const { error } = await supabase
+          .from('sales')
+          .update({
+            eway_bill_status: 'CANCELLED',
+          })
+          .eq('bill_serial_no', sale.bill_serial_no);
 
-    const result = await response.json();
-    console.log('Cancel E-Way Bill Response:', result);
-
-    // TaxPro GSP sandbox may return the result unwrapped at root level
-    // (e.g. {ewbNo: 591009081410, cancelDate: '...'}) instead of {Status: 1, Data: {...}}
-    const cancelDate = result.cancelDate || result.CancelDate || result.Data?.cancelDate || result.Data?.CancelDate;
-    const isSuccess = result.Status === 1 || result.Status === '1' || result.status === 1 || result.status === '1' || !!cancelDate;
-
-    if (isSuccess) {
-      const { error } = await supabase
-        .from('sales')
-        .update({
-          eway_bill_status: 'CANCELLED',
-        })
-        .eq('bill_serial_no', sale.bill_serial_no);
-
-      if (error) {
-        console.error('Error updating cancelled E-Way Bill in DB:', error);
+        if (error) {
+          console.error('Error updating cancelled E-Way Bill status in DB:', error);
+        }
+        return true;
       }
-
-      return true;
-    } else {
-      const errorMsg = result.ErrorDetails?.[0]?.ErrorMessage || result.error?.message || 'Failed to cancel E-Way Bill';
-      const errorCode = result.ErrorDetails?.[0]?.ErrorCode || result.error?.error_cd || '';
-      throw new Error(`Cancel E-Way Bill Failed: ${errorMsg} (${errorCode})`);
+      throw err;
     }
   },
 
@@ -1802,8 +2301,18 @@ export const einvoiceService = {
   /**
    * Fetch complete E-Way Bill details from GSP
    */
-  async getEWayBillDetails(ewbNo: string, companySettings: CompanySetting): Promise<any> {
-    const token = await this.authenticateEWayBill(companySettings);
+  async getEWayBillDetails(ewbNo: string, companySettings: CompanySetting, irn?: string, returnFullResponse: boolean = false): Promise<any> {
+    let token: string;
+    try {
+      token = await this.authenticateEWayBill(companySettings);
+    } catch (err: any) {
+      if (isEWayBillAuthUnavailableError(err)) {
+        console.warn('Dedicated E-Way Bill auth returned NIC404. Falling back to e-invoice AuthToken for E-Way Bill details...');
+        token = await this.authenticate(companySettings);
+      } else {
+        throw err;
+      }
+    }
     const sandbox = companySettings.einvoice_sandbox ?? true;
 
     const aspid = companySettings.einvoice_aspid || '';
@@ -1829,12 +2338,66 @@ export const einvoiceService = {
         await handleNonOkResponse(response, 'GetEwayBill server error');
       }
     } catch (err: any) {
-      if (err.message && (err.message.includes('GSP752') || err.message.includes('AuthToken not found') || err.message.includes('expired'))) {
+      if (irn && isEWayBillAuthUnavailableError(err)) {
+        console.warn('Direct GetEwayBill returned NIC404. Fetching E-Way Bill details through E-Invoice IRN details...');
+        const invDetails = await this.getEInvoiceDetails(irn, companySettings);
+        const invDetailsStatus = invDetails?.Status ?? invDetails?.status ?? invDetails?.status_cd;
+        if (invDetailsStatus === 0 || invDetailsStatus === '0') {
+          const invDetailsError = extractErrorMessage(invDetails, 'E-Invoice IRN details did not return E-Way Bill data');
+          throw new Error(`Could not fetch E-Way Bill details from IRN details: ${invDetailsError}`);
+        }
+        let invData = invDetails.Data || invDetails.data || invDetails;
+        if (typeof invData === 'string' && invData) {
+          try {
+            invData = JSON.parse(invData);
+          } catch (e) {
+            // ignore
+          }
+        }
+        const ewbDetails = findEWayBillDetailsInObject(invData, ewbNo);
+        if (ewbDetails) {
+          return ewbDetails;
+        }
+        throw err;
+      } else if (err.message && (err.message.includes('GSP752') || err.message.includes('AuthToken not found') || err.message.includes('expired'))) {
         console.warn('AuthToken expired. Retrying GetEwayBill with a fresh token...');
-        const freshToken = await this.authenticateEWayBill(companySettings, true);
+        let freshToken: string;
+        try {
+          freshToken = await this.authenticateEWayBill(companySettings, true);
+        } catch (authErr: any) {
+          if (isEWayBillAuthUnavailableError(authErr)) {
+            freshToken = await this.authenticate(companySettings, true);
+          } else {
+            throw authErr;
+          }
+        }
         response = await makeRequest(freshToken);
         if (!response.ok) {
-          await handleNonOkResponse(response, 'GetEwayBill server error');
+          try {
+            await handleNonOkResponse(response, 'GetEwayBill server error');
+          } catch (retryErr: any) {
+            if (irn && isEWayBillAuthUnavailableError(retryErr)) {
+              const invDetails = await this.getEInvoiceDetails(irn, companySettings);
+              const invDetailsStatus = invDetails?.Status ?? invDetails?.status ?? invDetails?.status_cd;
+              if (invDetailsStatus === 0 || invDetailsStatus === '0') {
+                const invDetailsError = extractErrorMessage(invDetails, 'E-Invoice IRN details did not return E-Way Bill data');
+                throw new Error(`Could not fetch E-Way Bill details from IRN details: ${invDetailsError}`);
+              }
+              let invData = invDetails.Data || invDetails.data || invDetails;
+              if (typeof invData === 'string' && invData) {
+                try {
+                  invData = JSON.parse(invData);
+                } catch (e) {
+                  // ignore
+                }
+              }
+              const ewbDetails = findEWayBillDetailsInObject(invData, ewbNo);
+              if (ewbDetails) {
+                return ewbDetails;
+              }
+            }
+            throw retryErr;
+          }
         }
       } else {
         throw err;
@@ -1846,9 +2409,9 @@ export const einvoiceService = {
 
     const ewbNoVal = result.ewbNo || result.EwbNo || result.Data?.ewbNo || result.Data?.EwbNo;
     if (ewbNoVal) {
-      return result.Data || result;
+      return returnFullResponse ? result : (result.Data || result);
     } else if (result.Status === 1 || result.Status === '1' || result.status === 1 || result.status === '1') {
-      return result.Data || result;
+      return returnFullResponse ? result : (result.Data || result);
     } else {
       const errorMsg = result.ErrorDetails?.[0]?.ErrorMessage || result.error?.message || 'Failed to fetch E-Way Bill details';
       const errorCode = result.ErrorDetails?.[0]?.ErrorCode || result.error?.error_cd || '';
@@ -1875,30 +2438,29 @@ export const einvoiceService = {
     ewbNo: string,
     companySettings: CompanySetting,
     filename: string = 'ewaybill.pdf',
-    printAction: 'printewb' | 'printdetailewb' | 'printcewb' = 'printewb'
+    printAction: 'printewb' | 'printdetailewb' | 'printcewb' = 'printewb',
+    irn?: string
   ): Promise<void> {
     const sandbox = companySettings.einvoice_sandbox ?? true;
 
     // 1. Always fetch the real EWB details first (works in both sandbox & production)
     let details: any;
     try {
-      details = await this.getEWayBillDetails(ewbNo, companySettings);
+      details = await this.getEWayBillDetails(ewbNo, companySettings, irn, true);
       console.log('EWB details fetched for PDF:', details);
     } catch (err: any) {
-      console.warn('Could not fetch EWB details; will proceed with ewbNo only:', err);
+      console.warn('Could not fetch EWB details required for print API:', err);
       // details stays undefined — mock PDF will use minimal info
+    }
+
+    if (!details) {
+      throw new Error('Could not fetch E-Way Bill details required for TaxPro print API. Direct GetEwayBill and IRN details fallback did not return E-Way Bill JSON.');
     }
 
     // 2. SANDBOX: The TaxPro GSP print API returns GSP503 "This feature is available
     //    only in Production" for any /aspapi/v1.0/* endpoint call in the sandbox
     //    environment. Skip the API call entirely and build the mock PDF client-side
     //    using the real EWB details we already fetched above.
-    if (sandbox) {
-      console.info('Sandbox mode: Print API not available (GSP503). Generating mock PDF from EWB details...');
-      await this.generateMockEWayBillPDF(ewbNo, companySettings, filename, details);
-      return;
-    }
-
     // 3. PRODUCTION: Call the official TaxPro GSP print engine
     //    API Docs: POST https://einvapi.charteredinfo.com/aspapi/v1.0/<action>
     //    Headers : aspid, password, Gstin  (also accepted as query params)
@@ -1909,14 +2471,17 @@ export const einvoiceService = {
       const password = companySettings.einvoice_asppassword || '';
       const gstin = companySettings.gstin || '';
 
-      const pathAndQuery = `/aspapi/v1.0/${printAction}?gstin=${encodeURIComponent(gstin)}`;
+      const pathAndQuery = `/aspapi/v1.0/${printAction}?Gstin=${encodeURIComponent(gstin)}`;
 
-      console.log(`Sending EWB details to production print engine [${printAction}] via secure backend proxy...`);
+      console.log(`Sending EWB details to ${sandbox ? 'sandbox' : 'production'} print engine [${printAction}] via secure backend proxy...`);
 
-      const response = await this.executeRequest(false, pathAndQuery, {
+      const response = await this.executeRequest(sandbox, pathAndQuery, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'aspid': aspid,
+          'password': password,
+          'Gstin': gstin
         },
         body: JSON.stringify(details)
       });
@@ -1930,10 +2495,16 @@ export const einvoiceService = {
       // The server returns application/pdf on success.
       // Guard against a 200 OK that actually carries a JSON error body.
       const contentType = response.headers.get('content-type') || '';
-      if (contentType.includes('application/json') || contentType.includes('text/')) {
-        const errBody = await response.json().catch(() => ({ message: 'Unknown print engine error' }));
-        const errMsg = errBody?.message || errBody?.ErrorDetails?.[0]?.ErrorMessage || errBody?.error?.message || JSON.stringify(errBody);
-        console.error('Print engine returned JSON instead of PDF:', errBody);
+      if (!contentType.includes('application/pdf')) {
+        const rawText = await response.text();
+        let errMsg = rawText;
+        try {
+          const errBody = JSON.parse(rawText);
+          errMsg = errBody?.message || errBody?.ErrorDetails?.[0]?.ErrorMessage || errBody?.error?.message || rawText;
+        } catch (e) {
+          // keep rawText
+        }
+        console.error('Print engine returned non-PDF response:', rawText);
         throw new Error(`PDF Print Engine returned an error: ${errMsg}`);
       }
 
@@ -1949,9 +2520,14 @@ export const einvoiceService = {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(downloadUrl);
-      console.log(`E-Way Bill PDF downloaded from production print engine: ${filename}`);
+      console.log(`E-Way Bill PDF downloaded from TaxPro print engine: ${filename}`);
     } catch (err: any) {
-      console.error('Production print engine error:', err);
+      console.error('TaxPro print engine error:', err);
+      if (sandbox && details) {
+        console.info('Sandbox print failed. Generating mock PDF from fetched EWB details...');
+        await this.generateMockEWayBillPDF(ewbNo, companySettings, filename, details);
+        return;
+      }
       throw err;
     }
   },

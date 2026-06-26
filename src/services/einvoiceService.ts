@@ -1453,7 +1453,7 @@ export const einvoiceService = {
     const username = companySettings.einvoice_username || '';
 
     const makeRequest = async (tokenVal: string) => {
-      const pathAndQuery = `/eivapi/v1.04/ewbcancel?aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}&User_name=${encodeURIComponent(username)}&AuthToken=${encodeURIComponent(tokenVal)}`;
+      const pathAndQuery = `/eiewb/dec/v1.03/ewaybill/cancel?aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}&User_name=${encodeURIComponent(username)}&AuthToken=${encodeURIComponent(tokenVal)}`;
       return await this.executeRequest(sandbox, pathAndQuery, {
         method: 'POST',
         headers: {

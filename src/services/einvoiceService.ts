@@ -1436,12 +1436,12 @@ export const einvoiceService = {
       throw new Error('No E-Way Bill Number found for this sale.');
     }
 
-    const token = await this.authenticate(companySettings);
+    const token = await this.authenticateEWayBill(companySettings);
     const sandbox = companySettings.einvoice_sandbox ?? true;
 
     const payload = {
       ewbNo: parseInt(sale.eway_bill_no, 10),
-      cancelRsnCode: reasonCode.toString(), // E-Invoice portal EWB cancellation expects string reason code
+      cancelRsnCode: reasonCode, // E-Way Bill portal expects number reason code
       cancelRmrk: remark || 'Cancelled'
     };
 
@@ -1453,7 +1453,7 @@ export const einvoiceService = {
     const username = companySettings.einvoice_username || '';
 
     const makeRequest = async (tokenVal: string) => {
-      const pathAndQuery = `/eiewb/dec/v1.03/ewaybill/cancel?aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}&User_name=${encodeURIComponent(username)}&AuthToken=${encodeURIComponent(tokenVal)}`;
+      const pathAndQuery = `/ewaybillapi/dec/v1.03/ewayapi?action=CANEWB&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&username=${encodeURIComponent(username)}&authtoken=${encodeURIComponent(tokenVal)}`;
       return await this.executeRequest(sandbox, pathAndQuery, {
         method: 'POST',
         headers: {
@@ -1472,9 +1472,9 @@ export const einvoiceService = {
         await handleNonOkResponse(response, 'Cancel E-Way Bill server error');
       }
     } catch (err: any) {
-      if (err.message && (err.message.includes('GSP752') || err.message.includes('AuthToken not found') || err.message.includes('expired'))) {
+      if (err.message && (err.message.includes('GSP752') || err.message.includes('authtoken not found') || err.message.includes('expired'))) {
         console.warn('AuthToken expired. Retrying Cancel E-Way Bill with a fresh token...');
-        const freshToken = await this.authenticate(companySettings, true);
+        const freshToken = await this.authenticateEWayBill(companySettings, true);
         response = await makeRequest(freshToken);
         if (!response.ok) {
           await handleNonOkResponse(response, 'Cancel E-Way Bill server error');

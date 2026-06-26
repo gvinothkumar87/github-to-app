@@ -2457,79 +2457,9 @@ export const einvoiceService = {
       throw new Error('Could not fetch E-Way Bill details required for TaxPro print API. Direct GetEwayBill and IRN details fallback did not return E-Way Bill JSON.');
     }
 
-    // 2. SANDBOX: The TaxPro GSP print API returns GSP503 "This feature is available
-    //    only in Production" for any /aspapi/v1.0/* endpoint call in the sandbox
-    //    environment. Skip the API call entirely and build the mock PDF client-side
-    //    using the real EWB details we already fetched above.
-    // 3. PRODUCTION: Call the official TaxPro GSP print engine
-    //    API Docs: POST https://einvapi.charteredinfo.com/aspapi/v1.0/<action>
-    //    Headers : aspid, password, Gstin  (also accepted as query params)
-    //    Body    : JSON from GetEwayBill API
-    //    Response: Binary PDF stream → save as .pdf file
-    try {
-      const aspid = companySettings.einvoice_aspid || '';
-      const password = companySettings.einvoice_asppassword || '';
-      const gstin = companySettings.gstin || '';
-
-      const pathAndQuery = `/aspapi/v1.0/${printAction}?Gstin=${encodeURIComponent(gstin)}`;
-
-      console.log(`Sending EWB details to ${sandbox ? 'sandbox' : 'production'} print engine [${printAction}] via secure backend proxy...`);
-
-      const response = await this.executeRequest(sandbox, pathAndQuery, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'aspid': aspid,
-          'password': password,
-          'Gstin': gstin
-        },
-        body: JSON.stringify(details)
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Print engine error (HTTP ${response.status}):`, errorText);
-        throw new Error(`PDF Print Engine error (${response.status}): ${errorText}`);
-      }
-
-      // The server returns application/pdf on success.
-      // Guard against a 200 OK that actually carries a JSON error body.
-      const contentType = response.headers.get('content-type') || '';
-      if (!contentType.includes('application/pdf')) {
-        const rawText = await response.text();
-        let errMsg = rawText;
-        try {
-          const errBody = JSON.parse(rawText);
-          errMsg = errBody?.message || errBody?.ErrorDetails?.[0]?.ErrorMessage || errBody?.error?.message || rawText;
-        } catch (e) {
-          // keep rawText
-        }
-        console.error('Print engine returned non-PDF response:', rawText);
-        throw new Error(`PDF Print Engine returned an error: ${errMsg}`);
-      }
-
-      const blob = await response.blob();
-      if (blob.size === 0) {
-        throw new Error('PDF Print Engine returned an empty response body');
-      }
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(downloadUrl);
-      console.log(`E-Way Bill PDF downloaded from TaxPro print engine: ${filename}`);
-    } catch (err: any) {
-      console.error('TaxPro print engine error:', err);
-      if (sandbox && details) {
-        console.info('Sandbox print failed. Generating mock PDF from fetched EWB details...');
-        await this.generateMockEWayBillPDF(ewbNo, companySettings, filename, details);
-        return;
-      }
-      throw err;
-    }
+    // Always generate PDF locally using the fetched details, bypassing the premium print API
+    console.info('Generating PDF locally from fetched EWB details...');
+    await this.generateLocalEWayBillPDF(ewbNo, companySettings, filename, details);
   },
 
 
@@ -2606,7 +2536,7 @@ export const einvoiceService = {
     const username = companySettings.einvoice_username || '';
 
     const makeRequest = async (tokenVal: string) => {
-      const pathAndQuery = `/eicore/dec/v1.03/Invoice/irn/details?aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}&AuthToken=${encodeURIComponent(tokenVal)}&User_name=${encodeURIComponent(username)}&irn=${encodeURIComponent(irn)}`;
+      const pathAndQuery = `/eicore/dec/v1.03/Invoice/irn/${encodeURIComponent(irn)}?aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}&AuthToken=${encodeURIComponent(tokenVal)}&User_name=${encodeURIComponent(username)}`;
       return await this.executeRequest(sandbox, pathAndQuery, {
         method: 'GET',
         headers: {
@@ -2641,10 +2571,10 @@ export const einvoiceService = {
   },
 
   /**
-   * Helper to generate a mock E-Way Bill PDF client-side using jsPDF (Sandbox only).
-   * If ewbDetails is provided (from GetEwayBill API), they will be included in the PDF.
+   * Helper to generate a computer-generated E-Way Bill PDF client-side using jsPDF.
+   * This uses the official details returned from the GetEwayBill API.
    */
-  async generateMockEWayBillPDF(
+  async generateLocalEWayBillPDF(
     ewbNo: string,
     companySettings: CompanySetting,
     filename: string,

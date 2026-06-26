@@ -64,37 +64,42 @@ serve(async (req) => {
       })
     }
 
-    // 1. Resolve GSP Credentials (ENV first, then DB fallback)
-    let aspid = Deno.env.get('TAXPRO_ASPID')
-    let password = Deno.env.get('TAXPRO_ASPPASSWORD')
-    let username = Deno.env.get('TAXPRO_USERNAME')
-    let eInvPwd = Deno.env.get('TAXPRO_EINVOICE_PASSWORD')
-    let ewbpwd = Deno.env.get('TAXPRO_EWAYBILL_PASSWORD')
+    // 1. Resolve GSP Credentials (DB first, then ENV fallback)
+    let aspid = null
+    let password = null
+    let username = null
+    let eInvPwd = null
+    let ewbpwd = null
 
-    if (!aspid || !password || !username) {
-      const supabaseServiceRole = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-      const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRole)
+    const supabaseServiceRole = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRole)
 
-      const { data: settingsList, error: settingsError } = await supabaseAdmin
-        .from('company_settings')
-        .select('einvoice_aspid, einvoice_asppassword, einvoice_username, einvoice_password, ewaybill_password')
-        .eq('gstin', gstin)
+    const { data: settingsList, error: settingsError } = await supabaseAdmin
+      .from('company_settings')
+      .select('einvoice_aspid, einvoice_asppassword, einvoice_username, einvoice_password, ewaybill_password')
+      .eq('gstin', gstin)
 
-      if (settingsError) {
-        console.error('Error fetching settings from DB:', settingsError)
-      }
-
-      // If multiple settings exist for the same GSTIN, choose the one that has GSP credentials filled in
-      const settings = settingsList?.find(s => s.einvoice_aspid && s.einvoice_username)
-
-      if (settings) {
-        if (!aspid) aspid = settings.einvoice_aspid
-        if (!password) password = settings.einvoice_asppassword
-        if (!username) username = settings.einvoice_username
-        if (!eInvPwd) eInvPwd = settings.einvoice_password
-        if (!ewbpwd) ewbpwd = settings.ewaybill_password
-      }
+    if (settingsError) {
+      console.error('Error fetching settings from DB:', settingsError)
     }
+
+    // If multiple settings exist for the same GSTIN, choose the one that has GSP credentials filled in
+    const settings = settingsList?.find(s => s.einvoice_aspid && s.einvoice_username)
+
+    if (settings) {
+      aspid = settings.einvoice_aspid
+      password = settings.einvoice_asppassword
+      username = settings.einvoice_username
+      eInvPwd = settings.einvoice_password
+      ewbpwd = settings.ewaybill_password
+    }
+
+    // Fallback to Deno Environment variables if not found in DB
+    if (!aspid) aspid = Deno.env.get('TAXPRO_ASPID')
+    if (!password) password = Deno.env.get('TAXPRO_ASPPASSWORD')
+    if (!username) username = Deno.env.get('TAXPRO_USERNAME')
+    if (!eInvPwd) eInvPwd = Deno.env.get('TAXPRO_EINVOICE_PASSWORD')
+    if (!ewbpwd) ewbpwd = Deno.env.get('TAXPRO_EWAYBILL_PASSWORD')
 
     if (!aspid || !password) {
       return new Response(JSON.stringify({ error: 'GSP credentials are not configured.' }), {

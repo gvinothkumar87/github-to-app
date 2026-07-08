@@ -382,6 +382,8 @@ export class SyncService {
       case 'UPDATE':
         const { error: updateError } = await table
           .update({
+            customer_id: data.customer_id,
+            item_id: data.item_id,
             quantity: data.quantity,
             rate: data.rate,
             total_amount: data.total_amount,

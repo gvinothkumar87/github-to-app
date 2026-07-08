@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Loader2, Calendar as CalendarIcon, Activity as ActivityIcon } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, parseISO } from 'date-fns';
+import { useLocations } from '@/hooks/useLocations';
 
 type ActivityType = 'all' | 'sale_direct' | 'sale_transit' | 'outward' | 'purchase' | 'receipt' | 'credit_note' | 'debit_note';
 
@@ -28,6 +29,7 @@ export default function ActivitiesLog() {
   const { language, getDisplayName } = useLanguage();
   const [activities, setActivities] = useState<UnifiedActivity[]>([]);
   const [loading, setLoading] = useState(true);
+  const { locations } = useLocations();
 
   // Filters
   const [fromDate, setFromDate] = useState<string>(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
@@ -309,8 +311,11 @@ export default function ActivitiesLog() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{language === 'english' ? 'All Mills' : 'அனைத்து மில்களும்'}</SelectItem>
-                    <SelectItem value="PULIVANTHI">{language === 'english' ? 'PULIVANTHI' : 'புலியந்தி'}</SelectItem>
-                    <SelectItem value="MATTAPARAI">{language === 'english' ? 'MATTAPARAI' : 'மட்டப்பாறை'}</SelectItem>
+                    {locations.map((loc) => (
+                      <SelectItem key={loc.id} value={loc.location_code}>
+                        {language === 'english' ? loc.location_code : loc.location_name_tamil || loc.location_code}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -374,9 +379,7 @@ export default function ActivitiesLog() {
                         </TableCell>
                         <TableCell className="font-semibold">{activity.amount_or_qty}</TableCell>
                         <TableCell>
-                          {activity.location === 'PULIVANTHI' ? (language === 'english' ? 'PULIVANTHI' : 'புலியந்தி') : 
-                           activity.location === 'MATTAPARAI' ? (language === 'english' ? 'MATTAPARAI' : 'மட்டப்பாறை') : 
-                           activity.location}
+                          {activity.location || '-'}
                         </TableCell>
                       </TableRow>
                     ))}

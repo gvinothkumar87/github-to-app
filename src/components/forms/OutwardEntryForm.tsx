@@ -26,7 +26,7 @@ export const OutwardEntryForm: React.FC<OutwardEntryFormProps> = ({ onSuccess, o
 
   const [formData, setFormData] = useState({
     entry_date: new Date().toISOString().split('T')[0],
-    loading_place: 'PULIVANTHI',
+    loading_place: '',
     customer_id: '',
     item_id: '',
     lorry_no: '',
@@ -47,6 +47,12 @@ export const OutwardEntryForm: React.FC<OutwardEntryFormProps> = ({ onSuccess, o
     fetchCustomers();
     fetchItems();
   }, []);
+
+  useEffect(() => {
+    if (locations.length > 0 && !formData.loading_place) {
+      setFormData(prev => ({ ...prev, loading_place: locations[0].location_code }));
+    }
+  }, [locations]);
 
   const fetchCustomers = async () => {
     const { data, error } = await supabase
@@ -174,6 +180,43 @@ export const OutwardEntryForm: React.FC<OutwardEntryFormProps> = ({ onSuccess, o
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.customer_id) {
+      toast({
+        variant: 'destructive',
+        title: language === 'english' ? 'Validation Error' : 'சரிபார்ப்பு பிழை',
+        description: language === 'english' ? 'Please select a customer' : 'வாடிக்கையாளரை தேர்ந்தெடுக்கவும்',
+      });
+      return;
+    }
+
+    if (!formData.item_id) {
+      toast({
+        variant: 'destructive',
+        title: language === 'english' ? 'Validation Error' : 'சரிபார்ப்பு பிழை',
+        description: language === 'english' ? 'Please select an item' : 'பொருளை தேர்ந்தெடுக்கவும்',
+      });
+      return;
+    }
+
+    if (isNaN(parseFloat(formData.empty_weight))) {
+      toast({
+        variant: 'destructive',
+        title: language === 'english' ? 'Validation Error' : 'சரிபார்ப்பு பிழை',
+        description: language === 'english' ? 'Please enter a valid empty weight' : 'சரியான காலி எடையை உள்ளிடவும்',
+      });
+      return;
+    }
+
+    if (!formData.lorry_no || !formData.driver_mobile) {
+      toast({
+        variant: 'destructive',
+        title: language === 'english' ? 'Validation Error' : 'சரிபார்ப்பு பிழை',
+        description: language === 'english' ? 'Lorry number and driver mobile are required' : 'லாரி எண் மற்றும் ஓட்டுநர் மொபைல் எண் தேவை',
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -204,10 +247,11 @@ export const OutwardEntryForm: React.FC<OutwardEntryFormProps> = ({ onSuccess, o
 
       onSuccess();
     } catch (error: any) {
+      console.error('SUPABASE ERROR:', error);
       toast({
         variant: 'destructive',
         title: language === 'english' ? 'Error' : 'பிழை',
-        description: error.message,
+        description: error.message || 'An unknown error occurred (check console)',
       });
     } finally {
       setLoading(false);

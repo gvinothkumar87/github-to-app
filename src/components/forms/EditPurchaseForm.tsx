@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Purchase, Supplier, Item } from "@/types";
 import { Loader2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface EditPurchaseFormProps {
   purchase: Purchase;
@@ -21,6 +22,26 @@ export const EditPurchaseForm = ({ purchase, supplier, item, onSuccess, onCancel
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { language, getDisplayName } = useLanguage();
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [itemsList, setItemsList] = useState<Item[]>([]);
+  const [selectedSupplierId, setSelectedSupplierId] = useState<string>(supplier.id);
+  const [selectedItemId, setSelectedItemId] = useState<string>(item.id);
+
+  useEffect(() => {
+    const fetchSuppliersAndItems = async () => {
+      try {
+        const [suppRes, itemRes] = await Promise.all([
+          supabase.from('suppliers').select('*').eq('is_active', true).order('name_english'),
+          supabase.from('items').select('*').eq('is_active', true).order('name_english')
+        ]);
+        if (suppRes.data) setSuppliers(suppRes.data);
+        if (itemRes.data) setItemsList(itemRes.data);
+      } catch (err) {
+        console.error('Error fetching suppliers/items:', err);
+      }
+    };
+    fetchSuppliersAndItems();
+  }, []);
 
   const [formData, setFormData] = useState({
     quantity: purchase.quantity.toString(),
@@ -59,6 +80,8 @@ export const EditPurchaseForm = ({ purchase, supplier, item, onSuccess, onCancel
       }
       
       const purchaseData = {
+        supplier_id: selectedSupplierId,
+        item_id: selectedItemId,
         quantity: quantity,
         rate: rate,
         total_amount: quantity * rate,
@@ -104,20 +127,39 @@ export const EditPurchaseForm = ({ purchase, supplier, item, onSuccess, onCancel
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="bg-muted p-4 rounded-lg space-y-2">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <Label className="text-xs font-medium">{language === 'english' ? 'Supplier' : 'சப்ளையர்'}:</Label>
-                <p>{getDisplayName(supplier)}</p>
-              </div>
-              <div>
-                <Label className="text-xs font-medium">{language === 'english' ? 'Item' : 'பொருள்'}:</Label>
-                <p>{getDisplayName(item)}</p>
-              </div>
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="supplier_id">{language === 'english' ? 'Supplier *' : 'சப்ளையர் *'}</Label>
+              <Select value={selectedSupplierId} onValueChange={setSelectedSupplierId}>
+                <SelectTrigger className="w-full mt-1">
+                  <SelectValue placeholder="Select Supplier" />
+                </SelectTrigger>
+                <SelectContent>
+                  {suppliers.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {getDisplayName(s)} ({s.code})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="item_id">{language === 'english' ? 'Product *' : 'தயாரிப்பு *'}</Label>
+              <Select value={selectedItemId} onValueChange={setSelectedItemId}>
+                <SelectTrigger className="w-full mt-1">
+                  <SelectValue placeholder="Select Product" />
+                </SelectTrigger>
+                <SelectContent>
+                  {itemsList.map((i) => (
+                    <SelectItem key={i.id} value={i.id}>
+                      {getDisplayName(i)} ({i.code})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div>
               <Label htmlFor="purchase_date">{language === 'english' ? 'Purchase Date *' : 'கொள்முதல் தேதி *'}</Label>
               <Input

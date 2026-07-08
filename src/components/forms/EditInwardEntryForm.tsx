@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { InwardEntry, Supplier, Item } from '@/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface EditInwardEntryFormProps {
   inwardEntry: InwardEntry;
@@ -28,6 +29,27 @@ export const EditInwardEntryForm = ({ inwardEntry, supplier, item, onSuccess, on
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { language, getDisplayName } = useLanguage();
+  
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [itemsList, setItemsList] = useState<Item[]>([]);
+  const [selectedSupplierId, setSelectedSupplierId] = useState<string>(inwardEntry.supplier_id);
+  const [selectedItemId, setSelectedItemId] = useState<string>(inwardEntry.item_id);
+
+  useEffect(() => {
+    const fetchSuppliersAndItems = async () => {
+      try {
+        const [suppRes, itemRes] = await Promise.all([
+          supabase.from('suppliers').select('*').eq('is_active', true).order('name_english'),
+          supabase.from('items').select('*').eq('is_active', true).order('name_english')
+        ]);
+        if (suppRes.data) setSuppliers(suppRes.data);
+        if (itemRes.data) setItemsList(itemRes.data);
+      } catch (err) {
+        console.error('Error fetching suppliers/items:', err);
+      }
+    };
+    fetchSuppliersAndItems();
+  }, []);
 
   const calculateNetWeight = () => {
     const full = parseFloat(fullWeight) || 0;
@@ -58,6 +80,8 @@ export const EditInwardEntryForm = ({ inwardEntry, supplier, item, onSuccess, on
       const { error: inwardError } = await supabase
         .from('inward_entries')
         .update({
+          supplier_id: selectedSupplierId,
+          item_id: selectedItemId,
           entry_date: entryDate,
           lorry_no: lorryNo,
           driver_mobile: driverMobile,
@@ -71,6 +95,33 @@ export const EditInwardEntryForm = ({ inwardEntry, supplier, item, onSuccess, on
         .eq('id', inwardEntry.id);
 
       if (inwardError) throw inwardError;
+
+      // Check if there is an associated purchase
+      const { data: assocPurchase } = await supabase
+        .from('purchases')
+        .select('*')
+        .eq('inward_entry_id', inwardEntry.id)
+        .maybeSingle();
+
+      if (assocPurchase) {
+        const qty = assocPurchase.quantity;
+        const rate = parseFloat(assocPurchase.rate);
+        const totalAmount = qty * rate;
+
+        const { error: purchaseError } = await supabase
+          .from('purchases')
+          .update({
+            supplier_id: selectedSupplierId,
+            item_id: selectedItemId,
+            quantity: qty,
+            rate: rate,
+            total_amount: totalAmount,
+            purchase_date: entryDate
+          })
+          .eq('id', assocPurchase.id);
+
+        if (purchaseError) throw purchaseError;
+      }
 
       toast({
         title: language === 'english' ? 'Success' : 'வெற்றி',
@@ -104,19 +155,45 @@ export const EditInwardEntryForm = ({ inwardEntry, supplier, item, onSuccess, on
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Entry Details */}
-          <div className="bg-muted p-4 rounded-lg space-y-2">
-            <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="bg-muted p-4 rounded-lg space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div>
                 <Label className="text-xs font-medium">{language === 'english' ? 'Serial No' : 'வ.எண்'}:</Label>
-                <p className="font-bold">#{inwardEntry.serial_no}</p>
+                <p className="font-bold text-base mt-1">#{inwardEntry.serial_no}</p>
               </div>
               <div>
-                <Label className="text-xs font-medium">{language === 'english' ? 'Supplier' : 'சப்ளையர்'}:</Label>
-                <p>{getDisplayName(supplier)}</p>
+                <Label htmlFor="supplierSelect" className="text-xs font-medium">
+                  {language === 'english' ? 'Supplier *' : 'சப்ளையர் *'}
+                </Label>
+                <Select value={selectedSupplierId} onValueChange={setSelectedSupplierId}>
+                  <SelectTrigger id="supplierSelect" className="w-full bg-background mt-1">
+                    <SelectValue placeholder="Select Supplier" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {suppliers.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {getDisplayName(s)} ({s.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
-                <Label className="text-xs font-medium">{language === 'english' ? 'Item' : 'பொருள்'}:</Label>
-                <p>{getDisplayName(item)}</p>
+                <Label htmlFor="itemSelect" className="text-xs font-medium">
+                  {language === 'english' ? 'Product/Item *' : 'தயாரிப்பு/பொருள் *'}
+                </Label>
+                <Select value={selectedItemId} onValueChange={setSelectedItemId}>
+                  <SelectTrigger id="itemSelect" className="w-full bg-background mt-1">
+                    <SelectValue placeholder="Select Product" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {itemsList.map((i) => (
+                      <SelectItem key={i.id} value={i.id}>
+                        {getDisplayName(i)} ({i.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>

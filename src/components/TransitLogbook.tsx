@@ -582,9 +582,7 @@ export const TransitLogbook = () => {
                         <span className="font-medium">
                           {language === 'english' ? 'Loading Place: ' : 'ஏற்றும் இடம்: '}
                         </span>
-                        {entry.loading_place === 'PULIVANTHI'
-                          ? (language === 'english' ? 'PULIVANTHI' : 'புலியந்தி')
-                          : (language === 'english' ? 'MATTAPARAI' : 'மட்டப்பாறை')}
+                        {entry.loading_place || '-'}
                       </div>
                       <div>
                         <span className="font-medium">
@@ -648,9 +646,7 @@ export const TransitLogbook = () => {
                         <TableCell>{entry.customers ? getDisplayName(entry.customers) : '-'}</TableCell>
                         <TableCell>{entry.items ? getDisplayName(entry.items) : '-'}</TableCell>
                         <TableCell>
-                          {entry.loading_place === 'PULIVANTHI'
-                            ? (language === 'english' ? 'PULIVANTHI' : 'புலியந்தி')
-                            : (language === 'english' ? 'MATTAPARAI' : 'மட்டப்பாறை')}
+                          {entry.loading_place || '-'}
                         </TableCell>
                         <TableCell className="font-mono">{entry.lorry_no}</TableCell>
                         <TableCell>{entry.empty_weight} KG</TableCell>
@@ -814,9 +810,7 @@ export const TransitLogbook = () => {
                           <span className="font-medium">
                             {language === 'english' ? 'Loading Place: ' : 'ஏற்றும் இடம்: '}
                           </span>
-                          {entry.loading_place === 'PULIVANTHI'
-                            ? (language === 'english' ? 'PULIVANTHI' : 'புலியந்தி')
-                            : (language === 'english' ? 'MATTAPARAI' : 'மட்டப்பாறை')}
+                          {entry.loading_place || '-'}
                         </div>
                         <div>
                           <span className="font-medium">
@@ -936,9 +930,7 @@ export const TransitLogbook = () => {
                           <TableCell>{entry.customers ? getDisplayName(entry.customers) : '-'}</TableCell>
                           <TableCell>{entry.items ? getDisplayName(entry.items) : '-'}</TableCell>
                           <TableCell>
-                            {entry.loading_place === 'PULIVANTHI'
-                              ? (language === 'english' ? 'PULIVANTHI' : 'புலியந்தி')
-                              : (language === 'english' ? 'MATTAPARAI' : 'மட்டப்பாறை')}
+                            {entry.loading_place || '-'}
                           </TableCell>
                           <TableCell className="font-mono">{entry.lorry_no}</TableCell>
                           <TableCell>{entry.empty_weight} KG</TableCell>

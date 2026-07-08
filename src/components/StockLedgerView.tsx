@@ -7,12 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { format } from "date-fns";
+import { useLocations } from "@/hooks/useLocations";
 
 export function StockLedgerView() {
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<any[]>([]);
   const [selectedItem, setSelectedItem] = useState("");
-  const [selectedMill, setSelectedMill] = useState("MATTAPARAI");
+  const [selectedMill, setSelectedMill] = useState("");
+  const { locations } = useLocations();
   const [ledgerEntries, setLedgerEntries] = useState<any[]>([]);
   const [currentStock, setCurrentStock] = useState(0);
   const [openingStock, setOpeningStock] = useState(0);
@@ -21,6 +23,12 @@ export function StockLedgerView() {
   useEffect(() => {
     fetchItems();
   }, []);
+
+  useEffect(() => {
+    if (locations.length > 0 && !selectedMill) {
+      setSelectedMill(locations[0].location_code);
+    }
+  }, [locations]);
 
   useEffect(() => {
     if (selectedItem) {
@@ -110,8 +118,11 @@ export function StockLedgerView() {
                     <SelectValue placeholder="Select mill" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="MATTAPARAI">MATTAPARAI</SelectItem>
-                    <SelectItem value="PULIVANTHI">PULIVANTHI</SelectItem>
+                    {locations.map((loc) => (
+                      <SelectItem key={loc.id} value={loc.location_code}>
+                        {language === 'english' ? loc.location_code : loc.location_name_tamil || loc.location_code}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

@@ -81,6 +81,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
   const [extTransitType, setExtTransitType] = useState<'R' | 'W' | 'O'>('R');
   const [extConsignmentStatus, setExtConsignmentStatus] = useState<'M' | 'T'>('M');
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [downloadingOfficialPdf, setDownloadingOfficialPdf] = useState(false);
 
   useEffect(() => {
     const fetchAllSalesForBill = async () => {
@@ -468,6 +469,34 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
     }
   };
 
+  const handleDownloadOfficialEWayBillPDF = async (printAction: 'printewb' | 'printdetailewb' | 'printcewb' = 'printewb') => {
+    if (!companySettings || !currentSale.eway_bill_no) return;
+    setDownloadingOfficialPdf(true);
+    try {
+      const filename = `official_ewaybill_${currentSale.eway_bill_no}.pdf`;
+      await einvoiceService.downloadOfficialEWayBillPDF(
+        currentSale.eway_bill_no,
+        companySettings,
+        filename,
+        printAction,
+        currentSale.irn || undefined
+      );
+      toast({
+        title: 'Success',
+        description: 'Official E-Way Bill PDF downloaded successfully!',
+      });
+    } catch (err: any) {
+      console.error(err);
+      toast({
+        title: 'Official PDF Download Error',
+        description: err.message || 'Failed to download official E-Way Bill PDF',
+        variant: 'destructive'
+      });
+    } finally {
+      setDownloadingOfficialPdf(false);
+    }
+  };
+
   const handleCancelEInvoice = async () => {
     if (!companySettings) return;
     setGenerating(true);
@@ -539,6 +568,8 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
   };
 
   const { baseAmount, gstAmount, totalAmount, totalQuantity } = calculateTotals();
+  // True when every sale line has 0% GST — used to simplify the invoice layout
+  const allGstZero = allSales.every((s, index) => (allItems[index] || item).gst_percentage === 0);
 
   const generateEInvoiceJSON = () => {
     if (!companySettings) {
@@ -689,6 +720,24 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
   };
 
   const printInvoice = async () => {
+    // Fetch E-Way Bill details from government portal if it exists
+    let ewbDetails: any = null;
+    if (currentSale.eway_bill_no && companySettings) {
+      try {
+        const res = await einvoiceService.getEWayBillDetails(currentSale.eway_bill_no, companySettings, currentSale.irn || undefined, true);
+        let dataObj = res.Data || res.data || res;
+        if (typeof dataObj === 'string' && dataObj) {
+          try {
+            dataObj = JSON.parse(dataObj);
+          } catch (e) {}
+        }
+        ewbDetails = dataObj;
+        console.log('EWB details fetched for print invoice:', ewbDetails);
+      } catch (err) {
+        console.warn('Could not fetch E-Way Bill details for print invoice:', err);
+      }
+    }
+
     // Generate QR code if IRN exists
     let qrCodeDataUrl = '';
     const qrcodeContent = currentSale.signed_qrcode || currentSale.irn;
@@ -704,6 +753,23 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
         });
       } catch (error) {
         console.error('Error generating QR code:', error);
+      }
+    }
+
+    // Generate E-Way Bill QR Code if EWB number exists
+    let ewbQrCodeDataUrl = '';
+    if (currentSale.eway_bill_no) {
+      try {
+        ewbQrCodeDataUrl = await QRCode.toDataURL(currentSale.eway_bill_no, {
+          width: 100,
+          margin: 1,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          }
+        });
+      } catch (error) {
+        console.error('Error generating EWB QR code:', error);
       }
     }
 
@@ -848,13 +914,13 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
               <thead>
                 <tr>
                   <th style="width: 4%;">Sl<br>No.</th>
-                  <th style="width: 25%;">Description of Goods</th>
+                  <th style="width: ${allGstZero ? '32%' : '25%'};">Description of Goods</th>
                   <th style="width: 8%;">HSN/SAC</th>
-                  <th style="width: 6%;">GST<br>Rate</th>
-                  <th style="width: 10%;">Quantity</th>
-                  <th style="width: 8%;">Rate</th>
-                  <th style="width: 6%;">per</th>
-                  <th style="width: 10%;">Amount</th>
+                  ${allGstZero ? '' : '<th style="width: 6%;">GST<br>Rate</th>'}
+                  <th style="width: ${allGstZero ? '14%' : '10%'};">Quantity</th>
+                  <th style="width: 10%;">Rate</th>
+                  <th style="width: 8%;">per</th>
+                  <th style="width: ${allGstZero ? '24%' : '10%'};">Amount</th>
                 </tr>
               </thead>
               <tbody>
@@ -866,7 +932,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
                       <td>${index + 1}</td>
                       <td class="desc-col">${getDisplayName(currentItem)}</td>
                       <td>${currentItem.hsn_no}</td>
-                      <td>${currentItem.gst_percentage}%</td>
+                      ${allGstZero ? '' : `<td>${currentItem.gst_percentage}%</td>`}
                       <td>${s.quantity} ${currentItem.unit}</td>
                       <td class="amount-col">₹${s.rate.toFixed(2)}</td>
                       <td>${currentItem.unit}</td>
@@ -875,7 +941,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
                   `;
       }).join('')}
                 <tr style="background-color: #f9f9f9;">
-                  <td colspan="4" style="text-align: right; font-weight: bold; padding-right: 10px;">Total</td>
+                  <td colspan="${allGstZero ? '3' : '4'}" style="text-align: right; font-weight: bold; padding-right: 10px;">Total</td>
                   <td style="font-weight: bold;">${totalQuantity} ${item.unit}</td>
                   <td></td>
                   <td></td>
@@ -887,6 +953,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
             <!-- Footer Section -->
             <div class="footer-section">
               <div class="tax-details">
+                ${allGstZero ? '' : `
                 <div class="hsn-table-section">
                   <table class="hsn-table">
                     <thead>
@@ -907,9 +974,10 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
                     </tbody>
                   </table>
                 </div>
+                `}
                 
-                <div class="total-section">
-                  ${item.gst_percentage > 0 ? `
+                <div class="total-section" style="${allGstZero ? 'flex: 1; max-width: 100%;' : ''}">
+                  ${!allGstZero && item.gst_percentage > 0 ? `
                   <div class="total-row">
                     <span>CGST ${(item.gst_percentage / 2)}%:</span>
                     <span>₹${(gstAmount / 2).toFixed(2)}</span>
@@ -918,12 +986,12 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
                     <span>SGST ${(item.gst_percentage / 2)}%:</span>
                     <span>₹${(gstAmount / 2).toFixed(2)}</span>
                   </div>
-                  ` : `
+                  ` : !allGstZero ? `
                   <div class="total-row">
                     <span>Tax Amount:</span>
                     <span>NIL</span>
                   </div>
-                  `}
+                  ` : ''}
                   <div class="total-row total-final">
                     <span>Total:</span>
                     <span>₹${totalAmount.toFixed(2)}</span>
@@ -939,10 +1007,10 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
               <div class="bank-signature">
                 <div class="bank-details">
                   <strong style="font-size: 10px;">Bank Details</strong><br>
-                  <span style="font-size: 10px;">Bank Name: ICICI</span><br>
-                  <span style="font-size: 10px;">A/c No.: 305105000641</span><br>
-                  <span style="font-size: 10px;">Branch: ANANTHAPURAM</span><br>
-                  <span style="font-size: 10px;">IFSC: ICIC0003051</span>
+                  <span style="font-size: 10px;">Bank Name: ${companySettings?.bank_name || ''}</span><br>
+                  <span style="font-size: 10px;">A/c No.: ${companySettings?.bank_account_no || ''}</span><br>
+                  <span style="font-size: 10px;">Branch: ${companySettings?.bank_branch || ''}</span><br>
+                  <span style="font-size: 10px;">IFSC: ${companySettings?.bank_ifsc || ''}</span>
                 </div>
                 <div class="signature-area">
                   <div style="margin-bottom: 40px;">${signHtml}</div>
@@ -1087,22 +1155,25 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
           ${currentSale.eway_bill_no ? `
           <div class="invoice-container" style="padding: 15px; border: 2px solid #000; min-height: 275mm; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; margin-top: 20px;">
             <div>
-              <div style="border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; text-align: center;">
+              <div style="border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
                 <div style="font-size: 16px; font-weight: bold; color: #1e3a8a;">E-WAY BILL DETAILS (FORM GST EWB-01)</div>
+                <div>
+                  ${ewbQrCodeDataUrl ? `<img src="${ewbQrCodeDataUrl}" style="width: 70px; height: 70px;" />` : ''}
+                </div>
               </div>
               
               <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 9px;">
                 <tr>
                   <td style="width: 25%; border: 1px solid #000; padding: 6px; font-weight: bold; background-color: #f5f5f5;">E-Way Bill No:</td>
-                  <td style="width: 25%; border: 1px solid #000; padding: 6px; font-weight: bold; font-size: 11px; color: #1e3a8a;">${currentSale.eway_bill_no}</td>
+                  <td style="width: 25%; border: 1px solid #000; padding: 6px; font-weight: bold; font-size: 11px; color: #1e3a8a;">${ewbDetails?.ewbNo || ewbDetails?.ewayBillNo || currentSale.eway_bill_no}</td>
                   <td style="width: 25%; border: 1px solid #000; padding: 6px; font-weight: bold; background-color: #f5f5f5;">E-Way Bill Date:</td>
-                  <td style="width: 25%; border: 1px solid #000; padding: 6px;">${currentSale.eway_bill_date || 'N/A'}</td>
+                  <td style="width: 25%; border: 1px solid #000; padding: 6px;">${ewbDetails?.ewayBillDate || ewbDetails?.EwayBillDate || currentSale.eway_bill_date || 'N/A'}</td>
                 </tr>
                 <tr>
                   <td style="border: 1px solid #000; padding: 6px; font-weight: bold; background-color: #f5f5f5;">Generated By:</td>
-                  <td style="border: 1px solid #000; padding: 6px;">${companySettings?.gstin}</td>
+                  <td style="border: 1px solid #000; padding: 6px;">${ewbDetails?.fromGstin || ewbDetails?.FromGstin || companySettings?.gstin || 'N/A'}</td>
                   <td style="border: 1px solid #000; padding: 6px; font-weight: bold; background-color: #f5f5f5;">Valid Till:</td>
-                  <td style="border: 1px solid #000; padding: 6px; font-weight: bold;">N/A (Refer Portal)</td>
+                  <td style="border: 1px solid #000; padding: 6px; font-weight: bold;">${ewbDetails?.validUpto || ewbDetails?.ValidUpto || 'N/A (Refer Portal)'}</td>
                 </tr>
               </table>
 
@@ -1111,27 +1182,27 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
               <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 9px;">
                 <tr>
                   <td style="width: 25%; border: 1px solid #000; padding: 5px; font-weight: bold; background-color: #fafafa;">Transaction Type:</td>
-                  <td style="width: 25%; border: 1px solid #000; padding: 5px;">Outward - Supply</td>
+                  <td style="width: 25%; border: 1px solid #000; padding: 5px;">${ewbDetails?.supplyType || ewbDetails?.SupplyType || 'Outward - Supply'}</td>
                   <td style="width: 25%; border: 1px solid #000; padding: 5px; font-weight: bold; background-color: #fafafa;">Doc Type & No:</td>
-                  <td style="width: 25%; border: 1px solid #000; padding: 5px;">Tax Invoice / ${currentSale.bill_serial_no}</td>
+                  <td style="width: 25%; border: 1px solid #000; padding: 5px;">${ewbDetails?.docType || ewbDetails?.DocType || 'Tax Invoice'} / ${ewbDetails?.docNo || ewbDetails?.DocNo || currentSale.bill_serial_no}</td>
                 </tr>
                 <tr>
                   <td style="border: 1px solid #000; padding: 5px; font-weight: bold; background-color: #fafafa;">Doc Date:</td>
-                  <td style="border: 1px solid #000; padding: 5px;">${new Date(currentSale.sale_date).toLocaleDateString('en-IN')}</td>
+                  <td style="border: 1px solid #000; padding: 5px;">${ewbDetails?.docDate || ewbDetails?.DocDate || new Date(currentSale.sale_date).toLocaleDateString('en-IN')}</td>
                   <td style="border: 1px solid #000; padding: 5px; font-weight: bold; background-color: #fafafa;">Total Taxable Value:</td>
-                  <td style="border: 1px solid #000; padding: 5px;">₹${baseAmount.toFixed(2)}</td>
+                  <td style="border: 1px solid #000; padding: 5px;">₹${parseFloat(ewbDetails?.taxableAmount || ewbDetails?.TaxableAmount || baseAmount).toFixed(2)}</td>
                 </tr>
                 <tr>
                   <td style="border: 1px solid #000; padding: 5px; font-weight: bold; background-color: #fafafa;">Total Tax Amount:</td>
-                  <td style="border: 1px solid #000; padding: 5px;">₹${gstAmount.toFixed(2)}</td>
+                  <td style="border: 1px solid #000; padding: 5px;">₹${parseFloat(ewbDetails?.cgstValue || ewbDetails?.CgstValue || ewbDetails?.sgstValue || ewbDetails?.SgstValue ? (parseFloat(ewbDetails?.cgstValue || ewbDetails?.CgstValue || 0) + parseFloat(ewbDetails?.sgstValue || ewbDetails?.SgstValue || 0)) : gstAmount).toFixed(2)}</td>
                   <td style="border: 1px solid #000; padding: 5px; font-weight: bold; background-color: #fafafa;">Total Invoice Value:</td>
-                  <td style="border: 1px solid #000; padding: 5px; font-weight: bold;">₹${totalAmount.toFixed(2)}</td>
+                  <td style="border: 1px solid #000; padding: 5px; font-weight: bold;">₹${parseFloat(ewbDetails?.totInvValue || ewbDetails?.TotInvValue || totalAmount).toFixed(2)}</td>
                 </tr>
                 <tr>
                   <td style="border: 1px solid #000; padding: 5px; font-weight: bold; background-color: #fafafa;">Primary HSN Code:</td>
-                  <td style="border: 1px solid #000; padding: 5px;">${item.hsn_no || 'N/A'}</td>
+                  <td style="border: 1px solid #000; padding: 5px;">${ewbDetails?.hsnCode || ewbDetails?.HsnCode || item.hsn_no || 'N/A'}</td>
                   <td style="border: 1px solid #000; padding: 5px; font-weight: bold; background-color: #fafafa;">Main Product:</td>
-                  <td style="border: 1px solid #000; padding: 5px;">${item.name_english}</td>
+                  <td style="border: 1px solid #000; padding: 5px;">${ewbDetails?.mainProduct || ewbDetails?.MainProduct || item.name_english}</td>
                 </tr>
               </table>
 
@@ -1142,18 +1213,18 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
                 </tr>
                 <tr>
                   <td style="border: 1px solid #000; padding: 8px; vertical-align: top; line-height: 1.4;">
-                    <strong>GSTIN:</strong> ${companySettings?.gstin}<br>
-                    <strong>Name:</strong> ${companySettings?.company_name}<br>
-                    <strong>Address:</strong> ${companySettings?.address_line1}, ${companySettings?.address_line2 || ''}<br>
-                    ${companySettings?.locality} - ${companySettings?.pin_code}<br>
-                    <strong>State:</strong> Tamil Nadu (${companySettings?.state_code})
+                    <strong>GSTIN:</strong> ${ewbDetails?.fromGstin || ewbDetails?.FromGstin || companySettings?.gstin}<br>
+                    <strong>Name:</strong> ${ewbDetails?.fromTrdName || ewbDetails?.FromTrdName || companySettings?.company_name}<br>
+                    <strong>Address:</strong> ${ewbDetails?.fromAddr1 || ewbDetails?.FromAddr1 || companySettings?.address_line1 || ''}, ${ewbDetails?.fromAddr2 || ewbDetails?.FromAddr2 || ''}<br>
+                    ${ewbDetails?.fromPlace || ewbDetails?.FromPlace || companySettings?.locality || ''} - ${ewbDetails?.fromPincode || ewbDetails?.FromPincode || companySettings?.pin_code || ''}<br>
+                    <strong>State:</strong> State Code: ${ewbDetails?.fromStateCode || ewbDetails?.FromStateCode || companySettings?.state_code || '33'}
                   </td>
                   <td style="border: 1px solid #000; padding: 8px; vertical-align: top; line-height: 1.4;">
-                    <strong>GSTIN:</strong> ${customer.gstin || 'URP'}<br>
-                    <strong>Name:</strong> ${getDisplayName(customer)}<br>
-                    <strong>Address:</strong> ${customer.address_english || customer.address_tamil || 'N/A'}<br>
-                    ${customer.pin_code ? `PIN: ${customer.pin_code}<br>` : ''}
-                    <strong>State Code:</strong> ${customer.state_code || '33'}
+                    <strong>GSTIN:</strong> ${ewbDetails?.toGstin || ewbDetails?.ToGstin || customer.gstin || 'URP'}<br>
+                    <strong>Name:</strong> ${ewbDetails?.toTrdName || ewbDetails?.ToTrdName || getDisplayName(customer)}<br>
+                    <strong>Address:</strong> ${ewbDetails?.toAddr1 || ewbDetails?.ToAddr1 || customer.address_english || customer.address_tamil || 'N/A'}, ${ewbDetails?.toAddr2 || ewbDetails?.ToAddr2 || ''}<br>
+                    ${ewbDetails?.toPlace || ewbDetails?.ToPlace || ''} - ${ewbDetails?.toPincode || ewbDetails?.ToPincode || customer.pin_code || ''}<br>
+                    <strong>State Code:</strong> ${ewbDetails?.toStateCode || ewbDetails?.ToStateCode || customer.state_code || '33'}
                   </td>
                 </tr>
               </table>
@@ -1171,15 +1242,31 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td style="border: 1px solid #000; padding: 6px; text-align: center;">Road</td>
-                    <td style="border: 1px solid #000; padding: 6px; text-align: center; font-weight: bold;">
-                      ${currentSale.lorry_no || outwardEntry?.lorry_no || 'N/A'}
-                    </td>
-                    <td style="border: 1px solid #000; padding: 6px; text-align: center;">${companySettings?.locality}</td>
-                    <td style="border: 1px solid #000; padding: 6px; text-align: center;">${currentSale.eway_bill_date || 'N/A'}</td>
-                    <td style="border: 1px solid #000; padding: 6px; text-align: center;">${companySettings?.gstin}</td>
-                  </tr>
+                  ${(ewbDetails?.VehiclListDetails || ewbDetails?.vehicleListDetails || []).length > 0 ? 
+                    (ewbDetails?.VehiclListDetails || ewbDetails?.vehicleListDetails).map((v: any) => `
+                      <tr>
+                        <td style="border: 1px solid #000; padding: 6px; text-align: center;">
+                          ${v.transMode === '1' || v.TransMode === '1' ? 'Road' : v.transMode === '2' || v.TransMode === '2' ? 'Rail' : v.transMode === '3' || v.TransMode === '3' ? 'Air' : v.transMode === '4' || v.TransMode === '4' ? 'Ship' : (v.transMode || v.TransMode || 'Road')}
+                        </td>
+                        <td style="border: 1px solid #000; padding: 6px; text-align: center; font-weight: bold;">
+                          ${v.vehicleNo || v.VehicleNo || v.transDocNo || v.TransDocNo || 'N/A'}
+                        </td>
+                        <td style="border: 1px solid #000; padding: 6px; text-align: center;">${v.fromPlace || v.FromPlace || 'N/A'}</td>
+                        <td style="border: 1px solid #000; padding: 6px; text-align: center;">${v.enteredDate || v.EnteredDate || 'N/A'}</td>
+                        <td style="border: 1px solid #000; padding: 6px; text-align: center;">${v.gstinNo || v.GstinNo || companySettings?.gstin || 'N/A'}</td>
+                      </tr>
+                    `).join('') : `
+                      <tr>
+                        <td style="border: 1px solid #000; padding: 6px; text-align: center;">Road</td>
+                        <td style="border: 1px solid #000; padding: 6px; text-align: center; font-weight: bold;">
+                          ${ewbDetails?.vehicleNo || ewbDetails?.VehicleNo || currentSale.lorry_no || outwardEntry?.lorry_no || 'N/A'}
+                        </td>
+                        <td style="border: 1px solid #000; padding: 6px; text-align: center;">${ewbDetails?.fromPlace || ewbDetails?.FromPlace || companySettings?.locality || 'N/A'}</td>
+                        <td style="border: 1px solid #000; padding: 6px; text-align: center;">${ewbDetails?.ewayBillDate || ewbDetails?.EwayBillDate || currentSale.eway_bill_date || 'N/A'}</td>
+                        <td style="border: 1px solid #000; padding: 6px; text-align: center;">${companySettings?.gstin || 'N/A'}</td>
+                      </tr>
+                    `
+                  }
                 </tbody>
               </table>
             </div>
@@ -1817,6 +1904,42 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleDownloadEWayBillPDF('printcewb')} className="cursor-pointer">
                     <FileText className="h-4 w-4 mr-2" />
+                    {language === 'english' ? 'Consolidated (printcewb)' : 'ஒருங்கிணைந்த அச்சு'}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            {currentSale.eway_bill_no && currentSale.eway_bill_status === 'GENERATED' && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    disabled={downloadingOfficialPdf}
+                    variant="outline"
+                    className="flex items-center gap-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50"
+                  >
+                    <Download className="h-4 w-4 text-emerald-600" />
+                    {downloadingOfficialPdf
+                      ? (language === 'english' ? 'Downloading...' : 'பதிவிறக்கப்படுகிறது...')
+                      : (language === 'english' ? 'Official EWB (API)' : 'அதிகாரப்பூர்வ ஈ-வே பில்')
+                    }
+                    <ChevronDown className="h-3 w-3 ml-1" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">
+                    {language === 'english' ? 'Select official format' : 'அதிகாரப்பூர்வ வடிவம்'}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => handleDownloadOfficialEWayBillPDF('printewb')} className="cursor-pointer">
+                    <Download className="h-4 w-4 mr-2 text-emerald-600" />
+                    {language === 'english' ? 'Standard (printewb)' : 'நிலையான அச்சு'}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleDownloadOfficialEWayBillPDF('printdetailewb')} className="cursor-pointer">
+                    <FileText className="h-4 w-4 mr-2 text-emerald-600" />
+                    {language === 'english' ? 'Detailed (printdetailewb)' : 'விரிவான அச்சு'}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleDownloadOfficialEWayBillPDF('printcewb')} className="cursor-pointer">
+                    <FileText className="h-4 w-4 mr-2 text-emerald-600" />
                     {language === 'english' ? 'Consolidated (printcewb)' : 'ஒருங்கிணைந்த அச்சு'}
                   </DropdownMenuItem>
                 </DropdownMenuContent>

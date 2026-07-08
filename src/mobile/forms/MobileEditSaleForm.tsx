@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export const MobileEditSaleForm = () => {
   const { saleId } = useParams();
@@ -18,6 +19,8 @@ export const MobileEditSaleForm = () => {
   const [irn, setIrn] = useState('');
   const [billSerialNo, setBillSerialNo] = useState('');
   const [saleDate, setSaleDate] = useState('');
+  const [selectedCustomerId, setSelectedCustomerId] = useState('');
+  const [selectedItemId, setSelectedItemId] = useState('');
   const [loading, setLoading] = useState(false);
   const [sale, setSale] = useState<any>(null);
 
@@ -36,12 +39,14 @@ export const MobileEditSaleForm = () => {
         setIrn((foundSale as any).irn || '');
         setBillSerialNo((foundSale as any).bill_serial_no || '');
         setSaleDate((foundSale as any).sale_date || new Date().toISOString().split('T')[0]);
+        setSelectedCustomerId((foundSale as any).customer_id || '');
+        setSelectedItemId((foundSale as any).item_id || '');
       }
     }
   }, [saleId, sales]);
 
-  const customer = sale ? customers.find((c: any) => c.id === sale.customer_id) : null;
-  const item = sale ? items.find((i: any) => i.id === sale.item_id) : null;
+  const customer = selectedCustomerId ? customers.find((c: any) => c.id === selectedCustomerId) : null;
+  const item = selectedItemId ? items.find((i: any) => i.id === selectedItemId) : null;
   const outwardEntry = sale ? outwardEntries.find((e: any) => e.id === sale.outward_entry_id) : null;
 
   const calculateTotalAmount = (newRate: number) => {
@@ -83,6 +88,8 @@ export const MobileEditSaleForm = () => {
       const newTotalAmount = calculateTotalAmount(newRate);
 
       await update(sale.id, {
+        customer_id: selectedCustomerId,
+        item_id: selectedItemId,
         rate: newRate,
         total_amount: newTotalAmount,
         irn: irn || null,
@@ -158,16 +165,38 @@ export const MobileEditSaleForm = () => {
               <div className="bg-muted p-4 rounded-lg space-y-3">
                 <div className="grid grid-cols-1 gap-3 text-sm">
                     <div>
-                      <Label className="text-xs font-medium text-muted-foreground">
-                        {language === 'english' ? 'Customer' : 'வாடிக்கையாளர்'}
+                      <Label htmlFor="customerSelect" className="text-xs font-medium text-muted-foreground">
+                        {language === 'english' ? 'Customer *' : 'வாடிக்கையாளர் *'}
                       </Label>
-                      <p className="font-medium">{getDisplayName(customer as any)}</p>
+                      <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
+                        <SelectTrigger id="customerSelect" className="w-full bg-background mt-1 text-foreground">
+                          <SelectValue placeholder="Select Customer" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover text-popover-foreground">
+                          {customers.map((c: any) => (
+                            <SelectItem key={c.id} value={c.id}>
+                              {getDisplayName(c)} ({c.code})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
-                      <Label className="text-xs font-medium text-muted-foreground">
-                        {language === 'english' ? 'Item' : 'பொருள்'}
+                      <Label htmlFor="itemSelect" className="text-xs font-medium text-muted-foreground">
+                        {language === 'english' ? 'Item *' : 'பொருள் *'}
                       </Label>
-                      <p className="font-medium">{getDisplayName(item as any)}</p>
+                      <Select value={selectedItemId} onValueChange={setSelectedItemId}>
+                        <SelectTrigger id="itemSelect" className="w-full bg-background mt-1 text-foreground">
+                          <SelectValue placeholder="Select Item" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover text-popover-foreground">
+                          {items.map((i: any) => (
+                            <SelectItem key={i.id} value={i.id}>
+                              {getDisplayName(i)} ({i.code})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>

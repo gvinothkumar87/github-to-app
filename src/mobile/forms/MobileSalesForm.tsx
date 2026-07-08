@@ -419,8 +419,8 @@ const MobileSalesForm: React.FC = () => {
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   {language === 'english'
-                    ? `${useSpecialSerial ? 'D-series' : selectedEntry?.loading_place === 'PULIVANTHI' ? 'Numeric' : 'GRM-series'} - Auto-generated, can be edited`
-                    : `${useSpecialSerial ? 'D-தொடர்' : selectedEntry?.loading_place === 'PULIVANTHI' ? 'எண்கள்' : 'GRM-தொடர்'} - தானாக உருவாக்கப்பட்டது, திருத்தலாம்`
+                    ? `Auto-generated based on location, can be edited`
+                    : `இடத்தின் அடிப்படையில் தானாக உருவாக்கப்பட்டது, திருத்தலாம்`
                   }
                 </p>
               </div>

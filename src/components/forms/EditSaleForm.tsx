@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Sale, OutwardEntry, Customer, Item } from '@/types';
 import { Trash2 } from 'lucide-react';
 import { generateUUID } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface EditSaleFormProps {
   sale: any; // Can be a single sale or grouped sale with _allSales
@@ -56,6 +57,26 @@ export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, on
       }];
     }
   });
+
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [itemsList, setItemsList] = useState<Item[]>([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>(customer.id);
+
+  useEffect(() => {
+    const fetchCustomersAndItems = async () => {
+      try {
+        const [custRes, itemRes] = await Promise.all([
+          supabase.from('customers').select('*').eq('is_active', true).order('name_english'),
+          supabase.from('items').select('*').eq('is_active', true).order('name_english')
+        ]);
+        if (custRes.data) setCustomers(custRes.data);
+        if (itemRes.data) setItemsList(itemRes.data);
+      } catch (err) {
+        console.error('Error fetching customers/items:', err);
+      }
+    };
+    fetchCustomersAndItems();
+  }, []);
 
   const [irn, setIrn] = useState(sale.irn || '');
   const [saleDate, setSaleDate] = useState(sale.sale_date || new Date().toISOString().split('T')[0]);
@@ -170,6 +191,27 @@ export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, on
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
+      // If the bill number has changed, clear the old E-Invoice and E-Way Bill details
+      if (billSerialNo !== sale.bill_serial_no) {
+        const saleIds = lineItems.map(item => item.sale_id);
+        const { error: clearError } = await supabase
+          .from('sales')
+          .update({
+            irn: null,
+            ack_no: null,
+            ack_date: null,
+            signed_invoice: null,
+            signed_qrcode: null,
+            einvoice_status: null,
+            eway_bill_no: null,
+            eway_bill_date: null,
+            eway_bill_status: null
+          })
+          .in('id', saleIds);
+          
+        if (clearError) throw clearError;
+      }
+
       // Update each sale in the line items
       for (const lineItem of lineItems) {
         const newRate = parseFloat(lineItem.rate);
@@ -179,11 +221,13 @@ export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, on
         const totalAmount = baseAmount + gstAmount;
 
         const saleData = {
+          customer_id: selectedCustomerId,
+          item_id: lineItem.item.id,
           rate: newRate.toString(),
           total_amount: totalAmount.toString(),
           base_amount: baseAmount.toString(),
           gst_amount: gstAmount.toString(),
-          irn: irn || null,
+          irn: billSerialNo !== sale.bill_serial_no ? null : (irn || null),
           bill_serial_no: billSerialNo,
           sale_date: saleDate
         };
@@ -243,16 +287,29 @@ export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, on
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Sale Details */}
-          <div className="bg-muted p-4 rounded-lg space-y-2">
-            <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="bg-muted p-4 rounded-lg space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
-                <Label className="text-xs font-medium">{language === 'english' ? 'Customer' : 'வாடிக்கையாளர்'}:</Label>
-                <p>{getDisplayName(customer)}</p>
+                <Label htmlFor="customerSelect" className="text-xs font-medium">
+                  {language === 'english' ? 'Customer *' : 'வாடிக்கையாளர் *'}
+                </Label>
+                <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
+                  <SelectTrigger id="customerSelect" className="w-full mt-1 bg-background">
+                    <SelectValue placeholder="Select Customer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {customers.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {getDisplayName(c)} ({c.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               {outwardEntry && (
-                <div>
-                  <Label className="text-xs font-medium">{language === 'english' ? 'Lorry No' : 'லாரி எண்'}:</Label>
-                  <p>{outwardEntry.lorry_no}</p>
+                <div className="flex flex-col justify-end">
+                  <Label className="text-xs font-medium text-muted-foreground">{language === 'english' ? 'Lorry No' : 'லாரி எண்'}:</Label>
+                  <p className="font-semibold text-base mt-1">{outwardEntry.lorry_no}</p>
                 </div>
               )}
             </div>
@@ -295,15 +352,45 @@ export const EditSaleForm = ({ sale, outwardEntry, customer, item, onSuccess, on
 
             {lineItems.map((lineItem, index) => (
               <div key={lineItem.id} className="p-4 bg-muted rounded-lg space-y-3">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium">{getDisplayName(lineItem.item)}</p>
-                      {lineItem.sale_date && isMultiProduct && (
-                        <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                          {new Date(lineItem.sale_date).toLocaleDateString('en-IN')}
-                        </span>
-                      )}
+                <div className="flex justify-between items-start gap-4">
+                  <div className="flex-1 space-y-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Label className="text-xs font-medium">
+                          {language === 'english' ? 'Product *' : 'தயாரிப்பு *'}
+                        </Label>
+                        {lineItem.sale_date && isMultiProduct && (
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                            {new Date(lineItem.sale_date).toLocaleDateString('en-IN')}
+                          </span>
+                        )}
+                      </div>
+                      <Select 
+                        value={lineItem.item.id} 
+                        onValueChange={(val) => {
+                          const selectedItem = itemsList.find(i => i.id === val);
+                          if (selectedItem) {
+                            setLineItems(lineItems.map(li => 
+                              li.id === lineItem.id ? { 
+                                ...li, 
+                                item: selectedItem,
+                                unit: selectedItem.unit
+                              } : li
+                            ));
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="w-full bg-background mt-1">
+                          <SelectValue placeholder="Select Product" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {itemsList.map((i) => (
+                            <SelectItem key={i.id} value={i.id}>
+                              {getDisplayName(i)} ({i.code})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <p className="text-sm text-muted-foreground">
                       {lineItem.quantity} {lineItem.unit} @ GST {lineItem.item.gst_percentage}%

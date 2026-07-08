@@ -39,21 +39,13 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
     quantity: '',
     rate: ''
   }]);
-  const [loadingPlace, setLoadingPlace] = useState<string>('PULIVANTHI');
+  const [loadingPlace, setLoadingPlace] = useState<string>('');
   const [billSerialNo, setBillSerialNo] = useState<string>('');
   const { locations } = useLocations();
 
   useEffect(() => {
-    if (locations.length > 0) {
-      const hasCurrentPlace = locations.some(loc => loc.location_code === loadingPlace);
-      if (!hasCurrentPlace) {
-        const pulivanthiLoc = locations.find(loc => loc.location_code === 'PULIVANTHI');
-        if (pulivanthiLoc) {
-          setLoadingPlace('PULIVANTHI');
-        } else {
-          setLoadingPlace(locations[0].location_code);
-        }
-      }
+    if (locations.length > 0 && !loadingPlace) {
+      setLoadingPlace(locations[0].location_code);
     }
   }, [locations]);
   const [lorryNo, setLorryNo] = useState<string>('');

@@ -168,6 +168,25 @@ const MobileOutwardEntryForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.customer_id) {
+      toast({
+        variant: 'destructive',
+        title: language === 'english' ? 'Validation Error' : 'சரிபார்ப்பு பிழை',
+        description: language === 'english' ? 'Please select a customer' : 'வாடிக்கையாளரை தேர்ந்தெடுக்கவும்',
+      });
+      return;
+    }
+
+    if (!formData.item_id) {
+      toast({
+        variant: 'destructive',
+        title: language === 'english' ? 'Validation Error' : 'சரிபார்ப்பு பிழை',
+        description: language === 'english' ? 'Please select an item' : 'பொருளை தேர்ந்தெடுக்கவும்',
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {

@@ -88,11 +88,19 @@ export const DebitNoteInvoiceGenerator = ({ debitNote, customer, item, onClose }
 
   const fetchCompanySettings = async () => {
     try {
+      // NEW: Use mill field directly; if missing, fetch first active location
       let locationCode = currentNote.mill;
-      if (!locationCode && currentNote.reference_bill_no) {
-        locationCode = currentNote.reference_bill_no?.toUpperCase().includes('PULIVANTHI') ? 'PULIVANTHI' : 'MATTAPARAI';
+      if (!locationCode) {
+        // fallback: get the first active location from company_settings
+        const { data: firstLoc } = await supabase
+          .from('company_settings')
+          .select('location_code')
+          .eq('is_active', true)
+          .order('location_name')
+          .limit(1)
+          .single();
+        locationCode = firstLoc?.location_code || '';
       }
-      if (!locationCode) locationCode = 'PULIVANTHI';
 
       const { data, error } = await supabase
         .from('company_settings')
@@ -109,20 +117,11 @@ export const DebitNoteInvoiceGenerator = ({ debitNote, customer, item, onClose }
       }
     } catch (error) {
       console.error('Error:', error);
-      setCompanySettings(getDefaultCompanyDetails('MATTAPARAI'));
+      setCompanySettings(null);
     }
   };
 
-  const getDefaultCompanyDetails = (locationCode = 'MATTAPARAI') => ({
-    company_name: 'Sri Raghavendra Traders',
-    address_line1: locationCode === 'PULIVANTHI' ? 'No. 456, Pulivanthi Road' : 'No. 123, Mattaparai Street',
-    locality: locationCode === 'PULIVANTHI' ? 'Pulivanthi' : 'Mattaparai',
-    pin_code: locationCode === 'PULIVANTHI' ? 600002 : 600001,
-    gstin: locationCode === 'PULIVANTHI' ? '33XXXXX0000X2ZZ' : '33XXXXX0000X1ZZ',
-    phone: '+91 9876543210',
-    email: 'info@company.com',
-    location_code: locationCode
-  });
+  const getDefaultCompanyDetails = (_locationCode = '') => null;
 
   const calculateGST = (amount: number, gstPercentage: number = 18) => {
     const taxableAmount = amount / (1 + gstPercentage / 100);

@@ -21,38 +21,7 @@ import { Label } from '@/components/ui/label';
 
 const normalizeLocationCode = (code?: string | null) => (code || '').toString().trim().toUpperCase();
 
-const getDefaultCompanyDetails = (locationCode: string = 'PULIVANTHI') => {
-  const normalizedCode = normalizeLocationCode(locationCode) || 'PULIVANTHI';
-  if (normalizedCode === 'MATTAPARAI') {
-    return {
-      location_code: 'MATTAPARAI',
-      location_name: 'Mattaparai Location',
-      company_name: 'GOVINDAN RICE MILL',
-      address_line1: 'S.No.58, SE KUNNATHURE ROAD,MATTAPARAI',
-      address_line2: 'GINGEE TK., VILLUPURAM DIST.',
-      locality: 'MATTAPARAI VILLAGE',
-      pin_code: 605201,
-      state_code: '33',
-      gstin: '33AALFG0221E1Z3',
-      phone: '9790404001',
-      email: 'ER.CGVIGNESH@GMAIL.COM',
-    };
-  }
-
-  return {
-    location_code: 'PULIVANTHI',
-    location_name: 'Pulivanthi Location',
-    company_name: 'GOVINDAN RICE MILL',
-    address_line1: '6/175 GINGEE MAIN ROAD',
-    address_line2: 'GINGEE TALUK, VILLUPURAM DISTRICT',
-    locality: 'GINGEE',
-    pin_code: 605601,
-    state_code: '33',
-    gstin: '33AALFG0221E1Z3',
-    phone: '9790404001',
-    email: 'ER.CGVIGNESH@GMAIL.COM',
-  };
-};
+const getDefaultCompanyDetails = (locationCode: string = '') => null;
 
 export const MobileInvoiceGenerator: React.FC = () => {
   const { billId, id } = useParams();
@@ -146,16 +115,12 @@ export const MobileInvoiceGenerator: React.FC = () => {
         (companySettingsData as any[])[0];
 
       if (fallbackSettings) {
-        setCompanySettings({
-          ...getDefaultCompanyDetails(preferredLocation),
-          ...fallbackSettings,
-          location_code: fallbackSettings.location_code || preferredLocation,
-        });
+        setCompanySettings(fallbackSettings);
         return;
       }
     }
 
-    setCompanySettings(getDefaultCompanyDetails(preferredLocation));
+    setCompanySettings(null);
   }, [companySettingsData, sale, outwardEntries]);
 
   // Use data from state first, fall back to fetching from offline data
@@ -170,7 +135,7 @@ export const MobileInvoiceGenerator: React.FC = () => {
       companySettings?.location_code ||
       undefined
     ) || 'PULIVANTHI';
-  const effectiveCompanySettings = companySettings || getDefaultCompanyDetails(invoiceLocationCode);
+  const effectiveCompanySettings = companySettings;
 
   const calculateAmounts = () => {
     if (!allSales.length || !allSalesItems.length) {

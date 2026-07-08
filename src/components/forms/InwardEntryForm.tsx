@@ -26,7 +26,7 @@ export const InwardEntryForm: React.FC<InwardEntryFormProps> = ({ onSuccess, onC
 
   const [formData, setFormData] = useState({
     entry_date: new Date().toISOString().split('T')[0],
-    loading_place: 'MATTAPARAI',
+    loading_place: '',
     supplier_id: '',
     item_id: '',
     lorry_no: '',
@@ -47,6 +47,12 @@ export const InwardEntryForm: React.FC<InwardEntryFormProps> = ({ onSuccess, onC
     fetchSuppliers();
     fetchItems();
   }, []);
+
+  useEffect(() => {
+    if (locations.length > 0 && !formData.loading_place) {
+      setFormData(prev => ({ ...prev, loading_place: locations[0].location_code }));
+    }
+  }, [locations]);
 
   const fetchSuppliers = async () => {
     const { data, error } = await supabase

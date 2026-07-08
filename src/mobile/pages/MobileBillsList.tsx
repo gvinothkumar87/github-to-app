@@ -245,7 +245,7 @@ export const MobileBillsList = () => {
                           className="gap-1"
                         >
                           <Printer className="h-3 w-3" />
-                          {language === 'english' ? 'Print' : 'அச்சிடு'}
+                          {language === 'english' ? 'PDF' : 'PDF'}
                         </Button>
                         {isAdmin && (
                           <>

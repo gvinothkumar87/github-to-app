@@ -146,12 +146,13 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
   const generateBillSerial = async (loadingPlace: string) => {
     try {
       // Fetch company settings — reads prefix and financial year flag
-      const { data: settings } = await supabase
+      const { data: allSettings } = await supabase
         .from('company_settings')
-        .select('start_bill_no, bill_prefix, bill_digits, financial_year_in_serial')
-        .eq('location_code', loadingPlace)
-        .eq('is_active', true)
-        .single();
+        .select('location_code, start_bill_no, bill_prefix, bill_digits, financial_year_in_serial')
+        .eq('is_active', true);
+
+      const searchLoc = (loadingPlace || '').trim().toUpperCase();
+      const settings = allSettings?.find(s => (s.location_code || '').trim().toUpperCase() === searchLoc);
 
       const startNo = settings?.start_bill_no || 1;
       const basePrefix = settings?.bill_prefix || '';

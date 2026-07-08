@@ -24,22 +24,14 @@ export function PurchaseForm({ onSuccess, onCancel }: PurchaseFormProps) {
     quantity: "",
     rate: "",
     bill_serial_no: "",
-    mill: "MATTAPARAI",
+    mill: "",
     purchase_date: new Date().toISOString().split('T')[0],
   });
   const { locations } = useLocations();
 
   useEffect(() => {
-    if (locations.length > 0) {
-      const hasCurrentMill = locations.some(loc => loc.location_code === formData.mill);
-      if (!hasCurrentMill) {
-        const mattaparaiLoc = locations.find(loc => loc.location_code === 'MATTAPARAI');
-        if (mattaparaiLoc) {
-          setFormData(prev => ({ ...prev, mill: 'MATTAPARAI' }));
-        } else {
-          setFormData(prev => ({ ...prev, mill: locations[0].location_code }));
-        }
-      }
+    if (locations.length > 0 && !formData.mill) {
+      setFormData(prev => ({ ...prev, mill: locations[0].location_code }));
     }
   }, [locations]);
 
@@ -122,9 +114,7 @@ export function PurchaseForm({ onSuccess, onCancel }: PurchaseFormProps) {
         description: "Purchase added successfully",
       });
 
-      const defaultMill = locations.find(loc => loc.location_code === 'MATTAPARAI') 
-        ? 'MATTAPARAI' 
-        : (locations[0]?.location_code || 'MATTAPARAI');
+      const defaultMill = locations[0]?.location_code || '';
 
       setFormData({
         supplier_id: "",

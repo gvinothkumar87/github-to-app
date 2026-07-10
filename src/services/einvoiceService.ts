@@ -850,6 +850,7 @@ export const einvoiceService = {
       const signedQrcode = data.SignedQRCode || '';
       const ewayBillNo = (data.EwbNo || data.ewbNo || result.EwbNo || result.ewbNo)?.toString() || '';
       const ewayBillDate = data.EwbDt || '';
+      const ewayBillValidUpto = data.EwbValidTill || data.validUpto || data.ValidUpto || '';
 
       // Update in Supabase
       const updateData: any = {
@@ -864,6 +865,7 @@ export const einvoiceService = {
       if (ewayBillNo) {
         updateData.eway_bill_no = ewayBillNo;
         updateData.eway_bill_date = ewayBillDate;
+        updateData.eway_bill_valid_upto = ewayBillValidUpto || null;
         updateData.eway_bill_status = 'GENERATED';
       }
 
@@ -876,7 +878,7 @@ export const einvoiceService = {
         console.error('Error updating sale in DB:', error);
       }
 
-      return { irn, ewayBillNo, signedQrcode, correctedDistance: finalDistance };
+      return { irn, ewayBillNo, signedQrcode, correctedDistance: finalDistance, ackNo, ackDate, ewayBillDate, ewayBillValidUpto };
     } else {
       console.error('IRN generation error result:', JSON.stringify(result));
       const fullError = extractErrorMessage(result, 'Failed to generate IRN');
@@ -1100,6 +1102,7 @@ export const einvoiceService = {
 
       const ewayBillNo = (parsedData?.EwbNo || parsedData?.ewbNo || result.EwbNo || result.ewbNo)?.toString();
       const ewayBillDate = parsedData?.EwbDt || parsedData?.EwbDate || parsedData?.ewayBillDate || result.EwbDt || '';
+      const ewayBillValidUpto = parsedData?.EwbValidTill || parsedData?.validUpto || parsedData?.ValidUpto || result.EwbValidTill || '';
 
       if (isSuccess && ewayBillNo) {
         const { error } = await supabase
@@ -1107,6 +1110,7 @@ export const einvoiceService = {
           .update({
             eway_bill_no: ewayBillNo,
             eway_bill_date: ewayBillDate,
+            eway_bill_valid_upto: ewayBillValidUpto || null,
             eway_bill_status: 'GENERATED'
           })
           .eq('bill_serial_no', sale.bill_serial_no);
@@ -1115,7 +1119,7 @@ export const einvoiceService = {
           console.error('Error updating sale E-Way Bill in DB:', error);
         }
 
-        return { ewayBillNo, ewayBillDate, correctedDistance: finalDistance };
+        return { ewayBillNo, ewayBillDate, ewayBillValidUpto, correctedDistance: finalDistance };
       } else {
         console.error('E-Way Bill generation error result:', JSON.stringify(result));
         const fullError = extractErrorMessage(result, 'Failed to generate E-Way Bill');

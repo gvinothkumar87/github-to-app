@@ -78,6 +78,7 @@ export interface Sale {
   updated_at: string;
   eway_bill_no?: string;
   eway_bill_date?: string;
+  eway_bill_valid_upto?: string;
   eway_bill_status?: string;
   einvoice_status?: string;
   ack_no?: string;

@@ -200,9 +200,13 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
         ...prev,
         irn: res.irn,
         signed_qrcode: res.signedQrcode,
+        ack_no: res.ackNo,
+        ack_date: res.ackDate,
         einvoice_status: 'GENERATED',
         ...(res.ewayBillNo ? {
           eway_bill_no: res.ewayBillNo,
+          eway_bill_date: res.ewayBillDate,
+          eway_bill_valid_upto: res.ewayBillValidUpto || prev.eway_bill_valid_upto,
           eway_bill_status: 'GENERATED'
         } : {})
       }));
@@ -258,6 +262,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
         ...prev,
         eway_bill_no: res.ewayBillNo,
         eway_bill_date: res.ewayBillDate,
+        eway_bill_valid_upto: res.ewayBillValidUpto || prev.eway_bill_valid_upto,
         eway_bill_status: 'GENERATED'
       }));
 
@@ -721,23 +726,10 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
   };
 
   const printInvoice = async () => {
-    // Fetch E-Way Bill details from government portal if it exists
-    let ewbDetails: any = null;
-    if (currentSale.eway_bill_no && companySettings) {
-      try {
-        const res = await einvoiceService.getEWayBillDetails(currentSale.eway_bill_no, companySettings, currentSale.irn || undefined, true);
-        let dataObj = res.Data || res.data || res;
-        if (typeof dataObj === 'string' && dataObj) {
-          try {
-            dataObj = JSON.parse(dataObj);
-          } catch (e) {}
-        }
-        ewbDetails = dataObj;
-        console.log('EWB details fetched for print invoice:', ewbDetails);
-      } catch (err) {
-        console.warn('Could not fetch E-Way Bill details for print invoice:', err);
-      }
-    }
+    // EWB details from API (ewaybillapi) are not used during print —
+    // eway_bill_no, eway_bill_date, ack_no, ack_date are all stored in the DB (currentSale).
+    // The template falls back to currentSale values when ewbDetails is null.
+    const ewbDetails: any = null;
 
     // Generate QR code if IRN exists
     let qrCodeDataUrl = '';
@@ -776,16 +768,25 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
 
     const printWindow = window.open('', '_blank');
     if (printWindow) {
-      const htmlContent = generateInvoiceHtml(
-        currentSale,
+      const htmlContent = generateInvoiceHtml({
+        sale: currentSale,
+        allSales,
         allItems,
+        item,
         customer,
         companySettings,
-        allSales,
+        outwardEntry,
+        getDisplayName,
+        convertNumberToWords,
+        baseAmount,
+        gstAmount,
+        totalAmount,
+        totalQuantity,
+        allGstZero,
         qrCodeDataUrl,
         ewbQrCodeDataUrl,
         ewbDetails
-      );
+      });
       printWindow.document.write(htmlContent);
       printWindow.document.close();
       printWindow.print();

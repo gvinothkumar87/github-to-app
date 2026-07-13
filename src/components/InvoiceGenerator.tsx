@@ -2,7 +2,7 @@ import { Sale, OutwardEntry, Customer, Item } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Download, FileText, Edit, ShieldAlert, Truck, CheckCircle, Ban, RefreshCw, Calendar, ChevronDown } from 'lucide-react';
+import { Download, FileText, Edit, ShieldAlert, Truck, CheckCircle, Ban, RefreshCw, Calendar, ChevronDown, Printer } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useState, useEffect } from 'react';
 import { IrnInputDialog } from '@/components/IrnInputDialog';
@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import QRCode from 'qrcode';
 import { generateInvoiceHtml } from '@/utils/invoiceTemplate';
+import { generateEwayBillHtml } from '@/utils/ewayBillTemplate';
 
 interface InvoiceGeneratorProps {
   sale: Sale;
@@ -83,6 +84,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
   const [extConsignmentStatus, setExtConsignmentStatus] = useState<'M' | 'T'>('M');
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [downloadingOfficialPdf, setDownloadingOfficialPdf] = useState(false);
+  const [printingEwb, setPrintingEwb] = useState(false);
 
   useEffect(() => {
     const fetchAllSalesForBill = async () => {
@@ -453,6 +455,81 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
     }
   };
 
+  const handlePrintEWayBill = async () => {
+    if (!companySettings || !currentSale.eway_bill_no) return;
+    setPrintingEwb(true);
+    try {
+      // 1. Fetch EWB details from API
+      let ewbDetails: any = null;
+      try {
+        const res = await einvoiceService.getEWayBillDetails(
+          currentSale.eway_bill_no,
+          companySettings,
+          currentSale.irn || undefined,
+          true
+        );
+        let dataObj = res.Data || res.data || res;
+        if (typeof dataObj === 'string' && dataObj) {
+          try { dataObj = JSON.parse(dataObj); } catch (e) { /* ignore */ }
+        }
+        ewbDetails = dataObj;
+      } catch (err: any) {
+        console.warn('Could not fetch EWB details for print, using local data:', err);
+      }
+
+      // 2. Generate QR code from full EWB details string
+      let qrCodeDataUrl = '';
+      try {
+        const ewbNo = currentSale.eway_bill_no || '';
+        const ewbDate = ewbDetails?.ewayBillDate || ewbDetails?.EwayBillDate || currentSale.eway_bill_date || '';
+        const genGstin = ewbDetails?.userGstin || ewbDetails?.UserGstin || companySettings?.gstin || '';
+        const docNo = ewbDetails?.docNo || ewbDetails?.DocNo || currentSale.bill_serial_no || '';
+        const docDate = ewbDetails?.docDate || ewbDetails?.DocDate || currentSale.sale_date || '';
+        const fromGstin = ewbDetails?.fromGstin || ewbDetails?.FromGstin || companySettings?.gstin || '';
+        const toGstin = ewbDetails?.toGstin || ewbDetails?.ToGstin || '';
+        const totInvVal = ewbDetails?.totInvValue || ewbDetails?.TotInvValue || currentSale.total_amount || '';
+        const hsnCode = ewbDetails?.hsnCode || ewbDetails?.HsnCode || '';
+
+        // Official EWB QR Code format: EWBNo, EWBDate, GenGstin, DocNo, DocDate, FromGstin, ToGstin, TotInvVal, HsnCode
+        const qrString = `${ewbNo},${ewbDate},${genGstin},${docNo},${docDate},${fromGstin},${toGstin},${totInvVal},${hsnCode}`;
+
+        qrCodeDataUrl = await QRCode.toDataURL(qrString, {
+          width: 140,
+          margin: 1,
+          color: { dark: '#000000', light: '#FFFFFF' }
+        });
+      } catch (error) {
+        console.error('Error generating EWB QR code for print:', error);
+      }
+
+      // 3. Generate HTML using the official format template
+      const htmlContent = generateEwayBillHtml({
+        ewbNo: currentSale.eway_bill_no,
+        ewbDetails,
+        qrCodeDataUrl,
+        sale: currentSale,
+        companySettings
+      });
+
+      // 4. Open print window
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+        printWindow.print();
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast({
+        title: 'Print Error',
+        description: err.message || 'Failed to print E-Way Bill',
+        variant: 'destructive'
+      });
+    } finally {
+      setPrintingEwb(false);
+    }
+  };
+
   const handleDownloadEWayBillPDF = async (printAction: 'printewb' | 'printdetailewb' | 'printcewb' = 'printewb') => {
     if (!companySettings || !currentSale.eway_bill_no) return;
     setDownloadingPdf(true);
@@ -753,8 +830,21 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
     let ewbQrCodeDataUrl = '';
     if (currentSale.eway_bill_no) {
       try {
-        ewbQrCodeDataUrl = await QRCode.toDataURL(currentSale.eway_bill_no, {
-          width: 100,
+        const ewbNo = currentSale.eway_bill_no || '';
+        const ewbDate = ewbDetails?.ewayBillDate || ewbDetails?.EwayBillDate || currentSale.eway_bill_date || '';
+        const genGstin = ewbDetails?.userGstin || ewbDetails?.UserGstin || companySettings?.gstin || '';
+        const docNo = ewbDetails?.docNo || ewbDetails?.DocNo || currentSale.bill_serial_no || '';
+        const docDate = ewbDetails?.docDate || ewbDetails?.DocDate || currentSale.sale_date || '';
+        const fromGstin = ewbDetails?.fromGstin || ewbDetails?.FromGstin || companySettings?.gstin || '';
+        const toGstin = ewbDetails?.toGstin || ewbDetails?.ToGstin || '';
+        const totInvVal = ewbDetails?.totInvValue || ewbDetails?.TotInvValue || currentSale.total_amount || '';
+        const hsnCode = ewbDetails?.hsnCode || ewbDetails?.HsnCode || '';
+
+        // Official EWB QR Code format: EWBNo, EWBDate, GenGstin, DocNo, DocDate, FromGstin, ToGstin, TotInvVal, HsnCode
+        const qrString = `${ewbNo},${ewbDate},${genGstin},${docNo},${docDate},${fromGstin},${toGstin},${totInvVal},${hsnCode}`;
+
+        ewbQrCodeDataUrl = await QRCode.toDataURL(qrString, {
+          width: 140,
           margin: 1,
           color: {
             dark: '#000000',
@@ -1382,6 +1472,20 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
               <FileText className="h-4 w-4" />
               {language === 'english' ? 'Download E-Invoice JSON' : 'ஈ-இன்வாய்ஸ் JSON பதிவிறக்கவும்'}
             </Button>
+            {currentSale.eway_bill_no && currentSale.eway_bill_status === 'GENERATED' && (
+              <Button
+                onClick={handlePrintEWayBill}
+                disabled={printingEwb}
+                variant="outline"
+                className="flex items-center gap-2 border-orange-500 text-orange-600 hover:bg-orange-50"
+              >
+                <Printer className="h-4 w-4" />
+                {printingEwb
+                  ? (language === 'english' ? 'Preparing...' : 'தயாரிக்கிறது...')
+                  : (language === 'english' ? 'Print E-Way Bill' : 'ஈ-வே பில் அச்சிடவும்')
+                }
+              </Button>
+            )}
             {currentSale.eway_bill_no && currentSale.eway_bill_status === 'GENERATED' && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

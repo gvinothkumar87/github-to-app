@@ -183,8 +183,13 @@ export const getEwayBillStyles = (): string => {
       box-sizing: border-box;
     }
     #ewb-print-page .header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border-bottom: 1px solid #000;
+      padding-bottom: 15px;
+      margin-bottom: 15px;
       text-align: center;
-      margin-bottom: 8px;
     }
     #ewb-print-page .header h1 {
       font-size: 17px;

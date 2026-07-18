@@ -404,7 +404,9 @@ export const generateInvoiceHtml = ({
             ewbDetails,
             qrCodeDataUrl: ewbQrCodeDataUrl,
             sale: currentSale,
-            companySettings
+            companySettings,
+            customer,
+            item
           }) : ''}
         </body>
         </html>

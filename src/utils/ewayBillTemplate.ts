@@ -166,6 +166,8 @@ export interface EwayBillPrintParams {
   qrCodeDataUrl: string;
   sale?: any;
   companySettings?: any;
+  customer?: any;
+  item?: any;
 }
 
 export const getEwayBillStyles = (): string => {
@@ -267,7 +269,7 @@ export const getEwayBillStyles = (): string => {
 };
 
 export const getEwayBillContentHtml = (params: EwayBillPrintParams): string => {
-  const { ewbNo, ewbDetails, qrCodeDataUrl, sale, companySettings } = params;
+  const { ewbNo, ewbDetails, qrCodeDataUrl, sale, companySettings, customer, item } = params;
   const d = ewbDetails || {};
 
   // ── Extract fields with fallbacks ──
@@ -296,15 +298,15 @@ export const getEwayBillContentHtml = (params: EwayBillPrintParams): string => {
   const dispatchAddress = [fromAddr1, fromAddr2, fromPlace, fromStateName, fromPincode].filter(Boolean).join(' ');
 
   // Part-A: Recipient
-  const toGstin = get(d, 'toGstin', 'ToGstin') || '';
-  const toTrdName = get(d, 'toTrdName', 'ToTrdName') || '';
-  const toAddr1 = get(d, 'toAddr1', 'ToAddr1') || '';
+  const toGstin = get(d, 'toGstin', 'ToGstin') || customer?.gstin || sale?.customers?.gstin || '';
+  const toTrdName = get(d, 'toTrdName', 'ToTrdName') || customer?.name_english || sale?.customers?.name_english || '';
+  const toAddr1 = get(d, 'toAddr1', 'ToAddr1') || customer?.address_english || sale?.customers?.address_english || '';
   const toAddr2 = get(d, 'toAddr2', 'ToAddr2') || '';
-  const toPlace = get(d, 'toPlace', 'ToPlace') || '';
-  const toPincode = get(d, 'toPincode', 'ToPincode') || '';
-  const toStateCode = get(d, 'toStateCode', 'ToStateCode') || '';
+  const toPlace = get(d, 'toPlace', 'ToPlace') || customer?.place_of_supply || '';
+  const toPincode = get(d, 'toPincode', 'ToPincode') || customer?.pin_code || sale?.customers?.pin_code || '';
+  const toStateCode = get(d, 'toStateCode', 'ToStateCode') || customer?.state_code || sale?.customers?.state_code || '';
   const toStateName = getStateName(toStateCode);
-  const deliveryAddress = [toPlace, toStateName, toPincode].filter(Boolean).join(' ');
+  const deliveryAddress = [toAddr1, toAddr2, toPlace, toStateName, toPincode].filter(Boolean).join(' ');
 
   // Document details
   const docNo = get(d, 'docNo', 'DocNo') || get(sale, 'bill_serial_no') || '';
@@ -312,12 +314,30 @@ export const getEwayBillContentHtml = (params: EwayBillPrintParams): string => {
   const transactionType = getTransactionTypeLabel(get(d, 'transactionType', 'TransactionType', 'transType', 'TransType') || '1');
 
   // Values
-  const totInvValue = get(d, 'totInvValue', 'TotInvValue', 'totalValue', 'TotalValue') || '0';
+  let totInvValue = get(d, 'totInvValue', 'TotInvValue', 'totalValue', 'TotalValue') || '';
+  if ((!totInvValue || totInvValue === '0' || totInvValue === '0.00') && sale?.total_amount) {
+    totInvValue = String(sale.total_amount);
+  }
+  if (!totInvValue) {
+    totInvValue = '0';
+  }
 
   // HSN and product
-  const hsnCode = get(d, 'hsnCode', 'HsnCode', 'mainHsnCode', 'MainHsnCode') || '';
-  const mainProduct = get(d, 'mainProduct', 'MainProduct', 'productName', 'ProductName') || '';
-  const hsnDisplay = [hsnCode, mainProduct].filter(Boolean).join('-');
+  const itemList: any[] = d.itemList || d.ItemList || [];
+  let hsnDisplay = '';
+  if (itemList.length > 0) {
+    hsnDisplay = itemList.map(i => {
+      const code = get(i, 'hsnCode', 'HsnCode') || '';
+      const name = get(i, 'productName', 'ProductName') || '';
+      return [code, name].filter(Boolean).join('-');
+    }).filter(Boolean).join(', ');
+  }
+
+  if (!hsnDisplay) {
+    const hsnCode = get(d, 'hsnCode', 'HsnCode', 'mainHsnCode', 'MainHsnCode') || item?.hsn_no || sale?.items?.hsn_no || '';
+    const mainProduct = get(d, 'mainProduct', 'MainProduct', 'productName', 'ProductName') || item?.name_english || sale?.items?.name_english || '';
+    hsnDisplay = [hsnCode, mainProduct].filter(Boolean).join('-');
+  }
 
   // Supply / Transport
   const supplyType = get(d, 'supplyType', 'SupplyType') || 'O';

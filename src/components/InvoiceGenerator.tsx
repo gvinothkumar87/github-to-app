@@ -508,7 +508,9 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
         ewbDetails,
         qrCodeDataUrl,
         sale: currentSale,
-        companySettings
+        companySettings,
+        customer,
+        item
       });
 
       // 4. Open print window

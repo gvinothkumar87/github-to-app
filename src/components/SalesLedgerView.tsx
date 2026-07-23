@@ -264,6 +264,7 @@ export const SalesLedgerView: React.FC = () => {
                   <TableHead>{language === 'english' ? 'Empty Weight' : 'வெற்று எடை'}</TableHead>
                   <TableHead>{language === 'english' ? 'Load Weight' : 'ஏற்றப்பட்ட எடை'}</TableHead>
                   <TableHead>{language === 'english' ? 'Net Weight' : 'நிகர எடை'}</TableHead>
+                  <TableHead>{language === 'english' ? 'Quantity' : 'அளவு'}</TableHead>
                   <TableHead>{language === 'english' ? 'Rate' : 'விலை'}</TableHead>
                   <TableHead>{language === 'english' ? 'Total Amount' : 'மொத்த தொகை'}</TableHead>
                   <TableHead>{language === 'english' ? 'Status' : 'நிலை'}</TableHead>
@@ -272,13 +273,13 @@ export const SalesLedgerView: React.FC = () => {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8">
+                    <TableCell colSpan={11} className="text-center py-8">
                       {language === 'english' ? 'Loading...' : 'ஏற்றுகிறது...'}
                     </TableCell>
                   </TableRow>
                 ) : salesData.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
                       {language === 'english' ? 'No sales data found' : 'விற்பனை தரவு கிடைக்கவில்லை'}
                     </TableCell>
                   </TableRow>
@@ -315,6 +316,9 @@ export const SalesLedgerView: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         {sale.outward_entries?.net_weight ? `${sale.outward_entries.net_weight} KG` : 'N/A'}
+                      </TableCell>
+                      <TableCell>
+                        {sale.quantity !== undefined && sale.quantity !== null ? `${sale.quantity} KG` : 'N/A'}
                       </TableCell>
                       <TableCell>
                         ₹{sale.rate.toLocaleString()}

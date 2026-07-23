@@ -302,11 +302,11 @@ const MobileSalesLedgerOffline: React.FC = () => {
                     
                     <div className="flex justify-between items-center text-xs">
                       <div className="flex gap-4">
-                        <span>Qty: {sale.quantity} KG</span>
-                        <span>Rate: ₹{sale.rate}</span>
-                        {sale.net_weight && (
+                        {sale.net_weight !== undefined && sale.net_weight !== null && (
                           <span>Net: {sale.net_weight} KG</span>
                         )}
+                        <span>Qty: {sale.quantity} KG</span>
+                        <span>Rate: ₹{sale.rate}</span>
                       </div>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(sale)}`}>
                         {getStatus(sale)}

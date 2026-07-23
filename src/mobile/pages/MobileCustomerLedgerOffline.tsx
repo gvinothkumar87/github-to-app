@@ -62,15 +62,23 @@ const MobileCustomerLedgerOffline: React.FC = () => {
       // Sort by transaction date
       filteredEntries.sort((a: any, b: any) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime());
       
-      // Fetch bill numbers for each entry
+      // Fetch bill numbers and details for each entry
       const entriesWithBillNo = await Promise.all(filteredEntries.map(async (entry: any) => {
         let billNo = '';
+        let quantity: number | null = null;
+        let rate: number | null = null;
+        let fullData: any = {};
         
         try {
           if (entry.transaction_type === 'sale') {
             const sales = await databaseService.findAll('sales');
             const sale = sales.find((s: any) => s.id === entry.reference_id);
-            billNo = sale?.bill_serial_no || '';
+            if (sale) {
+              billNo = sale.bill_serial_no || '';
+              quantity = sale.quantity ?? null;
+              rate = sale.rate ?? null;
+              fullData = { sale };
+            }
           } else if (entry.transaction_type === 'receipt') {
             const receipts = await databaseService.findAll('receipts');
             const receipt = receipts.find((r: any) => r.id === entry.reference_id);
@@ -78,11 +86,17 @@ const MobileCustomerLedgerOffline: React.FC = () => {
           } else if (entry.transaction_type === 'debit_note') {
             const debitNotes = await databaseService.findAll('debit_notes');
             const note = debitNotes.find((n: any) => n.id === entry.reference_id);
-            billNo = note?.note_no || '';
+            if (note) {
+              billNo = note.note_no || '';
+              fullData = { debitNote: note };
+            }
           } else if (entry.transaction_type === 'credit_note') {
             const creditNotes = await databaseService.findAll('credit_notes');
             const note = creditNotes.find((n: any) => n.id === entry.reference_id);
-            billNo = note?.note_no || '';
+            if (note) {
+              billNo = note.note_no || '';
+              fullData = { creditNote: note };
+            }
           }
         } catch (err) {
           console.error('Error fetching bill number:', err);
@@ -92,7 +106,7 @@ const MobileCustomerLedgerOffline: React.FC = () => {
           ? (billNo ? `${entry.description} - Bill: ${billNo}` : entry.description)
           : (billNo ? `Bill: ${billNo}` : '');
 
-        return { ...entry, description };
+        return { ...entry, description, billNo, quantity, rate, fullData };
       }));
       
       // Calculate running balance for each entry
@@ -304,6 +318,16 @@ const MobileCustomerLedgerOffline: React.FC = () => {
                             <div className="text-sm text-muted-foreground">
                               {entry.description}
                             </div>
+                            {(entry.quantity !== undefined && entry.quantity !== null || entry.rate !== undefined && entry.rate !== null) && (
+                              <div className="flex gap-3 text-xs font-medium text-muted-foreground mt-1">
+                                {entry.quantity !== undefined && entry.quantity !== null && (
+                                  <span>Qty: {entry.quantity} KG</span>
+                                )}
+                                {entry.rate !== undefined && entry.rate !== null && (
+                                  <span>Rate: ₹{entry.rate}</span>
+                                )}
+                              </div>
+                            )}
                           </div>
                           <div className="text-right">
                             {entry.debit_amount > 0 && (

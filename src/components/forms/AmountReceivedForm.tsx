@@ -146,28 +146,33 @@ export const AmountReceivedForm = ({ onSuccess, onCancel }: AmountReceivedFormPr
     try {
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
-      const userId = user?.id || '';
+      const activeUserId = user?.id || '6fad72cb-61e3-4507-9ade-11d1c3a6ffa4'; // gvinothkumar87 admin user
 
       // Generate receipt number
       const receiptNo = await generateReceiptNo();
 
-      // Prepare receipt data
+      const selectedCustomerData = customers.find(c => c.id === selectedCustomerId);
+      const selectedLedgerData = ledgers.find(l => l.id === selectedLedger);
+
+      // 1. Prepare receipt data (Table 1: receipts)
       const receiptDataPayload = {
         receipt_no: receiptNo,
         customer_id: selectedCustomerId,
         amount: parseFloat(amount),
         receipt_date: receiptDate,
         payment_method: paymentMethod,
-        remarks: remarks || null,
-        created_by: userId,
+        remarks: remarks || (selectedLedgerData ? `Received to ${selectedLedgerData.name}` : null),
+        created_by: activeUserId,
       };
 
-      // Prepare ledger data
+      // 2. Prepare customer ledger data (Table 3: customer_ledger)
       const ledgerDataPayload = {
         customer_id: selectedCustomerId,
         transaction_date: receiptDate,
         credit_amount: parseFloat(amount),
-        description: `Receipt ${receiptNo} - ${paymentMethod}${remarks ? ` (${remarks})` : ''}`,
+        description: selectedLedgerData 
+          ? `Received to ${selectedLedgerData.name}`
+          : `Receipt ${receiptNo} - ${paymentMethod}${remarks ? ` (${remarks})` : ''}`,
       };
 
       // Use transactional RPC function
@@ -181,28 +186,26 @@ export const AmountReceivedForm = ({ onSuccess, onCancel }: AmountReceivedFormPr
       const resultData = result as { receipt_id: string; ledger_id: string; success: boolean };
       if (!resultData || !resultData.success) throw new Error('Failed to create receipt');
 
-      // Fetch the created receipt
-      const { data: receipt, error: fetchError } = await supabase
-        .from('receipts')
-        .select()
-        .eq('id', resultData.receipt_id)
-        .single();
+      // Fetch customer ledger mapping to get source_ledger_id if available
+      const { data: customerMapping } = await supabase
+        .from('customer_ledger_mapping')
+        .select('ledger_id')
+        .eq('customer_id', selectedCustomerId)
+        .maybeSingle();
 
-      if (fetchError) throw fetchError;
+      const sourceLedgerId = customerMapping?.ledger_id || null;
 
-      // Create transaction in main ledger system using process_transaction function
-      const selectedCustomerData = customers.find(c => c.id === selectedCustomerId);
-      const selectedLedgerData = ledgers.find(l => l.id === selectedLedger);
-      
+      // 3. Create transaction in main ledger system (Table 2: transactions via process_transaction)
       const { error: transactionError } = await supabase.rpc('process_transaction', {
         p_amount: parseFloat(amount),
-        p_description: `Receipt from ${selectedCustomerData?.name_english || 'Customer'} - ${receiptNo}`,
+        p_description: `Receipt ${receiptNo} from ${selectedCustomerData?.name_english || 'Customer'}`,
         p_date: receiptDate,
-        p_user_id: '6fad72cb-61e3-4507-9ade-11d1c3a6ffa4', // gvinothkumar87 admin user
-        p_type: 'income',
-        p_created_by: '6fad72cb-61e3-4507-9ade-11d1c3a6ffa4', // gvinothkumar87 admin user
+        p_user_id: activeUserId,
+        p_type: 'transfer',
+        p_created_by: activeUserId,
         p_ledger_id: selectedLedger,
-        p_attached_bill: receiptNo
+        p_attached_bill: receiptNo,
+        p_source_ledger_id: sourceLedgerId || undefined
       });
 
       if (transactionError) {

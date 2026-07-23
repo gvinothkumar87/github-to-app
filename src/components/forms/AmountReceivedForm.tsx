@@ -82,7 +82,7 @@ export const AmountReceivedForm = ({ onSuccess, onCancel }: AmountReceivedFormPr
     try {
       const { data, error } = await supabase
         .from('customer_ledger')
-        .select('debit_amount, credit_amount')
+        .select('reference_id, transaction_type, debit_amount, credit_amount')
         .eq('customer_id', customerId)
         .order('created_at', { ascending: true });
 
@@ -92,10 +92,17 @@ export const AmountReceivedForm = ({ onSuccess, onCancel }: AmountReceivedFormPr
         return;
       }
 
-      // Calculate running balance
+      // Calculate running balance with deduplication by reference_id
       let balance = 0;
+      const seenKeys = new Set<string>();
+
       data?.forEach(entry => {
-        balance += entry.debit_amount - entry.credit_amount;
+        if (entry.reference_id && entry.transaction_type) {
+          const key = `${entry.transaction_type}_${entry.reference_id}`;
+          if (seenKeys.has(key)) return;
+          seenKeys.add(key);
+        }
+        balance += (entry.debit_amount || 0) - (entry.credit_amount || 0);
       });
 
       setCustomerBalance(balance);

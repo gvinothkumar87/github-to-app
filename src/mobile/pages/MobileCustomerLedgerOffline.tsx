@@ -59,6 +59,26 @@ const MobileCustomerLedgerOffline: React.FC = () => {
         filteredEntries = filteredEntries.filter((entry: any) => entry.transaction_date <= dateTo);
       }
       
+      // Deduplicate entries by (transaction_type, reference_id)
+      const uniqueEntriesMap = new Map<string, any>();
+      const nonReferencedEntries: any[] = [];
+
+      for (const entry of filteredEntries) {
+        if (entry.reference_id && entry.transaction_type) {
+          const key = `${entry.transaction_type}_${entry.reference_id}`;
+          const existing = uniqueEntriesMap.get(key);
+          if (!existing) {
+            uniqueEntriesMap.set(key, entry);
+          } else if ((entry.description?.length || 0) > (existing.description?.length || 0)) {
+            uniqueEntriesMap.set(key, entry);
+          }
+        } else {
+          nonReferencedEntries.push(entry);
+        }
+      }
+
+      filteredEntries = [...Array.from(uniqueEntriesMap.values()), ...nonReferencedEntries];
+
       // Sort by transaction date
       filteredEntries.sort((a: any, b: any) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime());
       

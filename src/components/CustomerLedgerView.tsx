@@ -120,6 +120,29 @@ export const CustomerLedgerView = () => {
       return;
     }
 
+    // Deduplicate entries that refer to the same underlying transaction (e.g. receipts created by trigger AND RPC)
+    const uniqueEntriesMap = new Map<string, any>();
+    const nonReferencedEntries: any[] = [];
+
+    for (const entry of (data || [])) {
+      if (entry.reference_id && entry.transaction_type) {
+        const key = `${entry.transaction_type}_${entry.reference_id}`;
+        const existing = uniqueEntriesMap.get(key);
+        if (!existing) {
+          uniqueEntriesMap.set(key, entry);
+        } else {
+          // Keep the row with the richer/longer description
+          if ((entry.description?.length || 0) > (existing.description?.length || 0)) {
+            uniqueEntriesMap.set(key, entry);
+          }
+        }
+      } else {
+        nonReferencedEntries.push(entry);
+      }
+    }
+
+    const deduplicatedData = [...Array.from(uniqueEntriesMap.values()), ...nonReferencedEntries];
+
     const selectedCustomerObj = customers.find(c => c.id === selectedCustomerId);
 
     const defaultItem: Item = {
@@ -139,7 +162,7 @@ export const CustomerLedgerView = () => {
     };
 
     // Fetch related bill numbers, entry dates, quantity, rate, and full record data for each entry
-    const entriesWithDetails = await Promise.all((data || []).map(async (entry) => {
+    const entriesWithDetails = await Promise.all((deduplicatedData || []).map(async (entry) => {
       let billNo = '';
       let entryDate = '';
       let quantity: number | null = null;

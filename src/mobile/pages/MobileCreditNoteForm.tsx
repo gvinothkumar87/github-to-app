@@ -78,11 +78,12 @@ export const MobileCreditNoteForm = () => {
       const existingNotes = creditNotes || [];
       const filteredNotes = existingNotes.filter((note: any) => {
         if (!note.note_no) return false;
-        if (useFY) {
-          const fy = getFinancialYear(date);
-          return note.note_no.includes(fy);
-        } else if (effectivePrefix) {
-          return note.note_no.startsWith(effectivePrefix);
+        if (effectivePrefix) {
+          if (useFY) {
+            return note.note_no.startsWith(`${effectivePrefix}-`);
+          } else {
+            return note.note_no.startsWith(effectivePrefix);
+          }
         } else {
           return /^[0-9]+$/.test(note.note_no);
         }

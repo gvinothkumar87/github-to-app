@@ -161,17 +161,23 @@ const MobileSalesForm: React.FC = () => {
       let nextNumber = startNo;
       if (existingBills.length > 0) {
         let maxNumber = 0;
-        existingBills.forEach((sale: any) => {
-          const num = effectivePrefix
-            ? extractSerialNumber(sale.bill_serial_no || '')
-            : parseInt(sale.bill_serial_no || '0');
-          if (!isNaN(num)) maxNumber = Math.max(maxNumber, num);
+        existingBills.forEach(sale => {
+          if (effectivePrefix) {
+            const num = extractSerialNumber(sale.bill_serial_no || '');
+            if (!isNaN(num)) maxNumber = Math.max(maxNumber, num);
+          } else {
+            const serialStr = (sale.bill_serial_no || '').trim();
+            if (/^\d+$/.test(serialStr)) {
+              const num = parseInt(serialStr, 10);
+              if (!isNaN(num)) maxNumber = Math.max(maxNumber, num);
+            }
+          }
         });
         nextNumber = Math.max(startNo, maxNumber + 1);
       }
 
       const serialNumber = nextNumber.toString().padStart(digits, '0');
-      return effectivePrefix ? `${effectivePrefix}-${serialNumber}` : nextNumber.toString();
+      return effectivePrefix ? `${effectivePrefix}-${serialNumber}` : serialNumber;
     } catch (error) {
       console.error('Error generating bill serial:', error);
       return '1';

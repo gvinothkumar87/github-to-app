@@ -113,11 +113,12 @@ const CreditNoteForm = () => {
         : basePrefix;
 
       let query = supabase.from('credit_notes').select('note_no');
-      if (useFY) {
-        const fy = getFinancialYear(formData.note_date || date);
-        query = query.ilike('note_no', `%${fy}-%`);
-      } else if (effectivePrefix) {
-        query = query.ilike('note_no', `${effectivePrefix}%`);
+      if (effectivePrefix) {
+        if (useFY) {
+          query = query.ilike('note_no', `${effectivePrefix}-%`);
+        } else {
+          query = query.ilike('note_no', `${effectivePrefix}%`);
+        }
       } else {
         query = query.or('note_no.ilike.[0-9]%,note_no.ilike.[1-9][0-9]%');
       }

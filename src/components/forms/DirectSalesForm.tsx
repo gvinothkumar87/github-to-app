@@ -169,10 +169,16 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
       if (existingBills && existingBills.length > 0) {
         let maxNumber = 0;
         existingBills.forEach(bill => {
-          const num = effectivePrefix
-            ? extractSerialNumber(bill.bill_serial_no || '')
-            : parseInt(bill.bill_serial_no || '0');
-          if (!isNaN(num)) maxNumber = Math.max(maxNumber, num);
+          if (effectivePrefix) {
+            const num = extractSerialNumber(bill.bill_serial_no || '');
+            if (!isNaN(num)) maxNumber = Math.max(maxNumber, num);
+          } else {
+            const serialStr = (bill.bill_serial_no || '').trim();
+            if (/^\d+$/.test(serialStr)) {
+              const num = parseInt(serialStr, 10);
+              if (!isNaN(num)) maxNumber = Math.max(maxNumber, num);
+            }
+          }
         });
         nextNumber = Math.max(startNo, maxNumber + 1);
       }
@@ -181,7 +187,7 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
       if (effectivePrefix) {
         return `${effectivePrefix}-${serialNumber}`;
       } else {
-        return nextNumber.toString();
+        return serialNumber;
       }
     } catch (error) {
       console.error('Error generating bill serial:', error);

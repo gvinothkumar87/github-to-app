@@ -303,7 +303,7 @@ export const einvoiceService = {
       } else {
         serviceType = 'ewaybill-auth';
       }
-    } else if (cleanPath.includes('/ewaybillapi')) {
+    } else if (cleanPath.includes('/ewaybillapi') || cleanPath.includes('/ewayapi')) {
       serviceType = 'ewaybill';
     } else if (cleanPath.includes('/aspapi')) {
       serviceType = 'print';
@@ -497,7 +497,7 @@ export const einvoiceService = {
       }
     }
 
-    const pathAndQuery = `/ewaybillapi/dec/v1.03/auth?action=ACCESSTOKEN&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&username=${encodeURIComponent(username)}&ewbpwd=${encodeURIComponent(ewbpwd)}`;
+    const pathAndQuery = `/v1.03/dec/auth?action=ACCESSTOKEN&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&username=${encodeURIComponent(username)}&ewbpwd=${encodeURIComponent(ewbpwd)}`;
 
     console.log('Authenticating for E-Way Bill with TaxPro GSP...');
     const response = await this.executeRequest(sandbox, pathAndQuery, {
@@ -1299,7 +1299,7 @@ export const einvoiceService = {
 
     const makeRequest = async (tokenVal: string, distVal: number) => {
       payload.transDistance = distVal.toString();
-      const pathAndQuery = `/ewaybillapi/dec/v1.03/ewayapi?action=GENEWAYBILL&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&authtoken=${encodeURIComponent(tokenVal)}`;
+      const pathAndQuery = `/v1.03/dec/ewayapi?action=GENEWAYBILL&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&authtoken=${encodeURIComponent(tokenVal)}`;
       return await this.executeRequest(sandbox, pathAndQuery, {
         method: 'POST',
         headers: {
@@ -1841,7 +1841,7 @@ export const einvoiceService = {
       const username = companySettings.einvoice_username || '';
 
       const makeRequest = async (tokenVal: string) => {
-        const pathAndQuery = `/ewaybillapi/dec/v1.03/ewayapi?action=CANEWB&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&username=${encodeURIComponent(username)}&authtoken=${encodeURIComponent(tokenVal)}`;
+        const pathAndQuery = `/v1.03/dec/ewayapi?action=CANEWB&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&username=${encodeURIComponent(username)}&authtoken=${encodeURIComponent(tokenVal)}`;
         return await this.executeRequest(sandbox, pathAndQuery, {
           method: 'POST',
           headers: {
@@ -2085,7 +2085,7 @@ export const einvoiceService = {
     const username = companySettings.einvoice_username || '';
 
     const makeRequest = async (tokenVal: string) => {
-      const pathAndQuery = `/ewaybillapi/dec/v1.03/ewayapi?action=VEHEWB&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&username=${encodeURIComponent(username)}&authtoken=${encodeURIComponent(tokenVal)}`;
+      const pathAndQuery = `/v1.03/dec/ewayapi?action=VEHEWB&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&username=${encodeURIComponent(username)}&authtoken=${encodeURIComponent(tokenVal)}`;
       return await this.executeRequest(sandbox, pathAndQuery, {
         method: 'POST',
         headers: {
@@ -2248,7 +2248,7 @@ export const einvoiceService = {
     const username = companySettings.einvoice_username || '';
 
     const makeRequest = async (tokenVal: string) => {
-      const pathAndQuery = `/ewaybillapi/dec/v1.03/ewayapi?action=EXTENDVALIDITY&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&username=${encodeURIComponent(username)}&authtoken=${encodeURIComponent(tokenVal)}`;
+      const pathAndQuery = `/v1.03/dec/ewayapi?action=EXTENDVALIDITY&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&username=${encodeURIComponent(username)}&authtoken=${encodeURIComponent(tokenVal)}`;
       return await this.executeRequest(sandbox, pathAndQuery, {
         method: 'POST',
         headers: {
@@ -2331,7 +2331,7 @@ export const einvoiceService = {
     const gstin = companySettings.gstin || '';
 
     const makeRequest = async (tokenVal: string) => {
-      const pathAndQuery = `/ewaybillapi/dec/v1.03/ewayapi?action=GetEwayBill&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&authtoken=${encodeURIComponent(tokenVal)}&ewbNo=${encodeURIComponent(ewbNo)}`;
+      const pathAndQuery = `/v1.03/dec/ewayapi?action=GetEwayBill&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&authtoken=${encodeURIComponent(tokenVal)}&ewbNo=${encodeURIComponent(ewbNo)}`;
       return await this.executeRequest(sandbox, pathAndQuery, {
         method: 'GET',
         headers: {
@@ -2656,7 +2656,7 @@ export const einvoiceService = {
     const gstin = companySettings.gstin || '';
 
     const makeRequest = async (tokenVal: string) => {
-      const pathAndQuery = `/ewaybillapi/dec/v1.03/ewayapi?action=GETPINPIN&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&authtoken=${encodeURIComponent(tokenVal)}&fromPinCode=${encodeURIComponent(finalFromPin)}&toPinCode=${encodeURIComponent(finalToPin)}`;
+      const pathAndQuery = `/v1.03/dec/ewayapi?action=GETPINPIN&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&authtoken=${encodeURIComponent(tokenVal)}&fromPinCode=${encodeURIComponent(finalFromPin)}&toPinCode=${encodeURIComponent(finalToPin)}`;
       return await this.executeRequest(sandbox, pathAndQuery, {
         method: 'GET',
         headers: {

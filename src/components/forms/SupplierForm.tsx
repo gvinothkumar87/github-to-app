@@ -10,49 +10,51 @@ interface SupplierFormProps {
   onSuccess?: () => void;
 }
 
+const getEmptySupplierFormData = (code = "") => ({
+  name_english: "",
+  name_tamil: "",
+  code,
+  contact_person: "",
+  phone: "",
+  email: "",
+  address_english: "",
+  address_tamil: "",
+  gstin: "",
+  pin_code: "",
+  state_code: "33",
+  place_of_supply: "33",
+  opening_balance: 0,
+});
+
 export function SupplierForm({ onSuccess }: SupplierFormProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    name_english: "",
-    name_tamil: "",
-    code: "",
-    contact_person: "",
-    phone: "",
-    email: "",
-    address_english: "",
-    address_tamil: "",
-    gstin: "",
-    pin_code: "",
-    state_code: "33",
-    place_of_supply: "33",
-    opening_balance: 0,
-  });
+  const [formData, setFormData] = useState(getEmptySupplierFormData());
 
   useEffect(() => {
     generateSupplierCode();
   }, []);
 
+  const getNextSupplierCode = async () => {
+    const { data, error } = await supabase
+      .from("suppliers")
+      .select("code")
+      .ilike("code", "SUP%");
+
+    if (error) throw error;
+
+    const highestSupplierNumber = (data || []).reduce((highest, supplier) => {
+      const match = supplier.code?.match(/^SUP(\d+)$/i);
+      if (!match) return highest;
+      return Math.max(highest, parseInt(match[1], 10));
+    }, 0);
+
+    return `SUP${String(highestSupplierNumber + 1).padStart(3, '0')}`;
+  };
+
   const generateSupplierCode = async () => {
     try {
-      const { data, error } = await supabase
-        .from("suppliers")
-        .select("code")
-        .order("created_at", { ascending: false })
-        .limit(1);
-
-      if (error) throw error;
-
-      let nextNumber = 1;
-      if (data && data.length > 0) {
-        const lastCode = data[0].code;
-        const match = lastCode.match(/^SUP(\d+)$/);
-        if (match) {
-          nextNumber = parseInt(match[1]) + 1;
-        }
-      }
-
-      const newCode = `SUP${String(nextNumber).padStart(3, '0')}`;
+      const newCode = await getNextSupplierCode();
       setFormData(prev => ({ ...prev, code: newCode }));
     } catch (error: any) {
       toast({
@@ -68,9 +70,11 @@ export function SupplierForm({ onSuccess }: SupplierFormProps) {
     setLoading(true);
 
     try {
+      const latestCode = await getNextSupplierCode();
+      const supplierData = { ...formData, code: latestCode };
       const { error } = await supabase
         .from("suppliers")
-        .insert([formData]);
+        .insert([supplierData]);
 
       if (error) throw error;
 
@@ -79,22 +83,9 @@ export function SupplierForm({ onSuccess }: SupplierFormProps) {
         description: "Supplier added successfully",
       });
 
-      setFormData({
-        name_english: "",
-        name_tamil: "",
-        code: "",
-        contact_person: "",
-        phone: "",
-        email: "",
-        address_english: "",
-        address_tamil: "",
-        gstin: "",
-        pin_code: "",
-        state_code: "33",
-        place_of_supply: "33",
-        opening_balance: 0,
-      });
-
+      const savedCodeMatch = latestCode.match(/^SUP(\d+)$/i);
+      const nextCode = `SUP${String(parseInt(savedCodeMatch![1], 10) + 1).padStart(3, '0')}`;
+      setFormData(getEmptySupplierFormData(nextCode));
       onSuccess?.();
     } catch (error: any) {
       toast({

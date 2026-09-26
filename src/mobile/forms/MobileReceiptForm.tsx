@@ -1,3 +1,4 @@
+import { isActiveParty } from '@/utils/partyStatus';
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -145,7 +146,7 @@ export const MobileReceiptForm: React.FC = () => {
                   <SelectValue placeholder="Select customer" />
                 </SelectTrigger>
                  <SelectContent>
-                   {customers.map((customer: any) => (
+                   {customers.filter(isActiveParty).map((customer: any) => (
                      <SelectItem key={customer.id} value={customer.id}>
                        {customer.name_english} ({customer.code})
                      </SelectItem>

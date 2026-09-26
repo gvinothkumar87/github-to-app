@@ -1,3 +1,4 @@
+import { PartyStatusButton } from '@/components/PartyStatusButton';
 import { PageLayout } from "@/components/PageLayout";
 import { SupplierForm } from "@/components/forms/SupplierForm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -95,7 +96,7 @@ export default function Suppliers() {
                           <TableCell>{supplier.gstin || "-"}</TableCell>
                           <TableCell>
                             <span className={supplier.is_active ? "text-green-600" : "text-red-600"}>
-                              {supplier.is_active ? "Active" : "Inactive"}
+                              {supplier.is_active ? "Active" : "Disabled"}
                             </span>
                           </TableCell>
                           <TableCell>
@@ -108,6 +109,7 @@ export default function Suppliers() {
                               <Edit className="h-4 w-4 mr-2" />
                               Edit
                             </Button>
+                            <PartyStatusButton table="suppliers" id={supplier.id} active={supplier.is_active} onChanged={fetchSuppliers} />
                           </TableCell>
                         </TableRow>
                       ))}

@@ -1,3 +1,4 @@
+import { isActiveParty } from '@/utils/partyStatus';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MobileLayout } from '../components/MobileLayout';
@@ -173,7 +174,7 @@ export const MobileEditSaleForm = () => {
                           <SelectValue placeholder="Select Customer" />
                         </SelectTrigger>
                         <SelectContent className="bg-popover text-popover-foreground">
-                          {customers.map((c: any) => (
+                          {customers.filter(isActiveParty).map((c: any) => (
                             <SelectItem key={c.id} value={c.id}>
                               {getDisplayName(c)} ({c.code})
                             </SelectItem>

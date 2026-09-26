@@ -1,3 +1,4 @@
+import { PartyStatusButton } from './PartyStatusButton';
 import React, { useState, useEffect } from 'react';
 import Layout from './Layout';
 import { CustomerForm } from './forms/CustomerForm';
@@ -695,7 +696,7 @@ export const TransitLogbook = () => {
                           <Badge variant={customer.is_active ? 'default' : 'secondary'}>
                             {customer.is_active
                               ? (language === 'english' ? 'Active' : 'செயல்பாட்டில்')
-                              : (language === 'english' ? 'Inactive' : 'செயல்படாது')}
+                              : (language === 'english' ? 'Disabled' : 'செயல்படாது')}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -707,6 +708,7 @@ export const TransitLogbook = () => {
                             <Edit className="h-3 w-3 mr-1" />
                             {language === 'english' ? 'Edit' : 'திருத்து'}
                           </Button>
+                          <PartyStatusButton table="customers" id={customer.id} active={customer.is_active} onChanged={fetchCustomers} />
                         </TableCell>
                       </TableRow>
                     ))}

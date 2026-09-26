@@ -61,7 +61,6 @@ export const CustomerLedgerView = () => {
     const { data, error } = await supabase
       .from('customers')
       .select('*')
-      .eq('is_active', true)
       .order('name_english', { ascending: true });
 
     if (error) {

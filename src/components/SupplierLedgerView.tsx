@@ -29,7 +29,6 @@ export function SupplierLedgerView() {
     const { data } = await supabase
       .from("suppliers")
       .select("*")
-      .eq("is_active", true)
       .order("name_english");
     
     if (data) setSuppliers(data);

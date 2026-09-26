@@ -1,3 +1,4 @@
+import { isActiveParty } from '@/utils/partyStatus';
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -276,7 +277,7 @@ const MobileOutwardEntryForm: React.FC = () => {
                     <SelectValue placeholder={language === 'english' ? 'Select customer' : 'வாடிக்கையாளரை தேர்ந்தெடுக்கவும்'} />
                   </SelectTrigger>
                   <SelectContent>
-                    {customers.map((customer: any) => (
+                    {customers.filter(isActiveParty).map((customer: any) => (
                       <SelectItem key={customer.id} value={customer.id}>
                         {customer.name_english} ({customer.code})
                       </SelectItem>

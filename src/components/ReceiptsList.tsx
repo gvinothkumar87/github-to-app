@@ -61,8 +61,7 @@ export const ReceiptsList = () => {
       // Fetch customers
       const { data: customersData, error: customersError } = await supabase
         .from('customers')
-        .select('*')
-        .eq('is_active', true);
+        .select('*');
 
       if (customersError) throw customersError;
 

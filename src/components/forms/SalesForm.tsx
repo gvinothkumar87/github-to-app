@@ -73,7 +73,7 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
 
       // Filter out entries that have already been converted to sales
       const soldEntryIds = new Set(sales?.map(s => s.outward_entry_id) || []);
-      const availableEntries = (entries || []).filter(entry => !soldEntryIds.has(entry.id));
+      const availableEntries = (entries || []).filter(entry => !soldEntryIds.has(entry.id) && entry.customers?.is_active === true);
 
       setOutwardEntries(availableEntries as OutwardEntry[]);
     } catch (error: any) {

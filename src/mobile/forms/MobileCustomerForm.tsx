@@ -50,7 +50,11 @@ const MobileCustomerForm: React.FC<MobileCustomerFormProps> = ({ customerId }) =
     try {
       const customer = await findById(customerId);
       if (customer) {
-        setFormData(customer as any);
+        // Status belongs to the list's Disable/Enable action; editing contact
+        // details must not restore a stale is_active value.
+        setFormData(previous => Object.fromEntries(
+          Object.keys(previous).map(key => [key, (customer as Record<string, unknown>)[key] ?? previous[key as keyof typeof previous]])
+        ) as typeof previous);
       }
     } catch (error) {
       console.error('Error loading customer:', error);

@@ -52,7 +52,7 @@ export const PurchaseFromTransitForm = ({ onSuccess, onCancel }: PurchaseFromTra
 
       // Filter out entries that have already been converted to purchases
       const purchasedEntryIds = new Set(purchases?.map(p => p.inward_entry_id) || []);
-      const availableEntries = (entries || []).filter(entry => !purchasedEntryIds.has(entry.id));
+      const availableEntries = (entries || []).filter(entry => !purchasedEntryIds.has(entry.id) && entry.suppliers?.is_active === true);
 
       setInwardEntries(availableEntries as InwardEntry[]);
     } catch (error: any) {

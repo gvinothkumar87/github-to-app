@@ -1,3 +1,4 @@
+import { isActiveParty } from '@/utils/partyStatus';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MobileLayout } from '../components/MobileLayout';
@@ -254,7 +255,7 @@ export const MobileCreditNoteForm = () => {
                     <SelectValue placeholder={language === 'english' ? 'Select Customer' : 'வாடிக்கையாளரைத் தேர்ந்தெடுக்கவும்'} />
                   </SelectTrigger>
                   <SelectContent>
-                    {customers.map((customer: any) => (
+                    {customers.filter(isActiveParty).map((customer: any) => (
                       <SelectItem key={customer.id} value={customer.id}>
                         {getDisplayName(customer)} ({customer.code})
                       </SelectItem>

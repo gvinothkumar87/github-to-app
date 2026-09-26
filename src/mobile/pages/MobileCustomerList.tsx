@@ -1,3 +1,4 @@
+import { PartyStatusButton } from '@/components/PartyStatusButton';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -97,6 +98,8 @@ const MobileCustomerList: React.FC = () => {
                     </div>
                     
                     <div className="flex flex-col items-end gap-1">
+                      <Badge variant={customer.is_active ? 'default' : 'secondary'}>{customer.is_active ? 'Active' : 'Disabled'}</Badge>
+                      <PartyStatusButton table="customers" id={customer.id} active={customer.is_active} onChanged={refresh} />
                       <Badge variant={customer.sync_status === 'synced' ? 'default' : 'secondary'}>
                         {customer.sync_status === 'synced' ? 'Synced' : 'Pending'}
                       </Badge>

@@ -1,3 +1,4 @@
+import { isActiveParty } from '@/utils/partyStatus';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -56,7 +57,7 @@ const MobileSalesForm: React.FC = () => {
   useEffect(() => {
     if (outwardEntryId) {
       const entry = outwardEntries.find((e: any) => e.id === outwardEntryId) as any;
-      if (entry) {
+      if (entry && isActiveParty(customers.find((c: any) => c.id === entry.customer_id) as any)) {
         setSelectedEntry(entry);
         setFormData(prev => ({
           ...prev,
@@ -67,7 +68,7 @@ const MobileSalesForm: React.FC = () => {
         }));
       }
     }
-  }, [outwardEntryId, outwardEntries]);
+  }, [outwardEntryId, outwardEntries, customers]);
 
   // Auto-calculate quantity based on net weight and unit weight
   useEffect(() => {
@@ -310,7 +311,7 @@ const MobileSalesForm: React.FC = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {outwardEntries
-                      .filter((entry: any) => entry.is_completed && !salesOutwardEntryIds.has(entry.id))
+                      .filter((entry: any) => entry.is_completed && !salesOutwardEntryIds.has(entry.id) && isActiveParty(customers.find((c: any) => c.id === entry.customer_id) as any))
                       .map((entry: any) => {
                         const customer = customers.find((c: any) => c.id === entry.customer_id) as any;
                         const item = items.find((i: any) => i.id === entry.item_id) as any;

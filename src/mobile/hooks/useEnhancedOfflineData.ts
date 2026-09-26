@@ -5,6 +5,7 @@ import { syncService } from '../services/sync.service';
 import { useMobileServices } from '../providers/MobileServiceProvider';
 import { ONLINE_ONLY } from '../config';
 import { supabase } from '@/integrations/supabase/client';
+import { isActiveParty } from '@/utils/partyStatus';
 
 interface OfflineDataOptions {
   autoSync?: boolean;
@@ -81,7 +82,29 @@ export function useEnhancedOfflineData<T>(
     }
   };
 
+  const validateEntryParty = async (item: Record<string, unknown>, entryId?: string) => {
+    const name = normalizeTableName(table);
+    const customerTables = ['outward_entries', 'sales', 'receipts', 'debit_notes', 'credit_notes'];
+    const supplierTables = ['inward_entries', 'purchases'];
+    const partyTable = customerTables.includes(name) ? 'customers' : supplierTables.includes(name) ? 'suppliers' : null;
+    if (!partyTable) return;
+    const field = partyTable === 'customers' ? 'customer_id' : 'supplier_id';
+    const existing = entryId && item[field] === undefined ? await findById(entryId) : null;
+    const id = item[field] ?? (existing as Record<string, unknown> | null)?.[field];
+    if (typeof id !== 'string') return;
+    let party;
+    if (ONLINE_ONLY || networkService.isOnline()) {
+      const result = await supabase.from(partyTable).select('is_active').eq('id', id).single();
+      if (result.error) throw result.error;
+      party = result.data;
+    } else {
+      party = await databaseService.findById(partyTable, id);
+    }
+    if (!isActiveParty(party)) throw new Error('This account is disabled. Select an active customer or supplier.');
+  };
+
   const create = async (item: Omit<T, 'id' | 'created_at' | 'updated_at'>) => {
+    await validateEntryParty(item as Record<string, unknown>);
     if (ONLINE_ONLY || isOnline) {
       const normalizedTable = normalizeTableName(table);
       
@@ -161,6 +184,7 @@ export function useEnhancedOfflineData<T>(
   };
 
   const update = async (id: string, item: Partial<T>) => {
+    await validateEntryParty(item as Record<string, unknown>, id);
     if (ONLINE_ONLY) {
       const normalizedTable = normalizeTableName(table);
       const result = await supabase

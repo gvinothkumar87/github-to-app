@@ -104,7 +104,7 @@ const MobileDirectSalesForm: React.FC = () => {
   const generateSpecialSerial = async () => {
     try {
       const { data: existingBills } = await supabase
-        .from('sales')
+        .from('sales_bill_numbers')
         .select('bill_serial_no')
         .like('bill_serial_no', 'D%');
 
@@ -149,7 +149,7 @@ const MobileDirectSalesForm: React.FC = () => {
         ? buildFYPrefix(basePrefix, billDate)
         : basePrefix;
 
-      let query = supabase.from('sales').select('bill_serial_no');
+      let query = supabase.from('sales_bill_numbers').select('bill_serial_no');
       if (effectivePrefix) {
         query = query.like('bill_serial_no', `${effectivePrefix}-%`);
       }

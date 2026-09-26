@@ -75,7 +75,9 @@ export const MobileCreditNoteForm = () => {
         ? buildFYPrefix(basePrefix, date)
         : basePrefix;
 
-      const existingNotes = creditNotes || [];
+      const history = navigator.onLine
+        ? await supabase.from('credit_note_numbers').select('note_no') : { data: [] };
+      const existingNotes = [...(creditNotes || []), ...(history.data || [])];
       const filteredNotes = existingNotes.filter((note: any) => {
         if (!note.note_no) return false;
         if (effectivePrefix) {

@@ -3,14 +3,18 @@ import { SupplierForm } from "@/components/forms/SupplierForm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Edit, Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Supplier } from "@/types";
 
 export default function Suppliers() {
-  const [suppliers, setSuppliers] = useState<any[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("list");
+  const [editingSupplier, setEditingSupplier] = useState<Supplier | undefined>(undefined);
   const { getDisplayName } = useLanguage();
 
   const fetchSuppliers = async () => {
@@ -28,12 +32,31 @@ export default function Suppliers() {
     fetchSuppliers();
   }, []);
 
+  const handleEdit = (supplier: Supplier) => {
+    setEditingSupplier(supplier);
+    setActiveTab("add");
+  };
+
+  const handleFormSuccess = () => {
+    setEditingSupplier(undefined);
+    setActiveTab("list");
+    fetchSuppliers();
+  };
+
+  const handleFormCancel = () => {
+    setEditingSupplier(undefined);
+    setActiveTab("list");
+  };
+
   return (
     <PageLayout title="Suppliers Management">
       <div className="container mx-auto p-6">
         <h1 className="text-3xl font-bold mb-6">Suppliers Management</h1>
         
-        <Tabs defaultValue="list" className="w-full">
+        <Tabs value={activeTab} onValueChange={(value) => {
+          setActiveTab(value);
+          if (value === "add") setEditingSupplier(undefined);
+        }} className="w-full">
           <TabsList className="grid w-full md:w-[400px] grid-cols-2">
             <TabsTrigger value="list">Suppliers List</TabsTrigger>
             <TabsTrigger value="add">Add Supplier</TabsTrigger>
@@ -59,6 +82,7 @@ export default function Suppliers() {
                         <TableHead>Phone</TableHead>
                         <TableHead>GSTIN</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>Action</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -74,6 +98,17 @@ export default function Suppliers() {
                               {supplier.is_active ? "Active" : "Inactive"}
                             </span>
                           </TableCell>
+                          <TableCell>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEdit(supplier)}
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -86,10 +121,14 @@ export default function Suppliers() {
           <TabsContent value="add">
             <Card>
               <CardHeader>
-                <CardTitle>Add New Supplier</CardTitle>
+                <CardTitle>{editingSupplier ? "Edit Supplier" : "Add New Supplier"}</CardTitle>
               </CardHeader>
               <CardContent>
-                <SupplierForm onSuccess={fetchSuppliers} />
+                <SupplierForm
+                  supplier={editingSupplier}
+                  onSuccess={handleFormSuccess}
+                  onCancel={editingSupplier ? handleFormCancel : undefined}
+                />
               </CardContent>
             </Card>
           </TabsContent>

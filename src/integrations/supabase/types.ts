@@ -14,6 +14,13 @@ export type Database = {
   }
   public: {
     Tables: {
+      cancelled_bills: {
+        Row: { id: string; bill_type: string; source_ids: string[]; bill_no: string; reason: string; cancelled_at: string; cancelled_by: string; snapshot: Json }
+        Insert: { id?: string; bill_type: string; source_ids: string[]; bill_no: string; reason: string; cancelled_at?: string; cancelled_by?: string; snapshot: Json }
+        Update: never
+        Relationships: []
+      }
+
       activity_logs: {
         Row: {
           activity_type: string
@@ -790,6 +797,11 @@ export type Database = {
       }
       credit_notes: {
         Row: {
+          irn: string | null
+          einvoice_status: string | null
+          ack_no: string | null
+          ack_date: string | null
+
           amount: number
           created_at: string
           created_by: string | null
@@ -805,6 +817,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          irn?: string | null
+          einvoice_status?: string | null
+          ack_no?: string | null
+          ack_date?: string | null
+
           amount: number
           created_at?: string
           created_by?: string | null
@@ -820,6 +837,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          irn?: string | null
+          einvoice_status?: string | null
+          ack_no?: string | null
+          ack_date?: string | null
+
           amount?: number
           created_at?: string
           created_by?: string | null
@@ -1005,6 +1027,11 @@ export type Database = {
       }
       debit_notes: {
         Row: {
+          irn: string | null
+          einvoice_status: string | null
+          ack_no: string | null
+          ack_date: string | null
+
           amount: number
           created_at: string
           created_by: string | null
@@ -1020,6 +1047,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          irn?: string | null
+          einvoice_status?: string | null
+          ack_no?: string | null
+          ack_date?: string | null
+
           amount: number
           created_at?: string
           created_by?: string | null
@@ -1035,6 +1067,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          irn?: string | null
+          einvoice_status?: string | null
+          ack_no?: string | null
+          ack_date?: string | null
+
           amount?: number
           created_at?: string
           created_by?: string | null
@@ -6898,6 +6935,10 @@ export type Database = {
       }
     }
     Views: {
+      sales_bill_numbers: { Row: { bill_serial_no: string | null }; Relationships: [] }
+      debit_note_numbers: { Row: { note_no: string | null }; Relationships: [] }
+      credit_note_numbers: { Row: { note_no: string | null }; Relationships: [] }
+
       analytics_bottlenecks: {
         Row: {
           avg_duration_minutes: number | null
@@ -6975,6 +7016,11 @@ export type Database = {
       }
     }
     Functions: {
+      cancel_bill: {
+        Args: { p_type: string; p_ids: string[]; p_reason: string }
+        Returns: string
+      }
+
       __codex_plpgsql_smoke: { Args: never; Returns: string }
       __ctx_check: { Args: never; Returns: string }
       admin_cleanup_salary_data: {

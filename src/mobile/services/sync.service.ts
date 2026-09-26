@@ -695,7 +695,7 @@ export class SyncService {
     try {
       // Check if bill number already exists in Supabase
       const { data: existingSales, error } = await supabase
-        .from('sales')
+        .from('sales_bill_numbers')
         .select('bill_serial_no')
         .eq('bill_serial_no', data.bill_serial_no)
         .limit(1);
@@ -706,7 +706,7 @@ export class SyncService {
       if (existingSales && existingSales.length > 0) {
         // Get the highest existing bill number
         const { data: maxSale, error: maxError } = await supabase
-          .from('sales')
+          .from('sales_bill_numbers')
           .select('bill_serial_no')
           .not('bill_serial_no', 'is', null)
           .order('bill_serial_no', { ascending: false })
@@ -810,7 +810,7 @@ export class SyncService {
         ? buildFYPrefix(basePrefix, saleDate)
         : basePrefix;
 
-      let query = supabase.from('sales').select('bill_serial_no');
+      let query = supabase.from('sales_bill_numbers').select('bill_serial_no');
       if (effectivePrefix) {
         query = query.like('bill_serial_no', `${effectivePrefix}-%`);
       } else {

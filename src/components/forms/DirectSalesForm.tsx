@@ -110,7 +110,7 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
     try {
       // For special serial, get D prefixed serials like D001, D002, D003
       const { data: existingBills } = await supabase
-        .from('sales')
+        .from('sales_bill_numbers')
         .select('bill_serial_no')
         .like('bill_serial_no', 'D%');
       
@@ -158,7 +158,7 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
         : basePrefix;
 
       // Query existing bills scoped to this FY prefix (or base prefix)
-      let query = supabase.from('sales').select('bill_serial_no');
+      let query = supabase.from('sales_bill_numbers').select('bill_serial_no');
       if (effectivePrefix) {
         query = query.like('bill_serial_no', `${effectivePrefix}-%`);
       }

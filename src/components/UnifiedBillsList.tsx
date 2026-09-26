@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,8 @@ import { Edit, FileText, Search, Trash2, Image } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { cancelBill } from '@/services/billCancellationService';
+import { CancelledBillsAudit } from './CancelledBillsAudit';
 import { useLocations } from '@/hooks/useLocations';
 
 type BillType = 'all' | 'sales' | 'debit_notes' | 'credit_notes' | 'outward_entries';
@@ -49,6 +51,11 @@ export const UnifiedBillsList = ({
   onPrintCreditNote,
   onEditOutwardEntry
 }: UnifiedBillsListProps) => {
+  const [auditView, setAuditView] = useState(false);
+  const [cancellingBill, setCancellingBill] = useState<UnifiedBill | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelBusy, setCancelBusy] = useState(false);
+  const cancellationLock = useRef(false);
   const [bills, setBills] = useState<UnifiedBill[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -265,6 +272,28 @@ export const UnifiedBillsList = ({
     }
   };
 
+  const handleCancelBill = async () => {
+    if (!cancellingBill || cancellationLock.current) return;
+    cancellationLock.current = true;
+    setCancelBusy(true);
+    try {
+      const bill = cancellingBill;
+      const saleData = bill.data as Sale & { _allSales?: Sale[] };
+      const ids = bill.type === 'sale' && saleData._allSales?.length
+        ? saleData._allSales.map(sale => sale.id) : [bill.id];
+      await cancelBill(bill.type, ids, cancelReason);
+      setCancellingBill(null);
+      setCancelReason('');
+      toast({ title: 'Bill cancelled', description: 'Removed from active records and retained in the cancellation audit.' });
+    } catch (error) {
+      toast({ title: 'Cancellation not completed', description: `${error instanceof Error ? error.message : 'Unable to cancel bill.'} Any confirmed portal cancellations are saved; retry to finish.`, variant: 'destructive' });
+    } finally {
+      cancellationLock.current = false;
+      setCancelBusy(false);
+      await fetchAllBills();
+    }
+  };
+
   const handleDelete = async (bill: UnifiedBill) => {
     try {
       let deletedCount = 0;
@@ -466,6 +495,28 @@ export const UnifiedBillsList = ({
         </CardDescription>
       </CardHeader>
       <CardContent>
+        <div className="flex gap-2 mb-4">
+          <Button variant={auditView ? 'outline' : 'default'} onClick={() => setAuditView(false)}>Active bills</Button>
+          <Button variant={auditView ? 'default' : 'outline'} onClick={() => setAuditView(true)}>Cancelled bills (audit)</Button>
+        </div>
+        <AlertDialog open={!!cancellingBill} onOpenChange={open => { if (!open && !cancelBusy) setCancellingBill(null); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Cancel bill {cancellingBill?.bill_no}?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Linked e-way bills and e-invoices will be cancelled first. The bill will then be removed from active records, like Delete, with its details kept for audit. This cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <label htmlFor="bill-cancel-reason">Cancellation reason</label>
+            <Input id="bill-cancel-reason" value={cancelReason} maxLength={50} disabled={cancelBusy} onChange={e => setCancelReason(e.target.value)} placeholder="Reason (required, up to 50 characters)" />
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={cancelBusy}>Keep bill</AlertDialogCancel>
+              <Button variant="destructive" onClick={handleCancelBill} disabled={cancelBusy || !cancelReason.trim()}>{cancelBusy ? 'Cancelling…' : 'Cancel bill'}</Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        {auditView ? <CancelledBillsAudit /> : <>
+
         <div className="mb-4 flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -608,6 +659,9 @@ export const UnifiedBillsList = ({
                             {language === 'english' ? 'Print' : 'அச்சிடு'}
                           </Button>
                         )}
+                        <Button size="sm" variant="outline" disabled={cancelBusy} onClick={() => { setCancelReason(''); setCancellingBill(bill); }}>
+                          {language === 'english' ? 'Cancel bill' : 'பில் ரத்து'}
+                        </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button
@@ -649,6 +703,7 @@ export const UnifiedBillsList = ({
             </Table>
           </div>
         )}
+        </>}
       </CardContent>
     </Card>
   );

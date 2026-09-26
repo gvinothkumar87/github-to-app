@@ -112,7 +112,7 @@ const CreditNoteForm = () => {
         ? buildFYPrefix(basePrefix, date)
         : basePrefix;
 
-      let query = supabase.from('credit_notes').select('note_no');
+      let query = supabase.from('credit_note_numbers').select('note_no');
       if (effectivePrefix) {
         if (useFY) {
           query = query.ilike('note_no', `${effectivePrefix}-%`);

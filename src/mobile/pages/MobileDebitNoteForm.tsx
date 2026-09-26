@@ -75,7 +75,9 @@ export const MobileDebitNoteForm = () => {
         ? buildFYPrefix(basePrefix, date)
         : basePrefix;
 
-      const existingNotes = debitNotes || [];
+      const history = navigator.onLine
+        ? await supabase.from('debit_note_numbers').select('note_no') : { data: [] };
+      const existingNotes = [...(debitNotes || []), ...(history.data || [])];
       const filteredNotes = existingNotes.filter((note: any) => {
         if (!note.note_no) return false;
         if (effectivePrefix) {

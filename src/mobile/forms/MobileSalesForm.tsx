@@ -102,7 +102,9 @@ const MobileSalesForm: React.FC = () => {
   // Generate special serial (D-series)
   const generateSpecialSerial = async (): Promise<string> => {
     try {
-      const sales = salesData || [];
+      const history = navigator.onLine
+        ? await supabase.from('sales_bill_numbers').select('bill_serial_no') : { data: [] };
+      const sales = [...(salesData || []), ...(history.data || [])];
       const existingBills = sales.filter((sale: any) =>
         sale.bill_serial_no && sale.bill_serial_no.startsWith('D')
       );
@@ -145,7 +147,9 @@ const MobileSalesForm: React.FC = () => {
         ? buildFYPrefix(basePrefix, billDate)
         : basePrefix;
 
-      const sales = salesData || [];
+      const history = navigator.onLine
+        ? await supabase.from('sales_bill_numbers').select('bill_serial_no') : { data: [] };
+      const sales = [...(salesData || []), ...(history.data || [])];
       let existingBills: any[];
 
       if (effectivePrefix) {

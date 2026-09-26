@@ -5,9 +5,12 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { Supplier } from "@/types";
 
 interface SupplierFormProps {
+  supplier?: Supplier;
   onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
 const getEmptySupplierFormData = (code = "") => ({
@@ -26,14 +29,35 @@ const getEmptySupplierFormData = (code = "") => ({
   opening_balance: 0,
 });
 
-export function SupplierForm({ onSuccess }: SupplierFormProps) {
+const getSupplierFormData = (supplier?: Supplier) => ({
+  name_english: supplier?.name_english || "",
+  name_tamil: supplier?.name_tamil || "",
+  code: supplier?.code || "",
+  contact_person: supplier?.contact_person || "",
+  phone: supplier?.phone || "",
+  email: supplier?.email || "",
+  address_english: supplier?.address_english || "",
+  address_tamil: supplier?.address_tamil || "",
+  gstin: supplier?.gstin || "",
+  pin_code: supplier?.pin_code || "",
+  state_code: supplier?.state_code || "33",
+  place_of_supply: supplier?.place_of_supply || "33",
+  opening_balance: supplier?.opening_balance || 0,
+});
+
+export function SupplierForm({ supplier, onSuccess, onCancel }: SupplierFormProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState(getEmptySupplierFormData());
+  const [formData, setFormData] = useState(getSupplierFormData(supplier));
 
   useEffect(() => {
-    generateSupplierCode();
-  }, []);
+    if (supplier) {
+      setFormData(getSupplierFormData(supplier));
+    } else {
+      setFormData(getEmptySupplierFormData());
+      generateSupplierCode();
+    }
+  }, [supplier]);
 
   const getNextSupplierCode = async () => {
     const { data, error } = await supabase
@@ -70,22 +94,36 @@ export function SupplierForm({ onSuccess }: SupplierFormProps) {
     setLoading(true);
 
     try {
-      const latestCode = await getNextSupplierCode();
-      const supplierData = { ...formData, code: latestCode };
-      const { error } = await supabase
-        .from("suppliers")
-        .insert([supplierData]);
+      if (supplier) {
+        const { error } = await supabase
+          .from("suppliers")
+          .update(formData)
+          .eq("id", supplier.id);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Supplier added successfully",
-      });
+        toast({
+          title: "Success",
+          description: "Supplier updated successfully",
+        });
+      } else {
+        const latestCode = await getNextSupplierCode();
+        const supplierData = { ...formData, code: latestCode };
+        const { error } = await supabase
+          .from("suppliers")
+          .insert([supplierData]);
 
-      const savedCodeMatch = latestCode.match(/^SUP(\d+)$/i);
-      const nextCode = `SUP${String(parseInt(savedCodeMatch![1], 10) + 1).padStart(3, '0')}`;
-      setFormData(getEmptySupplierFormData(nextCode));
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Supplier added successfully",
+        });
+
+        const savedCodeMatch = latestCode.match(/^SUP(\d+)$/i);
+        const nextCode = `SUP${String(parseInt(savedCodeMatch![1], 10) + 1).padStart(3, '0')}`;
+        setFormData(getEmptySupplierFormData(nextCode));
+      }
       onSuccess?.();
     } catch (error: any) {
       toast({
@@ -214,8 +252,13 @@ export function SupplierForm({ onSuccess }: SupplierFormProps) {
 
       <Button type="submit" disabled={loading}>
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Add Supplier
+        {supplier ? "Update Supplier" : "Add Supplier"}
       </Button>
+      {onCancel && (
+        <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
+          Cancel
+        </Button>
+      )}
     </form>
   );
 }

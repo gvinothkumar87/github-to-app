@@ -29,6 +29,7 @@ import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useLocations } from '@/hooks/useLocations';
+import { OutwardEntrySummary } from './OutwardEntrySummary';
 
 export const TransitLogbook = () => {
   const { language, getDisplayName } = useLanguage();
@@ -95,7 +96,7 @@ export const TransitLogbook = () => {
       .select(`
         *,
         customers!inner(name_english, name_tamil, code),
-        items!inner(name_english, name_tamil, code, unit)
+        items!inner(name_english, name_tamil, code, unit, unit_weight, gst_percentage)
       `)
       .gte('entry_date', tenDaysAgoFormatted)
       .order('serial_no', { ascending: false });
@@ -121,7 +122,7 @@ export const TransitLogbook = () => {
       .select(`
         *,
         customers!inner(name_english, name_tamil, code),
-        items!inner(name_english, name_tamil, code, unit)
+        items!inner(name_english, name_tamil, code, unit, unit_weight, gst_percentage)
       `)
       .eq('is_completed', false)
       .order('serial_no', { ascending: false });
@@ -321,7 +322,7 @@ export const TransitLogbook = () => {
         .update({
           load_weight: loadWeight,
           net_weight: netWeight,
-          weighment_photo_url: viewUrl,
+          load_weight_photo_url: viewUrl,
           load_weight_updated_at: new Date().toISOString(),
           is_completed: true,
         })
@@ -828,6 +829,14 @@ export const TransitLogbook = () => {
                         </div>
                       </div>
 
+                      <OutwardEntrySummary
+                        entry={entry}
+                        customer={entry.customers}
+                        item={entry.items}
+                        loadWeight={loadWeights[entry.id] ? parseFloat(loadWeights[entry.id]) : null}
+                        loadPhotoUrl={photoData[entry.id] || entry.load_weight_photo_url || null}
+                      />
+
                       <div className="space-y-2">
                         <Input
                           type="number"
@@ -926,82 +935,95 @@ export const TransitLogbook = () => {
                     </TableHeader>
                     <TableBody>
                       {entries.map((entry) => (
-                        <TableRow key={entry.id}>
-                          <TableCell className="font-medium">{entry.serial_no}</TableCell>
-                          <TableCell>{new Date(entry.entry_date).toLocaleDateString()}</TableCell>
-                          <TableCell>{entry.customers ? getDisplayName(entry.customers) : '-'}</TableCell>
-                          <TableCell>{entry.items ? getDisplayName(entry.items) : '-'}</TableCell>
-                          <TableCell>
-                            {entry.loading_place || '-'}
-                          </TableCell>
-                          <TableCell className="font-mono">{entry.lorry_no}</TableCell>
-                          <TableCell>{entry.empty_weight} KG</TableCell>
-                          <TableCell>
-                            <input
-                              id={`photo_${entry.id}`}
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) handlePhotoFileChange(entry.id, file);
-                              }}
-                            />
-                            <div className="flex items-center gap-2">
+                        <React.Fragment key={entry.id}>
+                          <TableRow>
+                            <TableCell className="font-medium">{entry.serial_no}</TableCell>
+                            <TableCell>{new Date(entry.entry_date).toLocaleDateString()}</TableCell>
+                            <TableCell>{entry.customers ? getDisplayName(entry.customers) : '-'}</TableCell>
+                            <TableCell>{entry.items ? getDisplayName(entry.items) : '-'}</TableCell>
+                            <TableCell>
+                              {entry.loading_place || '-'}
+                            </TableCell>
+                            <TableCell className="font-mono">{entry.lorry_no}</TableCell>
+                            <TableCell>{entry.empty_weight} KG</TableCell>
+                            <TableCell>
+                              <input
+                                id={`photo_${entry.id}`}
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handlePhotoFileChange(entry.id, file);
+                                }}
+                              />
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => document.getElementById(`photo_${entry.id}`)?.click()}
+                                >
+                                  {language === 'english' ? 'Upload Photo' : 'புகைப்படம் பதிவேற்று'}
+                                </Button>
+                                {photoData[entry.id] && (
+                                  <img src={photoData[entry.id]} alt="Preview" className="h-10 w-14 object-cover rounded border" />
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                placeholder={language === 'english' ? 'Enter load weight' : 'மொத்த எடையை உள்ளிடவும்'}
+                                value={loadWeights[entry.id] || ''}
+                                onChange={(e) => setLoadWeights(prev => ({
+                                  ...prev,
+                                  [entry.id]: e.target.value
+                                }))}
+                                className="w-32"
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    const value = parseFloat(loadWeights[entry.id] || '0');
+                                    if (value > 0) {
+                                      updateLoadWeight(entry, value);
+                                    }
+                                  }
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell>
                               <Button
-                                type="button"
-                                variant="outline"
                                 size="sm"
-                                onClick={() => document.getElementById(`photo_${entry.id}`)?.click()}
-                              >
-                                {language === 'english' ? 'Upload Photo' : 'புகைப்படம் பதிவேற்று'}
-                              </Button>
-                              {photoData[entry.id] && (
-                                <img src={photoData[entry.id]} alt="Preview" className="h-10 w-14 object-cover rounded border" />
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              placeholder={language === 'english' ? 'Enter load weight' : 'மொத்த எடையை உள்ளிடவும்'}
-                              value={loadWeights[entry.id] || ''}
-                              onChange={(e) => setLoadWeights(prev => ({
-                                ...prev,
-                                [entry.id]: e.target.value
-                              }))}
-                              className="w-32"
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
+                                disabled={!photoData[entry.id] || uploadingMap[entry.id]}
+                                onClick={() => {
                                   const value = parseFloat(loadWeights[entry.id] || '0');
                                   if (value > 0) {
                                     updateLoadWeight(entry, value);
                                   }
-                                }
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              size="sm"
-                              disabled={!photoData[entry.id] || uploadingMap[entry.id]}
-                              onClick={() => {
-                                const value = parseFloat(loadWeights[entry.id] || '0');
-                                if (value > 0) {
-                                  updateLoadWeight(entry, value);
-                                }
-                              }}
-                            >
-                              {uploadingMap[entry.id] ? (language === 'english' ? 'Uploading...' : 'பதிவேற்றுகிறது...') : (language === 'english' ? 'Update' : 'புதுப்பிக்கவும்')}
-                            </Button>
-                          </TableCell>
-                        </TableRow>
+                                }}
+                              >
+                                {uploadingMap[entry.id] ? (language === 'english' ? 'Uploading...' : 'பதிவேற்றுகிறது...') : (language === 'english' ? 'Update' : 'புதுப்பிக்கவும்')}
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell colSpan={10} className="bg-muted/40">
+                              <OutwardEntrySummary
+                                entry={entry}
+                                customer={entry.customers}
+                                item={entry.items}
+                                loadWeight={loadWeights[entry.id] ? parseFloat(loadWeights[entry.id]) : null}
+                                loadPhotoUrl={photoData[entry.id] || entry.load_weight_photo_url || null}
+                              />
+                            </TableCell>
+                          </TableRow>
+                        </React.Fragment>
                       ))}
 
                       {entries.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                             {language === 'english'
                               ? 'No pending load weight entries'
                               : 'நிலுவையில் உள்ள மொத்த எடை பதிவுகள் இல்லை'}

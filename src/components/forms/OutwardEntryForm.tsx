@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Customer, Item } from '@/types';
 import { Camera, Upload, X } from 'lucide-react';
+import { OutwardEntrySummary } from '@/components/OutwardEntrySummary';
 
 interface OutwardEntryFormProps {
   onSuccess: () => void;
@@ -42,6 +43,9 @@ export const OutwardEntryForm: React.FC<OutwardEntryFormProps> = ({ onSuccess, o
   const [uploading, setUploading] = useState(false);
   const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const selectedCustomer = customers.find(customer => customer.id === formData.customer_id);
+  const selectedItem = items.find(item => item.id === formData.item_id);
+  const enteredEmptyWeight = parseFloat(formData.empty_weight);
 
   useEffect(() => {
     fetchCustomers();
@@ -395,6 +399,21 @@ export const OutwardEntryForm: React.FC<OutwardEntryFormProps> = ({ onSuccess, o
               />
             </div>
           </div>
+
+          {selectedCustomer && selectedItem && (
+            <OutwardEntrySummary
+              entry={{
+                entry_date: formData.entry_date,
+                loading_place: formData.loading_place,
+                lorry_no: formData.lorry_no,
+                empty_weight: Number.isFinite(enteredEmptyWeight) ? enteredEmptyWeight : 0,
+              }}
+              customer={selectedCustomer}
+              item={selectedItem}
+              showGst={false}
+              entryPhotoUrl={previewUrl || uploadedPhotoUrl || null}
+            />
+          )}
 
           <div>
             <Label htmlFor="remarks">

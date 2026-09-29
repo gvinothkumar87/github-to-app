@@ -8,11 +8,11 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Download, FileText, Printer, Zap, XCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useState, useEffect } from 'react';
-import { IrnInputDialog } from '@/components/IrnInputDialog';
+import { printNote } from '@/utils/notePrintTemplate';
 import { einvoiceService } from '@/services/einvoiceService';
 import { useToast } from '@/hooks/use-toast';
 import QRCodeLib from 'qrcode';
-import jsPDF from 'jspdf';
+
 
 interface CreditNote {
   id: string;
@@ -28,6 +28,8 @@ interface CreditNote {
   einvoice_status?: string | null;
   ack_no?: string | null;
   ack_date?: string | null;
+  signed_qrcode?: string | null;
+  signed_invoice?: string | null;
 }
 
 interface Customer {
@@ -66,7 +68,7 @@ export const CreditNoteInvoiceGenerator = ({ creditNote, customer, item, onClose
   const { language } = useLanguage();
   const { toast } = useToast();
   const [companySettings, setCompanySettings] = useState<any>(null);
-  const [showIrnDialog, setShowIrnDialog] = useState(false);
+
   const [currentNote, setCurrentNote] = useState(creditNote);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
 
@@ -81,10 +83,23 @@ export const CreditNoteInvoiceGenerator = ({ creditNote, customer, item, onClose
   }, []);
 
   useEffect(() => {
-    if (currentNote.irn) {
-      generateQRCode();
+    setCurrentNote(creditNote);
+    supabase.from('credit_notes').select('*').eq('id', creditNote.id).single().then(({ data, error }) => {
+      if (data) setCurrentNote(data);
+      if (error) toast({ title: 'Unable to load saved e-invoice', description: error.message, variant: 'destructive' });
+    });
+  }, [creditNote.id]);
+
+  useEffect(() => {
+    let disposed = false;
+    setQrCodeDataUrl('');
+    if (currentNote.signed_qrcode && currentNote.einvoice_status !== 'CANCELLED') {
+      QRCodeLib.toDataURL(currentNote.signed_qrcode, { width: 200, margin: 1 }).then(url => {
+        if (!disposed) setQrCodeDataUrl(url);
+      }).catch(console.error);
     }
-  }, [currentNote.irn, companySettings]);
+    return () => { disposed = true; };
+  }, [currentNote.signed_qrcode, currentNote.einvoice_status]);
 
   const fetchCompanySettings = async () => {
     try {
@@ -137,46 +152,6 @@ export const CreditNoteInvoiceGenerator = ({ creditNote, customer, item, onClose
     };
   };
 
-  const generateQRCode = async () => {
-    try {
-      if (!currentNote.irn || !companySettings) return;
-      const qrData = {
-        Version: '1.1',
-        TxnDtls: { TaxSch: 'GST', SupTyp: 'B2B' },
-        DocDtls: {
-          Typ: 'CRN',
-          No: currentNote.note_no,
-          Dt: new Date(currentNote.note_date).toISOString().split('T')[0].split('-').reverse().join('/')
-        },
-        SellerDtls: {
-          Gstin: companySettings.gstin,
-          LglNm: companySettings.company_name,
-          Addr1: companySettings.address_line1,
-          Loc: companySettings.locality,
-          Pin: companySettings.pin_code.toString(),
-          Stcd: companySettings.state_code || '33'
-        },
-        BuyerDtls: {
-          Gstin: customer.gstin || null,
-          LglNm: customer.name_english,
-          Pos: customer.place_of_supply || customer.state_code || '33',
-          Addr1: customer.address_english || 'Address Not Available',
-          Pin: customer.pin_code || 'PIN Not Available',
-          Stcd: customer.state_code || '33'
-        },
-        ValDtls: { TotInvVal: currentNote.amount },
-        IRN: currentNote.irn
-      };
-      const url = await QRCodeLib.toDataURL(JSON.stringify(qrData), {
-        width: 200, margin: 1,
-        color: { dark: '#000000', light: '#FFFFFF' }
-      });
-      setQrCodeDataUrl(url);
-    } catch (error) {
-      console.error('Error generating QR code:', error);
-    }
-  };
-
   // ─── E-Invoice Generation ─────────────────────────────────────────────────
   const handleGenerateEInvoice = async () => {
     if (!companySettings) return;
@@ -197,6 +172,9 @@ export const CreditNoteInvoiceGenerator = ({ creditNote, customer, item, onClose
       setCurrentNote(prev => ({
         ...prev,
         irn: result.irn,
+        ack_no: result.ackNo,
+        ack_date: result.ackDate,
+        signed_qrcode: result.signedQrcode,
         einvoice_status: 'GENERATED'
       }));
       toast({ title: 'E-Invoice Generated', description: `IRN: ${result.irn.substring(0, 20)}...` });
@@ -234,21 +212,14 @@ export const CreditNoteInvoiceGenerator = ({ creditNote, customer, item, onClose
     }
   };
 
-  const handlePrintButtonClick = () => {
-    if (!currentNote.irn) {
-      setShowIrnDialog(true);
-    } else {
-      printInvoice();
+  const handlePrintButtonClick = async () => {
+    if (!companySettings) return;
+    try {
+      await printNote({ type: 'CRN', note: currentNote, company: companySettings, customer, item, qrCodeDataUrl });
+    } catch (error) {
+      toast({ title: 'Unable to print', description: error instanceof Error ? error.message : 'Print failed', variant: 'destructive' });
     }
   };
-
-  const handleIrnSaved = (irn: string) => {
-    setCurrentNote(prev => ({ ...prev, irn, einvoice_status: 'GENERATED' }));
-    setShowIrnDialog(false);
-    setTimeout(() => printInvoice(), 100);
-  };
-
-  const printInvoice = () => { window.print(); };
 
   const downloadEInvoiceJSON = () => {
     if (!companySettings) return;
@@ -287,26 +258,10 @@ export const CreditNoteInvoiceGenerator = ({ creditNote, customer, item, onClose
     URL.revokeObjectURL(url);
   };
 
-  const downloadPDF = () => {
-    const pdf = new jsPDF();
-    pdf.setFontSize(16); pdf.text(companySettings?.company_name || 'Company Name', 20, 20);
-    pdf.setFontSize(12); pdf.text('CREDIT NOTE', 20, 40);
-    pdf.text(`Note No: ${currentNote.note_no}`, 20, 50);
-    pdf.text(`Date: ${new Date(currentNote.note_date).toLocaleDateString()}`, 20, 60);
-    pdf.text('Bill To:', 20, 80); pdf.text(customer.name_english, 20, 90);
-    if (customer.address_english) pdf.text(customer.address_english, 20, 100);
-    pdf.text(`Amount: ₹${currentNote.amount.toFixed(2)}`, 20, 120);
-    pdf.text(`Reason: ${currentNote.reason}`, 20, 130);
-    pdf.text(`Reference Bill No: ${currentNote.reference_bill_no || 'N/A'}`, 20, 140);
-    if (currentNote.irn) pdf.text(`IRN: ${currentNote.irn}`, 20, 160);
-    if (qrCodeDataUrl) pdf.addImage(qrCodeDataUrl, 'PNG', 140, 120, 50, 50);
-    pdf.save(`credit-note-${currentNote.note_no}.pdf`);
-  };
-
   if (!companySettings) return <div>Loading...</div>;
 
   const einvoiceStatus = currentNote.einvoice_status || 'PENDING';
-  const isGenerated = einvoiceStatus === 'GENERATED';
+  const isGenerated = !!currentNote.irn && einvoiceStatus !== 'CANCELLED';
   const isCancelled = einvoiceStatus === 'CANCELLED';
 
   return (
@@ -322,7 +277,7 @@ export const CreditNoteInvoiceGenerator = ({ creditNote, customer, item, onClose
               {!isGenerated && !isCancelled && <Badge variant="outline" className="text-muted-foreground">E-Invoice: PENDING</Badge>}
             </div>
             <div className="flex gap-2 flex-wrap">
-              <Button onClick={handlePrintButtonClick} size="sm">
+              <Button onClick={handlePrintButtonClick} size="sm" disabled={generating}>
                 <Printer className="w-4 h-4 mr-2" />
                 {language === 'english' ? 'Print' : 'அச்சிடு'}
               </Button>
@@ -348,9 +303,9 @@ export const CreditNoteInvoiceGenerator = ({ creditNote, customer, item, onClose
                 <Download className="w-4 h-4 mr-2" />
                 {language === 'english' ? 'Download JSON' : 'JSON பதிவிறக்கு'}
               </Button>
-              <Button onClick={downloadPDF} variant="outline" size="sm">
+              <Button onClick={handlePrintButtonClick} variant="outline" size="sm" disabled={generating}>
                 <FileText className="w-4 h-4 mr-2" />
-                {language === 'english' ? 'Download PDF' : 'PDF பதிவிறக்கு'}
+                {language === 'english' ? 'Print / Save as PDF' : 'PDF ஆக சேமி'}
               </Button>
               <Button onClick={onClose} variant="secondary" size="sm">
                 {language === 'english' ? 'Close' : 'மூடு'}
@@ -441,19 +396,9 @@ export const CreditNoteInvoiceGenerator = ({ creditNote, customer, item, onClose
         </CardContent>
       </Card>
 
-      {/* IRN Manual Entry Dialog */}
-      {showIrnDialog && (
-        <IrnInputDialog
-          open={showIrnDialog}
-          onOpenChange={setShowIrnDialog}
-          saleId={currentNote.id}
-          onIrnSaved={handleIrnSaved}
-          tableType="credit_notes"
-        />
-      )}
-
       {/* Cancel E-Invoice Dialog */}
       <Dialog open={showCancelIrnDialog} onOpenChange={(open) => {
+        if (generating) return;
         if (!open) { setCancelReason('2'); setCancelRemark('Data entry mistake'); }
         setShowCancelIrnDialog(open);
       }}>

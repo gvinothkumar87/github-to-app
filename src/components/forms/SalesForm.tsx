@@ -11,6 +11,7 @@ import { OutwardEntry } from '@/types';
 import { InvoiceGenerator } from '@/components/InvoiceGenerator';
 import { buildFYPrefix, extractSerialNumber } from '@/utils/financialYear';
 import { validateBillSequence } from '@/utils/billValidation';
+import { OutwardEntrySummary } from '@/components/OutwardEntrySummary';
 
 interface SalesFormProps {
   onSuccess: () => void;
@@ -385,42 +386,7 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
           </div>
 
           {selectedEntry && (
-            <div className="bg-muted p-4 rounded-lg space-y-2">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <Label className="text-xs font-medium">{language === 'english' ? 'Customer' : 'வாடிக்கையாளர்'}:</Label>
-                  <p>{getDisplayName(selectedEntry.customers!)}</p>
-                </div>
-                <div>
-                  <Label className="text-xs font-medium">{language === 'english' ? 'Item' : 'பொருள்'}:</Label>
-                  <p>{getDisplayName(selectedEntry.items!)}</p>
-                </div>
-                <div>
-                  <Label className="text-xs font-medium">{language === 'english' ? 'Net Weight' : 'நிகர எடை'}:</Label>
-                  <p>{selectedEntry.net_weight} KG</p>
-                </div>
-                <div>
-                  <Label className="text-xs font-medium">{language === 'english' ? 'Unit Weight' : 'யூனிட் எடை'}:</Label>
-                  <p>{selectedEntry.items?.unit_weight} KG per {selectedEntry.items?.unit}</p>
-                </div>
-                <div>
-                  <Label className="text-xs font-medium">{language === 'english' ? 'Calculated Quantity' : 'கணக்கிடப்பட்ட அளவு'}:</Label>
-                  <p>{calculateQuantity().toFixed(2)} {selectedEntry.items?.unit}</p>
-                </div>
-                <div>
-                  <Label className="text-xs font-medium">{language === 'english' ? 'Lorry No' : 'லாரி எண்'}:</Label>
-                  <p>{selectedEntry.lorry_no}</p>
-                </div>
-                <div>
-                  <Label className="text-xs font-medium">{language === 'english' ? 'GST %' : 'ஜிஎஸ்டி %'}:</Label>
-                  <p>{selectedEntry.items?.gst_percentage || 0}%</p>
-                </div>
-                <div>
-                  <Label className="text-xs font-medium">{language === 'english' ? 'Loading Place' : 'ஏற்றும் இடம்'}:</Label>
-                  <p>{selectedEntry.loading_place}</p>
-                </div>
-              </div>
-            </div>
+            <OutwardEntrySummary entry={selectedEntry} customer={selectedEntry.customers} item={selectedEntry.items} />
           )}
 
           <div>

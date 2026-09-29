@@ -35,6 +35,9 @@ export const EditOutwardEntryForm = ({ outwardEntry, customer, item, onSuccess, 
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>(outwardEntry.customer_id);
   const [selectedItemId, setSelectedItemId] = useState<string>(outwardEntry.item_id);
 
+  const currentCustomer = customers.find(c => c.id === selectedCustomerId) || customer;
+  const selectableCustomers = customers.some(c => c.id === customer.id) ? customers : [customer, ...customers];
+
   useEffect(() => {
     const fetchCustomersAndItems = async () => {
       try {
@@ -42,7 +45,11 @@ export const EditOutwardEntryForm = ({ outwardEntry, customer, item, onSuccess, 
           supabase.from('customers').select('*').eq('is_active', true).order('name_english'),
           supabase.from('items').select('*').eq('is_active', true).order('name_english')
         ]);
-        if (custRes.data) setCustomers(custRes.data);
+        if (custRes.data) {
+          setCustomers(custRes.data);
+        } else {
+          setCustomers([]);
+        }
         if (itemRes.data) setItemsList(itemRes.data);
       } catch (err) {
         console.error('Error fetching customers/items:', err);
@@ -207,20 +214,22 @@ export const EditOutwardEntryForm = ({ outwardEntry, customer, item, onSuccess, 
           {/* Entry Details */}
           <div className="bg-muted p-4 rounded-lg space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div>
+              <div className="md:col-span-1">
                 <Label className="text-xs font-medium">{language === 'english' ? 'Serial No' : 'வ.எண்'}:</Label>
                 <p className="font-bold text-base mt-1">#{outwardEntry.serial_no}</p>
               </div>
-              <div>
+              <div className="md:col-span-1 min-w-0">
                 <Label htmlFor="customerSelect" className="text-xs font-medium">
-                  {language === 'english' ? 'Customer *' : 'வாடிக்கையாளர் *'}
+                  {language === 'english' ? 'Customer / Supplier *' : 'வாடிக்கையாளர் / சப்ளையர் *'}
                 </Label>
                 <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
                   <SelectTrigger id="customerSelect" className="w-full bg-background mt-1">
-                    <SelectValue placeholder="Select Customer" />
+                    <SelectValue placeholder={language === 'english' ? 'Select customer' : 'வாடிக்கையாளரை தேர்ந்தெடுக்கவும்'}>
+                      {currentCustomer ? `${getDisplayName(currentCustomer)} (${currentCustomer.code})` : undefined}
+                    </SelectValue>
                   </SelectTrigger>
-                  <SelectContent>
-                    {customers.map((c) => (
+                  <SelectContent className="max-h-72">
+                    {selectableCustomers.map((c) => (
                       <SelectItem key={c.id} value={c.id}>
                         {getDisplayName(c)} ({c.code})
                       </SelectItem>

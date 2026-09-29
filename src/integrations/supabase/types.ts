@@ -797,6 +797,9 @@ export type Database = {
       }
       credit_notes: {
         Row: {
+          signed_qrcode: string | null
+          signed_invoice: string | null
+
           irn: string | null
           einvoice_status: string | null
           ack_no: string | null
@@ -817,6 +820,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          signed_qrcode?: string | null
+          signed_invoice?: string | null
+
           irn?: string | null
           einvoice_status?: string | null
           ack_no?: string | null
@@ -837,6 +843,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          signed_qrcode?: string | null
+          signed_invoice?: string | null
+
           irn?: string | null
           einvoice_status?: string | null
           ack_no?: string | null
@@ -1027,6 +1036,9 @@ export type Database = {
       }
       debit_notes: {
         Row: {
+          signed_qrcode: string | null
+          signed_invoice: string | null
+
           irn: string | null
           einvoice_status: string | null
           ack_no: string | null
@@ -1047,6 +1059,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          signed_qrcode?: string | null
+          signed_invoice?: string | null
+
           irn?: string | null
           einvoice_status?: string | null
           ack_no?: string | null
@@ -1067,6 +1082,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          signed_qrcode?: string | null
+          signed_invoice?: string | null
+
           irn?: string | null
           einvoice_status?: string | null
           ack_no?: string | null

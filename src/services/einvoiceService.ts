@@ -1,3 +1,4 @@
+import { noteTax } from '@/utils/notePrintTemplate';
 import { supabase } from '@/integrations/supabase/client';
 import { Sale, Customer, Item, OutwardEntry } from '@/types';
 import { CompanySetting } from '@/types/company';
@@ -1528,19 +1529,18 @@ export const einvoiceService = {
     companySettings: CompanySetting;
     customer: { id: string; name_english: string; name_tamil?: string; code: string; address_english?: string; address_tamil?: string; gstin?: string; phone?: string; email?: string; pin_code?: string; state_code?: string; place_of_supply?: string };
     item: { id: string; name_english: string; name_tamil?: string; code: string; hsn_no?: string; gst_percentage: number; unit: string };
-  }): Promise<{ irn: string; signedQrcode: string }> {
+  }): Promise<{ irn: string; signedQrcode: string; ackNo: string; ackDate: string }> {
     const { note, noteType, table, companySettings, customer, item } = params;
 
     const token = await this.authenticate(companySettings);
     const sandbox = companySettings.einvoice_sandbox ?? true;
 
-    // Calculate amounts
-    const gstPct = note.gst_percentage ?? item.gst_percentage ?? 5;
-    const baseAmount = Math.round((note.amount / (1 + gstPct / 100)) * 100) / 100;
-    const gstAmount = Math.round((note.amount - baseAmount) * 100) / 100;
-    const cgstAmount = Math.round((gstAmount / 2) * 100) / 100;
-    const sgstAmount = Math.round((gstAmount / 2) * 100) / 100;
-    const totalAmount = Math.round((baseAmount + cgstAmount + sgstAmount) * 100) / 100;
+    const tax = noteTax({ type: noteType, note, company: companySettings, customer, item });
+    const gstPct = tax.rate;
+    const baseAmount = tax.taxable;
+    const cgstAmount = tax.cgst;
+    const sgstAmount = tax.sgst;
+    const totalAmount = note.amount;
 
     const customerAddress = customer.address_english || customer.address_tamil || '';
     const buyerAddr1 = customerAddress.substring(0, 100);
@@ -1595,7 +1595,7 @@ export const einvoiceService = {
       },
       ValDtls: {
         AssVal: baseAmount,
-        IgstVal: 0,
+        IgstVal: tax.igst,
         CgstVal: cgstAmount,
         SgstVal: sgstAmount,
         CesVal: 0,
@@ -1624,7 +1624,7 @@ export const einvoiceService = {
           PreTaxVal: 0,
           AssAmt: baseAmount,
           GstRt: gstPct,
-          IgstAmt: 0,
+          IgstAmt: tax.igst,
           CgstAmt: cgstAmount,
           SgstAmt: sgstAmount,
           CesRt: 0,
@@ -1690,20 +1690,32 @@ export const einvoiceService = {
     if ((isSuccess && parsedData?.Irn) || (isDuplicate && dupInfo)) {
       const data = parsedData || {};
       const irn = data.Irn || dupInfo?.Desc?.Irn;
-      const ackNo = (data.AckNo || dupInfo?.Desc?.AckNo)?.toString() || '';
-      const ackDate = data.AckDt || dupInfo?.Desc?.AckDt || '';
-      const signedQrcode = data.SignedQRCode || '';
-
-      const { error } = await supabase
-        .from(table as any)
-        .update({ irn, ack_no: ackNo, ack_date: ackDate, einvoice_status: 'GENERATED' })
-        .eq('id', note.id);
-
-      if (error) {
-        console.error(`Error updating ${noteType} E-Invoice in DB:`, error);
+      let ackNo = (data.AckNo || dupInfo?.Desc?.AckNo)?.toString() || '';
+      let ackDate = data.AckDt || dupInfo?.Desc?.AckDt || '';
+      let signedQrcode = data.SignedQRCode || '';
+      let signedInvoice = data.SignedInvoice || '';
+      if (!irn) throw new Error('The portal did not return an IRN. The note has not been marked as generated.');
+      // Duplicate/retry responses may omit the signed QR; recover it from the IRN.
+      if (!signedQrcode) {
+        try {
+          const details = await this.getEInvoiceDetails(irn, companySettings);
+          const recovered = parseMaybeJson(details.Data || details.data);
+          signedQrcode = recovered?.SignedQRCode || '';
+          signedInvoice = recovered?.SignedInvoice || signedInvoice;
+          ackNo = ackNo || recovered?.AckNo?.toString() || '';
+          ackDate = ackDate || recovered?.AckDt || '';
+        } catch (error) {
+          console.warn('Signed QR recovery failed; saving the confirmed IRN and acknowledgement.', error);
+        }
       }
-
-      return { irn, signedQrcode };
+      const values = { irn, ack_no: ackNo, ack_date: ackDate, signed_qrcode: signedQrcode, signed_invoice: signedInvoice, einvoice_status: 'GENERATED' };
+      const saved = table === 'credit_notes'
+        ? await supabase.from('credit_notes').update(values).eq('id', note.id).select('id').single()
+        : await supabase.from('debit_notes').update(values).eq('id', note.id).select('id').single();
+      if (saved.error) {
+        throw new Error(`IRN ${irn} was generated on the portal but could not be saved: ${saved.error.message}. Retry Generate E-Invoice to recover and save it.`);
+      }
+      return { irn, signedQrcode, ackNo, ackDate };
     } else {
       const fullError = extractErrorMessage(result, `Failed to generate ${noteType} E-Invoice`);
       throw new Error(`E-Invoice Generation Failed: ${fullError}`);
@@ -1713,6 +1725,14 @@ export const einvoiceService = {
   /**
    * Cancel E-Invoice for Credit Note (CRN) or Debit Note (DBN)
    */
+  async saveNoteCancellation(table: 'credit_notes' | 'debit_notes', id: string, irn: string): Promise<void> {
+    const values = { einvoice_status: 'CANCELLED' };
+    const saved = table === 'credit_notes'
+      ? await supabase.from('credit_notes').update(values).eq('id', id).eq('irn', irn).select('id').single()
+      : await supabase.from('debit_notes').update(values).eq('id', id).eq('irn', irn).select('id').single();
+    if (saved.error) throw new Error(`Portal cancellation completed, but saving the status failed: ${saved.error.message}. Retry cancellation to synchronize the note.`);
+  },
+
   async cancelNoteEInvoice(params: {
     note: { id: string; irn?: string | null };
     noteType: 'CRN' | 'DBN';
@@ -1776,14 +1796,7 @@ export const einvoiceService = {
       console.log(`Cancel ${noteType} E-Invoice Response:`, result);
 
       if (result.Status === 1 || result.Status === '1') {
-        const { error } = await supabase
-          .from(table as any)
-          .update({ einvoice_status: 'CANCELLED' })
-          .eq('id', note.id);
-
-        if (error) {
-          console.error(`Error updating cancelled ${noteType} E-Invoice in DB:`, error);
-        }
+        await this.saveNoteCancellation(table, note.id, note.irn);
         return true;
       } else {
         const errorMsg = result.ErrorDetails?.[0]?.ErrorMessage || 'Failed to cancel E-Invoice';
@@ -1794,7 +1807,7 @@ export const einvoiceService = {
       const errMsg = err.message || '';
       if (errMsg.includes('already cancelled')) {
         console.warn(`${noteType} E-Invoice already cancelled on portal. Updating local status...`);
-        await supabase.from(table as any).update({ einvoice_status: 'CANCELLED' }).eq('id', note.id);
+        await this.saveNoteCancellation(table, note.id, note.irn);
         return true;
       }
       if (hasErrorCode(errMsg, '2270') || errMsg.includes('time limit is crossed')) {

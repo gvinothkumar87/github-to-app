@@ -94,7 +94,7 @@ export const CreditNoteInvoiceGenerator = ({ creditNote, customer, item, onClose
     let disposed = false;
     setQrCodeDataUrl('');
     if (currentNote.signed_qrcode && currentNote.einvoice_status !== 'CANCELLED') {
-      QRCodeLib.toDataURL(currentNote.signed_qrcode, { width: 200, margin: 1 }).then(url => {
+      QRCodeLib.toDataURL(currentNote.signed_qrcode, { width: 260, margin: 2, errorCorrectionLevel: 'M' }).then(url => {
         if (!disposed) setQrCodeDataUrl(url);
       }).catch(console.error);
     }
@@ -387,7 +387,7 @@ export const CreditNoteInvoiceGenerator = ({ creditNote, customer, item, onClose
             {qrCodeDataUrl && (
               <div className="flex justify-center">
                 <div className="text-center">
-                  <img src={qrCodeDataUrl} alt="QR Code" className="mx-auto" />
+                  <img src={qrCodeDataUrl} alt="QR Code" className="mx-auto w-44 h-44" />
                   <p className="text-xs mt-2">E-Invoice QR Code</p>
                 </div>
               </div>

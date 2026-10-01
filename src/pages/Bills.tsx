@@ -11,7 +11,7 @@ import { DebitNoteInvoiceGenerator } from '@/components/DebitNoteInvoiceGenerato
 import { CreditNoteInvoiceGenerator } from '@/components/CreditNoteInvoiceGenerator';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
-import { Sale, OutwardEntry, Customer, Item, DebitNote, CreditNote } from '@/types';
+import { Sale, OutwardEntry, Customer, Item, DebitNote, CreditNote, CustomerShipAddress } from '@/types';
 import { ArrowLeft, FileSpreadsheet, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -54,6 +54,7 @@ const Bills = () => {
     outwardEntry: OutwardEntry;
     customer: Customer;
     item: Item;
+    shipToAddress?: CustomerShipAddress | null;
   } | null>(null);
   
   const [printingDebitNote, setPrintingDebitNote] = useState<{
@@ -75,8 +76,8 @@ const Bills = () => {
     setEditingSale({ sale, outwardEntry, customer, item });
   };
 
-  const handlePrintSale = (sale: Sale, outwardEntry: OutwardEntry, customer: Customer, item: Item) => {
-    setPrintingSale({ sale, outwardEntry, customer, item });
+  const handlePrintSale = (sale: Sale, outwardEntry: OutwardEntry, customer: Customer, item: Item, shipToAddress?: CustomerShipAddress | null) => {
+    setPrintingSale({ sale, outwardEntry, customer, item, shipToAddress: shipToAddress || (sale as any).customer_ship_addresses || null });
   };
 
   // Debit note handlers
@@ -373,6 +374,7 @@ const Bills = () => {
             sale={printingSale.sale}
             outwardEntry={printingSale.outwardEntry}
             customer={printingSale.customer}
+            shipToAddress={printingSale.shipToAddress || (printingSale.sale as any).customer_ship_addresses || null}
             item={printingSale.item}
             onClose={handleClosePrint}
           />

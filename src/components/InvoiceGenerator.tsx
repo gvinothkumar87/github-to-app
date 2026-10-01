@@ -1,4 +1,4 @@
-import { Sale, OutwardEntry, Customer, Item } from '@/types';
+import { Sale, OutwardEntry, Customer, CustomerShipAddress, Item } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -20,6 +20,7 @@ interface InvoiceGeneratorProps {
   sale: Sale;
   outwardEntry?: OutwardEntry | null;
   customer: Customer;
+  shipToAddress?: CustomerShipAddress | null;
   item: Item;
   onClose: () => void;
 }
@@ -30,12 +31,13 @@ interface CompanyDetails {
   gstin: string;
 }
 
-export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }: InvoiceGeneratorProps) => {
+export const InvoiceGenerator = ({ sale, outwardEntry, customer, shipToAddress, item, onClose }: InvoiceGeneratorProps) => {
   const { language, getDisplayName } = useLanguage();
   const { toast } = useToast();
   const [companySettings, setCompanySettings] = useState<any>(null);
   const [showIrnDialog, setShowIrnDialog] = useState(false);
   const [currentSale, setCurrentSale] = useState(sale);
+  const [currentShipToAddress, setCurrentShipToAddress] = useState<CustomerShipAddress | null>(shipToAddress || null);
   const [allSales, setAllSales] = useState<Sale[]>([sale]);
   const [allItems, setAllItems] = useState<Item[]>([item]);
 
@@ -94,7 +96,8 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
             .from('sales')
             .select(`
               *,
-              items(*)
+              items(*),
+              customer_ship_addresses(*)
             `)
             .eq('bill_serial_no', sale.bill_serial_no)
             .order('created_at');
@@ -109,6 +112,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
             const matched = data.find((d: any) => d.id === sale.id);
             if (matched) {
               setCurrentSale(matched);
+              setCurrentShipToAddress((matched as any).customer_ship_addresses || shipToAddress || null);
             }
           }
         } catch (error) {
@@ -118,7 +122,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
     };
 
     fetchAllSalesForBill();
-  }, [sale.bill_serial_no, sale.id]);
+  }, [sale.bill_serial_no, sale.id, shipToAddress]);
 
   useEffect(() => {
     const fetchCompanySettings = async () => {
@@ -181,6 +185,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
         allSales,
         allItems,
         customer,
+        shipToAddress: currentShipToAddress,
         item,
         companySettings,
         outwardEntry,
@@ -314,6 +319,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
         allSales,
         allItems,
         customer,
+        shipToAddress: currentShipToAddress,
         item,
         companySettings,
         outwardEntry,
@@ -494,8 +500,9 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
         const qrString = `${ewbNo},${ewbDate},${genGstin},${docNo},${docDate},${fromGstin},${toGstin},${totInvVal},${hsnCode}`;
 
         qrCodeDataUrl = await QRCode.toDataURL(qrString, {
-          width: 140,
-          margin: 1,
+          width: 220,
+          margin: 2,
+          errorCorrectionLevel: 'M',
           color: { dark: '#000000', light: '#FFFFFF' }
         });
       } catch (error) {
@@ -510,6 +517,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
         sale: currentSale,
         companySettings,
         customer,
+        shipToAddress: currentShipToAddress,
         item
       });
 
@@ -816,8 +824,9 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
     if (qrcodeContent) {
       try {
         qrCodeDataUrl = await QRCode.toDataURL(qrcodeContent, {
-          width: 120,
-          margin: 1,
+          width: 260,
+          margin: 2,
+          errorCorrectionLevel: 'M',
           color: {
             dark: '#000000',
             light: '#FFFFFF'
@@ -846,8 +855,9 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
         const qrString = `${ewbNo},${ewbDate},${genGstin},${docNo},${docDate},${fromGstin},${toGstin},${totInvVal},${hsnCode}`;
 
         ewbQrCodeDataUrl = await QRCode.toDataURL(qrString, {
-          width: 140,
-          margin: 1,
+          width: 220,
+          margin: 2,
+          errorCorrectionLevel: 'M',
           color: {
             dark: '#000000',
             light: '#FFFFFF'
@@ -866,6 +876,7 @@ export const InvoiceGenerator = ({ sale, outwardEntry, customer, item, onClose }
         allItems,
         item,
         customer,
+        shipToAddress: currentShipToAddress,
         companySettings,
         outwardEntry,
         getDisplayName,

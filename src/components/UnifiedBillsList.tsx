@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Sale, OutwardEntry, Customer, Item, DebitNote, CreditNote } from '@/types';
+import { Sale, OutwardEntry, Customer, Item, DebitNote, CreditNote, CustomerShipAddress } from '@/types';
 import { Edit, FileText, Search, Trash2, Image } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -34,7 +34,7 @@ interface UnifiedBill {
 
 interface UnifiedBillsListProps {
   onEditSale: (sale: Sale, outwardEntry: OutwardEntry, customer: Customer, item: Item) => void;
-  onPrintSale: (sale: Sale, outwardEntry: OutwardEntry, customer: Customer, item: Item) => void;
+  onPrintSale: (sale: Sale, outwardEntry: OutwardEntry, customer: Customer, item: Item, shipToAddress?: CustomerShipAddress | null) => void;
   onEditDebitNote: (debitNote: DebitNote, customer: Customer) => void;
   onPrintDebitNote: (debitNote: DebitNote, customer: Customer) => void;
   onEditCreditNote: (creditNote: CreditNote, customer: Customer) => void;
@@ -101,6 +101,7 @@ export const UnifiedBillsList = ({
         .select(`
           *,
           customers (*),
+          customer_ship_addresses (*),
           items (id, name_english, name_tamil, code, unit, gst_percentage, hsn_no),
           outward_entries!sales_outward_entry_id_fkey (
             id, serial_no, lorry_no, driver_mobile, loading_place, empty_weight, load_weight, net_weight, entry_date, remarks, weighment_photo_url, load_weight_photo_url
@@ -440,7 +441,7 @@ export const UnifiedBillsList = ({
 
   const handlePrint = (bill: UnifiedBill) => {
     if (bill.type === 'sale') {
-      onPrintSale(bill.data as Sale, bill.outward_entry!, bill.customer, bill.item!);
+      onPrintSale(bill.data as Sale, bill.outward_entry!, bill.customer, bill.item!, (bill.data as any).customer_ship_addresses || null);
     } else if (bill.type === 'debit_note') {
       onPrintDebitNote(bill.data as DebitNote, bill.customer);
     } else if (bill.type === 'credit_note') {

@@ -8,13 +8,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Customer, Item } from '@/types';
+import { Customer, CustomerShipAddress, Item } from '@/types';
 import { InvoiceGenerator } from '@/components/InvoiceGenerator';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getFinancialYear, buildFYPrefix, extractSerialNumber } from '@/utils/financialYear';
 import { validateBillSequence } from '@/utils/billValidation';
 import { generateUUID } from '@/lib/utils';
 import { useLocations } from '@/hooks/useLocations';
+import { ShipToAddressSelect } from '@/components/ShipToAddressSelect';
 
 interface DirectSalesFormProps {
   onSuccess: () => void;
@@ -33,6 +34,8 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
+  const [selectedShipToAddressId, setSelectedShipToAddressId] = useState<string | null>(null);
+  const [selectedShipToAddress, setSelectedShipToAddress] = useState<CustomerShipAddress | null>(null);
   const [lineItems, setLineItems] = useState<LineItem[]>([{
     id: generateUUID(),
     item_id: '',
@@ -281,6 +284,7 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
         const saleData = {
           outward_entry_id: null,
           customer_id: selectedCustomer,
+          ship_to_address_id: selectedShipToAddressId,
           item_id: lineItem.item_id,
           quantity: parseFloat(lineItem.quantity),
           rate: parseFloat(lineItem.rate),
@@ -371,6 +375,7 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
         sale: salesData[0], // First sale for compatibility
         outwardEntry: tempOutwardEntry,
         customer,
+        shipToAddress: selectedShipToAddress,
         item: firstItem
       });
       setShowInvoice(true);
@@ -412,6 +417,7 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
         sale={createdSale.sale}
         outwardEntry={createdSale.outwardEntry}
         customer={createdSale.customer}
+        shipToAddress={createdSale.shipToAddress}
         item={createdSale.item}
         onClose={() => {
           setShowInvoice(false);
@@ -431,7 +437,11 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="customer">Customer *</Label>
-              <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
+              <Select value={selectedCustomer} onValueChange={(value) => {
+                setSelectedCustomer(value);
+                setSelectedShipToAddressId(null);
+                setSelectedShipToAddress(null);
+              }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select customer" />
                 </SelectTrigger>
@@ -444,6 +454,16 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
                 </SelectContent>
               </Select>
             </div>
+
+            <ShipToAddressSelect
+              customerId={selectedCustomer}
+              customer={customers.find(c => c.id === selectedCustomer) || null}
+              value={selectedShipToAddressId}
+              onChange={(id, address) => {
+                setSelectedShipToAddressId(id);
+                setSelectedShipToAddress(address);
+              }}
+            />
 
           </div>
 

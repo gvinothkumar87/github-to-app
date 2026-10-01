@@ -18,6 +18,24 @@ export interface Customer {
   updated_at: string;
 }
 
+export interface CustomerShipAddress {
+  id: string;
+  customer_id: string;
+  label: string;
+  name?: string;
+  address_english: string;
+  address_tamil?: string;
+  pin_code?: string;
+  state_code?: string;
+  place_of_supply?: string;
+  gstin?: string;
+  phone?: string;
+  is_default: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Item {
   id: string;
   name_english: string;
@@ -64,6 +82,7 @@ export interface Sale {
   id: string;
   outward_entry_id: string;
   customer_id: string;
+  ship_to_address_id?: string | null;
   item_id: string;
   quantity: number;
   rate: number;
@@ -86,6 +105,7 @@ export interface Sale {
   signed_invoice?: string;
   signed_qrcode?: string;
   customers?: Customer;
+  customer_ship_addresses?: CustomerShipAddress;
   items?: Item;
   outward_entries?: OutwardEntry;
 }
@@ -230,6 +250,7 @@ export interface LanguageContextType {
 export interface CreateSaleData {
   outward_entry_id?: string | null;
   customer_id: string;
+  ship_to_address_id?: string | null;
   item_id: string;
   quantity: number;
   rate: number;

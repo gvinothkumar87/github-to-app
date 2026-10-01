@@ -1034,6 +1034,68 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_ship_addresses: {
+        Row: {
+          address_english: string
+          address_tamil: string | null
+          created_at: string
+          customer_id: string
+          gstin: string | null
+          id: string
+          is_active: boolean
+          is_default: boolean
+          label: string
+          name: string | null
+          phone: string | null
+          pin_code: string | null
+          place_of_supply: string | null
+          state_code: string | null
+          updated_at: string
+        }
+        Insert: {
+          address_english: string
+          address_tamil?: string | null
+          created_at?: string
+          customer_id: string
+          gstin?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          label: string
+          name?: string | null
+          phone?: string | null
+          pin_code?: string | null
+          place_of_supply?: string | null
+          state_code?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address_english?: string
+          address_tamil?: string | null
+          created_at?: string
+          customer_id?: string
+          gstin?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          label?: string
+          name?: string | null
+          phone?: string | null
+          pin_code?: string | null
+          place_of_supply?: string | null
+          state_code?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_ship_addresses_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       debit_notes: {
         Row: {
           signed_qrcode: string | null
@@ -4555,6 +4617,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           customer_id: string
+          ship_to_address_id: string | null
           einvoice_status: string | null
           eway_bill_date: string | null
           eway_bill_no: string | null
@@ -4582,6 +4645,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           customer_id: string
+          ship_to_address_id?: string | null
           einvoice_status?: string | null
           eway_bill_date?: string | null
           eway_bill_no?: string | null
@@ -4609,6 +4673,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           customer_id?: string
+          ship_to_address_id?: string | null
           einvoice_status?: string | null
           eway_bill_date?: string | null
           eway_bill_no?: string | null
@@ -4634,6 +4699,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_ship_to_address_id_fkey"
+            columns: ["ship_to_address_id"]
+            isOneToOne: false
+            referencedRelation: "customer_ship_addresses"
             referencedColumns: ["id"]
           },
           {

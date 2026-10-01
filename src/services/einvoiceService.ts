@@ -1,6 +1,6 @@
 import { noteTax } from '@/utils/notePrintTemplate';
 import { supabase } from '@/integrations/supabase/client';
-import { Sale, Customer, Item, OutwardEntry } from '@/types';
+import { Sale, Customer, CustomerShipAddress, Item, OutwardEntry } from '@/types';
 import { CompanySetting } from '@/types/company';
 
 // Helper to format date in DD/MM/YYYY format
@@ -59,6 +59,35 @@ const formatHsnCode = (hsn: string | null | undefined): string => {
   return clean.substring(0, 8);
 };
 
+const getShipToDetails = (customer: Customer, shipToAddress?: CustomerShipAddress | null) => {
+  if (!shipToAddress) {
+    return {
+      name: customer.name_english || customer.name_tamil || 'UNKNOWN',
+      gstin: customer.gstin || '',
+      address: customer.address_english || customer.address_tamil || '',
+      pinCode: customer.pin_code || '',
+      stateCode: customer.state_code || '33',
+      placeOfSupply: customer.place_of_supply || customer.state_code || '33',
+      phone: customer.phone || '',
+    };
+  }
+
+  return {
+    name: shipToAddress.name || customer.name_english || customer.name_tamil || 'UNKNOWN',
+    gstin: shipToAddress.gstin || customer.gstin || '',
+    address: shipToAddress.address_english || shipToAddress.address_tamil || customer.address_english || customer.address_tamil || '',
+    pinCode: shipToAddress.pin_code || customer.pin_code || '',
+    stateCode: shipToAddress.state_code || customer.state_code || '33',
+    placeOfSupply: shipToAddress.place_of_supply || shipToAddress.state_code || customer.place_of_supply || customer.state_code || '33',
+    phone: shipToAddress.phone || customer.phone || '',
+  };
+};
+
+const splitAddress = (address: string) => ({
+  addr1: (address || '').substring(0, 100),
+  addr2: (address || '').length > 100 ? (address || '').substring(100, 200) : '',
+  loc: ((address || '').split(',').pop() || '').replace(/\d{6}/g, '').replace(/[^\w\s]/g, '').trim() || 'Tamil Nadu',
+});
 
 // Helper to derive state code from GSTIN
 const getStateCodeFromGstin = (gstin: string | null | undefined, defaultStateCode: string = '33'): string => {
@@ -550,6 +579,7 @@ export const einvoiceService = {
     allSales: Sale[];
     allItems: Item[];
     customer: Customer;
+    shipToAddress?: CustomerShipAddress | null;
     item: Item;
     companySettings: CompanySetting;
     outwardEntry?: OutwardEntry | null;
@@ -567,6 +597,7 @@ export const einvoiceService = {
       allSales,
       allItems,
       customer,
+      shipToAddress,
       item,
       companySettings,
       outwardEntry,
@@ -606,12 +637,9 @@ export const einvoiceService = {
     const roundedTotalAmount = Math.round((roundedBaseAmount + roundedCgstAmount + roundedSgstAmount) * 100) / 100;
 
     const customerAddress = customer.address_english || customer.address_tamil || '';
-    const buyerAddr1 = customerAddress.substring(0, 100);
-    const buyerAddr2 = customerAddress.length > 100 ? customerAddress.substring(100, 200) : '';
-
-    const addressParts = customerAddress.split(',');
-    let buyerLoc = addressParts.length > 0 ? addressParts[addressParts.length - 1].trim() : '';
-    buyerLoc = buyerLoc.replace(/\d{6}/g, '').replace(/[^\w\s]/g, '').trim() || 'Tamil Nadu';
+    const { addr1: buyerAddr1, addr2: buyerAddr2, loc: buyerLoc } = splitAddress(customerAddress);
+    const shipTo = getShipToDetails(customer, shipToAddress);
+    const { addr1: shipAddr1, addr2: shipAddr2, loc: shipLoc } = splitAddress(shipTo.address);
 
     // Vehicle details
     const vehicleNo = sale.lorry_no || outwardEntry?.lorry_no || '';
@@ -677,6 +705,22 @@ export const einvoiceService = {
         Ph: customer.phone || null,
         Em: customer.email || null
       },
+      ...(shipToAddress ? {
+        ShipDtls: {
+          Gstin: shipTo.gstin || 'URP',
+          LglNm: shipTo.name,
+          TrdNm: shipTo.name,
+          Addr1: shipAddr1,
+          Addr2: shipAddr2 || null,
+          Loc: shipLoc,
+          Pin: getValidPinForState(
+            getStateCodeFromGstin(shipTo.gstin || '', shipTo.stateCode || '33'),
+            shipTo.stateCode || '33',
+            shipTo.pinCode
+          ),
+          Stcd: getStateCodeFromGstin(shipTo.gstin || '', shipTo.stateCode || '33')
+        }
+      } : {}),
       ValDtls: {
         AssVal: roundedBaseAmount,
         IgstVal: 0,
@@ -1154,6 +1198,7 @@ export const einvoiceService = {
     allSales: Sale[];
     allItems: Item[];
     customer: Customer;
+    shipToAddress?: CustomerShipAddress | null;
     item: Item;
     companySettings: CompanySetting;
     outwardEntry?: OutwardEntry | null;
@@ -1171,6 +1216,7 @@ export const einvoiceService = {
       allSales,
       allItems,
       customer,
+      shipToAddress,
       item,
       companySettings,
       outwardEntry,
@@ -1181,7 +1227,7 @@ export const einvoiceService = {
       transDocDt = '',
       vehType = 'R',
       transMode = '1',
-      transactionType = 1,
+      transactionType = shipToAddress ? 2 : 1,
     } = params;
 
     const token = await this.authenticateEWayBill(companySettings);
@@ -1208,12 +1254,8 @@ export const einvoiceService = {
     const roundedTotalAmount = Math.round((roundedBaseAmount + roundedCgstAmount + roundedSgstAmount) * 100) / 100;
 
     const customerAddress = customer.address_english || customer.address_tamil || '';
-    const buyerAddr1 = customerAddress.substring(0, 100);
-    const buyerAddr2 = customerAddress.length > 100 ? customerAddress.substring(100, 200) : '';
-
-    const addressParts = customerAddress.split(',');
-    let buyerLoc = addressParts.length > 0 ? addressParts[addressParts.length - 1].trim() : '';
-    buyerLoc = buyerLoc.replace(/\d{6}/g, '').replace(/[^\w\s]/g, '').trim() || 'Tamil Nadu';
+    const shipTo = getShipToDetails(customer, shipToAddress);
+    const { addr1: shipAddr1, addr2: shipAddr2, loc: shipLoc } = splitAddress(shipTo.address || customerAddress);
 
     const vehicleNo = sale.lorry_no || outwardEntry?.lorry_no || '';
 
@@ -1236,18 +1278,18 @@ export const einvoiceService = {
       ),
       actFromStateCode: parseInt(getStateCodeFromGstin(companySettings.gstin, companySettings.state_code), 10),
       fromStateCode: parseInt(getStateCodeFromGstin(companySettings.gstin, companySettings.state_code), 10),
-      toGstin: customer.gstin || "URP",
-      toTrdName: customer.name_english || customer.name_tamil || "UNKNOWN",
-      toAddr1: buyerAddr1,
-      toAddr2: buyerAddr2 || "",
-      toPlace: buyerLoc,
+      toGstin: shipTo.gstin || "URP",
+      toTrdName: shipTo.name,
+      toAddr1: shipAddr1,
+      toAddr2: shipAddr2 || "",
+      toPlace: shipLoc,
       toPincode: getValidPinForState(
-        getStateCodeFromGstin(customer.gstin || "", customer.state_code || "33"),
-        customer.state_code || "33",
-        customer.pin_code
+        getStateCodeFromGstin(shipTo.gstin || "", shipTo.stateCode || "33"),
+        shipTo.stateCode || "33",
+        shipTo.pinCode
       ),
-      actToStateCode: parseInt(getStateCodeFromGstin(customer.gstin || "", customer.state_code || "33"), 10),
-      toStateCode: parseInt(getStateCodeFromGstin(customer.gstin || "", customer.state_code || "33"), 10),
+      actToStateCode: parseInt(getStateCodeFromGstin(shipTo.gstin || "", shipTo.stateCode || "33"), 10),
+      toStateCode: parseInt(getStateCodeFromGstin(shipTo.gstin || "", shipTo.stateCode || "33"), 10),
       transactionType: transactionType,
       otherValue: "0",
       totalValue: roundedBaseAmount,

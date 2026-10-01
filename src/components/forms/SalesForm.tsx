@@ -7,11 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { OutwardEntry } from '@/types';
+import { CustomerShipAddress, OutwardEntry } from '@/types';
 import { InvoiceGenerator } from '@/components/InvoiceGenerator';
 import { buildFYPrefix, extractSerialNumber } from '@/utils/financialYear';
 import { validateBillSequence } from '@/utils/billValidation';
 import { OutwardEntrySummary } from '@/components/OutwardEntrySummary';
+import { ShipToAddressSelect } from '@/components/ShipToAddressSelect';
 
 interface SalesFormProps {
   onSuccess: () => void;
@@ -21,6 +22,8 @@ interface SalesFormProps {
 export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
   const [outwardEntries, setOutwardEntries] = useState<OutwardEntry[]>([]);
   const [selectedEntry, setSelectedEntry] = useState<OutwardEntry | null>(null);
+  const [selectedShipToAddressId, setSelectedShipToAddressId] = useState<string | null>(null);
+  const [selectedShipToAddress, setSelectedShipToAddress] = useState<CustomerShipAddress | null>(null);
   const [rate, setRate] = useState('');
   const [saleDate, setSaleDate] = useState(new Date().toISOString().split('T')[0]);
   const [billSerialNo, setBillSerialNo] = useState('');
@@ -263,6 +266,7 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
       const saleData = {
         outward_entry_id: selectedEntry.id,
         customer_id: selectedEntry.customer_id,
+        ship_to_address_id: selectedShipToAddressId,
         item_id: selectedEntry.item_id,
         quantity: calculateQuantity(),
         rate: parseFloat(rate),
@@ -330,6 +334,7 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
         sale={createdSale}
         outwardEntry={selectedEntry}
         customer={selectedEntry.customers!}
+        shipToAddress={selectedShipToAddress || (createdSale as any).customer_ship_addresses || null}
         item={selectedEntry.items!}
         onClose={() => {
           setShowInvoice(false);
@@ -360,6 +365,8 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
             <Select onValueChange={(value) => {
               const entry = outwardEntries.find(e => e.id === value);
               setSelectedEntry(entry || null);
+              setSelectedShipToAddressId(null);
+              setSelectedShipToAddress(null);
               setBillSerialNo(''); // Reset bill serial to trigger auto-generation
               setUseSpecialSerial(false); // Reset special serial checkbox
               
@@ -387,6 +394,18 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
 
           {selectedEntry && (
             <OutwardEntrySummary entry={selectedEntry} customer={selectedEntry.customers} item={selectedEntry.items} />
+          )}
+
+          {selectedEntry && (
+            <ShipToAddressSelect
+              customerId={selectedEntry.customer_id}
+              customer={selectedEntry.customers}
+              value={selectedShipToAddressId}
+              onChange={(id, address) => {
+                setSelectedShipToAddressId(id);
+                setSelectedShipToAddress(address);
+              }}
+            />
           )}
 
           <div>

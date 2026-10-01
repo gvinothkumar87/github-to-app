@@ -167,6 +167,7 @@ export interface EwayBillPrintParams {
   sale?: any;
   companySettings?: any;
   customer?: any;
+  shipToAddress?: any;
   item?: any;
 }
 
@@ -269,7 +270,7 @@ export const getEwayBillStyles = (): string => {
 };
 
 export const getEwayBillContentHtml = (params: EwayBillPrintParams): string => {
-  const { ewbNo, ewbDetails, qrCodeDataUrl, sale, companySettings, customer, item } = params;
+  const { ewbNo, ewbDetails, qrCodeDataUrl, sale, companySettings, customer, shipToAddress, item } = params;
   const d = ewbDetails || {};
 
   // ── Extract fields with fallbacks ──
@@ -298,13 +299,14 @@ export const getEwayBillContentHtml = (params: EwayBillPrintParams): string => {
   const dispatchAddress = [fromAddr1, fromAddr2, fromPlace, fromStateName, fromPincode].filter(Boolean).join(' ');
 
   // Part-A: Recipient
-  const toGstin = get(d, 'toGstin', 'ToGstin') || customer?.gstin || sale?.customers?.gstin || '';
-  const toTrdName = get(d, 'toTrdName', 'ToTrdName') || customer?.name_english || sale?.customers?.name_english || '';
-  const toAddr1 = get(d, 'toAddr1', 'ToAddr1') || customer?.address_english || sale?.customers?.address_english || '';
+  const fallbackShipTo = shipToAddress || sale?.customer_ship_addresses || null;
+  const toGstin = get(d, 'toGstin', 'ToGstin') || fallbackShipTo?.gstin || customer?.gstin || sale?.customers?.gstin || '';
+  const toTrdName = get(d, 'toTrdName', 'ToTrdName') || fallbackShipTo?.name || fallbackShipTo?.label || customer?.name_english || sale?.customers?.name_english || '';
+  const toAddr1 = get(d, 'toAddr1', 'ToAddr1') || fallbackShipTo?.address_english || customer?.address_english || sale?.customers?.address_english || '';
   const toAddr2 = get(d, 'toAddr2', 'ToAddr2') || '';
-  const toPlace = get(d, 'toPlace', 'ToPlace') || customer?.place_of_supply || '';
-  const toPincode = get(d, 'toPincode', 'ToPincode') || customer?.pin_code || sale?.customers?.pin_code || '';
-  const toStateCode = get(d, 'toStateCode', 'ToStateCode') || customer?.state_code || sale?.customers?.state_code || '';
+  const toPlace = get(d, 'toPlace', 'ToPlace') || fallbackShipTo?.place_of_supply || customer?.place_of_supply || '';
+  const toPincode = get(d, 'toPincode', 'ToPincode') || fallbackShipTo?.pin_code || customer?.pin_code || sale?.customers?.pin_code || '';
+  const toStateCode = get(d, 'toStateCode', 'ToStateCode') || fallbackShipTo?.state_code || customer?.state_code || sale?.customers?.state_code || '';
   const toStateName = getStateName(toStateCode);
   const deliveryAddress = [toAddr1, toAddr2, toPlace, toStateName, toPincode].filter(Boolean).join(' ');
 

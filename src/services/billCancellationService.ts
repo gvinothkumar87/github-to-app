@@ -3,6 +3,8 @@ import { einvoiceService } from './einvoiceService';
 import type { Sale } from '@/types';
 import type { CompanySetting } from '@/types/company';
 
+const COMPANY_SETTINGS_PUBLIC_COLUMNS = 'id,location_code,location_name,company_name,gstin,address_line1,address_line2,locality,pin_code,state_code,phone,email,bank_name,bank_account_no,bank_ifsc,bank_branch,start_bill_no,start_debit_note_no,start_credit_note_no,bill_prefix,bill_digits,financial_year_in_serial,debit_note_prefix,debit_note_digits,debit_note_financial_year_in_serial,credit_note_prefix,credit_note_digits,credit_note_financial_year_in_serial,is_active,einvoice_enabled,einvoice_sandbox,ewaybill_enabled,created_at,updated_at';
+
 export type CancellableBillType = 'sale' | 'debit_note' | 'credit_note' | 'outward_entry';
 const tables = { sale: 'sales', debit_note: 'debit_notes', credit_note: 'credit_notes', outward_entry: 'outward_entries' } as const;
 
@@ -30,7 +32,7 @@ export async function cancelBill(type: CancellableBillType, ids: string[], reaso
       location = result.data.loading_place;
     }
     if (!location) throw new Error('Set the bill location before cancelling linked GST documents.');
-    const settings = await supabase.from('company_settings').select('*').eq('location_code', location).eq('is_active', true).single();
+    const settings = await supabase.from('company_settings').select(COMPANY_SETTINGS_PUBLIC_COLUMNS).eq('location_code', location).eq('is_active', true).single();
     if (settings.error) throw settings.error;
     const company = settings.data as CompanySetting;
     // E-way bill must be cancelled before the IRN. Persist each success for retry.

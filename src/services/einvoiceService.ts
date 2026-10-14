@@ -301,7 +301,88 @@ interface TokenCache {
   expiry: number;
 }
 
+const EWAY_DETAILS_CACHE_MS = 5 * 60 * 1000;
+const EWAY_AUTH_CAPABILITY_STORAGE_PREFIX = 'taxpro_eway_auth_capability_v1';
+const SERVER_MANAGED_CREDENTIAL = 'SERVER_MANAGED';
+const ewayDetailsCache = new Map<string, { value: any; expiry: number }>();
+const ewayDetailsInFlight = new Map<string, Promise<any>>();
+const ewayAuthUnavailable = new Set<string>();
+
+const ewayAccountKey = (settings: CompanySetting) =>
+  `${settings.gstin || ''}:${(settings.einvoice_sandbox ?? true) ? 'sandbox' : 'prod'}`;
+
+const simpleFingerprint = (value: string) => {
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i += 1) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(36);
+};
+
+const ewayCredentialFingerprint = (settings: CompanySetting) => simpleFingerprint([
+  settings.gstin || '',
+  (settings.einvoice_sandbox ?? true) ? 'sandbox' : 'prod'
+].join('|'));
+
+const ewayCapabilityStorageKey = (settings: CompanySetting) =>
+  `${EWAY_AUTH_CAPABILITY_STORAGE_PREFIX}:${ewayAccountKey(settings)}`;
+
+const ewayCapabilityKey = (settings: CompanySetting) =>
+  `${ewayAccountKey(settings)}:${ewayCredentialFingerprint(settings)}`;
+
+const detailsCacheKey = (ewbNo: string, settings: CompanySetting, irn?: string, full = false) =>
+  `${ewayAccountKey(settings)}:${ewbNo}:${irn || ''}:${full ? 'full' : 'data'}`;
+
+const markEWayAuthUnavailable = (settings: CompanySetting) => {
+  const fingerprint = ewayCredentialFingerprint(settings);
+  ewayAuthUnavailable.add(ewayCapabilityKey(settings));
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(ewayCapabilityStorageKey(settings), JSON.stringify({
+      unavailable: true,
+      fingerprint
+    }));
+  }
+};
+
+const isEWayAuthKnownUnavailable = (settings: CompanySetting) => {
+  const key = ewayCapabilityKey(settings);
+  if (ewayAuthUnavailable.has(key)) return true;
+
+  if (typeof localStorage !== 'undefined') {
+    const storageKey = ewayCapabilityStorageKey(settings);
+    try {
+      const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
+      if (saved?.unavailable === true && saved.fingerprint === ewayCredentialFingerprint(settings)) {
+        ewayAuthUnavailable.add(key);
+        return true;
+      }
+      // Credential/environment changes invalidate the previous decision.
+      if (saved) localStorage.removeItem(storageKey);
+    } catch {
+      localStorage.removeItem(storageKey);
+    }
+  }
+  return false;
+};
+
+const clearEWayAuthUnavailable = (settings: CompanySetting) => {
+  ewayAuthUnavailable.delete(ewayCapabilityKey(settings));
+  if (typeof localStorage !== 'undefined') {
+    localStorage.removeItem(ewayCapabilityStorageKey(settings));
+  }
+};
+
+const clearEWayDetailsCache = (ewbNo?: string) => {
+  for (const key of ewayDetailsCache.keys()) {
+    if (!ewbNo || key.includes(`:${ewbNo}:`)) ewayDetailsCache.delete(key);
+  }
+};
+
 export const einvoiceService = {
+  clearDedicatedEWayBillAuthFallback(settings: CompanySetting): void {
+    clearEWayAuthUnavailable(settings);
+  },
   /**
    * Helper to execute a request with failover support for production.
    * Urged by TaxPro GSP Team:
@@ -335,6 +416,9 @@ export const einvoiceService = {
       }
     } else if (cleanPath.includes('/ewaybillapi') || cleanPath.includes('/ewayapi')) {
       serviceType = 'ewaybill';
+    } else if (cleanPath.includes('/eiewb/')) {
+      // IRN-linked E-Way Bill APIs use the e-Invoice token/credentials.
+      serviceType = 'einvoice';
     } else if (cleanPath.includes('/aspapi')) {
       serviceType = 'print';
     }
@@ -432,14 +516,14 @@ export const einvoiceService = {
    */
   async authenticate(settings: CompanySetting, forceRefresh = false): Promise<string> {
     const sandbox = settings.einvoice_sandbox ?? true;
-    const aspid = settings.einvoice_aspid || '';
-    const password = settings.einvoice_asppassword || '';
+    const aspid = SERVER_MANAGED_CREDENTIAL;
+    const password = SERVER_MANAGED_CREDENTIAL;
     const gstin = settings.gstin || '';
-    const username = settings.einvoice_username || '';
-    const eInvPwd = settings.einvoice_password || '';
+    const username = SERVER_MANAGED_CREDENTIAL;
+    const eInvPwd = SERVER_MANAGED_CREDENTIAL;
 
     if (!aspid || !password || !gstin || !username || !eInvPwd) {
-      throw new Error('E-Invoice GSP credentials are not fully configured in Company Settings.');
+      throw new Error('GSTIN is required for E-Invoice authentication.');
     }
 
     const cacheKey = `einvoice_token_${gstin}_${sandbox ? 'sandbox' : 'prod'}`;
@@ -504,14 +588,14 @@ export const einvoiceService = {
    */
   async authenticateEWayBill(settings: CompanySetting, forceRefresh = false): Promise<string> {
     const sandbox = settings.einvoice_sandbox ?? true;
-    const aspid = settings.einvoice_aspid || '';
-    const password = settings.einvoice_asppassword || '';
+    const aspid = SERVER_MANAGED_CREDENTIAL;
+    const password = SERVER_MANAGED_CREDENTIAL;
     const gstin = settings.gstin || '';
-    const username = settings.einvoice_username || '';
-    const ewbpwd = settings.ewaybill_password || '';
+    const username = SERVER_MANAGED_CREDENTIAL;
+    const ewbpwd = SERVER_MANAGED_CREDENTIAL;
 
     if (!aspid || !password || !gstin || !username || !ewbpwd) {
-      throw new Error('E-Way Bill GSP credentials are not fully configured in Company Settings (E-Way Bill password is required).');
+      throw new Error('GSTIN is required for E-Way Bill authentication.');
     }
 
     const cacheKey = `ewaybill_token_${gstin}_${sandbox ? 'sandbox' : 'prod'}`;
@@ -776,10 +860,10 @@ export const einvoiceService = {
 
     console.log('Sending payload to TaxPro IRN Generation:', payload);
 
-    const aspid = companySettings.einvoice_aspid || '';
-    const password = companySettings.einvoice_asppassword || '';
+    const aspid = SERVER_MANAGED_CREDENTIAL;
+    const password = SERVER_MANAGED_CREDENTIAL;
     const gstin = companySettings.gstin || '';
-    const username = companySettings.einvoice_username || '';
+    const username = SERVER_MANAGED_CREDENTIAL;
 
     let finalToken = token;
     let finalDistance = distance;
@@ -986,10 +1070,10 @@ export const einvoiceService = {
 
       console.log('Sending payload to TaxPro E-Way Bill Generation:', payload);
 
-      const aspid = companySettings.einvoice_aspid || '';
-      const password = companySettings.einvoice_asppassword || '';
+      const aspid = SERVER_MANAGED_CREDENTIAL;
+      const password = SERVER_MANAGED_CREDENTIAL;
       const gstin = companySettings.gstin || '';
-      const username = companySettings.einvoice_username || '';
+      const username = SERVER_MANAGED_CREDENTIAL;
 
       let finalToken = token;
       let finalDistance = distance;
@@ -1333,8 +1417,8 @@ export const einvoiceService = {
 
     console.log('Sending payload to Standalone E-Way Bill Generation:', payload);
 
-    const aspid = companySettings.einvoice_aspid || '';
-    const password = companySettings.einvoice_asppassword || '';
+    const aspid = SERVER_MANAGED_CREDENTIAL;
+    const password = SERVER_MANAGED_CREDENTIAL;
     const gstin = companySettings.gstin || '';
 
     let finalToken = token;
@@ -1480,10 +1564,10 @@ export const einvoiceService = {
 
       console.log('Sending payload to Cancel E-Invoice:', payload);
 
-      const aspid = companySettings.einvoice_aspid || '';
-      const password = companySettings.einvoice_asppassword || '';
+      const aspid = SERVER_MANAGED_CREDENTIAL;
+      const password = SERVER_MANAGED_CREDENTIAL;
       const gstin = companySettings.gstin || '';
-      const username = companySettings.einvoice_username || '';
+      const username = SERVER_MANAGED_CREDENTIAL;
 
       const makeRequest = async (tokenVal: string) => {
         const pathAndQuery = `/eicore/dec/v1.03/Invoice/Cancel?aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}&User_name=${encodeURIComponent(username)}&AuthToken=${encodeURIComponent(tokenVal)}`;
@@ -1683,10 +1767,10 @@ export const einvoiceService = {
 
     console.log(`Sending ${noteType} E-Invoice payload to TaxPro:`, payload);
 
-    const aspid = companySettings.einvoice_aspid || '';
-    const password = companySettings.einvoice_asppassword || '';
+    const aspid = SERVER_MANAGED_CREDENTIAL;
+    const password = SERVER_MANAGED_CREDENTIAL;
     const gstin = companySettings.gstin || '';
-    const username = companySettings.einvoice_username || '';
+    const username = SERVER_MANAGED_CREDENTIAL;
 
     const makeRequest = async (tokenVal: string) => {
       const pathAndQuery = `/eicore/dec/v1.03/Invoice?aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}&AuthToken=${encodeURIComponent(tokenVal)}&QrCodeSize=250&User_name=${encodeURIComponent(username)}`;
@@ -1800,10 +1884,10 @@ export const einvoiceService = {
 
     console.log(`Sending ${noteType} Cancel E-Invoice payload:`, payload);
 
-    const aspid = companySettings.einvoice_aspid || '';
-    const password = companySettings.einvoice_asppassword || '';
+    const aspid = SERVER_MANAGED_CREDENTIAL;
+    const password = SERVER_MANAGED_CREDENTIAL;
     const gstin = companySettings.gstin || '';
-    const username = companySettings.einvoice_username || '';
+    const username = SERVER_MANAGED_CREDENTIAL;
 
     const makeRequest = async (tokenVal: string) => {
       const pathAndQuery = `/eicore/dec/v1.03/Invoice/Cancel?aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}&User_name=${encodeURIComponent(username)}&AuthToken=${encodeURIComponent(tokenVal)}`;
@@ -1890,10 +1974,10 @@ export const einvoiceService = {
 
       console.log('Sending payload to Cancel E-Way Bill:', payload);
 
-      const aspid = companySettings.einvoice_aspid || '';
-      const password = companySettings.einvoice_asppassword || '';
+      const aspid = SERVER_MANAGED_CREDENTIAL;
+      const password = SERVER_MANAGED_CREDENTIAL;
       const gstin = companySettings.gstin || '';
-      const username = companySettings.einvoice_username || '';
+      const username = SERVER_MANAGED_CREDENTIAL;
 
       const makeRequest = async (tokenVal: string) => {
         const pathAndQuery = `/v1.03/dec/ewayapi?action=CANEWB&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&username=${encodeURIComponent(username)}&authtoken=${encodeURIComponent(tokenVal)}`;
@@ -1913,52 +1997,20 @@ export const einvoiceService = {
           throw new Error('IRN is required for IRN-linked E-Way Bill cancellation fallback.');
         }
         const ewbNo = parseInt(sale.eway_bill_no!, 10);
-        const pathSuffixes = [
-          '/eiewb/dec/v1.03/ewaybill/cancel',
-          '/eiewb/dec/v1.03/ewaybill/Cancel'
-        ];
-        const payloadVariants = [
-          { Irn: sale.irn, EwbNo: ewbNo, CnlRsn: reasonCode, CnlRem: remark || 'Cancelled' },
-          { Irn: sale.irn, ewbNo, cancelRsnCode: reasonCode, cancelRmrk: remark || 'Cancelled' },
-          { Irn: sale.irn, CnlRsn: reasonCode, CnlRem: remark || 'Cancelled' }
-        ];
-
-        for (const pathSuffix of pathSuffixes) {
-          for (const irnPayload of payloadVariants) {
-            const separator = pathSuffix.includes('?') ? '&' : '?';
-            const pathAndQuery = `${pathSuffix}${separator}aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}&User_name=${encodeURIComponent(username)}&AuthToken=${encodeURIComponent(tokenVal)}`;
-            const response = await this.executeRequest(sandbox, pathAndQuery, {
-              method: 'POST',
-              headers: {
-                'aspid': aspid,
-                'password': password,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(irnPayload)
-            });
-
-            if (response.ok) {
-              return response;
-            }
-
-            const responseText = await response.clone().text().catch(() => '');
-            const canTryNextVariant = response.status === 404 || responseText.includes('NIC404') || responseText.toLowerCase().includes('not found');
-            if (!canTryNextVariant) {
-              return response;
-            }
-            if (response.status === 404 || responseText.toLowerCase().includes('not found')) {
-              break;
-            }
-          }
-        }
-
-        return new Response(JSON.stringify({
-          error: {
-            message: 'TaxPro/NIC returned Not Found for all E-Way Bill cancellation endpoints. This E-Way Bill may need to be cancelled on the NIC E-Way Bill portal, or the TaxPro account may not have E-Way Bill cancellation enabled for this GSTIN.'
-          }
-        }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
+        const pathAndQuery = `/eiewb/dec/v1.03/ewaybill/cancel?aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}&User_name=${encodeURIComponent(username)}&AuthToken=${encodeURIComponent(tokenVal)}`;
+        return this.executeRequest(sandbox, pathAndQuery, {
+          method: 'POST',
+          headers: {
+            'aspid': aspid,
+            'password': password,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            Irn: sale.irn,
+            EwbNo: ewbNo,
+            CnlRsn: reasonCode,
+            CnlRem: remark || 'Cancelled'
+          })
         });
       };
 
@@ -2046,7 +2098,7 @@ export const einvoiceService = {
         if (error) {
           console.error('Error updating cancelled E-Way Bill in DB:', error);
         }
-
+        clearEWayDetailsCache(sale.eway_bill_no);
         return true;
       } else {
         const errorMsg = result.ErrorDetails?.[0]?.ErrorMessage
@@ -2071,6 +2123,7 @@ export const einvoiceService = {
         if (error) {
           console.error('Error updating cancelled E-Way Bill status in DB:', error);
         }
+        clearEWayDetailsCache(sale.eway_bill_no);
         return true;
       }
       throw err;
@@ -2134,10 +2187,10 @@ export const einvoiceService = {
 
     console.log('Sending payload to Update E-Way Bill Vehicle:', payload);
 
-    const aspid = companySettings.einvoice_aspid || '';
-    const password = companySettings.einvoice_asppassword || '';
+    const aspid = SERVER_MANAGED_CREDENTIAL;
+    const password = SERVER_MANAGED_CREDENTIAL;
     const gstin = companySettings.gstin || '';
-    const username = companySettings.einvoice_username || '';
+    const username = SERVER_MANAGED_CREDENTIAL;
 
     const makeRequest = async (tokenVal: string) => {
       const pathAndQuery = `/v1.03/dec/ewayapi?action=VEHEWB&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&username=${encodeURIComponent(username)}&authtoken=${encodeURIComponent(tokenVal)}`;
@@ -2190,7 +2243,7 @@ export const einvoiceService = {
       if (error) {
         console.error('Error updating sale lorry_no in DB:', error);
       }
-
+      clearEWayDetailsCache(sale.eway_bill_no);
       return true;
     } else {
       const errorMsg = result.ErrorDetails?.[0]?.ErrorMessage || result.error?.message || 'Failed to update E-Way Bill vehicle';
@@ -2297,10 +2350,10 @@ export const einvoiceService = {
     };
     console.log('Sending payload to Extend E-Way Bill Validity:', JSON.stringify(payload, null, 2));
 
-    const aspid = companySettings.einvoice_aspid || '';
-    const password = companySettings.einvoice_asppassword || '';
+    const aspid = SERVER_MANAGED_CREDENTIAL;
+    const password = SERVER_MANAGED_CREDENTIAL;
     const gstin = companySettings.gstin || '';
-    const username = companySettings.einvoice_username || '';
+    const username = SERVER_MANAGED_CREDENTIAL;
 
     const makeRequest = async (tokenVal: string) => {
       const pathAndQuery = `/v1.03/dec/ewayapi?action=EXTENDVALIDITY&aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&gstin=${encodeURIComponent(gstin)}&username=${encodeURIComponent(username)}&authtoken=${encodeURIComponent(tokenVal)}`;
@@ -2355,7 +2408,7 @@ export const einvoiceService = {
       if (error) {
         console.error('Error updating sale details on validity extension:', error);
       }
-
+      clearEWayDetailsCache(sale.eway_bill_no);
       return { validUpto: validUptoVal };
     } else {
       const errorMsg = result.ErrorDetails?.[0]?.ErrorMessage || result.error?.message || 'Failed to extend E-Way Bill validity';
@@ -2368,11 +2421,43 @@ export const einvoiceService = {
    * Fetch complete E-Way Bill details from GSP
    */
   async getEWayBillDetails(ewbNo: string, companySettings: CompanySetting, irn?: string, returnFullResponse: boolean = false): Promise<any> {
+    const key = detailsCacheKey(ewbNo, companySettings, irn, returnFullResponse);
+    const cached = ewayDetailsCache.get(key);
+    if (cached && cached.expiry > Date.now()) return cached.value;
+    if (cached) ewayDetailsCache.delete(key);
+
+    const existing = ewayDetailsInFlight.get(key);
+    if (existing) return existing;
+
+    const request = this.getEWayBillDetailsUncached(ewbNo, companySettings, irn, returnFullResponse)
+      .then((value: any) => {
+        ewayDetailsCache.set(key, { value, expiry: Date.now() + EWAY_DETAILS_CACHE_MS });
+        return value;
+      })
+      .finally(() => ewayDetailsInFlight.delete(key));
+
+    ewayDetailsInFlight.set(key, request);
+    return request;
+  },
+
+  async getEWayBillDetailsUncached(ewbNo: string, companySettings: CompanySetting, irn?: string, returnFullResponse: boolean = false): Promise<any> {
+    // Once TaxPro has told us that dedicated EWB auth is unavailable for this
+    // GSTIN, do not repeat a known-failing auth + direct lookup on every print.
+    if (irn && isEWayAuthKnownUnavailable(companySettings)) {
+      const invDetails = await this.getEInvoiceDetails(irn, companySettings);
+      let invData = invDetails.Data || invDetails.data || invDetails;
+      invData = parseMaybeJson(invData);
+      const ewbDetails = findEWayBillDetailsInObject(invData, ewbNo);
+      if (!ewbDetails) throw new Error('E-Invoice details did not contain the requested E-Way Bill.');
+      return returnFullResponse ? { Status: 1, Data: ewbDetails } : ewbDetails;
+    }
+
     let token: string;
     try {
       token = await this.authenticateEWayBill(companySettings);
     } catch (err: any) {
       if (isEWayBillAuthUnavailableError(err)) {
+        markEWayAuthUnavailable(companySettings);
         console.warn('Dedicated E-Way Bill auth returned NIC404. Falling back to e-invoice AuthToken for E-Way Bill details...');
         token = await this.authenticate(companySettings);
       } else {
@@ -2381,8 +2466,8 @@ export const einvoiceService = {
     }
     const sandbox = companySettings.einvoice_sandbox ?? true;
 
-    const aspid = companySettings.einvoice_aspid || '';
-    const password = companySettings.einvoice_asppassword || '';
+    const aspid = SERVER_MANAGED_CREDENTIAL;
+    const password = SERVER_MANAGED_CREDENTIAL;
     const gstin = companySettings.gstin || '';
 
     const makeRequest = async (tokenVal: string) => {
@@ -2405,6 +2490,7 @@ export const einvoiceService = {
       }
     } catch (err: any) {
       if (irn && isEWayBillAuthUnavailableError(err)) {
+        markEWayAuthUnavailable(companySettings);
         console.warn('Direct GetEwayBill returned NIC404. Fetching E-Way Bill details through E-Invoice IRN details...');
         const invDetails = await this.getEInvoiceDetails(irn, companySettings);
         const invDetailsStatus = invDetails?.Status ?? invDetails?.status ?? invDetails?.status_cd;
@@ -2557,8 +2643,8 @@ export const einvoiceService = {
     const sandbox = companySettings.einvoice_sandbox ?? true;
 
     // 1. Resolve credentials
-    const aspid = companySettings.einvoice_aspid || '';
-    const password = companySettings.einvoice_asppassword || '';
+    const aspid = SERVER_MANAGED_CREDENTIAL;
+    const password = SERVER_MANAGED_CREDENTIAL;
     const gstin = companySettings.gstin || '';
 
     // If sandbox is true, use the production host (einvapi.charteredinfo.com) and make a GET request
@@ -2706,8 +2792,8 @@ export const einvoiceService = {
     const finalFromPin = sandbox ? '605001' : fromPinCode.trim();
     const finalToPin = toPinCode.trim();
 
-    const aspid = companySettings.einvoice_aspid || '';
-    const password = companySettings.einvoice_asppassword || '';
+    const aspid = SERVER_MANAGED_CREDENTIAL;
+    const password = SERVER_MANAGED_CREDENTIAL;
     const gstin = companySettings.gstin || '';
 
     const makeRequest = async (tokenVal: string) => {
@@ -2762,10 +2848,10 @@ export const einvoiceService = {
     const token = await this.authenticate(companySettings);
     const sandbox = companySettings.einvoice_sandbox ?? true;
 
-    const aspid = companySettings.einvoice_aspid || '';
-    const password = companySettings.einvoice_asppassword || '';
+    const aspid = SERVER_MANAGED_CREDENTIAL;
+    const password = SERVER_MANAGED_CREDENTIAL;
     const gstin = companySettings.gstin || '';
-    const username = companySettings.einvoice_username || '';
+    const username = SERVER_MANAGED_CREDENTIAL;
 
     const makeRequest = async (tokenVal: string) => {
       const pathAndQuery = `/eicore/dec/v1.03/Invoice/irn/${encodeURIComponent(irn)}?aspid=${encodeURIComponent(aspid)}&password=${encodeURIComponent(password)}&Gstin=${encodeURIComponent(gstin)}&AuthToken=${encodeURIComponent(tokenVal)}&User_name=${encodeURIComponent(username)}`;

@@ -4,7 +4,7 @@ import { PageLayout } from '@/components/PageLayout';
 import CompanySettingsForm from '@/components/forms/CompanySettingsForm';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
-import { CompanySetting } from '@/types/company';
+import { CompanySetting, COMPANY_SETTINGS_PUBLIC_COLUMNS } from '@/types/company';
 import { Button } from '@/components/ui/button';
 import { Plus, Pencil, MapPin } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,7 +23,7 @@ const CompanySettings = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('company_settings')
-        .select('*')
+        .select(COMPANY_SETTINGS_PUBLIC_COLUMNS)
         .order('location_name');
 
       if (error) throw error;

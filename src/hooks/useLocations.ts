@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { CompanySetting } from '@/types/company';
+import { CompanySetting, COMPANY_SETTINGS_PUBLIC_COLUMNS } from '@/types/company';
 
 export const useLocations = () => {
     const [locations, setLocations] = useState<CompanySetting[]>([]);
@@ -12,7 +12,7 @@ export const useLocations = () => {
             try {
                 const { data, error } = await supabase
                     .from('company_settings')
-                    .select('*')
+                    .select(COMPANY_SETTINGS_PUBLIC_COLUMNS)
                     .eq('is_active', true)
                     .order('location_name');
 

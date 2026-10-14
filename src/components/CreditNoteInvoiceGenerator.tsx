@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Download, FileText, Printer, Zap, XCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { COMPANY_SETTINGS_PUBLIC_COLUMNS } from '@/types/company';
 import { useState, useEffect } from 'react';
 import { printNote } from '@/utils/notePrintTemplate';
 import { einvoiceService } from '@/services/einvoiceService';
@@ -119,7 +120,7 @@ export const CreditNoteInvoiceGenerator = ({ creditNote, customer, item, onClose
 
       const { data, error } = await supabase
         .from('company_settings')
-        .select('*')
+        .select(COMPANY_SETTINGS_PUBLIC_COLUMNS)
         .eq('is_active', true)
         .eq('location_code', locationCode)
         .single();

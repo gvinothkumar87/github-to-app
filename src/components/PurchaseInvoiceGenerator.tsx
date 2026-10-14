@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Download, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { COMPANY_SETTINGS_PUBLIC_COLUMNS } from '@/types/company';
 import { useState, useEffect } from 'react';
 
 interface PurchaseInvoiceGeneratorProps {
@@ -60,7 +61,7 @@ export const PurchaseInvoiceGenerator = ({ purchase, inwardEntry, supplier, item
         const loadingPlace = purchase.mill || 'PULIVANTHI';
         const { data, error } = await supabase
           .from('company_settings')
-          .select('*')
+          .select(COMPANY_SETTINGS_PUBLIC_COLUMNS)
           .eq('location_code', loadingPlace)
           .eq('is_active', true)
           .single();

@@ -7,6 +7,20 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
 }
 
+const allowedRoles = new Set(['admin', 'moderator', 'manager', 'user'])
+const normalizeGstin = (value: unknown) => String(value ?? '').trim().toUpperCase()
+
+const isAllowedTarget = (path: string, method: string) => {
+  if (!['GET', 'POST'].includes(method)) return false
+  const exactPaths = new Set([
+    '/eivital/dec/v1.04/auth', '/v1.03/dec/auth', '/eicore/dec/v1.03/Invoice',
+    '/eicore/dec/v1.03/Invoice/Cancel', '/eiewb/dec/v1.03/ewaybill',
+    '/eiewb/dec/v1.03/ewaybill/cancel', '/v1.03/dec/ewayapi',
+    '/aspapi/v1.0/printewb', '/aspapi/v1.0/printdetailewb', '/aspapi/v1.0/printcewb',
+  ])
+  return exactPaths.has(path) || /^\/eicore\/dec\/v1\.03\/Invoice\/irn\/[A-Za-z0-9]+$/.test(path)
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -54,19 +68,29 @@ serve(async (req) => {
       headers: clientHeaders, 
       body, 
       authToken,
-      gstin 
+      gstin: rawGstin,
     } = await req.json()
 
-    if (!gstin) {
+    const gstin = normalizeGstin(rawGstin)
+    const normalizedMethod = String(method || 'GET').toUpperCase()
+    const normalizedPath = String(path || '').startsWith('/') ? String(path) : `/${String(path || '')}`
+
+    if (!/^[0-9A-Z]{15}$/.test(gstin)) {
       return new Response(JSON.stringify({ error: 'GSTIN is required' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
 
-    // 1. Resolve GSP Credentials (DB first, then ENV fallback)
-    let aspid = null
-    let password = null
+    if (!isAllowedTarget(normalizedPath, normalizedMethod)) {
+      return new Response(JSON.stringify({ error: 'TAXPRO_ENDPOINT_NOT_ALLOWED' }), {
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    // 1. Authorize caller and resolve server-managed credentials.
+    const aspid = Deno.env.get('TAXPRO_ASPID')?.trim() ?? ''
+    const password = Deno.env.get('TAXPRO_ASPPASSWORD')?.trim() ?? ''
     let username = null
     let eInvPwd = null
     let ewbpwd = null
@@ -74,56 +98,52 @@ serve(async (req) => {
     const supabaseServiceRole = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRole)
 
-    const { data: settingsList, error: settingsError } = await supabaseAdmin
+    const { data: roleRows, error: roleError } = await supabaseAdmin
+      .from('user_roles').select('role').eq('user_id', user.id)
+    if (roleError || !roleRows?.some((row: any) => allowedRoles.has(row.role))) {
+      return new Response(JSON.stringify({ error: 'TAXPRO_OPERATION_NOT_AUTHORIZED' }), {
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    const { data: company, error: companyError } = await supabaseAdmin
       .from('company_settings')
-      .select('einvoice_aspid, einvoice_asppassword, einvoice_username, einvoice_password, ewaybill_password')
-      .eq('gstin', gstin)
-
-    if (settingsError) {
-      console.error('Error fetching settings from DB:', settingsError)
+      .select('id, gstin, is_active, einvoice_username, einvoice_password, ewaybill_password')
+      .eq('gstin', gstin).eq('is_active', true).limit(1).maybeSingle()
+    if (companyError) console.error('Error resolving company settings:', companyError.message)
+    if (!company) {
+      return new Response(JSON.stringify({ error: 'TAXPRO_GSTIN_NOT_FOUND' }), {
+        status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
     }
 
-    const hasBaseCredentials = (s: any) => s.einvoice_aspid && s.einvoice_asppassword && s.einvoice_username
-    const settings = serviceType === 'ewaybill-auth'
-      ? settingsList?.find(s => hasBaseCredentials(s) && s.ewaybill_password) ?? settingsList?.find(hasBaseCredentials)
-      : serviceType === 'einvoice-auth'
-        ? settingsList?.find(s => hasBaseCredentials(s) && s.einvoice_password) ?? settingsList?.find(hasBaseCredentials)
-        : serviceType === 'ewaybill'
-          ? settingsList?.find(s => hasBaseCredentials(s) && s.ewaybill_password) ?? settingsList?.find(hasBaseCredentials)
-          : settingsList?.find(hasBaseCredentials)
-
-    if (settings) {
-      aspid = settings.einvoice_aspid
-      password = settings.einvoice_asppassword
-      username = settings.einvoice_username
-      eInvPwd = settings.einvoice_password
-      ewbpwd = settings.ewaybill_password
-    }
-
-    // Fallback to Deno Environment variables if not found in DB
-    if (!aspid) aspid = Deno.env.get('TAXPRO_ASPID')
-    if (!password) password = Deno.env.get('TAXPRO_ASPPASSWORD')
-    if (!username) username = Deno.env.get('TAXPRO_USERNAME')
-    if (!eInvPwd) eInvPwd = Deno.env.get('TAXPRO_EINVOICE_PASSWORD')
-    if (!ewbpwd) ewbpwd = Deno.env.get('TAXPRO_EWAYBILL_PASSWORD')
+    const environment = sandbox ? 'sandbox' : 'production'
+    const { data: secureCredentials, error: credentialError } = await supabaseAdmin
+      .from('taxpro_gstin_credentials')
+      .select('nic_username, einvoice_password, ewaybill_password')
+      .eq('company_setting_id', company.id).eq('environment', environment).maybeSingle()
+    if (credentialError) console.error('Error resolving secure TaxPro credentials:', credentialError.message)
+    username = secureCredentials?.nic_username || company.einvoice_username
+    eInvPwd = secureCredentials?.einvoice_password || company.einvoice_password
+    ewbpwd = secureCredentials?.ewaybill_password || company.ewaybill_password
 
     if (!aspid || !password) {
-      return new Response(JSON.stringify({ error: 'GSP credentials are not configured.' }), {
-        status: 400,
+      return new Response(JSON.stringify({ error: 'TAXPRO_ASP_NOT_CONFIGURED' }), {
+        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
 
     if (serviceType === 'ewaybill-auth' && (!username || !ewbpwd)) {
-      return new Response(JSON.stringify({ error: 'E-Way Bill credentials are not configured for this GSTIN. Check NIC Portal API User Name and E-Way Bill API Password in Company Settings.' }), {
-        status: 400,
+      return new Response(JSON.stringify({ error: 'TAXPRO_NOT_CONFIGURED', service: 'ewaybill', environment }), {
+        status: 409,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
 
     if (serviceType === 'einvoice-auth' && (!username || !eInvPwd)) {
-      return new Response(JSON.stringify({ error: 'E-Invoice credentials are not configured for this GSTIN. Check NIC Portal API User Name and E-Invoice API Password in Company Settings.' }), {
-        status: 400,
+      return new Response(JSON.stringify({ error: 'TAXPRO_NOT_CONFIGURED', service: 'einvoice', environment }), {
+        status: 409,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
@@ -199,11 +219,11 @@ serve(async (req) => {
 
     let response: Response | null = null
     let lastError: any = null
+    const mayRetryAcrossHosts = normalizedMethod === 'GET' || normalizedMethod === 'HEAD'
 
     for (let i = 0; i < servers.length; i++) {
       const server = servers[i]
       // Ensure path starts with slash and build final URL
-      const normalizedPath = path.startsWith('/') ? path : `/${path}`
       const targetUrl = `${server}${normalizedPath}?${query.toString()}`
 
       console.log(`[Proxy] Routing ${method} request to: ${server}${normalizedPath} (Attempt ${i + 1}/${servers.length})`)
@@ -221,11 +241,18 @@ serve(async (req) => {
 
         clearTimeout(timeoutId)
 
-        if (res.status >= 500) {
+        if (res.status >= 500 && mayRetryAcrossHosts) {
           console.warn(`[Proxy] GSP Server ${server} returned status ${res.status}. Trying next server...`)
           lastError = new Error(`Server returned HTTP ${res.status}`)
           await new Promise(resolve => setTimeout(resolve, 1200))
           continue
+        }
+
+        // Generation, cancellation and update POSTs are not safe to replay on
+        // another host: the first server may have committed the operation even
+        // when its response is 5xx. Return that response for reconciliation.
+        if (res.status >= 500 && !mayRetryAcrossHosts) {
+          console.warn(`[Proxy] Not replaying ${normalizedMethod} request after status ${res.status}`)
         }
 
         response = res
@@ -233,6 +260,7 @@ serve(async (req) => {
       } catch (err: any) {
         console.error(`[Proxy] Request to ${server} failed:`, err)
         lastError = err
+        if (!mayRetryAcrossHosts) break
         await new Promise(resolve => setTimeout(resolve, 1200))
       }
     }

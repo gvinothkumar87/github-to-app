@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { CompanySetting } from "@/types/company";
 import { getFinancialYear } from "@/utils/financialYear";
+import { einvoiceService } from "@/services/einvoiceService";
 
 interface CompanySettingsFormProps {
   setting?: CompanySetting;
@@ -25,6 +26,19 @@ const CompanySettingsForm: React.FC<CompanySettingsFormProps> = ({
   const { toast } = useToast();
   const { language } = useLanguage();
   const [loading, setLoading] = useState(false);
+  const [taxproLoading, setTaxproLoading] = useState(false);
+  const [taxproStatus, setTaxproStatus] = useState<{ configured: boolean; credentialVersion?: number | null; lastTestStatus?: string | null }>({ configured: false });
+  const [taxproCredentials, setTaxproCredentials] = useState({ nicUsername: '', einvoicePassword: '', ewaybillPassword: '' });
+
+  const resetEWayAuthFallback = () => {
+    einvoiceService.clearDedicatedEWayBillAuthFallback(formData as unknown as CompanySetting);
+    toast({
+      title: language === 'english' ? 'E-Way API retry enabled' : 'ஈ-வே API மறுமுயற்சி இயக்கப்பட்டது',
+      description: language === 'english'
+        ? 'The app will test dedicated E-Way authentication on its next E-Way action.'
+        : 'அடுத்த ஈ-வே செயல்பாட்டில் தனிப்பட்ட ஈ-வே அங்கீகாரத்தை செயலி மீண்டும் சோதிக்கும்.',
+    });
+  };
 
   const [formData, setFormData] = useState({
     location_code: setting?.location_code || '',
@@ -55,14 +69,93 @@ const CompanySettingsForm: React.FC<CompanySettingsFormProps> = ({
     credit_note_digits: setting?.credit_note_digits?.toString() || '3',
     credit_note_financial_year_in_serial: setting?.credit_note_financial_year_in_serial ?? false,
     einvoice_enabled: setting?.einvoice_enabled ?? false,
-    einvoice_aspid: setting?.einvoice_aspid || '',
-    einvoice_asppassword: setting?.einvoice_asppassword || '',
-    einvoice_username: setting?.einvoice_username || '',
-    einvoice_password: setting?.einvoice_password || '',
     einvoice_sandbox: setting?.einvoice_sandbox ?? true,
     ewaybill_enabled: setting?.ewaybill_enabled ?? false,
-    ewaybill_password: setting?.ewaybill_password || '',
   });
+
+  const taxproEnvironment = formData.einvoice_sandbox ? 'sandbox' : 'production';
+
+  const loadTaxproStatus = useCallback(async () => {
+    if (!setting?.id || !formData.gstin) return;
+    const { data, error } = await supabase.functions.invoke('manage-taxpro-credentials', {
+      body: { action: 'status', companySettingId: setting.id, gstin: formData.gstin, environment: taxproEnvironment },
+    });
+    if (error) throw error;
+    setTaxproStatus(data);
+  }, [setting?.id, formData.gstin, taxproEnvironment]);
+
+  useEffect(() => {
+    loadTaxproStatus().catch((error) => console.error('Unable to load TaxPro credential status:', error));
+  }, [loadTaxproStatus]);
+
+  const saveTaxproCredentials = async () => {
+    if (!setting?.id) return;
+    setTaxproLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('manage-taxpro-credentials', {
+        body: {
+          action: taxproStatus.configured ? 'replace' : 'configure',
+          companySettingId: setting.id,
+          gstin: formData.gstin,
+          environment: taxproEnvironment,
+          ...taxproCredentials,
+        },
+      });
+      if (error) throw error;
+      setTaxproStatus({ configured: true, credentialVersion: data.credentialVersion, lastTestStatus: null });
+      setTaxproCredentials({ nicUsername: '', einvoicePassword: '', ewaybillPassword: '' });
+      sessionStorage.removeItem(`einvoice_token_${formData.gstin}_${formData.einvoice_sandbox ? 'sandbox' : 'prod'}`);
+      sessionStorage.removeItem(`ewaybill_token_${formData.gstin}_${formData.einvoice_sandbox ? 'sandbox' : 'prod'}`);
+      toast({ title: 'Success', description: `TaxPro ${taxproEnvironment} credentials saved securely.` });
+    } catch (error) {
+      console.error('Error saving TaxPro credentials:', error);
+      toast({ title: 'Error', description: 'Unable to save TaxPro credentials.', variant: 'destructive' });
+    } finally {
+      setTaxproLoading(false);
+    }
+  };
+
+  const testTaxproCredentials = async () => {
+    if (!setting?.id) return;
+    setTaxproLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('manage-taxpro-credentials', {
+        body: {
+          action: formData.einvoice_sandbox ? 'test-sandbox' : 'test-production',
+          companySettingId: setting.id,
+          gstin: formData.gstin,
+          environment: taxproEnvironment,
+        },
+      });
+      if (error) throw error;
+      setTaxproStatus((current) => ({ ...current, lastTestStatus: data.success ? 'success' : 'failed' }));
+      toast({ title: data.success ? 'Connection successful' : 'Connection failed', description: `TaxPro ${taxproEnvironment} test completed.` });
+    } catch (error) {
+      console.error('TaxPro connection test failed:', error);
+      toast({ title: 'Connection failed', description: 'TaxPro rejected the connection test.', variant: 'destructive' });
+    } finally {
+      setTaxproLoading(false);
+    }
+  };
+
+  const clearTaxproCredentials = async () => {
+    if (!setting?.id || !window.confirm(`Clear TaxPro ${taxproEnvironment} credentials for ${formData.gstin}?`)) return;
+    setTaxproLoading(true);
+    try {
+      const { error } = await supabase.functions.invoke('manage-taxpro-credentials', {
+        body: { action: 'clear', companySettingId: setting.id, gstin: formData.gstin, environment: taxproEnvironment },
+      });
+      if (error) throw error;
+      setTaxproStatus({ configured: false });
+      setTaxproCredentials({ nicUsername: '', einvoicePassword: '', ewaybillPassword: '' });
+      toast({ title: 'Credentials cleared', description: `TaxPro ${taxproEnvironment} credentials were removed.` });
+    } catch (error) {
+      console.error('Unable to clear TaxPro credentials:', error);
+      toast({ title: 'Error', description: 'Unable to clear TaxPro credentials.', variant: 'destructive' });
+    } finally {
+      setTaxproLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,13 +178,8 @@ const CompanySettingsForm: React.FC<CompanySettingsFormProps> = ({
         credit_note_digits: parseInt(formData.credit_note_digits) || 3,
         credit_note_financial_year_in_serial: formData.credit_note_financial_year_in_serial,
         einvoice_enabled: formData.einvoice_enabled,
-        einvoice_aspid: formData.einvoice_aspid || null,
-        einvoice_asppassword: formData.einvoice_asppassword || null,
-        einvoice_username: formData.einvoice_username || null,
-        einvoice_password: formData.einvoice_password || null,
         einvoice_sandbox: formData.einvoice_sandbox,
         ewaybill_enabled: formData.ewaybill_enabled,
-        ewaybill_password: formData.ewaybill_password || null,
         is_active: true,
       };
 
@@ -613,69 +701,59 @@ const CompanySettingsForm: React.FC<CompanySettingsFormProps> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="einvoice_aspid">GSP ASP ID</Label>
-                    <Input
-                      id="einvoice_aspid"
-                      value={formData.einvoice_aspid}
-                      onChange={(e) => setFormData({ ...formData, einvoice_aspid: e.target.value })}
-                      placeholder="e.g. 16******18"
-                      required={formData.einvoice_enabled || formData.ewaybill_enabled}
-                    />
+                <div className="rounded-md border p-4 space-y-4">
+                  <div>
+                    <p className="font-medium">TaxPro ASP credentials are managed securely by the system.</p>
+                    <p className="text-xs text-muted-foreground">
+                      {setting
+                        ? `${taxproEnvironment === 'sandbox' ? 'Sandbox' : 'Production'} NIC credentials: ${taxproStatus.configured ? 'Configured' : 'Not configured'}`
+                        : 'Save the company first, then configure its NIC credentials.'}
+                    </p>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="einvoice_asppassword">GSP ASP Password</Label>
-                    <Input
-                      id="einvoice_asppassword"
-                      type="password"
-                      value={formData.einvoice_asppassword}
-                      onChange={(e) => setFormData({ ...formData, einvoice_asppassword: e.target.value })}
-                      placeholder="Enter ASP password"
-                      required={formData.einvoice_enabled || formData.ewaybill_enabled}
-                    />
-                  </div>
+
+                  {setting && (
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="taxpro_nic_username">NIC Portal API User Name</Label>
+                          <Input id="taxpro_nic_username" value={taxproCredentials.nicUsername}
+                            onChange={(e) => setTaxproCredentials({ ...taxproCredentials, nicUsername: e.target.value })}
+                            placeholder="Enter to configure or replace" autoComplete="off" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="taxpro_einvoice_password">E-Invoice API Password</Label>
+                          <Input id="taxpro_einvoice_password" type="password" value={taxproCredentials.einvoicePassword}
+                            onChange={(e) => setTaxproCredentials({ ...taxproCredentials, einvoicePassword: e.target.value })}
+                            placeholder="Never displayed after saving" autoComplete="new-password" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="taxpro_ewaybill_password">E-Way Bill API Password</Label>
+                          <Input id="taxpro_ewaybill_password" type="password" value={taxproCredentials.ewaybillPassword}
+                            onChange={(e) => setTaxproCredentials({ ...taxproCredentials, ewaybillPassword: e.target.value })}
+                            placeholder="Never displayed after saving" autoComplete="new-password" />
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Button type="button" onClick={saveTaxproCredentials} disabled={taxproLoading}>Save secure credentials</Button>
+                        <Button type="button" variant="outline" onClick={testTaxproCredentials} disabled={taxproLoading || !taxproStatus.configured}>Test connection</Button>
+                        <Button type="button" variant="destructive" onClick={clearTaxproCredentials} disabled={taxproLoading || !taxproStatus.configured}>Clear credentials</Button>
+                      </div>
+                    </>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="einvoice_username">NIC Portal API User Name</Label>
-                    <Input
-                      id="einvoice_username"
-                      value={formData.einvoice_username}
-                      onChange={(e) => setFormData({ ...formData, einvoice_username: e.target.value })}
-                      placeholder="e.g. TaxProEnvPON"
-                      required={formData.einvoice_enabled || formData.ewaybill_enabled}
-                    />
+                {setting && (
+                  <div className="rounded-md border p-3 space-y-2">
+                    <p className="text-xs text-muted-foreground">
+                      {language === 'english'
+                        ? 'If TaxPro previously reported that dedicated E-Way authentication is unavailable, the app remembers that choice for this GSTIN and credential set.'
+                        : 'தனிப்பட்ட ஈ-வே அங்கீகாரம் கிடைக்கவில்லை என்று TaxPro முன்பு தெரிவித்திருந்தால், இந்த GSTIN மற்றும் சான்றுகளுக்கான தேர்வை செயலி நினைவில் வைத்திருக்கும்.'}
+                    </p>
+                    <Button type="button" variant="outline" size="sm" onClick={resetEWayAuthFallback}>
+                      {language === 'english' ? 'Retry Dedicated E-Way API' : 'தனிப்பட்ட ஈ-வே API-ஐ மீண்டும் முயற்சிக்கவும்'}
+                    </Button>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="einvoice_password">E-Invoice API Password (eInvPwd)</Label>
-                    <Input
-                      id="einvoice_password"
-                      type="password"
-                      value={formData.einvoice_password}
-                      onChange={(e) => setFormData({ ...formData, einvoice_password: e.target.value })}
-                      placeholder="Enter e-invoice API password"
-                      required={formData.einvoice_enabled}
-                      disabled={!formData.einvoice_enabled}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="ewaybill_password">E-Way Bill API Password (ewbpwd)</Label>
-                    <Input
-                      id="ewaybill_password"
-                      type="password"
-                      value={formData.ewaybill_password}
-                      onChange={(e) => setFormData({ ...formData, ewaybill_password: e.target.value })}
-                      placeholder="Enter e-way bill API password"
-                      required={formData.ewaybill_enabled}
-                      disabled={!formData.ewaybill_enabled}
-                    />
-                  </div>
-                </div>
+                )}
               </div>
             )}
           </div>

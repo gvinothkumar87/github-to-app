@@ -52,3 +52,31 @@ test('tax totals preserve amount and distinguish IGST', () => {
   assert.equal(result.igst, 180); assert.equal(result.cgst, 0); assert.equal(result.taxable + result.tax, note.amount);
 });
 if (process.env.NOTE_PRINT_FIXTURE) writeFileSync(process.env.NOTE_PRINT_FIXTURE, buildNotePrintHtml({ type: 'DBN', note: { ...note, irn: portalData.Irn, ack_no: String(portalData.AckNo), ack_date: portalData.AckDt, einvoice_status: 'GENERATED' }, company, customer, item }));
+
+for (const [noteType, table] of [['CRN', 'credit_notes'], ['DBN', 'debit_notes']]) {
+  for (const amount of [100, 100.01, 1180, 1234.56]) {
+    test(`${noteType}: equal local taxes and balanced payload for ${amount}`, async () => {
+      const s = setup();
+      let payload;
+      s.service.executeRequest = async (_sandbox, _path, options) => {
+        payload = JSON.parse(options.body);
+        return { ok: true, json: async () => ({ Status: 1, Data: portalData }) };
+      };
+      await s.service.generateNoteEInvoice({ note: { ...note, amount }, noteType, table, companySettings: company, customer, item });
+      const line = payload.ItemList[0];
+      const totals = payload.ValDtls;
+      assert.equal(line.CgstAmt, line.SgstAmt);
+      assert.equal(line.CgstAmt, Math.round(line.AssAmt * line.GstRt / 200 * 100) / 100);
+      assert.equal(Math.round((line.AssAmt + line.CgstAmt + line.SgstAmt) * 100), Math.round(line.TotItemVal * 100));
+      assert.equal(totals.CgstVal, line.CgstAmt);
+      assert.equal(totals.SgstVal, line.SgstAmt);
+      assert.equal(Math.round((line.TotItemVal + totals.RndOffAmt) * 100), Math.round(amount * 100));
+      if (amount === 100) {
+        assert.equal(line.CgstAmt, 7.63);
+        assert.equal(totals.RndOffAmt, -0.01);
+        const html = buildNotePrintHtml({ type: noteType, note: { ...note, amount }, company, customer, item });
+        assert.ok(html.includes('Round off'));
+      }
+    });
+  }
+}

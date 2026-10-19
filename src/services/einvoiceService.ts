@@ -1728,7 +1728,7 @@ export const einvoiceService = {
         StCesVal: 0,
         Discount: 0,
         OthChrg: 0,
-        RndOffAmt: 0,
+        RndOffAmt: tax.roundOff,
         TotInvVal: totalAmount
       },
       RefDtls: {
@@ -1760,7 +1760,7 @@ export const einvoiceService = {
           StateCesAmt: 0,
           StateCesNonAdvlAmt: 0,
           OthChrg: 0,
-          TotItemVal: totalAmount
+          TotItemVal: tax.itemTotal
         }
       ]
     };

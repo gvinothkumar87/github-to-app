@@ -19,8 +19,15 @@ export function noteTax(data: NotePrintData) {
   const taxable = Math.round(data.note.amount / (1 + rate / 100) * 100) / 100;
   const tax = Math.round((data.note.amount - taxable) * 100) / 100;
   const interstate = (data.customer.place_of_supply || data.customer.state_code || data.customer.gstin?.slice(0, 2)) !== (data.company.state_code || data.company.gstin?.slice(0, 2));
-  const cgst = interstate ? 0 : Math.round(tax / 2 * 100) / 100;
-  return { rate, taxable, tax, interstate, cgst, sgst: interstate ? 0 : Math.round((tax - cgst) * 100) / 100, igst: interstate ? tax : 0 };
+  // Round each half-rate identically; allocating a residual paisa to SGST
+  // makes the IRP reject the note with error 2227.
+  const cgst = interstate ? 0 : Math.round(taxable * rate / 200 * 100) / 100;
+  const sgst = cgst;
+  const igst = interstate ? tax : 0;
+  const totalTax = Math.round((cgst + sgst + igst) * 100) / 100;
+  const itemTotal = Math.round((taxable + totalTax) * 100) / 100;
+  const roundOff = Math.round((data.note.amount - itemTotal) * 100) / 100;
+  return { rate, taxable, tax: totalTax, interstate, cgst, sgst, igst, itemTotal, roundOff };
 }
 export function buildNotePrintHtml(data: NotePrintData) {
   const { note, company, customer, item } = data;
@@ -41,6 +48,7 @@ export function buildNotePrintHtml(data: NotePrintData) {
   <table><thead><tr><th style="width:8%">#</th><th style="width:42%">Description</th><th style="width:18%">HSN/SAC</th><th class="right">Taxable Value</th></tr></thead><tbody><tr><td>1</td><td>${escape(item.name_english)}</td><td>${escape(item.hsn_no)}</td><td class="right">${money(tax.taxable)}</td></tr></tbody></table>
   <div class="reason"><strong>Reason:</strong> ${escape(note.reason)}</div><section class="totals"><div class="total-row"><span>Taxable value</span><span>${money(tax.taxable)}</span></div>
   ${tax.interstate ? `<div class="total-row"><span>IGST (${tax.rate}%)</span><span>${money(tax.igst)}</span></div>` : `<div class="total-row"><span>CGST (${tax.rate / 2}%)</span><span>${money(tax.cgst)}</span></div><div class="total-row"><span>SGST (${tax.rate / 2}%)</span><span>${money(tax.sgst)}</span></div>`}
+  ${tax.roundOff ? `<div class="total-row"><span>Round off</span><span>${money(tax.roundOff)}</span></div>` : ''}
   <div class="total-row grand"><span>Total</span><span>${money(note.amount)}</span></div></section>
   ${note.irn ? `<section class="einvoice"><div class="details">${row('IRN', note.irn)}${row('Ack No', note.ack_no)}${row('Ack Date', note.ack_date)}${row('Status', cancelled ? 'CANCELLED' : note.einvoice_status || 'GENERATED')}</div>${qr ? `<div class="qr">${qr}</div>` : ''}</section>` : ''}
   <footer class="sign"><strong>For ${escape(company.company_name)}</strong><p>Authorised Signatory</p></footer></main></body></html>`;

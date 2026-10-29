@@ -1,3 +1,4 @@
+import { SaleConfirmationDialog } from '@/components/SaleConfirmationDialog';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -56,6 +57,7 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
   const [saleDate, setSaleDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [useSpecialSerial, setUseSpecialSerial] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
   const [createdSale, setCreatedSale] = useState<any>(null);
 
@@ -244,6 +246,12 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
       return;
     }
 
+    if (loading) return;
+    setShowConfirmation(true);
+  };
+
+  const confirmSale = async () => {
+    if (loading) return;
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -642,6 +650,12 @@ export const DirectSalesForm = ({ onSuccess, onCancel }: DirectSalesFormProps) =
             </Button>
           </div>
         </form>
+            <SaleConfirmationDialog
+              open={showConfirmation} onOpenChange={setShowConfirmation} onConfirm={confirmSale} loading={loading}
+              customer={customers.find(c => c.id === selectedCustomer)} shipTo={selectedShipToAddress} lorryNo={lorryNo}
+              lines={lineItems.map(line => { const item = items.find(i => i.id === line.item_id); return { name: item ? getDisplayName(item) : '', quantity: Number(line.quantity), rate: Number(line.rate), unit: item?.unit }; })}
+            />
+
       </CardContent>
     </Card>
   );

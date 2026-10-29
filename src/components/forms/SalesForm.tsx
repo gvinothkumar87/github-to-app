@@ -1,3 +1,4 @@
+import { SaleConfirmationDialog } from '@/components/SaleConfirmationDialog';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,7 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
   const [billSerialNo, setBillSerialNo] = useState('');
   const [useSpecialSerial, setUseSpecialSerial] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
   const [createdSale, setCreatedSale] = useState<any>(null);
   const { toast } = useToast();
@@ -225,6 +227,12 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
       return;
     }
 
+    if (loading) return;
+    setShowConfirmation(true);
+  };
+
+  const confirmSale = async () => {
+    if (loading) return;
     setLoading(true);
 
     try {
@@ -506,6 +514,12 @@ export const SalesForm = ({ onSuccess, onCancel }: SalesFormProps) => {
             </Button>
           </div>
         </form>
+            <SaleConfirmationDialog
+              open={showConfirmation} onOpenChange={setShowConfirmation} onConfirm={confirmSale} loading={loading}
+              customer={selectedEntry?.customers} shipTo={selectedShipToAddress} lorryNo={selectedEntry?.lorry_no}
+              lines={[{ name: selectedEntry?.items ? getDisplayName(selectedEntry.items) : '', quantity: calculateQuantity(), rate: Number(rate), unit: selectedEntry?.items?.unit }]}
+            />
+
       </CardContent>
     </Card>
   );

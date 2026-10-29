@@ -1,3 +1,5 @@
+import type { Customer, Item } from '@/types';
+import { SaleConfirmationDialog } from '@/components/SaleConfirmationDialog';
 import { isActiveParty } from '@/utils/partyStatus';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -15,11 +17,12 @@ import { buildFYPrefix, extractSerialNumber } from '@/utils/financialYear';
 import { validateBillSequence } from '@/utils/billValidation';
 
 const MobileSalesForm: React.FC = () => {
-  const { language } = useLanguage();
+  const { language, getDisplayName } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { outwardEntryId } = useParams();
   const [loading, setLoading] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   const { create: createSale } = useEnhancedOfflineData('offline_sales', [], { autoSync: true });
   const { data: outwardEntries } = useEnhancedOfflineData('offline_outward_entries', [], { autoSync: true });
@@ -202,6 +205,12 @@ const MobileSalesForm: React.FC = () => {
       return;
     }
 
+    if (loading) return;
+    setShowConfirmation(true);
+  };
+
+  const confirmSale = async () => {
+    if (loading) return;
     setLoading(true);
 
     try {
@@ -451,6 +460,12 @@ const MobileSalesForm: React.FC = () => {
                 </Button>
               </div>
             </form>
+            <SaleConfirmationDialog
+              open={showConfirmation} onOpenChange={setShowConfirmation} onConfirm={confirmSale} loading={loading}
+              customer={(customers as unknown as Customer[]).find(c => c.id === formData.customer_id)} shipTo={null} lorryNo={selectedEntry?.lorry_no}
+              lines={[( () => { const item = (items as unknown as Item[]).find(i => i.id === formData.item_id); return { name: item ? getDisplayName(item) : '', quantity: Number(formData.quantity), rate: Number(formData.rate), unit: item?.unit }; })()]}
+            />
+
           </CardContent>
         </Card>
       </div>
